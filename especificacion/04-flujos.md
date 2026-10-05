@@ -14,12 +14,12 @@ Dos solicitudes a la misma habitación: solo una puede ganar. Hotel.OCUPADA es p
 
 ## 2. Venta y stock
 
-Estados técnicos: PENDIENTE → CONFIRMADA | RECHAZADA | CANCELACION_PENDIENTE → CANCELADA.
+Transiciones técnicas permitidas: PENDIENTE→CONFIRMADA/RECHAZADA/CANCELACION_PENDIENTE; CONFIRMADA impagada→CANCELACION_PENDIENTE; CANCELACION_PENDIENTE→CANCELADA. No existe transición de CANCELADA o RECHAZADA a CONFIRMADA.
 Estado de pago separado: PENDIENTE | PAGADO. No se permite cancelar una venta PAGADA.
 
 1. Sales crea venta técnica PENDIENTE y operationId UUID con clave idempotente; las líneas contienen idProducto/cantidad, sin precio autorizado por el cliente.
-2. Feign a reception registra operación en esa estadía. Su transacción bloquea la recepción y solo admite si ACTIVA; valida propietario/sede. Operación única por UUID y venta. Un timeout aquí no permite descontar: se cancela y se finaliza la operación mediante comando, incluso si llega tarde el registro.
-3. Feign a inventory `POST /internal/stock/descontar` con idVenta,idHotel,items. Inventory crea/lock registro único del movimiento, compara hash y bloquea filas de stock ordenadas por idProducto. En una transacción descuenta todos los ítems o ninguno, calcula precios vigentes y persiste resultado inmutable.
+2. Feign a reception registra operación en esa estadía. Su transacción bloquea la recepción y solo admite si ACTIVA; valida propietario/sede. Operación única por UUID y venta. Un timeout aquí deja la venta RECHAZADA y emite finalizar, sin invocar inventory. El CAS terminal impide que una respuesta de admisión tardía continúe al débito. Si algún worker ya había persistido autorización para iniciar débito, se usa CANCELACION_PENDIENTE y restitución, como en el paso6.
+3. Sales persiste, mediante CAS PENDIENTE y operación PREPARANDO→DEBITO_SOLICITADO, que obtuvo admisión y va a iniciar débito. No hace llamada si la transición perdió frente al reconciliador. Feign a inventory `POST /internal/stock/descontar` con idVenta,idHotel,items. Inventory crea/lock registro único del movimiento, compara hash y bloquea filas de stock ordenadas por idProducto. En una transacción descuenta todos los ítems o ninguno, calcula precios vigentes y persiste resultado inmutable.
 4. Sales aplica CAS `WHERE estado_operacion='PENDIENTE'`: si gana, guarda detalles/precios devueltos, total y CONFIRMADA, emite VentaSnapshot y comando recepcion.operacion-finalizar. Responde201. Nunca vuelve a descontar por generar una respuesta.
 5. Si inventory rechaza por insuficiencia/inactividad: RECHAZADA sin descuento, libera operación y409. Una misma venta rechazada no se reintenta con nuevo cuerpo; el usuario inicia nueva venta con nueva clave.
 6. Si resultado remoto es incierto: CAS PENDIENTE→CANCELACION_PENDIENTE + outbox stock.restituir en la misma transacción; responde202. Si llega luego un éxito HTTP, no puede confirmar porque perdió CAS.
@@ -28,11 +28,11 @@ Estado de pago separado: PENDIENTE | PAGADO. No se permite cancelar una venta PA
 
 El estado inicial solicitado PAGADO solo lo pueden enviar A/E: es declaración de cobro manual una vez confirmada, no autorización bancaria. CLIENTE siempre inicia estado=PENDIENTE.
 
-Job cada30s: PENDIENTE con edad>120s compite con la confirmación mediante el mismo CAS, nunca “restituye todas las viejas” sin transición atómica. CANCELACION_PENDIENTE consulta `GET /internal/stock/movimientos/{idVenta}` o espera Kafka; republíca el mismo comando cuando corresponda. No compensa una CONFIRMADA por antigüedad.
+Job cada30s: venta PENDIENTE con edad>120s y operación PREPARANDO se rechaza mediante CAS y emite finalizar, sin stock; con DEBITO_SOLICITADO pasa por CAS a CANCELACION_PENDIENTE y emite restitución. Compite con la confirmación bajo el mismo lock/CAS, nunca “restituye todas las viejas” sin transición atómica. CANCELACION_PENDIENTE consulta `GET /internal/stock/movimientos/{idVenta}` o espera Kafka; republíca el mismo comando cuando corresponda. No compensa una CONFIRMADA por antigüedad.
 
 La recuperación revisa también operacion_venta, no solo Venta.estadoOperacion. Una operación PAGO en PREPARANDO/ADMITIDA reintenta la misma admisión y pago local; si ya pagó, solo asegura el outbox de finalizar. No compensa inventario por un timeout de pago. ANULACION reanuda su CAS/restitución; rechazo de admisión termina la operación sin tocar dinero/stock. Una restricción local permite solo una operación no terminal por venta.
 
-El registro de operación en reception no caduca solo por tiempo: un timeout no prueba que no hubo venta. Se libera por resultado terminal de sales, con comando durable. Si finalizar llega antes que registrar, deja lápida FINALIZADA y el registro tardío devuelve409.
+El registro de operación en reception no caduca solo por tiempo: un timeout no prueba que no hubo venta. Se libera por resultado terminal de sales, con comando durable. Si finalizar llega antes que registrar, deja lápida FINALIZADA con operationId,idRecepcion,idVenta,tipo y resultado; el registro tardío devuelve409. Finalizar y admitir usan el mismo orden de locks (recepción, después operación), verifican que la tupla coincida y nunca convierten FINALIZADA en ABIERTA. El rechazo de una admisión válida pero tardía también queda terminal; no puede aceptarse más tarde con el mismo operationId.
 
 ## 3. Carrito
 
@@ -42,37 +42,43 @@ La edición de carrito solo se permite con recepción ACTIVA. Una carrera de edi
 
 ## 4. Cierre seguro de estadía
 
-Una operación de venta incluye cualquier alta, pago o anulación que pueda cambiar lo facturable. Sales toma admisión en reception también para pago/anulación; usa operationId único. Esto evita modificar la cuenta mientras se cierra.
+Altas, pagos y anulaciones de ventas requieren una operación admitida en reception. Una estadía con operaciones ABIERTAS no inicia cierre.
 
-1. A/E obtiene cotización informativa. Front muestra alojamiento, adelanto, penalidad, consumos pagados/pendientes y monto de hoy.
-2. POST salida con closureId derivado de Idempotency-Key, idRecepcion,idHabitacion,costoPenalidad,totalPagado (=cobro de hoy).
-3. Transacción reception lock recepción. Otro closureId sobre una recepción CERRANDO devuelve409 CLOSURE_IN_PROGRESS con referencia al cierre vigente; el mismo closureId reanuda. Si hay operaciones ABIERTAS, devuelve409 OPERATIONS_IN_PROGRESS y NO cambia estado. Si no, ACTIVA→CERRANDO y persiste cierre/importe declarado. Desde ese commit, nuevas operaciones de venta son409.
-4. Feign `GET /internal/cierres/{idRecepcion}/resumen` obtiene ventas estables. Calcula saldo con tarifa/snapshot local. Si monto distinto: vuelve ACTIVA y devuelve409 AMOUNT_MISMATCH con cotización. Aún no se ha registrado pago.
-5. Feign `POST /internal/cierres/confirmar` con closureId,idRecepcion,expectedPendingTotal. Sales, en transacción, verifica total y ausencia de ventas técnicas pendientes, marca ventas impagadas PAGADO, registra receipt único por closureId/recepción y publica snapshots. Nunca toca otras bases.
-6. Reception guarda receipt e importe; CERRANDO→CERRADA, timestamp de salida, room_gate→LIMPIEZA_PENDIENTE con cleaningCycleId nuevo. Mismo commit produce SalidaRegistrada, limpieza.solicitada y notificación. Responde200.
-7. Timeout tras paso3 o5:202, conserva CERRANDO/gate OCUPADA; GET recepción muestra estado. Job reintenta MISMO closureId y payload, consulta receipt en sales. Nunca vuelve ACTIVA si puede haberse confirmado pago.
-8. Sales no disponible: cerrar falla de forma segura o queda202, sin reabrir la habitación. Recovery termina el mismo cierre; no hay segundo cobro.
+Estados persistidos de cierre: VALIDANDO → CONFIRMANDO → COMPLETADO, o VALIDANDO → RECHAZADO. Solo RECHAZADO permite devolver la estadía a ACTIVA. CONFIRMANDO significa que el pago remoto puede haberse aplicado.
 
-El registro de cobro es administrativo. Reintentar la API jamás vuelve a solicitar efectivo ni ordena un cargo externo. El panel muestra “cierre pendiente, no volver a cobrar” en202.
+1. A/E obtiene cotización informativa; presenta idRecepcion,idHabitacion,costoPenalidad,totalPagado (=cobro de hoy) e Idempotency-Key. closureId se fija a esa clave.
+2. Transacción: lock recepción. Otra clave sobre CERRANDO devuelve409 CLOSURE_IN_PROGRESS; la misma reanuda. Si hay operaciones ABIERTAS,409 sin cambiar la estadía. De lo contrario ACTIVA→CERRANDO e inserta cierre VALIDANDO con solicitud inmutable.
+3. Feign GET /internal/cierres/{idRecepcion}/resumen?idHotel=... obtiene consumos estables, incluso si no existe ninguna venta: devuelve totales0.
+4. Calcular y validar monto. Si discrepa, en transacción VALIDANDO→RECHAZADO y CERRANDO→ACTIVA, conservar registro y devolver409 AMOUNT_MISMATCH. Una nueva intención requiere nueva clave. Ningún pago remoto se invocó.
+5. Si coincide, persistir cálculo completo y expectedPendingTotal; CAS VALIDANDO→CONFIRMANDO y commit ANTES de llamar a Sales. Este es el punto que impide recalcular un cobro ya posiblemente aplicado.
+6. Feign POST /internal/cierres/confirmar con {closureId,idRecepcion,idHotel,expectedPendingTotal}, siempre idéntico. Sales busca primero su recibo por clave/recepción: si existe y coincide devuelve ese recibo, sin volver a comparar contra ventas ya pagadas. Si no existe, serializa por idRecepcion, valida total y marca las ventas impagadas como PAGADO junto con recibo y outbox.
+7. Reception valida recibo contra cierre/idHotel/importe congelado. En una transacción: CONFIRMANDO→COMPLETADO, CERRANDO→CERRADA, guarda fecha/desglose y room_gate→LIMPIEZA_PENDIENTE con cleaningCycleId. Produce SalidaRegistrada, limpieza.solicitada y notificación. Devuelve200.
+8. Timeout después de aceptar cierre:202 con Location=GET recepción, Retry-After y fase. Recuperación cada30s: VALIDANDO repite lectura/cálculo; CONFIRMANDO repite únicamente la confirmación con payload congelado; COMPLETADO devuelve resultado guardado; RECHAZADO devuelve su409 original.
+
+No se borra un cierre rechazado. Índice único parcial permite varios intentos rechazados y un único intento VALIDANDO/CONFIRMANDO/COMPLETADO por estadía. Cada fase avanza mediante CAS bajo lock; dos workers no pueden simultáneamente rechazar e iniciar confirmación. No mantener la transacción SQL durante Feign.
+
+Errores permanentes en CONFIRMANDO conservan estadía CERRANDO y lastErrorCode para revisión; no abren otra cuenta ni revierten a ACTIVA. Un retry posterior a confirmar en Sales no vuelve al cálculo de saldo pendiente, que ahora sería0.
+
+El registro de cobro es administrativo. Reintentar la API no vuelve a solicitar efectivo ni ordena un cargo externo. En202, el panel muestra “cierre pendiente, no volver a cobrar”.
 
 ## 5. Limpieza sin ventana de doble ingreso
 
-El gate LIMPIEZA_PENDIENTE del paso6 ya rechaza check-in aunque RabbitMQ esté detenido y hotel siga mostrando LISTA.
+El gate LIMPIEZA_PENDIENTE del paso7 ya rechaza check-in aunque RabbitMQ esté detenido y hotel siga mostrando LISTA.
 
-Hotel consume limpieza.solicitada con cleaningCycleId, idRecepcion y roomVersion. Crea tarea, pone EN_LIMPIEZA. Duplicados retornan éxito sin reabrir una tarea terminada. Una tarea de ciclo anterior no reemplaza otra más nueva.
+Hotel consume limpieza.solicitada con cleaningCycleId, idRecepcion y roomVersion. Crea tarea, pone EN_LIMPIEZA. Duplicados retornan éxito sin reabrir una tarea terminada. Hotel compara roomVersion de la solicitud con last_cleaning_room_version guardado: un ciclo antiguo o ya completado no reemplaza al actual. El mismo ciclo con otra habitación/recepción es error permanente y se envía a DLQ.
 
-Personal completa exactamente ese cleaningCycleId: hotel→LISTA + evento HabitacionLista. Reception solo libera gate si estaba LIMPIEZA_PENDIENTE y coincide ciclo/habitación. Un evento viejo jamás libera un ciclo posterior. Desfase puede demorar admisión, no admitir una habitación sucia.
+Personal completa exactamente ese cleaningCycleId y su habitación/sede; If-Match corresponde a version de la tarea obtenida en listado. La operación actualiza tarea y habitación bajo lock, y devuelve ETag/version de la tarea terminada. En ese commit hotel pasa a LISTA y emite HabitacionLista. Reception solo libera gate si estaba LIMPIEZA_PENDIENTE y coincide ciclo/habitación. Un evento viejo jamás libera un ciclo posterior. Desfase puede demorar admisión, no admitir una habitación sucia.
 
 ## 6. Mantenimiento y baja de habitación
 
 Para evitar la carrera “leí LISTA y alguien puso MANTENIMIENTO”:
 
 1. Hotel persiste operación administrativa PREPARANDO con blockId e idempotencia.
-2. Feign reception crea bloqueo durable del room_gate con ese blockId; solo LIBRE→BLOQUEADA. Si OCUPADA o LIMPIEZA_PENDIENTE:409. La misma llave devuelve mismo bloqueo.
-3. Hotel cambia físico a MANTENIMIENTO o estado=false. Si falla entre2 y3, el bloqueo se conserva; job reintenta la operación administrativa persistida. No libera por timeout.
+2. Feign reception crea bloqueo durable del room_gate con ese blockId; solo LIBRE→BLOQUEADA. Si OCUPADA o LIMPIEZA_PENDIENTE:409. La decisión se persiste por blockId con hash de request: ACTIVO o RECHAZADO. Una llave rechazada sigue rechazándose aunque la habitación quede libre después; otra intención necesita otra llave.
+3. Hotel cambia físico a MANTENIMIENTO o estado=false. Si falla entre2 y3, el bloqueo se conserva; job reintenta la operación administrativa persistida. El cambio local usa CAS PREPARANDO→APLICADA; una operación LIBERADA/RECHAZADA nunca vuelve a aplicar mantenimiento/baja. No libera por timeout.
 4. Finalizar mantenimiento/reactivar habitación: hotel físico LISTA/activo y emite HabitacionHabilitada con blockId. Reception libera solo el bloqueo coincidente. Habitación ocupada no puede entrar a mantenimiento vía este flujo.
 
-Baja de una sede solo después de dar de baja todas sus habitaciones; rechaza409 si quedan activas. Categoría/piso se dan de baja solo sin habitaciones activas. El número/idHotel de una habitación nunca cambia después de usada.
+Baja de una sede solo después de dar de baja todas sus habitaciones; rechaza409 si quedan activas. Categoría/piso se dan de baja solo sin habitaciones activas. El número/idHotel de una habitación es inmutable desde su creación.
 
 ## 7. Entrega, duplicados y orden
 

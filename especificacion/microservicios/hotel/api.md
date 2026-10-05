@@ -47,7 +47,7 @@ Acceso P. Detalle oculto/inactivo404. No fechas ni parámetro “disponible”. 
 | PUT /api/habitacion/{id}/reactivar · NUEVA | A,V | blockId:uuid | 200 Habitacion; sede/piso/categoría activos |
 | GET /api/habitacion/operaciones/{blockId} · NUEVA | A | blockId | 200 {blockId,idHabitacion,tipo,estado} |
 | GET /api/habitacion/limpiezas · NUEVA | A/E | H,estado=PENDIENTE/COMPLETADA,L | Limpieza[] |
-| PUT /api/habitacion/{id}/limpieza-completada · NUEVA | A/E,V | cleaningCycleId:uuid | 200 Habitacion; V es version de la tarea |
+| PUT /api/habitacion/{id}/limpieza-completada · NUEVA | A/E,V | cleaningCycleId:uuid | 200 {limpieza:Limpieza,habitacion:Habitacion}; V y ETag son version de la tarea |
 | GET /api/estadohabitacion/listar · LEGACY | A/E | — | EstadoFisico[] |
 | GET /api/estadohabitacion/buscar/{id} · LEGACY | A/E | id | EstadoFisico |
 | PUT /api/estadohabitacion/actualizar/{id} · LEGACY | A,V | descripcion | 200 etiqueta; código fijo |
@@ -80,6 +80,6 @@ Salida: hotel llama `POST /internal/habitaciones/{id}/bloqueos` a reception con 
 ## Mensajería
 
 Produce `hotel.sede.v1` SedeSnapshot payload `{idHotel,nombre,ciudad,estado,publicado,version}`.
-Produce `hotel.habitacion.v1`: snapshot `{idHabitacion,idHotel,numero,idCategoria,categoriaNombre,pisoNombre,precio,estado,estadoFisico,version,cleaningCycleId:null,blockId:null}`. HabitacionLista exige cleaningCycleId; HabitacionHabilitada exige blockId; HabitacionCreada crea gate inicial. Cualquier cambio de categorías/pisos que afecte estos snapshots dispara actualización de habitaciones afectadas, en la misma transacción de catálogo, incrementando version y outbox de cada habitación afectada. Si alguna está en operación administrativa PREPARANDO, devuelve409 sin aplicar el cambio de catálogo.
+Produce `hotel.habitacion.v1`: snapshot `{idHabitacion,idHotel,numero,idCategoria,categoriaNombre,pisoNombre,precio,estado,estadoFisico,version,cleaningCycleId:null,cleaningRoomVersion:null,blockId:null}`. HabitacionLista exige cleaningCycleId y cleaningRoomVersion (=roomVersion del comando de limpieza); no es hotel.version; HabitacionHabilitada exige blockId; HabitacionCreada crea gate inicial. Cualquier cambio de categorías/pisos que afecte estos snapshots dispara actualización de habitaciones afectadas, en la misma transacción de catálogo, incrementando version y outbox de cada habitación afectada. Si alguna está en operación administrativa PREPARANDO, devuelve409 sin aplicar el cambio de catálogo.
 
 Consume reception.recepcion.v1 para ocupacion_projection usando ocupacionActual, orden roomVersion; no infiere desocupación de una estadía histórica archivada. Consume Rabbit limpieza.solicitada; no necesita consumir eventos de identity/inventory/sales. Emisión siempre con outbox.

@@ -15,13 +15,13 @@
 | POST /api/producto/{id}/ajustes · NUEVA | A,V | {idHotel,delta,motivo} | 201 {ajusteId,cantidad,version} |
 | GET /api/producto/{id}/movimientos · NUEVA | A/E | H,L,inicio?,fin? | 200 Movimiento[] |
 
-Idempotency-Key en mutaciones. V corresponde a producto_sede.version; cambios del catálogo global mediante ProductoUpdate solo ADMIN y se serializan también con version de producto indicada como `productoVersion` en body. Una baja impide nuevas ventas, pero permite restituir stock de ventas previas.
+Idempotency-Key en mutaciones. V corresponde a producto_sede.version; cambios del catálogo global mediante ProductoUpdate solo ADMIN y se serializan también con version de producto indicada como `productoVersion` en body. Una baja impide nuevas ventas, pero permite restituir stock de ventas previas. En ProductoUpdate, estado pertenece solo a producto_sede; nombre/detalle/imagenUrl son globales y precio/umbralBajo son de la sede indicada. productoVersion y V se validan juntos en la transacción antes de cualquier cambio. Producto.estado global queda activo en MVP, sin endpoint de baja global; DELETE afecta únicamente a la sede.
 
 ProductoAlta: `{sku,nombre,detalle?,imagenUrl?,idHotel,precio,cantidadInicial,umbralBajo}`.
 ProductoUpdate: `{nombre,detalle?,imagenUrl?,precio,umbralBajo,estado,productoVersion}`.
 Precio>0; inicial>=0; delta entero distinto0, motivo1..300. Las cantidades de venta1..9999, hasta50 productos distintos.
 Producto response: `{idProducto,sku,nombre,detalle,imagenUrl,idHotel,precio,cantidad,umbralBajo,estado,fechaCreacion,version,productoVersion}`.
-Movimiento response: `{idVenta,idHotel,estado,cantidad,precioUnitario,createdAt}` para ese producto; ajustes se incluyen como `{ajusteId,delta,motivo,createdAt}` con tipo explícito.
+Movimiento response es unión discriminada: `{tipo:"VENTA",idVenta,idHotel,estado,cantidad,precioUnitario,createdAt,updatedAt}` o `{tipo:"AJUSTE",ajusteId,idHotel,delta,motivo,createdAt}`. VENTA refleja el movimiento y su estado actual (DESCONTADO/RECHAZADO/RESTITUIDO), no dos débitos por tener dos timestamps. Sin detalle de producto —rechazo o lápida anterior al débito— no aparece en esta ruta por producto; sí en consulta interna por idVenta. inicio/fin opcionales ISO-8601, intervalo [inicio,fin) sobre createdAt; orden createdAt,id/tipo y paginación L.
 
 ## Feign entrante
 

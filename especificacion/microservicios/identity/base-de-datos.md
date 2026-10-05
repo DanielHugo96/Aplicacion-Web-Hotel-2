@@ -25,9 +25,11 @@ DNI8 dígitos; otros documentos6–20 alfanuméricos; correo sintácticamente v�
 | Firma propuesta | Regla/resultado |
 |---|---|
 | fn_persona_guardar(p_id int?, p_datos jsonb, p_sedes int[], p_expected_version bigint?) RETURNS persona | Alta/update de datos permitidos; clave_hash ya BCrypt desde Java; lock versión; no duplicados; reemplazo local de asignaciones; devuelve fila sin serializar hash al API |
-| sp_persona_desactivar(p_id int,p_expected_version bigint,p_actor int) | Baja lógica; prohíbe borrar último ADMIN activo; bloquea filas ADMIN en orden estable para evitar bajas simultáneas |
+| sp_persona_desactivar(p_id int,p_expected_version bigint,p_actor int) | Baja lógica; comparte el bloqueo y la protección del último ADMIN con fn_persona_guardar, incluso ante cambios por PUT |
 | fn_cliente_vigente(p_id int) RETURNS TABLE(id int,nombre text,apellido text,tipo_documento text,documento text,correo text,version bigint) | Solo persona activa tipo CLIENTE, sin secreto |
 | sp_tipo_persona_descripcion(p_id int,p_descripcion varchar,p_expected_version bigint) | Edita etiqueta, no código ni permisos; los3 roles nunca se crean/eliminan por REST |
+
+Toda alta/cambio de rol/estado/baja de persona bloquea primero la fila fija tipo_persona.codigo=ADMIN con SELECT FOR UPDATE y después la persona. Dentro de la misma transacción verifica que quede al menos un ADMIN activo con clave_hash. La fila de rol actúa como mutex aunque distintos admins se editen a la vez; no basta contar administradores antes de adquirir el lock. Invariante también en PUT con estado=false o degradación de rol. Convertir un huésped sin clave en ADMIN/EMPLEADO se rechaza409 STAFF_CREDENTIAL_REQUIRED: no crear personal sin login ni inventar contraseña.
 
 Login usa consulta por correo + BCryptPasswordEncoder.matches en Java; NO comparación de texto plano SQL. Cambiar contraseña se hace por service transaction con auditoría, no desde GET ni DTO de salida. Buscar/listar usa JPA con proyección sin hash.
 

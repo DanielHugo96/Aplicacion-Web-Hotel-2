@@ -16,7 +16,7 @@
 | POST /api/recepcion/registrar-salida · LEGACY | A/E | Salida | 200 Recepcion cerrada o202 Recepcion CERRANDO |
 | DELETE /api/recepcion/eliminar/{id} · LEGACY | A,V | id | 200 archivada;409 si no CERRADA |
 
-Idempotency-Key en altas/cierre/PUT/DELETE. El idHabitacion de salida se valida contra recepción; no se usa para cerrar otra habitación. Una estadía cerrada no vuelve a ACTIVA por PUT.
+Idempotency-Key en altas/cierre/PUT/DELETE. El idHabitacion de salida se valida contra recepción; no se usa para cerrar otra habitación. Una estadía cerrada no vuelve a ACTIVA por PUT. Acortar fechaSalida no puede reducir precioInicial por debajo del adelanto (409 ADVANCE_EXCEEDS_NEW_TOTAL); no se inventa un reembolso.
 
 ## Request y response
 
@@ -38,7 +38,7 @@ totalPagado en request significa efectivo/pago manual recibido AHORA, incluyendo
 
 Recepcion: `{idRecepcion,idHotel,idCliente,idHabitacion,numero,categoriaNombre,pisoNombre,detalleHabitacion,precioHabitacion,nombre,apellido,tipoDocumento,documento,correo,fechaEntrada,fechaSalida,fechaSalidaConfirmacion,precioInicial,adelanto,precioRestante,totalPagado,costoPenalidad,observacion,estado,estadoEstadia,archivada,version,closureId,cleaningCycleId}`. `estado` legacy derivado true para ACTIVA/CERRANDO; false para CERRADA. totalPagado de response es total histórico del alojamiento, no mezcla consumo; detalle del cierre en campo adicional `cierre` con el desglose de Cotizacion y cobroAhora. C recibe el propio snapshot; no otro huésped.
 
-Cotizacion: `{idRecepcion,alojamiento:70,adelanto:20,penalidad:0,saldoAlojamiento:50,consumosPagados:0,consumosPendientes:7,cobroAhora:57,moneda:"PEN",calculadoEn}`. El servidor redondea a2 decimales, rechaza discrepancia con409 y nueva cotización.
+Cotizacion: `{idRecepcion,alojamiento:70,adelanto:20,penalidad:0,saldoAlojamiento:50,consumosPagados:0,consumosPendientes:7,cobroAhora:57,moneda:"PEN",calculadoEn}`. El servidor redondea a2 decimales, rechaza discrepancia con409 y nueva cotización. En CERRANDO, `cierre` devuelve `{closureId,estado,lastErrorCode,calculo}`; estado VALIDANDO/CONFIRMANDO y calculo=null hasta congelarse. En CERRADA, estado=COMPLETADO y añade el desglose final. Sin intento de cierre, cierre=null. Un rechazo devuelve409 con cotización y closureId; historial técnico rechazado no sustituye el último cierre vigente en GET. El mismo Idempotency-Key reanuda o devuelve su resultado terminal.
 
 ## Feign entrante
 
@@ -47,8 +47,8 @@ Acceso solo máquina y scope del [común](../../03-contrato-comun.md). POST inte
 | Método/ruta | Caller | Request | Response |
 |---|---|---|---|
 | GET /internal/recepciones/{id} | sales,recepciones:read | — | 200 {idRecepcion,idHotel,idCliente,idHabitacion,estadoEstadia,version} |
-| POST /internal/recepciones/{id}/operaciones | sales,operaciones:write | {operationId,idVenta,idHotel,tipo,actorId,actorRol} | 200 {operationId,estado:"ABIERTA"};409 no ACTIVA/finalizada |
-| POST /internal/habitaciones/{id}/bloqueos | hotel,bloqueos:write | {blockId,idHotel,motivo} | 200 {blockId,idHabitacion,estado:"BLOQUEADA"};409 no libre |
+| POST /internal/recepciones/{id}/operaciones | sales,operaciones:write | {operationId,idVenta,idHotel,tipo,actorId,actorRol} | 200 {operationId,tipo,estado:"ABIERTA"};409 no ACTIVA/finalizada, rechazo durable |
+| POST /internal/habitaciones/{id}/bloqueos | hotel,bloqueos:write | {blockId,idHotel,motivo} | 200 {blockId,idHabitacion,estado:"BLOQUEADA"};409 no libre, decisión por blockId inmutable |
 
 Caller sales valida JWT humano/sede y pasa actor auditado; si actorRol=CLIENTE reception comprueba idCliente=actorId y tipo=VENTA. No confundir token máquina con acceso humano sin permisos.
 
@@ -67,9 +67,9 @@ Consume hotel.habitacion.v1: inicializa gates; HabitacionLista libera solo ciclo
 ## Rabbit
 
 Produce limpieza.solicitada, notificacion.checkin y notificacion.checkout.
-Consume recepcion.operacion-finalizar, con inbox+lápida. No consulta stock desde listener. Ver payloads en [mensajería](../../05-mensajeria.md).
+Consume recepcion.operacion-finalizar, con inbox+lápida completa `{operationId,idRecepcion,idVenta,tipo,resultado}` e idHotel del envelope. Coincidencia estricta de tupla y combinaciones tipo/resultado; no revive FINALIZADA. No consulta stock desde listener. Ver payloads en [mensajería](../../05-mensajeria.md).
 
 ## Errores/pruebas
 
-ROOM_NOT_READY,ROOM_OCCUPIED,ROOM_NOT_SYNCED,OPERATIONS_IN_PROGRESS,AMOUNT_MISMATCH,STAY_NOT_ACTIVE →409 (ROOM_NOT_SYNCED puede503 transitorio). DEPENDENCY_UNAVAILABLE→503.
+ROOM_NOT_READY,ROOM_OCCUPIED,ROOM_NOT_SYNCED,OPERATIONS_IN_PROGRESS,AMOUNT_MISMATCH,STAY_NOT_ACTIVE →409 (ROOM_NOT_SYNCED puede503 transitorio). DEPENDENCY_UNAVAILABLE→503 antes de crear una operación durable. Si ya se aceptó el cierre y la estadía está CERRANDO, un fallo recuperable devuelve202 con fase/Location; no indica al usuario que vuelva a iniciar el cobro.
 Cliente intentando check-in403; fecha futura de entrada400; cierre con venta en vuelo409; timeout después de sales receipt202 y posterior200 con misma clave, una sola salida.

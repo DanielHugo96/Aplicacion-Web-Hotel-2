@@ -17,6 +17,17 @@ No rutas Gateway hacia notification, /internal/**, /eureka/**, /actuator/** ni D
 
 JWT, correlationId, límite de tamaño1MiB, rate limit público y CORS allowlist para los dos orígenes; CORS no reemplaza autorización. Exponer solo endpoints documentados. Opciones preflight permitidas para orígenes aprobados. Sin caché autenticada. Gateway no implementa stock ni joins.
 
+Configuración CORS explícita en Gateway:
+
+- allowedOrigins: http://localhost:4200 y http://localhost:4300 en dev; dominios HTTPS concretos por entorno en despliegue.
+- allowedMethods: GET,POST,PUT,DELETE,OPTIONS.
+- allowedHeaders: Authorization,Content-Type,Accept,Idempotency-Key,If-Match,X-Correlation-Id.
+- exposedHeaders: ETag,Location,Retry-After,X-Correlation-Id; necesarios para editar/reintentar/pollear desde Angular.
+- allowCredentials=false: no se utilizan cookies de autenticación; maxAge=600.
+- Preflight de origen permitido no exige JWT; la petición real sí aplica autorización. Sin wildcard de origen ni rutas internas como efecto del preflight.
+
+Rate limit de demo local a una instancia; login en identity distingue cuenta/IP sin revelar existencia de cuenta. Si se despliega con réplicas, revisar el almacenamiento del contador antes de afirmar límites globales; no agregar Redis al MVP.
+
 BD/procedimientos/seeds: ninguno. Configuración de rutas versionada; secretos externos.
 
 ## Discovery server
@@ -62,6 +73,7 @@ Logs estructurados incluyen service,correlationId,eventId/commandId cuando apliq
 ## Construcción y arranque futuro
 
 Las siguientes son tareas de implementación, no comandos ya disponibles:
+
 1. Fijar patches compatibles Boot3.5/Cloud2025.0 y Node compatible con Angular21.
 2. Crear Dockerfile multi-stage por servicio y frontend; lockfiles e imágenes con tag fijo/digest.
 3. Compose valida configuración sin secretos en Git.

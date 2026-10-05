@@ -6,9 +6,9 @@
 {"eventId":"11111111-1111-4111-8111-111111111111","type":"CheckInRegistrado","schemaVersion":1,"aggregateType":"habitacion-ocupacion","aggregateId":"101","aggregateVersion":1,"idHotel":1,"occurredAt":"2026-10-04T15:00:00Z","correlationId":"22222222-2222-4222-8222-222222222222","payload":{"idRecepcion":1001,"idHabitacion":101,"idCliente":100,"estadoEstadia":"ACTIVA"}}
 ```
 
-El ejemplo ilustra envelope; payload completo obligatorio según cada API/tabla siguiente. Kafka key=aggregateId salvo clave compuesta indicada. Headers `content-type=application/json`, `schema-version=1`, `correlation-id`. Fecha UTC, eventId UUID. Nunca JWT, clave ni hash.
+El ejemplo ilustra envelope; payload completo obligatorio según cada API/tabla siguiente. Kafka key=aggregateId salvo clave compuesta indicada. Headers `content-type=application/json`, `schema-version=1`, `correlation-id`. Fecha UTC, eventId UUID. idHotel es null para PersonaSnapshot global y un entero positivo para hechos de una sede. Nunca JWT, clave ni hash.
 
-Payload snapshot incluye todos los campos de proyección indicados en la API productora. Evento de eliminación contiene id,estado=false,version; las bajas de venta son snapshots de anulación, no DELETE físico.
+Payload snapshot incluye todos los campos de proyección indicados en la API productora. Evento de baja mantiene el snapshot completo, con id,estado=false,version y el resto de campos del contrato; las bajas de venta son snapshots de anulación, no DELETE físico.
 
 ## Topics y asignación exacta
 
@@ -24,7 +24,7 @@ Payload snapshot incluye todos los campos de proyección indicados en la API pro
 
 Cada consumidor tiene grupo propio `<servicio>-<proyeccion>-v1`; réplicas del mismo servicio comparten grupo. Demo1 partición/topic, replication-factor1 (no alta disponibilidad). Producción requeriría dimensionamiento distinto. Retención demo7d; la reconstrucción no depende de que exista todo el historial: snapshot de bootstrap + stream.
 
-Productor con acks=all e idempotencia habilitada; esto no elimina necesidad de outbox/inbox. Consumer confirma offset después del commit local. Máximo5 intentos con espera1,5,30,120,300s; luego `<topic>.dlt` conserva envelope original + error no sensible. Alertar; reenvío manual conserva eventId. No habilitar admisión por un evento perdido. Reporting marca proyección degradada ante DLT; el operador no declara paridad hasta reparar.
+Productor con acks=all e idempotencia habilitada; esto no elimina necesidad de outbox/inbox. Consumer confirma offset después del commit local. Hasta5 reintentos con espera1,5,30,120,300s después del intento inicial; luego `<topic>.<consumerGroup>.dlt` conserva envelope original, key, topic/partición/offset, consumerGroup y error no sensible. Alertar; reenvío manual conserva eventId y key, y se procesa con el consumerGroup que falló; no confundir fallos de Reporting con fallos de Reception. No habilitar admisión por un evento perdido. Reporting marca proyección degradada ante DLT; el operador no declara paridad hasta reparar.
 
 ## Envelope de comando RabbitMQ
 
@@ -40,10 +40,12 @@ Props AMQP: messageId=commandId, contentType=application/json, deliveryMode=2, c
 |---|---|---|
 | limpieza.solicitada | reception → hotel | idHabitacion:int,idRecepcion:int,cleaningCycleId:uuid,roomVersion:long |
 | stock.restituir | sales → inventory | idVenta:int,idRecepcion:int,motivo:string; idHotel del envelope |
-| recepcion.operacion-finalizar | sales → reception | operationId:uuid,idRecepcion:int,idVenta:int,resultado:CONFIRMADA/RECHAZADA/CANCELADA/PAGO_REGISTRADO |
+| recepcion.operacion-finalizar | sales → reception | operationId:uuid,idRecepcion:int,idVenta:int,tipo:VENTA/PAGO/ANULACION,resultado:CONFIRMADA/RECHAZADA/CANCELADA/PAGO_REGISTRADO |
 | notificacion.bienvenida | identity → notification | idPersona:int,destinatario:email,nombre:string,templateVersion:1 |
 | notificacion.checkin | reception → notification | idPersona:int,idRecepcion:int,destinatario:email,nombre:string,hotel:string,fechaSalida:date,templateVersion:1 |
 | notificacion.checkout | reception → notification | idPersona:int,idRecepcion:int,destinatario:email,nombre:string,hotel:string,totalAlojamiento:decimal,totalConsumos:decimal,templateVersion:1 |
+
+Finalizar incluye tipo para poder crear una lápida completa aun antes de admitir. Combinaciones: VENTA→CONFIRMADA/RECHAZADA/CANCELADA; PAGO→PAGO_REGISTRADO/RECHAZADA; ANULACION→CANCELADA/RECHAZADA. Verificar tupla de IDs e idHotel antes de liberar la operación; una contradicción va a DLQ sin desbloquear otra venta.
 
 Bienvenida tiene idHotel=null porque el cliente es global. Restituir no acepta cantidades/precios del emisor: inventory usa su movimiento original, o crea lápida si no existe.
 

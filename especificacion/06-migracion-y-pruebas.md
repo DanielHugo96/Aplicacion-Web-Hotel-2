@@ -46,7 +46,7 @@ Para demo desde cero: Flyway + seeds limpios. Para conservar datos reales del mo
 3. Crear nuevas DB vacías. Migrar IDs y snapshots; todos los datos originales son sede1 salvo mapeo explícito aprobado. Sedes2/3 son demo, no se inventa reparto de historia.
 4. Importar identity; validar hashes BCrypt, requerir reset seguro para credenciales incompatibles. No transformar claves desconocidas en cuentas con password común.
 5. Importar hotel y catálogo. Habitaciones OCUPADO necesitan recepción activa consistente; gate OCUPADA se importa en reception. Físico LISTA no equivale a libre. Estado legacy MANTENIMIENTO se conserva bloqueado hasta revisión.
-6. Importar inventory, sales y reception preservando referencias por ID sin FKs entre DB. Ventas previas válidas se marcan CONFIRMADA, estado de pago original; no generar descuentos retrospectivos (stock ya los refleja).
+6. Importar inventory, sales y reception preservando referencias por ID sin FKs entre DB. Ventas previas válidas se marcan CONFIRMADA, estado de pago original; no generar descuentos retrospectivos (stock ya los refleja). Ventas PAGADAS exigen paid_at verificable: si el origen no tiene fecha de pago, no sustituirla por fecha de creación. Esa historia queda en el legado de solo lectura hasta conciliación aprobada; no se importa a reportes de ingreso por día con fechas inventadas.
 7. Para venta heredada no existe movimiento inventario demostrable: no permitir anulación automática; marcar origen=LEGACY y bloquear restitución hasta conciliación. El schema de sales ya define origen=NUEVA/LEGACY; importar con LEGACY. No improvisar movimientos.
 8. Copiar estados de limpieza/bloqueos de manera conservadora y correlacionada. Crear ciclos/tareas iniciales para limpieza pendiente, no desbloquear por importar LISTA.
 9. Bootstrap snapshots y watermarks con tráfico congelado. Cargar reporting, publicar estado inicial y establecer checkpoints/inbox; procesar proyecciones receptoras.
@@ -79,6 +79,8 @@ Rollback ANTES de nuevas escrituras: restaurar rutas al monolito preservado. DES
 | SEC04 | C cambia idRecepcion ajena en carrito/ventas | 404 |
 | SEC05 | Token humano llama /internal/stock/descontar | 403/no ruta Gateway |
 | SEC06 | JWT algoritmo/issuer/aud incorrectos | 401 en cada servicio |
+| SEC07 | Dos ADMIN se degradan/inactivan simultáneamente por PUT/DELETE | Queda al menos un ADMIN activo con credenciales; uno recibe409 |
+| SEC08 | Angular hace preflight con If-Match/Idempotency-Key | Orígenes permitidos aceptados; ETag/Location/Retry-After legibles; origen ajeno no permitido |
 | LP01 | Visitar4 endpoints públicos sin token | 200, solo DTO públicos |
 | LP02 | Buscar disponibilidad futura o datos de huésped en LP | No existe funcionalidad/ningún dato privado |
 | CRUD01 | Crear/editar/listar/dar de baja maestros | DB persistida y UI refleja todos los verbos |
@@ -86,21 +88,32 @@ Rollback ANTES de nuevas escrituras: restaurar rutas al monolito preservado. DES
 | OCC02 | Check-in y bloqueo mantenimiento simultáneos | Solo una admisión válida |
 | CLN01 | Pausar Rabbit, cerrar y reintentar check-in | 409 hasta ciclo de limpieza correcto |
 | CLN02 | Repetir comando limpieza / evento viejo | No reabrir tarea ni liberar ciclo actual |
+| CLN03 | HabitacionLista llega antes de SalidaRegistrada, o después de otro check-in | Reporte reconcilia ciclo sin liberar ocupación posterior; comparar versiones del mismo origen |
+| OCC03 | Reintentar blockId rechazado después de quedar habitación libre | Sigue409; nueva intención usa nuevo blockId |
+| OCC04 | Dar de baja padre y crear/reactivar habitación concurrentemente | No queda habitación activa bajo padre inactivo |
 | STK01 | Dos ventas15 sobre stock20 | Una confirmada; stock5 |
 | STK02 | Multítem, una línea insuficiente | Ningún descuento parcial |
 | STK03 | Repetir venta misma clave | Mismo id y un débito |
 | STK04 | Restituir antes de débito tardío | Lápida rechaza débito, stock intacto |
 | STK05 | Timeout después de débito + reconciliador | Estado terminal consistente, sin confirmar tras compensar |
+| STK06 | Timeout de admisión, finalizar llega primero y luego respuesta de admitir | Lápida con tipo completo; CAS impide iniciar débito tardío |
+| STK07 | Worker cae tras DEBITO_SOLICITADO, antes o después de HTTP | Misma compensación segura en ambos casos, no liberar antes de RESTITUIDO |
 | PAY01 | C solicita estado PAGADO o precio reducido | 403/400, no cobro/precio adulterado |
 | PAY02 | DELETE venta ya PAGADA | 409, historial intacto |
 | OUT01 | Venta admitida compite con cierre | Cierre409, no consumo después de cierre |
 | OUT02 | Sales confirma cierre y reception cae | Reintento mismo closureId, un receipt y una salida |
-| OUT03 | Penalidad/total incorrecto | 409, no pago confirmado |
+| OUT03 | Penalidad/total incorrecto | 409, no pago confirmado; cierre RECHAZADO conservado |
+| OUT04 | Cerrar estadía sin ventas | Receipt con totales0 de consumos y sede correcta; cierre normal |
+| OUT05 | Crash en VALIDANDO / CONFIRMANDO / después de receipt | Solo VALIDANDO recalcula; CONFIRMANDO reenvía payload congelado; un cobro/salida |
+| OUT06 | Acortar estadía con precio nuevo menor que adelanto | 409 sin alterar precio ni adelanto |
 | MSG01 | Broker caído luego de commit | Outbox recupera, efecto se procesa una vez |
 | MSG02 | Duplicados y orden invertido | Inbox/version/ciclo mantienen invariantes |
 | REP01 | Pago directo y posterior cierre | Ingreso no duplicado |
 | REP02 | Rebuild con snapshots+eventos | Mismos totales y claves |
+| REP03 | Bootstrap de demo sin ventas/estadías y topics vacíos | LISTO al cumplir manifiesto/watermarks, sin esperar mensajes inexistentes |
 | NOT01 | SMTP caído o comando repetido | Negocio no bloqueado; un job, retries acotados |
+| NOT02 | Expira lease y responde tarde el worker anterior | Su token no modifica el nuevo trabajo; duplicado SMTP sigue siendo limitación explícita |
+| NOT03 | Retención elimina destinatario/variables de ENVIADA | CHECK permite purga y conserva hash/estado; no purgar jobs pendientes |
 
 ## 6. Doble validación antes de implementar y antes de entregar
 

@@ -38,9 +38,9 @@ Login:401 genérico sin distinguir correo ausente/clave inválida,429 tras5 inte
 
 Login correo y clave requeridos. Clave de registro/cambio12–72 bytes UTF-8 (límite BCrypt), nunca truncar silenciosamente.
 
-Registro: `{tipoDocumento,documento,nombre,apellido,correo,clave}`, todos requeridos. PersonaAlta mismos campos + idTipoPersona y sedes[]; clave opcional solo para cliente presencial sin cuenta; ADMIN/EMPLEADO requieren clave. PersonaUpdate: `{nombre,apellido,correo,fotoUrl?,idTipoPersona,sedes,estado}`; no cambiar documento ni contraseña por ese DTO. Perfil: `{nombre,apellido,fotoUrl?}`. Foto URL de origen permitido; no descarga de URL arbitraria por backend.
+Registro: `{tipoDocumento,documento,nombre,apellido,correo,clave}`, todos requeridos. PersonaAlta mismos campos + idTipoPersona y sedes[]; clave opcional solo para cliente presencial sin cuenta; ADMIN/EMPLEADO requieren clave. PersonaUpdate: `{nombre,apellido,correo,fotoUrl?,idTipoPersona,sedes,estado}`; no cambiar documento ni contraseña por ese DTO. Perfil: `{nombre,apellido,fotoUrl?}`. Tanto PUT como DELETE impiden quitar/desactivar al último ADMIN activo. Promoción a personal exige clave_hash existente; un cliente presencial sin credenciales devuelve409 STAFF_CREDENTIAL_REQUIRED. EMPLEADO requiere al menos una sede; CLIENTE sedes=[]; ADMIN sedes=[] significa alcance global. Foto URL de origen permitido; no descarga de URL arbitraria por backend.
 
-TipoPersona: `{idTipoPersona,descripcion,codigo,estado,version}`. Campos con límites de BD.
+TipoPersona: `{idTipoPersona,descripcion,codigo,estado,version}`. codigo es ADMIN/EMPLEADO/CLIENTE y no cambia; estado de estos tres roles permanece true. tipoPersona en Persona/Auth es el nombre canónico Administrador/Empleado/Cliente derivado del código, no la descripcion editable. Campos con límites de BD.
 
 ## Respuestas data
 

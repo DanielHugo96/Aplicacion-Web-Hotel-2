@@ -5,6 +5,7 @@
 No rutas de negocio externas, ni login propio, ni endpoint “enviar correo”. Gateway no enruta a este servicio. Angular no lo consume.
 
 Endpoints técnicos internos:
+
 - GET /actuator/health/liveness:200 UP o503; red privada, sin datos sensibles.
 - GET /actuator/health/readiness:200 si DB y Rabbit están disponibles; SMTP degradado se muestra al operador sin bloquear todo el negocio.
 No se habilita /actuator/prometheus en el MVP; operación mediante logs estructurados y health internos.
@@ -14,6 +15,7 @@ Estos endpoints no sustituyen una API pública ni requieren BD adicional. No POS
 ## RabbitMQ
 
 Consume solamente:
+
 1. notificacion.bienvenida → plantilla BIENVENIDA.
 2. notificacion.checkin → plantilla CHECKIN.
 3. notificacion.checkout → plantilla CHECKOUT.

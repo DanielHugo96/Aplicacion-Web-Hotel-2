@@ -1,4 +1,4 @@
-# Especificación del hotel — v1
+# Especificación del hotel — v1.1
 
 ## Leer en este orden
 
@@ -9,6 +9,7 @@
 5. [Mensajería](05-mensajeria.md): todos los topics, colas, consumidores y envelopes.
 6. [Migración y aceptación](06-migracion-y-pruebas.md): diferencias del monolito, secuencia y pruebas.
 7. [Infraestructura](infraestructura/gateway-eureka-docker.md): rutas del Gateway, Eureka, puertos y configuración.
+8. [Revisión y arranque](07-revision-y-arranque.md): incoherencias corregidas, validación realizada y primer incremento.
 
 ## Documento por microservicio
 
@@ -42,8 +43,8 @@ No se implementan reservas futuras, pasarela de pago, facturación fiscal, fidel
 
 ## Fuentes y trazabilidad
 
-Código inspeccionado: controllers/DTO del backend, POM, package.json Angular y `database/01_schema.sql`, `02_procedures.sql`, `03_reports.sql`, `seed.sql`. Hallazgos y cambios están en migración.
+Código inspeccionado en el [repositorio del monolito](https://github.com/DevJuanP/Aplicacion-Web-Hotel--2/tree/c10af777cc166319a7dff26eb9efd8cd09f60096), no incluido aún en este repositorio de documentación: controllers/DTO del backend, POM, package.json Angular y `database/01_schema.sql`, `02_procedures.sql`, `03_reports.sql`, `seed.sql`. Hallazgos y cambios están en migración.
 
 La guía académica requiere Spring Data/MVC/Security/Lombok, Angular, login con BCrypt y CRUD persistente. La división y los brokers son decisiones de este proyecto; no se presentan como requisitos textuales de la rúbrica. La entrega del informe y sustentación sigue siendo un trabajo separado de esta especificación.
 
-Referencias técnicas: [compatibilidad Spring Cloud](https://github.com/spring-cloud/spring-cloud-release/wiki/Supported-Versions), [Feign](https://docs.spring.io/spring-cloud-openfeign/reference/spring-cloud-openfeign.html), [JWT Resource Server](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html), [índices parciales PostgreSQL](https://www.postgresql.org/docs/current/indexes-partial.html), [entrega fiable RabbitMQ](https://www.rabbitmq.com/docs/reliability).
+Referencias técnicas: [compatibilidad Spring Cloud](https://github.com/spring-cloud/spring-cloud-release/wiki/Supported-Versions), [Feign](https://docs.spring.io/spring-cloud-openfeign/reference/spring-cloud-openfeign.html), [JWT Resource Server](https://docs.spring.io/spring-security/reference/servlet/oauth2/resource-server/jwt.html), [índices parciales PostgreSQL](https://www.postgresql.org/docs/current/indexes-partial.html), [entrega fiable RabbitMQ](https://www.rabbitmq.com/docs/reliability), [locks PostgreSQL](https://www.postgresql.org/docs/current/explicit-locking.html), [CORS en Spring WebFlux](https://docs.spring.io/spring-framework/reference/web/webflux-cors.html).

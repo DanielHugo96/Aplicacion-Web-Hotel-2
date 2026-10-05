@@ -4,12 +4,13 @@
 
 Un repositorio y PRs por funcionalidad completa; cada servicio mantiene build, migraciones, imagen y despliegue independientes. Evita coordinar varios repositorios para un equipo académico.
 
-Estructura objetivo, para crear durante la implementación; hoy se conserva el monolito en sus carpetas actuales:
+Estructura objetivo para la implementación. Este repositorio contiene hoy la especificación y los planes; el monolito se conserva en el repositorio de referencia indicado en ESPECIFICACION.md:
 
 ```text
 /
   ESPECIFICACION.md
-  docs/especificacion/
+  especificacion/
+  plans/                   planes de trabajo existentes
   apps/
     admin-web/             Angular: panel y área privada de cliente
     public-web/            Angular: landing y catálogo público
@@ -94,7 +95,7 @@ La base de datos de un servicio solo la modifica ese servicio. Un PostgreSQL loc
 
 PEN, `numeric(12,2)`/BigDecimal; nunca double. Precios de catálogo finales de demostración; no se modelan impuestos ni comprobantes fiscales. Fechas operativas en America/Lima; timestamps con offset ISO-8601 y almacenamiento timestamptz UTC.
 
-Alojamiento: noches = max(1, días entre fechaEntrada y fechaSalida prevista); tarifa guardada al check-in; precioInicial = noches × tarifa. Extender fechaSalida antes del cierre recalcula el alojamiento con esa tarifa. Penalidad manual explícita y auditada, nunca inferida de un monto arbitrario del cliente.
+Alojamiento: noches = max(1, días entre fechaEntrada y fechaSalida prevista); tarifa guardada al check-in; precioInicial = noches × tarifa. Cambiar fechaSalida antes del cierre recalcula el alojamiento con esa tarifa; se rechaza una reducción que deje precioInicial por debajo del adelanto. Penalidad manual explícita y auditada, nunca inferida de un monto arbitrario del cliente.
 
 Adelanto entre 0 y precioInicial, registrado en check-in. Al cerrar: saldoAlojamiento = precioInicial + costoPenalidad - adelanto; saldoConsumos = ventas CONFIRMADAS/PENDIENTE; cobroAhora = suma. Los consumos ya PAGADOS no se cobran otra vez. Persistir cierreId y desglose. Total histórico de alojamiento = adelanto + cobroAlojamientoFinal, separado de consumo.
 

@@ -51,10 +51,10 @@ Un pago/anulación confirmado requiere operación de recepción admitida para ev
 
 | Método/ruta | Caller | Entrada | data |
 |---|---|---|---|
-| GET /internal/cierres/{idRecepcion}/resumen | reception,cierres:write | idRecepcion | 200 {idRecepcion,idHotel,totalPendiente,totalPagado,ventasPendientes:[id],hayOperacionesAbiertas} |
+| GET /internal/cierres/{idRecepcion}/resumen | reception,cierres:write | idRecepcion + query idHotel obligatorio | 200 {idRecepcion,idHotel,totalPendiente,totalPagado,ventasPendientes:[id],hayOperacionesAbiertas} |
 | POST /internal/cierres/confirmar | reception,cierres:write | {closureId,idRecepcion,idHotel,expectedPendingTotal} | 200 Receipt |
 
-Idempotency-Key=closureId. Receipt `{closureId,idRecepcion,idHotel,totalPagadoPrevio,totalPagadoAhora,totalConsumos,ventasPagadas:[id],confirmedAt}`. Una recepción tiene un solo cierre de consumo. Mismo cierre/request retorna receipt; otro cierre para misma recepción409. Rechazar expectedPendingTotal distinto y no mutar.
+Idempotency-Key=closureId. Receipt `{closureId,idRecepcion,idHotel,totalPagadoPrevio,totalPagadoAhora,totalConsumos,ventasPagadas:[id],confirmedAt}`. Una recepción tiene un solo cierre de consumo. Mismo cierre/request retorna receipt ANTES de recalcular ventas ahora pagadas; otro cierre para misma recepción409. Si no hay receipt, rechazar expectedPendingTotal distinto sin mutar. Cero ventas devuelve totales0 y permite receipt de importe0: idHotel procede del caller reception y debe coincidir con cualquier fila existente. Resumen excluye ventas no admitidas; una operación admitida aún no terminal devuelve409.
 
 No contar ventas técnicas PENDIENTE sin admisión: no llegaron a modificar inventario. Una venta admitida no terminal hace409; recepción normalmente ya impide llegar aquí por el gate de operaciones. Sales confía solo en caller reception autenticado para el cierre; el usuario no puede invocar esta API directamente.
 
@@ -74,7 +74,7 @@ Consume inventory.movimiento.v1 para compensaciones. Consume reception.recepcion
 
 ## Rabbit
 
-Produce stock.restituir y recepcion.operacion-finalizar. Este último tras estado terminal, incluida RECHAZADA aunque la admisión pudiera no haber llegado. Tras PAGO_REGISTRADO se refiere al operationId del pago, no al de alta.
+Produce stock.restituir y recepcion.operacion-finalizar. Este último incluye tipo=VENTA/PAGO/ANULACION, tras estado terminal persistido de la operación, incluida RECHAZADA aunque la admisión pudiera no haber llegado. Tras PAGO_REGISTRADO se refiere al operationId del pago, no al de alta.
 
 No consume Rabbit. Todas las publicaciones mediante outbox con clave estable. Ver [flujos](../../04-flujos.md) para CAS y lápidas.
 

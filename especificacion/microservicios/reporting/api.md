@@ -16,7 +16,7 @@ inicio/fin ISO-8601 con offset, inicio<fin, intervalo semiabierto [inicio,fin), 
 
 idHotel requerido en los primeros4; en dashboard opcional solo A para consolidado; E debe escoger sede asignada. Filtro omitido no convierte a E en lector global.
 
-meta adicional `{updatedAt,consistency:"EVENTUAL",degraded,bootstrapComplete}`; updatedAt=min(checkpoints de topics requeridos con timestamp de ingestión), no “hora exacta del dato origen”. Un topic sin tráfico reciente no prueba atraso; degraded refleja errores/DLT/desconexión conocidos. Nunca prometer frescura absoluta.
+meta adicional `{updatedAt,consistency:"EVENTUAL",degraded,bootstrapComplete}`; updatedAt=min(checkpoints de topics requeridos con timestamp de ingestión), no “hora exacta del dato origen”. Particiones vacías reciben checkpoint durante bootstrap; bootstrapComplete sale de projection_bootstrap, no de la presencia de ventas. Un topic sin tráfico reciente no prueba atraso; degraded refleja errores/DLT/desconexión conocidos. Nunca prometer frescura absoluta.
 
 Sin bootstrap completo:503 REPORTING_NOT_READY. Con DLT/error:200 con degraded=true y advertencia visible, o503 si proyección no utilizable; umbral5min sin conexión activa declara no utilizable. Sin filas, data[]; no404.
 

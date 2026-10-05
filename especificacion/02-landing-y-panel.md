@@ -36,7 +36,7 @@ Texto de tarifa: “Desde S/ 70.00 por noche. Consulta disponibilidad con recepc
 
 | Función | ADMIN | EMPLEADO | CLIENTE |
 |---|---|---|---|
-| Crear personal / roles / asignar sedes | Sí | No | No |
+| Crear personal / asignar roles existentes y sedes | Sí | No | No |
 | Crear y buscar clientes | Sí | Sí, tipo Cliente únicamente | Solo registro propio / perfil propio |
 | Configurar sedes, pisos, categorías, habitaciones | Sí | Leer sedes asignadas | No |
 | Completar limpieza | Sí | Sí, sede asignada | No |
