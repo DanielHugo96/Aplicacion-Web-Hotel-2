@@ -1,0 +1,387 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "Hotel — Arquitectura objetivo microservicios",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "ruta-principal",
+        "label": "Ruta principal de solicitud",
+        "focus": [
+          "webapps",
+          "gateway",
+          "reception",
+          "hotel",
+          "postgres"
+        ],
+        "note": "Del panel y landing al Gateway y a recepcion y hotel hasta su BD propia."
+      },
+      {
+        "id": "eventos-comandos",
+        "label": "Eventos y comandos",
+        "focus": [
+          "reception",
+          "sales",
+          "brokers",
+          "reporting",
+          "notification"
+        ],
+        "note": "Hechos Kafka a reporting y comandos RabbitMQ a hotel, inventory y notificacion."
+      },
+      {
+        "id": "identidad-datos",
+        "label": "Identidad y datos",
+        "focus": [
+          "gateway",
+          "identity",
+          "postgres",
+          "brokers"
+        ],
+        "note": "JWT de identity validado en Gateway con siete BDs logicas separadas."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "webapps",
+      "type": "frontend",
+      "label": "Apps Angular",
+      "sublabel": "public-web :4300 + admin-web :4200",
+      "pos": [
+        380,
+        24
+      ],
+      "size": [
+        160,
+        52
+      ]
+    },
+    {
+      "id": "gateway",
+      "type": "cloud",
+      "label": "API Gateway",
+      "sublabel": "Spring Cloud Gateway :8080",
+      "pos": [
+        380,
+        140
+      ],
+      "size": [
+        160,
+        52
+      ]
+    },
+    {
+      "id": "identity",
+      "type": "backend",
+      "label": "identity-service",
+      "sublabel": "personas, roles, JWT :8081",
+      "pos": [
+        40,
+        310
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "hotel",
+      "type": "backend",
+      "label": "hotel-service",
+      "sublabel": "sedes y habitaciones :8082",
+      "pos": [
+        210,
+        286
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "reception",
+      "type": "backend",
+      "label": "reception-service",
+      "sublabel": "estadias y bloqueos :8083",
+      "pos": [
+        380,
+        310
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "inventory",
+      "type": "backend",
+      "label": "inventory-service",
+      "sublabel": "productos y stock :8084",
+      "pos": [
+        550,
+        310
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "sales",
+      "type": "backend",
+      "label": "sales-service",
+      "sublabel": "carrito y ventas :8085",
+      "pos": [
+        720,
+        310
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "reporting",
+      "type": "backend",
+      "label": "reporting-service",
+      "sublabel": "proyecciones :8086",
+      "pos": [
+        890,
+        310
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "notification",
+      "type": "backend",
+      "label": "notification-service",
+      "sublabel": "correo worker :8087",
+      "pos": [
+        36,
+        452
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "discovery",
+      "type": "cloud",
+      "label": "Discovery Server",
+      "sublabel": "Eureka :8761 interno",
+      "pos": [
+        210,
+        452
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "7 BDs logicas Flyway",
+      "pos": [
+        550,
+        452
+      ],
+      "size": [
+        150,
+        52
+      ]
+    },
+    {
+      "id": "brokers",
+      "type": "messagebus",
+      "label": "Brokers",
+      "sublabel": "Kafka KRaft + RabbitMQ",
+      "pos": [
+        890,
+        452
+      ],
+      "size": [
+        150,
+        52
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Docker Compose: red backend privada",
+      "wraps": [
+        "gateway",
+        "discovery",
+        "identity",
+        "hotel",
+        "reception",
+        "inventory",
+        "sales",
+        "reporting",
+        "notification",
+        "postgres",
+        "brokers"
+      ]
+    },
+    {
+      "kind": "security-group",
+      "label": "JWT + CORS allowlist",
+      "wraps": [
+        "gateway",
+        "identity"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "apps-to-gateway",
+      "from": "webapps",
+      "to": "gateway",
+      "label": "HTTPS",
+      "variant": "emphasis",
+      "labelAt": [
+        460,
+        110
+      ]
+    },
+    {
+      "id": "gw-to-identity",
+      "from": "gateway",
+      "to": "identity",
+      "label": "/api/auth/**",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "gw-to-hotel",
+      "from": "gateway",
+      "to": "hotel",
+      "label": "/api/hotel/**"
+    },
+    {
+      "id": "gw-to-reception",
+      "from": "gateway",
+      "to": "reception",
+      "label": "/api/recepcion/**",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        455,
+        290
+      ]
+    },
+    {
+      "id": "gw-to-sales",
+      "from": "gateway",
+      "to": "sales",
+      "label": "/api/venta/**",
+      "fromSide": "bottom",
+      "toSide": "top"
+    },
+    {
+      "id": "gw-to-inventory",
+      "from": "gateway",
+      "to": "inventory",
+      "label": "/api/producto/**",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        625,
+        290
+      ]
+    },
+    {
+      "id": "gw-to-reporting",
+      "from": "gateway",
+      "to": "reporting",
+      "label": "/api/reportes/**",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "labelAt": [
+        965,
+        290
+      ]
+    },
+    {
+      "id": "reception-to-hotel",
+      "from": "reception",
+      "to": "hotel",
+      "label": "limpieza.solicitada",
+      "labelAt": [
+        375,
+        402
+      ]
+    },
+    {
+      "id": "reception-to-brokers",
+      "from": "reception",
+      "to": "brokers",
+      "variant": "dashed",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "id": "sales-to-brokers",
+      "from": "sales",
+      "to": "brokers",
+      "variant": "dashed"
+    },
+    {
+      "id": "brokers-to-reporting",
+      "from": "brokers",
+      "to": "reporting"
+    },
+    {
+      "id": "brokers-to-notification",
+      "from": "brokers",
+      "to": "notification",
+      "fromSide": "bottom",
+      "toSide": "bottom"
+    },
+    {
+      "id": "inventory-to-postgres",
+      "from": "inventory",
+      "to": "postgres"
+    },
+    {
+      "id": "hotel-to-discovery",
+      "from": "hotel",
+      "to": "discovery",
+      "variant": "dashed"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Borde",
+      "items": [
+        "Gateway :8080 rutas explicitas: auth, hotel, recepcion, producto, venta, reportes",
+        "CORS allowlist, JWT aud hotel-api, rate limit demo"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Aplicacion",
+      "items": [
+        "Java 21, Boot 3.5.x, Cloud 2025.0.x, Feign + Eureka :8761",
+        "Kafka hechos confirmados, RabbitMQ comandos dirigidos",
+        "Reception decide ocupacion, sales cobra, inventory descuenta"
+      ]
+    },
+    {
+      "dot": "amber",
+      "title": "Datos",
+      "items": [
+        "Flyway por servicio, ddl-auto validate, seeds demo",
+        "Mailpit SMTP :1025 y UI :8025, correo no revierte negocio"
+      ]
+    }
+  ]
+}
