@@ -74,7 +74,7 @@ Logs estructurados incluyen service,correlationId,eventId/commandId cuando apliq
 
 Las siguientes son tareas de implementación, no comandos ya disponibles:
 
-1. Fijar patches compatibles Boot3.5/Cloud2025.0 y Node compatible con Angular21.
+1. Fijar patches compatibles Boot4.1/Cloud2025.1 y Node compatible con Angular22.
 2. Crear Dockerfile multi-stage por servicio y frontend; lockfiles e imágenes con tag fijo/digest.
 3. Compose valida configuración sin secretos en Git.
 4. Migraciones + seed de catálogos y datos ficticios.

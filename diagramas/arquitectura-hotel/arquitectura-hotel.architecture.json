@@ -370,7 +370,7 @@
       "dot": "emerald",
       "title": "Aplicacion",
       "items": [
-        "Java 21, Boot 3.5.x, Cloud 2025.0.x, Feign + Eureka :8761",
+        "Java 25, Boot 4.1.x, Cloud 2025.1.x, Feign + Eureka :8761",
         "Kafka hechos confirmados, RabbitMQ comandos dirigidos",
         "Reception decide ocupacion, sales cobra, inventory descuenta"
       ]

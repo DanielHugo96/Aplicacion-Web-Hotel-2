@@ -6,7 +6,7 @@ Referencia: commit `c10af777cc166319a7dff26eb9efd8cd09f60096`. No se utilizó el
 
 | Hallazgo en monolito | Decisión objetivo |
 |---|---|
-| Boot3.5.0/Java21, Angular21, PostgreSQL | Mantener familias; al implementar fijar patches compatibles y lockfiles |
+| Boot3.5.0/Java21, Angular21, PostgreSQL | Migrar familias a Boot4.1.x/Java25, Angular22, PostgreSQL18; al implementar fijar patches compatibles y lockfiles |
 | Seguridad permite /api/persona/** y producto sin roles suficientes | Default deny, DTO separados, roles/sede/propietario por servicio |
 | Registrar persona acepta idTipoPersona del request | Registro público específico solo CLIENTE; creación de personal solo ADMIN |
 | DTO Persona tiene clave, mapper de salida inspeccionado no la asigna | No afirmar fuga de hash observada; retirar campo del DTO de salida y probarlo |
