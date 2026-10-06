@@ -65,11 +65,11 @@ La base de datos de un servicio solo la modifica ese servicio. Un PostgreSQL loc
 
 ## 4. Stack
 
-- Conservar Java 21, Spring Boot 3.5.x y Angular 21 del proyecto. No migrar simultáneamente a Boot 4.
-- Spring Cloud release train 2025.0.x, compatible con Boot 3.5.x según la tabla oficial. OpenFeign + LoadBalancer, Eureka, Gateway, Security Resource Server.
+- Java 25 (LTS vigente), Spring Boot 4.1.x y Angular 22. Se abandona Boot 3.5.x por fin de soporte OSS (30-jun-2026); Boot 4.1 es la línea con soporte hasta jul-2027. Prever la guía de migración Boot 3→4 (JUnit 6, Spring Framework 7); el monolito de referencia queda en 3.5.x.
+- Spring Cloud release train 2025.1.x (Oakwood), compatible con Boot 4.0.x/4.1.x según la tabla oficial; 2025.0.x está EOL. OpenFeign + LoadBalancer, Eureka, Gateway, Security Resource Server.
 - Maven Wrapper y package-lock para reproducibilidad. Elegir y fijar los parches compatibles al crear los builds; no usar versiones flotantes ni `latest` en la entrega.
-- PostgreSQL, JPA para CRUD sencillo, Flyway para schema/funciones/procedimientos. `ddl-auto=validate`; no `update`.
-- Kafka en KRaft, un nodo para desarrollo; RabbitMQ con management; Mailpit para correos de demo.
+- PostgreSQL 18 (imagen pineada `postgres:18`), JPA para CRUD sencillo, Flyway para schema/funciones/procedimientos. `ddl-auto=validate`; no `update`.
+- Kafka 4.x en KRaft (solo KRaft desde 4.0), un nodo para desarrollo; RabbitMQ 4.3.x con management; Mailpit para correos de demo. Pinear tags de imagen, no `latest`.
 - Docker Compose: sí. Infraestructura en contenedores desde el inicio; Java/Angular en IDE durante desarrollo; perfil completo en contenedores para demostración.
 - Sin Kubernetes, service mesh, Redis, Debezium ni servidor de configuración en el MVP.
 
