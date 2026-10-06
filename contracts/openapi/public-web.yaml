@@ -1,0 +1,363 @@
+openapi: 3.1.0
+info:
+  title: Hotel public-web — contrato LP con backend
+  version: 1.0.0
+  description: >-
+    Landing pública vía Gateway. Solo lectura, sin token.
+    Fuentes: especificacion/02-landing-y-panel.md y microservicios/hotel/api.md.
+    Base externa local http://localhost:8080. Cache public,max-age=60. Sin fechas
+    ni disponibilidad garantizada. Texto tarifa obligatorio con disclaimer.
+servers:
+  - url: http://localhost:8080
+    description: API Gateway local
+tags:
+  - name: publico
+    description: Catálogo público de sedes y categorías
+paths:
+  /api/public/hoteles:
+    get:
+      tags: [publico]
+      summary: Listar sedes publicadas
+      operationId: listarHotelesPublicos
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Lista pública de hoteles
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public,max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListHotelPublico'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idHotel: 1
+                    slug: lima-centro
+                    nombre: Hotel Demo Lima Centro
+                    descripcion: Sede de demostración
+                    direccion: Dirección de demostración
+                    ciudad: Lima
+                    telefono: '+51 900 000 001'
+                    correoContacto: contacto@hotel.test
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 3
+                  correlationId: 11111111-1111-4111-8111-111111111111
+  /api/public/hoteles/{slug}:
+    get:
+      tags: [publico]
+      summary: Detalle público de sede
+      operationId: detalleHotelPublico
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[a-z0-9-]+$'
+          example: lima-centro
+      responses:
+        '200':
+          description: Hotel público
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public,max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiHotelPublico'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/public/hoteles/{slug}/categorias:
+    get:
+      tags: [publico]
+      summary: Tipos de habitación por sede
+      operationId: listarCategoriasPublicas
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          example: lima-centro
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: capacidad
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+      responses:
+        '200':
+          description: Categorías con habitaciones publicadas
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public,max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListCategoriaPublica'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/public/hoteles/{slug}/categorias/{idCategoria}:
+    get:
+      tags: [publico]
+      summary: Detalle de tipo/categoría
+      operationId: detalleCategoriaPublica
+      security: []
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+          example: lima-centro
+        - name: idCategoria
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+          example: 2
+      responses:
+        '200':
+          description: Categoría pública con precioDesde y galería curada
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: public,max-age=60
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiCategoriaPublica'
+              example:
+                success: true
+                message: OK
+                data:
+                  idCategoria: 2
+                  descripcion: Doble
+                  detalle: Habitación doble de demostración
+                  capacidad: 2
+                  precioDesde: 100.00
+                  moneda: PEN
+                  imagenes:
+                    - url: /assets/demo/hab-102-1.jpg
+                      alt: Habitación de demostración
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+  responses:
+    NotFound:
+      description: Inexistente, inactivo u oculto (hotel/categoría sin publicadas)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+  schemas:
+    ImagenPublica:
+      type: object
+      required: [url, alt]
+      properties:
+        url:
+          type: string
+          description: https allowlist o /assets/
+          example: /assets/demo/hab-102-1.jpg
+        alt:
+          type: string
+          example: Habitación de demostración
+    HotelPublico:
+      type: object
+      required: [idHotel, slug, nombre, descripcion, direccion, ciudad, telefono, correoContacto]
+      properties:
+        idHotel:
+          type: integer
+          minimum: 1
+        slug:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        direccion:
+          type: string
+        ciudad:
+          type: string
+        telefono:
+          type: string
+        correoContacto:
+          type: string
+          format: email
+    CategoriaPublica:
+      type: object
+      required: [idCategoria, descripcion, detalle, capacidad, precioDesde, moneda, imagenes]
+      properties:
+        idCategoria:
+          type: integer
+        descripcion:
+          type: string
+        detalle:
+          type: string
+        capacidad:
+          type: integer
+          minimum: 1
+          maximum: 10
+        precioDesde:
+          type: number
+          format: double
+          minimum: 0
+          example: 100.00
+        moneda:
+          type: string
+          const: PEN
+        imagenes:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/ImagenPublica'
+    MetaPage:
+      type: object
+      required: [page, size, totalElements]
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        correlationId:
+          type: string
+          format: uuid
+    MetaSingle:
+      type: object
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+    ApiListHotelPublico:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/HotelPublico'
+        meta:
+          $ref: '#/components/schemas/MetaPage'
+    ApiHotelPublico:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/HotelPublico'
+        meta:
+          $ref: '#/components/schemas/MetaSingle'
+    ApiListCategoriaPublica:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoriaPublica'
+        meta:
+          $ref: '#/components/schemas/MetaPage'
+    ApiCategoriaPublica:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/CategoriaPublica'
+        meta:
+          $ref: '#/components/schemas/MetaSingle'
+    ApiError:
+      type: object
+      required: [success, message, data, error, meta]
+      properties:
+        success:
+          type: boolean
+          const: false
+        message:
+          type: string
+        data:
+          type: 'null'
+        error:
+          type: object
+          required: [code, fields]
+          properties:
+            code:
+              type: string
+              example: NOT_FOUND
+            fields:
+              type: object
+        meta:
+          $ref: '#/components/schemas/MetaSingle'
