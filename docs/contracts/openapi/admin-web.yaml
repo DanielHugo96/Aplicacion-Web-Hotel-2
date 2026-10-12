@@ -1,14 +1,23 @@
 openapi: 3.1.0
 info:
   title: Hotel admin-web — contrato panel con backend
-  version: 1.0.0
+  version: 1.1.0
   description: >-
     Panel privado vía Gateway (http://localhost:8080). Roles ADMIN/EMPLEADO/CLIENTE
     por JWT (iss=hotel-identity, aud=hotel-api, TTL 15min). Deny-by-default.
-    POST/PUT/DELETE de negocio exigen Idempotency-Key. PUT/DELETE con V exigen
+    POST/PUT/DELETE de negocio exigen Idempotency-Key; PUT/DELETE con V exigen
     If-Match. L=page/size, H=idHotel, V=versión. CLIENTE nunca llama /api/producto/**
-    directo (usa /api/venta/catalogo). Fuentes: 02-landing-y-panel.md,
-    03-contrato-comun.md, microservicios/*/api.md, gateway-eureka-docker.md.
+    directo (usa /api/venta/catalogo). Catálogo único de errores (error.code,
+    mensaje para UI y acción esperada) en docs/contracts/errors.md. La UI presenta
+    formatos es-PE: montos S/ 1,234.50 y fechas dd/MM/yyyy HH:mm. En cobros,
+    montoRecibido es el pago manual recibido AHORA (incluye el consumo pendiente;
+    no es el total histórico) y medioPago es obligatorio. POST
+    /api/recepcion/{id}/anular-checkin corrige un check-in errado sin cobro. Las
+    bajas/bloqueos de habitación responden 200 cuando el bloqueo se admite y el
+    cambio local se aplica en el request, y 202 cuando la operación queda
+    PREPARANDO para polling. Fuentes: 02-landing-y-panel.md, 03-contrato-comun.md,
+    microservicios/*/api.md y base-de-datos.md, contracts/errors.md,
+    gateway-eureka-docker.md.
 servers:
   - url: http://localhost:8080
     description: API Gateway local
@@ -114,7 +123,14 @@ paths:
     put:
       tags: [auth]
       summary: Cambiar contraseña
+      description: >-
+        Verifica la contraseña vigente con BCrypt. El body contiene credenciales:
+        el request_hash de idempotencia se calcula con HMAC y la clave nunca se
+        guarda en payloads de idempotencia; un reintento devuelve el resultado
+        terminal original.
       operationId: cambiarPassword
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -128,6 +144,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiNull'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
   /api/auth/social:
     post:
       tags: [auth]
@@ -151,11 +171,13 @@ paths:
         - $ref: '#/components/parameters/Size'
         - name: idTipoPersona
           in: query
-          schema: {type: integer}
+          required: false
+          schema: {type: integer, minimum: 1}
         - name: documento
           in: query
+          required: false
           description: Obligatorio para EMPLEADO (búsqueda exacta)
-          schema: {type: string}
+          schema: {type: string, maxLength: 20}
       responses:
         '200':
           description: Persona[]
@@ -254,11 +276,11 @@ paths:
       operationId: listarTipos
       responses:
         '200':
-          description: TipoPersona[]
+          description: TipoPersona[] (catálogo fijo ADMIN/EMPLEADO/CLIENTE)
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListTipoPersona'
   /api/tipopersona/buscar/{id}:
     get:
       tags: [personas]
@@ -272,7 +294,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiTipoPersona'
   /api/tipopersona/actualizar/{id}:
     put:
       tags: [personas]
@@ -288,6 +310,7 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [descripcion]
               properties:
                 descripcion: {type: string, minLength: 1, maxLength: 80}
@@ -297,7 +320,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiTipoPersona'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   # ---------- HOTEL ----------
   /api/hotel/listar:
@@ -314,7 +339,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListHotel'
   /api/hotel/buscar/{id}:
     get:
       tags: [hoteles]
@@ -328,7 +353,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiHotel'
         '404':
           $ref: '#/components/responses/NotFound'
   /api/hotel/registrar:
@@ -350,7 +375,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiHotel'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/hotel/actualizar/{id}:
     put:
       tags: [hoteles]
@@ -372,7 +399,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiHotel'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/hotel/eliminar/{id}:
     delete:
       tags: [hoteles]
@@ -388,7 +417,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiHotel'
         '409':
           $ref: '#/components/responses/Conflict'
   /api/piso/listar:
@@ -406,7 +435,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListPiso'
   /api/piso/buscar/{id}:
     get:
       tags: [hoteles]
@@ -420,7 +449,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiPiso'
   /api/piso/registrar:
     post:
       tags: [hoteles]
@@ -434,17 +463,20 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [idHotel, descripcion]
               properties:
                 idHotel: {type: integer, minimum: 1}
-                descripcion: {type: string}
+                descripcion: {type: string, minLength: 1, maxLength: 80}
       responses:
         '201':
           description: Piso
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiPiso'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/piso/actualizar/{id}:
     put:
       tags: [hoteles]
@@ -460,13 +492,18 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
+              required: [descripcion, estado]
+              properties:
+                descripcion: {type: string, minLength: 1, maxLength: 80}
+                estado: {type: boolean}
       responses:
         '200':
           description: Piso
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiPiso'
   /api/piso/eliminar/{id}:
     delete:
       tags: [hoteles]
@@ -482,7 +519,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiPiso'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/categoria/listar:
     get:
       tags: [hoteles]
@@ -497,7 +536,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListCategoria'
   /api/categoria/buscar/{id}:
     get:
       tags: [hoteles]
@@ -511,7 +550,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiCategoria'
   /api/categoria/registrar:
     post:
       tags: [hoteles]
@@ -531,7 +570,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiCategoria'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/categoria/actualizar/{id}:
     put:
       tags: [hoteles]
@@ -553,7 +594,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiCategoria'
   /api/categoria/eliminar/{id}:
     delete:
       tags: [hoteles]
@@ -569,7 +610,9 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiCategoria'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/habitacion/listar:
     get:
       tags: [hoteles]
@@ -581,14 +624,15 @@ paths:
         - $ref: '#/components/parameters/IdHotelQuery'
         - name: idCategoria
           in: query
-          schema: {type: integer}
+          required: false
+          schema: {type: integer, minimum: 1}
       responses:
         '200':
           description: Habitacion[]
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListHabitacion'
   /api/habitacion/buscar/{id}:
     get:
       tags: [hoteles]
@@ -623,6 +667,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiHabitacion'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/habitacion/actualizar/{id}:
     put:
       tags: [hoteles]
@@ -645,10 +691,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiHabitacion'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/habitacion/eliminar/{id}:
     delete:
       tags: [hoteles]
-      summary: Baja habitación (A, V; puede 202 con blockId)
+      summary: Baja habitación (A, V; 200 terminal o 202 PREPARANDO)
+      description: >-
+        200: reception admitió el bloqueo (gate BLOQUEADA) y hotel aplicó el
+        cambio local (CAS PREPARANDO → APLICADA) dentro del request; respuesta
+        terminal con Habitacion + blockId. 202: la operación quedó persistida
+        PREPARANDO porque la admisión no se confirmó en el request (timeout, 503,
+        ROOM_NOT_SYNCED); el cliente consulta GET
+        /api/habitacion/operaciones/{blockId} y no debe reintentar la baja. 409:
+        reception rechazó por gate OCUPADA/LIMPIEZA_PENDIENTE con rechazo durable
+        por blockId; otra intención usa otro blockId.
       operationId: eliminarHabitacion
       parameters:
         - $ref: '#/components/parameters/IdPath'
@@ -656,17 +713,39 @@ paths:
         - $ref: '#/components/parameters/IfMatch'
       responses:
         '200':
-          description: Baja
+          description: >-
+            = admisión del bloqueo y cambio local aplicado en el request;
+            respuesta terminal con Habitacion (blockId de la operación vigente).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiHabitacion'
         '202':
           $ref: '#/components/responses/AcceptedOp'
+        '409':
+          description: >-
+            Rechazo durable del gate (GATE_NOT_AVAILABLE, ROOM_OPERATION_IN_PROGRESS);
+            no se admite después con el mismo blockId aunque la habitación quede libre.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /api/habitacion/{id}/mantenimiento:
     post:
       tags: [hoteles]
-      summary: Iniciar mantenimiento (A, V)
+      summary: Iniciar mantenimiento (A, V; 200 terminal o 202 PREPARANDO)
+      description: >-
+        200: reception admitió el bloqueo (gate BLOQUEADA) y hotel aplicó el
+        cambio local (CAS PREPARANDO → APLICADA) dentro del request; respuesta
+        terminal con Habitacion + blockId. 202: la operación quedó persistida
+        PREPARANDO porque la admisión no se confirmó en el request (timeout, 503,
+        ROOM_NOT_SYNCED); el cliente consulta GET
+        /api/habitacion/operaciones/{blockId}. 409: reception rechazó por gate
+        OCUPADA/LIMPIEZA_PENDIENTE con rechazo durable por blockId.
       operationId: iniciarMantenimiento
       parameters:
         - $ref: '#/components/parameters/IdPath'
@@ -678,20 +757,33 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [motivo]
               properties:
                 motivo: {type: string, minLength: 1, maxLength: 300}
       responses:
         '200':
-          description: Operación con blockId
+          description: >-
+            Admisión del bloqueo y cambio local aplicado en el request
+            (Habitacion con blockId de la operación vigente).
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiHabitacion'
         '202':
           $ref: '#/components/responses/AcceptedOp'
         '409':
-          $ref: '#/components/responses/Conflict'
+          description: >-
+            Rechazo durable del gate (GATE_NOT_AVAILABLE, ROOM_OPERATION_IN_PROGRESS);
+            no se admite después con el mismo blockId aunque la habitación quede libre.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /api/habitacion/{id}/mantenimiento-completado:
     put:
       tags: [hoteles]
@@ -707,6 +799,7 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [blockId]
               properties:
                 blockId: {type: string, format: uuid}
@@ -732,6 +825,7 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [blockId]
               properties:
                 blockId: {type: string, format: uuid}
@@ -754,11 +848,11 @@ paths:
           schema: {type: string, format: uuid}
       responses:
         '200':
-          description: '{blockId,idHabitacion,tipo,estado}'
+          description: OperacionHabitacion (blockId,idHabitacion,tipo,estado)
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiOperacionHabitacion'
   /api/habitacion/limpiezas:
     get:
       tags: [hoteles]
@@ -768,6 +862,7 @@ paths:
         - $ref: '#/components/parameters/IdHotelQuery'
         - name: estado
           in: query
+          required: false
           schema: {type: string, enum: [PENDIENTE, COMPLETADA]}
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
@@ -777,7 +872,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListLimpieza'
   /api/habitacion/{id}/limpieza-completada:
     put:
       tags: [hoteles]
@@ -793,6 +888,7 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [cleaningCycleId]
               properties:
                 cleaningCycleId: {type: string, format: uuid}
@@ -802,7 +898,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiLimpiezaResultado'
   /api/estadohabitacion/listar:
     get:
       tags: [hoteles]
@@ -814,7 +910,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListEstadoFisico'
   /api/estadohabitacion/buscar/{id}:
     get:
       tags: [hoteles]
@@ -828,7 +924,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiEstadoFisico'
   /api/estadohabitacion/actualizar/{id}:
     put:
       tags: [hoteles]
@@ -844,16 +940,19 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [descripcion]
               properties:
-                descripcion: {type: string}
+                descripcion: {type: string, minLength: 1, maxLength: 80}
       responses:
         '200':
           description: EstadoFisico
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiEstadoFisico'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   # ---------- RECEPCION ----------
   /api/recepcion/listar:
@@ -867,6 +966,7 @@ paths:
         - $ref: '#/components/parameters/IdHotelQuery'
         - name: estadoEstadia
           in: query
+          required: false
           schema: {type: string, enum: [ACTIVA, CERRANDO, CERRADA]}
       responses:
         '200':
@@ -874,7 +974,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListRecepcion'
   /api/recepcion/{id}:
     get:
       tags: [recepcion]
@@ -900,23 +1000,25 @@ paths:
         - name: idCliente
           in: path
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
         - name: estadoEstadia
           in: query
-          schema: {type: string}
+          required: false
+          schema: {type: string, enum: [ACTIVA, CERRANDO, CERRADA]}
         - name: idHotel
           in: query
+          required: false
           description: Requerido para EMPLEADO (filtro sede)
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
       responses:
         '200':
           description: Recepcion[]
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListRecepcion'
   /api/recepcion/habitacion-activa/{idHabitacion}:
     get:
       tags: [recepcion]
@@ -926,14 +1028,14 @@ paths:
         - name: idHabitacion
           in: path
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
       responses:
         '200':
           description: Recepcion o data=null
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiRecepcionOrNull'
   /api/recepcion/registrar:
     post:
       tags: [recepcion]
@@ -953,6 +1055,7 @@ paths:
               idHabitacion: 101
               fechaSalida: 2026-10-05
               adelanto: 20.00
+              medioPago: EFECTIVO
               observacion: Ingreso presencial
       responses:
         '201':
@@ -980,6 +1083,8 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
+              required: [fechaSalida]
               properties:
                 fechaSalida: {type: string, format: date}
                 observacion: {type: string, maxLength: 500}
@@ -990,6 +1095,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiRecepcion'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/recepcion/{id}/cotizacion-salida:
     get:
       tags: [recepcion]
@@ -999,7 +1106,8 @@ paths:
         - $ref: '#/components/parameters/IdPath'
         - name: costoPenalidad
           in: query
-          schema: {type: number, minimum: 0, default: 0}
+          required: false
+          schema: {type: number, multipleOf: 0.01, minimum: 0, default: 0}
       responses:
         '200':
           description: Cotizacion
@@ -1011,6 +1119,13 @@ paths:
     post:
       tags: [recepcion]
       summary: Cierre (A/E; 200 cerrada o 202 CERRANDO)
+      description: >-
+        montoRecibido es el pago manual recibido AHORA (etiqueta de panel “Monto
+        recibido ahora”) e incluye el consumo pendiente; no es el total histórico.
+        El backend verifica contra el cálculo estable y compara de forma exacta:
+        cualquier diferencia, aunque sea 0.01, devuelve 409 AMOUNT_MISMATCH con la
+        nueva cotización y el closureId. costoPenalidad 0..precioInicial y si es
+        > 0 exige motivoPenalidad 1..300. medioPago es obligatorio en cada cobro.
       operationId: checkout
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
@@ -1024,7 +1139,8 @@ paths:
               idRecepcion: 1001
               idHabitacion: 101
               costoPenalidad: 0.00
-              totalPagado: 57.00
+              montoRecibido: 57.00
+              medioPago: EFECTIVO
       responses:
         '200':
           description: Recepcion CERRADA
@@ -1036,6 +1152,62 @@ paths:
           $ref: '#/components/responses/AcceptedOp'
         '409':
           $ref: '#/components/responses/Conflict'
+  /api/recepcion/{id}/anular-checkin:
+    post:
+      tags: [recepcion]
+      summary: Anular check-in errado (A, V; 200 CERRADA archivada)
+      description: >-
+        Corrige una estadía ACTIVA creada por error. Admisible solo si está
+        ACTIVA, sin ventas admitidas ni cierre en curso. Hace CAS ACTIVA →
+        CERRADA con archivada=true, libera room_gate a LIBRE con roomVersion++
+        (sin limpieza ni notificación de checkout), publica RecepcionActualizada
+        y audita en audit_log. No genera receipt ni cobro. Con operaciones
+        ABIERTAS responde 409 OPERATIONS_IN_PROGRESS; con cierre vigente 409
+        CLOSURE_IN_PROGRESS. Requiere motivo 1..300, If-Match e Idempotency-Key;
+        el mismo Idempotency-Key devuelve el resultado terminal.
+      operationId: anularCheckin
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [motivo]
+              properties:
+                motivo: {type: string, minLength: 1, maxLength: 300}
+      responses:
+        '200':
+          description: Recepcion CERRADA archivada sin cobro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiRecepcion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >-
+            OPERATIONS_IN_PROGRESS si hay operaciones de consumo ABIERTAS;
+            CLOSURE_IN_PROGRESS si existe cierre vigente; STAY_NOT_ACTIVE si la
+            estadía no está ACTIVA. El rechazo no cambia nada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
   /api/recepcion/eliminar/{id}:
     delete:
       tags: [recepcion]
@@ -1069,7 +1241,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListProducto'
   /api/producto/buscar/{id}:
     get:
       tags: [productos]
@@ -1105,6 +1277,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiProducto'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/producto/actualizar/{id}:
     put:
       tags: [productos]
@@ -1158,10 +1332,11 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [idHotel, precio, cantidadInicial, umbralBajo]
               properties:
-                idHotel: {type: integer}
-                precio: {type: number, exclusiveMinimum: 0}
+                idHotel: {type: integer, minimum: 1}
+                precio: {type: number, multipleOf: 0.01, exclusiveMinimum: 0}
                 cantidadInicial: {type: integer, minimum: 0}
                 umbralBajo: {type: integer, minimum: 0}
       responses:
@@ -1171,6 +1346,8 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiProducto'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /api/producto/{id}/ajustes:
     post:
       tags: [productos]
@@ -1186,18 +1363,19 @@ paths:
           application/json:
             schema:
               type: object
+              additionalProperties: false
               required: [idHotel, delta, motivo]
               properties:
-                idHotel: {type: integer}
+                idHotel: {type: integer, minimum: 1}
                 delta: {type: integer, not: {const: 0}}
                 motivo: {type: string, minLength: 1, maxLength: 300}
       responses:
         '201':
-          description: '{ajusteId,cantidad,version}'
+          description: '{ajusteId, cantidad, version: nueva version de producto_sede}'
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiAjusteResultado'
   /api/producto/{id}/movimientos:
     get:
       tags: [productos]
@@ -1210,17 +1388,19 @@ paths:
         - $ref: '#/components/parameters/Size'
         - name: inicio
           in: query
+          required: false
           schema: {type: string, format: date-time}
         - name: fin
           in: query
+          required: false
           schema: {type: string, format: date-time}
       responses:
         '200':
-          description: Movimiento[] (VENTA/AJUSTE)
+          description: Movimiento[] (unión discriminada VENTA/AJUSTE)
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListMovimiento'
 
   # ---------- VENTAS / CARRITO (sales) ----------
   /api/venta/catalogo:
@@ -1232,16 +1412,16 @@ paths:
         - name: idRecepcion
           in: query
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
-          description: Producto[] de la sede
+          description: Producto[] de la sede (precio autoritativo de inventory)
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListProducto'
         '503':
           $ref: '#/components/responses/Unavailable'
   /api/carrito/agregar:
@@ -1254,11 +1434,11 @@ paths:
         - name: idRecepcion
           in: query
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
         - name: idProducto
           in: query
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
         - name: cantidad
           in: query
           required: true
@@ -1279,14 +1459,14 @@ paths:
         - name: idRecepcion
           in: path
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
       responses:
         '200':
           description: CarritoItem[]
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListCarritoItem'
   /api/carrito/eliminar:
     delete:
       tags: [ventas]
@@ -1296,11 +1476,12 @@ paths:
         - name: idRecepcion
           in: query
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
         - name: idProducto
           in: query
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
+        - $ref: '#/components/parameters/IdempotencyKey'
       responses:
         '204':
           description: Sin contenido
@@ -1315,9 +1496,11 @@ paths:
         - $ref: '#/components/parameters/IdHotelQuery'
         - name: estado
           in: query
+          required: false
           schema: {type: string, enum: [PENDIENTE, PAGADO]}
         - name: estadoOperacion
           in: query
+          required: false
           schema: {type: string, enum: [PENDIENTE, CONFIRMADA, RECHAZADA, CANCELACION_PENDIENTE, CANCELADA]}
       responses:
         '200':
@@ -1325,7 +1508,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListVenta'
     post:
       tags: [ventas]
       summary: Crear venta (A/E/C; C solo PENDIENTE; sin precios)
@@ -1378,7 +1561,7 @@ paths:
         - name: idRecepcion
           in: path
           required: true
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
       responses:
@@ -1387,7 +1570,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListVenta'
   /api/venta/{id}:
     put:
       tags: [ventas]
@@ -1403,9 +1586,17 @@ paths:
           application/json:
             schema:
               type: object
-              required: [estado]
+              additionalProperties: false
+              required: [estado, medioPago]
               properties:
                 estado: {type: string, const: PAGADO}
+                medioPago:
+                  type: string
+                  enum: [EFECTIVO, TARJETA, OTRO]
+                  description: Obligatorio al registrar cada cobro; queda en la venta y en el reporte de cobros.
+              example:
+                estado: PAGADO
+                medioPago: EFECTIVO
       responses:
         '200':
           description: Venta PAGADO
@@ -1454,11 +1645,11 @@ paths:
           schema: {type: string, format: uuid}
       responses:
         '200':
-          description: '{operationId,idVenta,tipo,estado,estadoOperacion}'
+          description: OperacionVenta (operationId,idVenta,tipo,estado,estadoOperacion)
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiOperacionVenta'
 
   # ---------- REPORTES (sin CLIENTE) ----------
   /api/reportes/productos-bajo-stock:
@@ -1470,20 +1661,27 @@ paths:
         - $ref: '#/components/parameters/IdHotelQuery'
         - name: limite
           in: query
+          required: false
           schema: {type: integer, minimum: 0, default: 5}
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
-          description: '{idProducto,nombreProducto,cantidad,precio,estado}[] + meta EVENTUAL'
+          description: ReporteBajoStockRow[] + meta EVENTUAL
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListReporteBajoStock'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /api/reportes/ventas:
     get:
       tags: [reportes]
-      summary: Ventas agregadas por paid_at (solo CONFIRMADA/PAGADO)
+      summary: Ventas agregadas por paid_at (solo PAGADO)
+      description: >-
+        Agrega por producto SOLO las ventas con estado PAGADO según paid_at en
+        [inicio, fin): las CONFIRMADA impagas no cuentan como ingreso y cada pago
+        se cuenta una sola vez. inicio/fin con offset, inicio<fin, máximo 366 días.
       operationId: repVentas
       parameters:
         - $ref: '#/components/parameters/IdHotelQuery'
@@ -1493,11 +1691,13 @@ paths:
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
-          description: Reporte ventas
+          description: ReporteVentasRow[] + meta EVENTUAL
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListReporteVentas'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /api/reportes/ocupacion:
     get:
       tags: [reportes]
@@ -1511,11 +1711,13 @@ paths:
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
-          description: Reporte ocupación
+          description: ReporteOcupacionRow[] + meta EVENTUAL
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListReporteOcupacion'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /api/reportes/cobros:
     get:
       tags: [reportes]
@@ -1529,11 +1731,13 @@ paths:
         - $ref: '#/components/parameters/Size'
       responses:
         '200':
-          description: Reporte cobros
+          description: ReporteCobrosRow[] + meta EVENTUAL
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiListReporteCobros'
+        '503':
+          $ref: '#/components/responses/Unavailable'
   /api/reportes/dashboard:
     get:
       tags: [reportes]
@@ -1543,14 +1747,14 @@ paths:
         - name: idHotel
           in: query
           required: false
-          schema: {type: integer}
+          schema: {type: integer, minimum: 1}
       responses:
         '200':
-          description: '{habitacionesOcupadas,habitacionesDisponibles,productosBajoStock,ingresosHoy,moneda:PEN}'
+          description: Dashboard + meta EVENTUAL
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/ApiReporteDashboard'
               example:
                 success: true
                 message: OK
@@ -1574,48 +1778,66 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
+      description: >-
+        JWT humano RS256 de identity (iss=hotel-identity, aud=hotel-api,
+        TTL 15min) con claim sedes para A/E y sub para CLIENTE.
   parameters:
     Page:
       name: page
       in: query
+      required: false
+      description: Página L base 0.
       schema: {type: integer, minimum: 0, default: 0}
     Size:
       name: size
       in: query
+      required: false
+      description: Tamaño de página L entre 1 y 100.
       schema: {type: integer, minimum: 1, maximum: 100, default: 20}
     IdPath:
       name: id
       in: path
       required: true
+      description: Identificador comercial del recurso.
       schema: {type: integer, minimum: 1}
     IdHotelQuery:
       name: idHotel
       in: query
       required: true
+      description: Sede H; E solo puede operar en sus sedes asignadas.
       schema: {type: integer, minimum: 1}
     Inicio:
       name: inicio
       in: query
       required: true
+      description: Inicio del intervalo [inicio, fin) en ISO-8601 con offset.
       schema: {type: string, format: date-time}
     Fin:
       name: fin
       in: query
       required: true
+      description: Fin exclusivo del intervalo [inicio, fin) en ISO-8601 con offset.
       schema: {type: string, format: date-time}
     IdempotencyKey:
       name: Idempotency-Key
       in: header
       required: true
+      description: >-
+        UUID obligatorio en POST/PUT/DELETE de negocio (salvo login/token/social);
+        el mismo valor al reintentar. Misma clave con request distinto devuelve
+        409 IDEMPOTENCY_CONFLICT.
       schema: {type: string, format: uuid}
     IfMatch:
       name: If-Match
       in: header
       required: true
+      description: >-
+        Versión V del recurso entre comillas, por ejemplo "1"; ausente 428,
+        distinta 412.
       schema: {type: string}
   responses:
     BadRequest:
-      description: 400 validación/formato
+      description: 400 validación/formato, JSON cerrado o campo calculado enviado por el cliente.
       content:
         application/json:
           schema: {$ref: '#/components/schemas/ApiError'}
@@ -1658,16 +1880,19 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/ApiError'}
     AcceptedOp:
-      description: 202 operación en curso (polling Location + Retry-After)
+      description: >-
+        202: operación durable aceptada y aún en curso (PREPARANDO/CERRANDO); el
+        cliente hace polling en Location según Retry-After y no reinicia la
+        intención.
       headers:
         Location:
-          schema: {type: string}
+          schema: {type: string, example: /api/habitacion/operaciones/33333333-3333-4333-8333-333333333333}
         Retry-After:
           schema: {type: integer, example: 2}
       content:
         application/json:
           schema:
-            type: object
+            $ref: '#/components/schemas/ApiSingleOperationRef'
     Unavailable:
       description: 503 dependencia no disponible
       headers:
@@ -1677,98 +1902,175 @@ components:
         application/json:
           schema: {$ref: '#/components/schemas/ApiError'}
   schemas:
+    ApiMetaSingle:
+      type: object
+      description: Meta de respuesta única; correlationId lo propaga el Gateway.
+      required: [correlationId]
+      properties:
+        correlationId: {type: string, format: uuid, example: 11111111-1111-4111-8111-111111111111}
+    ApiMetaPage:
+      type: object
+      description: Meta de listas paginadas; page/size/totalElements obligatorios.
+      required: [page, size, totalElements, correlationId]
+      properties:
+        page: {type: integer, minimum: 0, example: 0}
+        size: {type: integer, minimum: 0, example: 20}
+        totalElements: {type: integer, minimum: 0, example: 2}
+        correlationId: {type: string, format: uuid, example: 11111111-1111-4111-8111-111111111111}
+    ApiMetaReporte:
+      type: object
+      description: >-
+        Meta de reportes con consistencia EVENTUAL. updatedAt es el mínimo
+        checkpoint con timestamp de ingestión de los topics requeridos (no la
+        hora exacta del dato origen) y puede ser null mientras las particiones
+        estén vacías. En listas añade page, size y totalElements.
+      required: [consistency, degraded, bootstrapComplete]
+      properties:
+        updatedAt: {type: [string, 'null'], format: date-time}
+        consistency: {type: string, const: EVENTUAL}
+        degraded:
+          type: boolean
+          description: >-
+            true refleja errores/DLT/desconexión conocidos; la UI muestra la
+            advertencia aunque la respuesta sea 200.
+        bootstrapComplete:
+          type: boolean
+          description: true = projection_bootstrap en LISTO con manifest cumplido.
+        correlationId: {type: string, format: uuid}
+        page: {type: integer, minimum: 0}
+        size: {type: integer, minimum: 1}
+        totalElements: {type: integer, minimum: 0}
     ApiError:
       type: object
       required: [success, message, data, error, meta]
       properties:
         success: {type: boolean, const: false}
-        message: {type: string}
+        message: {type: string, example: Revisa los datos marcados.}
         data: {type: 'null'}
         error:
           type: object
           required: [code, fields]
           properties:
-            code: {type: string}
-            fields: {type: object}
-        meta:
-          type: object
-          properties:
-            correlationId: {type: string, format: uuid}
+            code: {type: string, example: ROOM_OCCUPIED}
+            fields:
+              type: object
+              additionalProperties: {type: string}
+              example: {idHabitacion: '101'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
     ApiNull:
       type: object
       required: [success, message, data, meta]
       properties:
         success: {type: boolean, const: true}
-        message: {type: string}
+        message: {type: string, example: OK}
         data: {type: 'null'}
-        meta: {type: object}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
     Login:
       type: object
+      additionalProperties: false
       required: [correo, clave]
       properties:
-        correo: {type: string, format: email}
-        clave: {type: string, minLength: 1}
+        correo: {type: string, format: email, maxLength: 254}
+        clave: {type: string, minLength: 1, description: Entrada del usuario; nunca se registra ni se responde.}
     Registro:
       type: object
+      additionalProperties: false
       required: [tipoDocumento, documento, nombre, apellido, correo, clave]
       properties:
         tipoDocumento: {type: string, enum: [DNI, PASAPORTE, CE]}
-        documento: {type: string}
-        nombre: {type: string}
-        apellido: {type: string}
-        correo: {type: string, format: email}
-        clave: {type: string, minLength: 12, maxLength: 72}
+        documento: {type: string, maxLength: 20}
+        nombre: {type: string, maxLength: 100}
+        apellido: {type: string, maxLength: 100}
+        correo: {type: string, format: email, maxLength: 254}
+        clave:
+          type: string
+          description: "12–72 bytes UTF-8 (límite BCrypt); la validación exacta se hace en backend (BCrypt) y frontend (TextEncoder)"
+          x-minBytes: 12
+          x-maxBytes: 72
     PersonaAlta:
       type: object
+      additionalProperties: false
       required: [tipoDocumento, documento, nombre, apellido, correo]
       properties:
         tipoDocumento: {type: string, enum: [DNI, PASAPORTE, CE]}
-        documento: {type: string}
-        nombre: {type: string}
-        apellido: {type: string}
-        correo: {type: string, format: email}
-        clave: {type: string}
-        idTipoPersona: {type: integer}
-        sedes: {type: array, items: {type: integer}}
+        documento: {type: string, maxLength: 20}
+        nombre: {type: string, maxLength: 100}
+        apellido: {type: string, maxLength: 100}
+        correo: {type: string, format: email, maxLength: 254}
+        clave:
+          type: string
+          description: >-
+            Opcional solo para cliente presencial sin cuenta; obligatoria si
+            idTipoPersona es ADMIN/EMPLEADO. 12–72 bytes UTF-8 (límite BCrypt);
+            la validación exacta se hace en backend (BCrypt) y frontend
+            (TextEncoder)
+          x-minBytes: 12
+          x-maxBytes: 72
+        idTipoPersona: {type: integer, minimum: 1}
+        sedes: {type: array, items: {type: integer, minimum: 1}}
     PersonaUpdate:
       type: object
+      additionalProperties: false
       properties:
-        nombre: {type: string}
-        apellido: {type: string}
-        correo: {type: string, format: email}
-        fotoUrl: {type: string}
-        idTipoPersona: {type: integer}
-        sedes: {type: array, items: {type: integer}}
+        nombre: {type: string, maxLength: 100}
+        apellido: {type: string, maxLength: 100}
+        correo: {type: string, format: email, maxLength: 254}
+        fotoUrl: {type: [string, 'null'], maxLength: 500}
+        idTipoPersona: {type: integer, minimum: 1}
+        sedes: {type: array, items: {type: integer, minimum: 1}}
         estado: {type: boolean}
     Perfil:
       type: object
+      additionalProperties: false
       properties:
-        nombre: {type: string}
-        apellido: {type: string}
-        fotoUrl: {type: string}
+        nombre: {type: string, maxLength: 100}
+        apellido: {type: string, maxLength: 100}
+        fotoUrl: {type: [string, 'null'], maxLength: 500}
     PasswordChange:
       type: object
+      additionalProperties: false
       required: [claveActual, claveNueva]
       properties:
-        claveActual: {type: string}
-        claveNueva: {type: string, minLength: 12, maxLength: 72}
+        claveActual: {type: string, description: 'Clave vigente, write-only; se verifica con BCrypt matches, nunca en SQL.'}
+        claveNueva:
+          type: string
+          description: "12–72 bytes UTF-8 (límite BCrypt); la validación exacta se hace en backend (BCrypt) y frontend (TextEncoder)"
+          x-minBytes: 12
+          x-maxBytes: 72
     Persona:
       type: object
-      required: [idPersona, tipoDocumento, documento, nombre, apellido, correo, idTipoPersona, tipoPersona, sedes, estado, fechaCreacion, version]
+      description: >-
+        Persona; tipoPersona es el nombre canónico Administrador/Empleado/Cliente
+        derivado del código del rol, no la descripcion editable. Nunca se
+        responde clave ni claveHash.
+      required: [idPersona, tipoDocumento, documento, nombre, apellido, correo, fotoUrl, idTipoPersona, tipoPersona, sedes, estado, fechaCreacion, version]
       properties:
-        idPersona: {type: integer}
-        tipoDocumento: {type: string}
-        documento: {type: string}
-        nombre: {type: string}
-        apellido: {type: string}
-        correo: {type: string}
-        fotoUrl: {type: string, nullable: true}
-        idTipoPersona: {type: integer}
-        tipoPersona: {type: string, enum: [Administrador, Empleado, Cliente]}
-        sedes: {type: array, items: {type: integer}}
-        estado: {type: boolean}
-        fechaCreacion: {type: string, format: date-time}
-        version: {type: integer, minimum: 1}
+        idPersona: {type: integer, minimum: 1, example: 100}
+        tipoDocumento: {type: string, enum: [DNI, PASAPORTE, CE]}
+        documento: {type: string, maxLength: 20, example: '90000100'}
+        nombre: {type: string, maxLength: 100, example: Cliente}
+        apellido: {type: string, maxLength: 100, example: Uno}
+        correo: {type: string, format: email, maxLength: 254, example: cliente.uno@hotel.test}
+        fotoUrl:
+          type: [string, 'null']
+          maxLength: 500
+          description: https allowlist o /assets/; null si no tiene foto.
+        idTipoPersona: {type: integer, minimum: 1, example: 3}
+        tipoPersona: {type: string, enum: [Administrador, Empleado, Cliente], example: Cliente}
+        sedes: {type: array, items: {type: integer, minimum: 1}, example: []}
+        estado: {type: boolean, example: true}
+        fechaCreacion: {type: string, format: date-time, example: '2026-09-01T10:00:00Z'}
+        version: {type: integer, minimum: 1, example: 1}
+    TipoPersona:
+      type: object
+      description: Rol del catálogo fijo; codigo es inmutable y solo descripcion es editable.
+      required: [idTipoPersona, descripcion, codigo, estado, version]
+      properties:
+        idTipoPersona: {type: integer, minimum: 1, example: 3}
+        descripcion: {type: string, maxLength: 80, example: Cliente}
+        codigo: {type: string, enum: [ADMIN, EMPLEADO, CLIENTE], example: CLIENTE}
+        estado: {type: boolean, description: Los tres roles del sistema permanecen activos.}
+        version: {type: integer, minimum: 1, example: 1}
     ApiPersona:
       type: object
       required: [success, message, data, meta]
@@ -1776,7 +2078,7 @@ components:
         success: {type: boolean, const: true}
         message: {type: string}
         data: {$ref: '#/components/schemas/Persona'}
-        meta: {type: object}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
     ApiListPersona:
       type: object
       required: [success, message, data, meta]
@@ -1784,7 +2086,23 @@ components:
         success: {type: boolean, const: true}
         message: {type: string}
         data: {type: array, items: {$ref: '#/components/schemas/Persona'}}
-        meta: {type: object}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    ApiTipoPersona:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/TipoPersona'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListTipoPersona:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/TipoPersona'}}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
     ApiAuth:
       type: object
       required: [success, message, data, meta]
@@ -1798,97 +2116,431 @@ components:
             idPersona: {type: integer}
             nombre: {type: string}
             apellido: {type: string}
-            correo: {type: string}
-            tipoPersona: {type: string}
+            correo: {type: string, format: email, maxLength: 254}
+            tipoPersona: {type: string, enum: [Administrador, Empleado, Cliente]}
             token: {type: string}
             expiresIn: {type: integer, const: 900}
-            sedes: {type: array, items: {type: integer}}
-        meta: {type: object}
+            sedes: {type: array, items: {type: integer, minimum: 1}}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
     HotelInput:
       type: object
+      additionalProperties: false
       required: [slug, nombre, descripcion, direccion, ciudad, telefono, correoContacto, publicado, estado]
       properties:
-        slug: {type: string, pattern: '^[a-z0-9-]+$'}
-        nombre: {type: string}
-        descripcion: {type: string}
-        direccion: {type: string}
-        ciudad: {type: string}
-        telefono: {type: string}
-        correoContacto: {type: string, format: email}
+        slug: {type: string, pattern: '^[a-z0-9-]+$', maxLength: 80, description: UNIQUE; estable tras la publicación.}
+        nombre: {type: string, maxLength: 120}
+        descripcion: {type: string, maxLength: 300}
+        direccion: {type: string, maxLength: 200}
+        ciudad: {type: string, maxLength: 80}
+        telefono: {type: string, maxLength: 20}
+        correoContacto: {type: string, format: email, maxLength: 254}
         publicado: {type: boolean}
         estado: {type: boolean}
+    Hotel:
+      type: object
+      required: [idHotel, slug, nombre, descripcion, direccion, ciudad, telefono, correoContacto, estado, publicado, version]
+      properties:
+        idHotel: {type: integer, minimum: 1, example: 1}
+        slug: {type: string, maxLength: 80, example: lima-centro}
+        nombre: {type: string, maxLength: 120, example: Hotel Demo Lima Centro}
+        descripcion: {type: string, maxLength: 300, example: Sede de demostración}
+        direccion: {type: string, maxLength: 200, example: Dirección de demostración}
+        ciudad: {type: string, maxLength: 80, example: Lima}
+        telefono: {type: string, maxLength: 20, example: '+51 900 000 001'}
+        correoContacto: {type: string, format: email, maxLength: 254, example: contacto@hotel.test}
+        estado: {type: boolean, example: true}
+        publicado: {type: boolean, example: true}
+        version: {type: integer, minimum: 1, example: 1}
+    Piso:
+      type: object
+      required: [idPiso, idHotel, descripcion, estado, version]
+      properties:
+        idPiso: {type: integer, minimum: 1, example: 11}
+        idHotel: {type: integer, minimum: 1, example: 1}
+        descripcion: {type: string, maxLength: 80, example: Primer piso}
+        estado: {type: boolean, example: true}
+        version: {type: integer, minimum: 1, example: 1}
     CategoriaInput:
       type: object
+      additionalProperties: false
       required: [descripcion, detalle, capacidad, estado]
       properties:
-        descripcion: {type: string}
-        detalle: {type: string}
+        descripcion: {type: string, minLength: 1, maxLength: 80, description: 'UNIQUE; la categoría es global, no por sede.'}
+        detalle: {type: string, maxLength: 500}
         capacidad: {type: integer, minimum: 1, maximum: 10}
         estado: {type: boolean}
+    Categoria:
+      type: object
+      required: [idCategoria, descripcion, detalle, capacidad, estado, version]
+      properties:
+        idCategoria: {type: integer, minimum: 1, example: 1}
+        descripcion: {type: string, maxLength: 80, example: Individual}
+        detalle: {type: string, maxLength: 500, example: Habitación individual de demostración}
+        capacidad: {type: integer, minimum: 1, maximum: 10, example: 1}
+        estado: {type: boolean, example: true}
+        version: {type: integer, minimum: 1, example: 1}
+    ImagenHabitacion:
+      type: object
+      additionalProperties: false
+      required: [url, alt, orden]
+      properties:
+        url:
+          type: string
+          maxLength: 500
+          description: https allowlist o /assets/; no file:// ni fetch arbitrario.
+        alt: {type: string, minLength: 1, maxLength: 150}
+        orden: {type: integer, minimum: 0, description: 'UNIQUE(idHabitacion, orden); máximo 10 imágenes.'}
     HabitacionInput:
       type: object
+      additionalProperties: false
       required: [idHotel, numero, idPiso, idCategoria, detalle, precio, publicada, urlsImagenes]
       properties:
-        idHotel: {type: integer}
-        numero: {type: string}
-        idPiso: {type: integer}
-        idCategoria: {type: integer}
-        detalle: {type: string}
-        precio: {type: number, exclusiveMinimum: 0}
+        idHotel: {type: integer, minimum: 1}
+        numero: {type: string, minLength: 1, maxLength: 10, description: 'UNIQUE parcial (idHotel, numero) solo entre activas; reutilizable tras la baja.'}
+        idPiso: {type: integer, minimum: 1, description: Debe pertenecer a la misma sede (FK compuesta).}
+        idCategoria: {type: integer, minimum: 1}
+        detalle: {type: string, maxLength: 500}
+        precio: {type: number, multipleOf: 0.01, exclusiveMinimum: 0}
         publicada: {type: boolean}
-        urlsImagenes:
-          type: array
-          maxItems: 10
-          items:
-            type: object
-            required: [url, alt, orden]
-            properties:
-              url: {type: string}
-              alt: {type: string}
-              orden: {type: integer}
+        urlsImagenes: {type: array, maxItems: 10, items: {$ref: '#/components/schemas/ImagenHabitacion'}}
     HabitacionUpdate:
       type: object
+      additionalProperties: false
       properties:
-        idPiso: {type: integer}
-        idCategoria: {type: integer}
-        detalle: {type: string}
-        precio: {type: number, exclusiveMinimum: 0}
+        idPiso: {type: integer, minimum: 1}
+        idCategoria: {type: integer, minimum: 1}
+        detalle: {type: string, maxLength: 500}
+        precio: {type: number, multipleOf: 0.01, exclusiveMinimum: 0}
         publicada: {type: boolean}
-        urlsImagenes: {type: array, maxItems: 10, items: {type: object}}
+        urlsImagenes: {type: array, maxItems: 10, items: {$ref: '#/components/schemas/ImagenHabitacion'}}
+    Habitacion:
+      type: object
+      description: >-
+        Habitación con catálogo y físico; estado es activo/inactivo (no ocupación).
+        ocupacion puede ser DESCONOCIDA hasta el bootstrap y no se convierte a
+        disponible. blockId/endpoint reflejan la operación administrativa vigente.
+      required: [idHabitacion, idHotel, numero, idPiso, idCategoria, detalle, precio, publicada, estado, idEstadoHabitacion, estadoFisico, ocupacion, blockId, endpoint, version]
+      properties:
+        idHabitacion: {type: integer, minimum: 1, example: 101}
+        idHotel: {type: integer, minimum: 1, example: 1}
+        numero: {type: string, maxLength: 10, example: '101'}
+        idPiso: {type: integer, minimum: 1, example: 11}
+        pisoNombre: {type: string, example: Primer piso}
+        idCategoria: {type: integer, minimum: 1, example: 1}
+        categoriaNombre: {type: string, example: Individual}
+        detalle: {type: string, maxLength: 500, example: Habitación individual de demostración}
+        precio: {type: number, multipleOf: 0.01, minimum: 0, example: 70.00}
+        publicada: {type: boolean, example: true}
+        urlsImagenes: {type: array, maxItems: 10, items: {$ref: '#/components/schemas/ImagenHabitacion'}}
+        estado: {type: boolean, description: Activo/inactivo del catálogo; no es ocupación.}
+        idEstadoHabitacion: {type: integer, minimum: 1, description: '1 LISTA, 2 EN_LIMPIEZA, 3 MANTENIMIENTO.'}
+        estadoFisico: {$ref: '#/components/schemas/EstadoFisico'}
+        ocupacion:
+          type: [object, 'null']
+          description: Proyección informativa de ocupación (reception.recepcion.v1); DESCONOCIDA hasta el bootstrap.
+          required: [estadoEstadia, idRecepcion, updatedAt]
+          properties:
+            estadoEstadia: {type: string, enum: [LIBRE, OCUPADA, DESCONOCIDA], example: LIBRE}
+            idRecepcion: {type: [integer, 'null'], minimum: 1}
+            updatedAt: {type: string, format: date-time}
+        blockId:
+          type: [string, 'null']
+          format: uuid
+          description: Operación vigente MANTENIMIENTO/BAJA mientras no se libere; null si no hay operación.
+        endpoint:
+          type: [string, 'null']
+          description: Ruta relativa de polling de la operación vigente (GET /api/habitacion/operaciones/{blockId}); null si no hay operación.
+        version: {type: integer, minimum: 1, example: 1}
+    EstadoFisico:
+      type: object
+      required: [idEstadoHabitacion, codigo, descripcion, estado, version]
+      properties:
+        idEstadoHabitacion: {type: integer, minimum: 1, example: 1}
+        codigo: {type: string, enum: [LISTA, EN_LIMPIEZA, MANTENIMIENTO], description: Código fijo; no se crean ni eliminan estados.}
+        descripcion: {type: string, maxLength: 80, description: Etiqueta editable por PUT; no cambia la semántica del código.}
+        estado: {type: boolean, example: true}
+        version: {type: integer, minimum: 1, example: 1}
+    Limpieza:
+      type: object
+      required: [cleaningCycleId, idHabitacion, idRecepcion, estado, roomVersion, version]
+      properties:
+        cleaningCycleId: {type: string, format: uuid}
+        idHabitacion: {type: integer, minimum: 1, example: 101}
+        idRecepcion: {type: integer, minimum: 1, example: 1001}
+        estado: {type: string, enum: [PENDIENTE, COMPLETADA]}
+        roomVersion: {type: integer, minimum: 0, description: roomVersion del comando de limpieza (no es hotel.version).}
+        version: {type: integer, minimum: 1, description: Versión de la tarea; es el If-Match de limpieza-completada.}
+    OperacionHabitacion:
+      type: object
+      description: Operación administrativa vigilada por blockId; LIBERADA/RECHAZADA no se reaplican.
+      required: [blockId, idHabitacion, tipo, estado]
+      properties:
+        blockId: {type: string, format: uuid}
+        idHabitacion: {type: integer, minimum: 1, example: 101}
+        tipo: {type: string, enum: [MANTENIMIENTO, BAJA]}
+        estado: {type: string, enum: [PREPARANDO, APLICADA, LIBERADA, RECHAZADA]}
+    LimpiezaResultado:
+      type: object
+      required: [limpieza, habitacion]
+      properties:
+        limpieza: {$ref: '#/components/schemas/Limpieza'}
+        habitacion: {$ref: '#/components/schemas/Habitacion'}
+    ApiHotel:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/Hotel'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListHotel:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/Hotel'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    ApiPiso:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/Piso'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListPiso:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/Piso'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    ApiCategoria:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/Categoria'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListCategoria:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/Categoria'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
     ApiHabitacion:
       type: object
       required: [success, message, data, meta]
       properties:
         success: {type: boolean, const: true}
         message: {type: string}
-        data: {type: object}
-        meta: {type: object}
+        data: {$ref: '#/components/schemas/Habitacion'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListHabitacion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/Habitacion'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    ApiEstadoFisico:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/EstadoFisico'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListEstadoFisico:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/EstadoFisico'}}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListLimpieza:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/Limpieza'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    ApiLimpiezaResultado:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/LimpiezaResultado'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiOperacionHabitacion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/OperacionHabitacion'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
     CheckIn:
       type: object
+      description: >-
+        Alta de estadía inmediata. fechaEntrada la fija el servidor en hoy
+        America/Lima; enviarla o mandar precios/nombre/documento devuelve 400.
+        El cliente debe existir primero en identity.
       required: [idHotel, idCliente, idHabitacion, fechaSalida, adelanto]
+      additionalProperties: false
       properties:
-        idHotel: {type: integer}
-        idCliente: {type: integer}
-        idHabitacion: {type: integer}
-        fechaSalida: {type: string, format: date}
-        adelanto: {type: number, minimum: 0}
+        idHotel: {type: integer, minimum: 1, example: 1}
+        idCliente: {type: integer, minimum: 1, example: 100}
+        idHabitacion: {type: integer, minimum: 1, example: 101}
+        fechaSalida: {type: string, format: date, description: Hoy (America/Lima) o posterior; máximo 365 noches; mínimo de cobro una noche.}
+        adelanto: {type: number, multipleOf: 0.01, minimum: 0, description: No negativo y menor o igual al alojamiento calculado.}
+        medioPago:
+          type: string
+          enum: [EFECTIVO, TARJETA, OTRO]
+          description: Obligatorio si adelanto > 0; sin cobro inicial se omite.
         observacion: {type: string, maxLength: 500}
     Salida:
       type: object
-      required: [idRecepcion, idHabitacion, costoPenalidad, totalPagado]
+      description: >-
+        Cierre solicitado por A/E. montoRecibido es el pago manual recibido AHORA
+        (etiqueta de panel “Monto recibido ahora”) e incluye el consumo pendiente;
+        no es el total histórico; se compara de forma exacta contra cobroAhora
+        (cualquier diferencia, aunque sea 0.01, devuelve 409 AMOUNT_MISMATCH con
+        nueva cotización). costoPenalidad 0..precioInicial y si es > 0 exige
+        motivoPenalidad 1..300.
+      required: [idRecepcion, idHabitacion, costoPenalidad, montoRecibido, medioPago]
+      additionalProperties: false
       properties:
-        idRecepcion: {type: integer}
-        idHabitacion: {type: integer}
-        costoPenalidad: {type: number, minimum: 0}
-        totalPagado: {type: number, minimum: 0}
+        idRecepcion: {type: integer, minimum: 1, example: 1001}
+        idHabitacion: {type: integer, minimum: 1, description: Se valida contra la recepción; nunca se usa para cerrar otra habitación.}
+        costoPenalidad: {type: number, multipleOf: 0.01, minimum: 0, description: Solo A/E; no puede superar precioInicial.}
+        motivoPenalidad: {type: string, minLength: 1, maxLength: 300, description: Obligatorio si costoPenalidad > 0.}
+        montoRecibido: {type: number, multipleOf: 0.01, minimum: 0, description: 'Pago manual recibido AHORA, incluye consumo pendiente; no es el total histórico.'}
+        medioPago: {type: string, enum: [EFECTIVO, TARJETA, OTRO], description: Obligatorio en cada cobro.}
+    Recepcion:
+      type: object
+      description: >-
+        Estadía con snapshots de cliente y habitación. estado es el booleano
+        legacy derivado (true para ACTIVA/CERRANDO; false para CERRADA). vencida
+        es derivado (ACTIVA con fechaSalida < hoy America/Lima) y el gate sigue
+        OCUPADA hasta el cierre normal por A/E. medioPagoAdelanto null equivale a
+        NO_REGISTRADO (histórico migrado). totalPagado es el total histórico del
+        alojamiento (adelanto + cobro final) sin mezclar consumos; el detalle del
+        cierre viaja en cierre.
+      required: [idRecepcion, idHotel, idCliente, idHabitacion, numero, categoriaNombre, pisoNombre, detalleHabitacion, precioHabitacion, nombre, apellido, tipoDocumento, documento, correo, fechaEntrada, fechaSalida, fechaSalidaConfirmacion, precioInicial, adelanto, medioPagoAdelanto, precioRestante, totalPagado, costoPenalidad, motivoPenalidad, observacion, estado, estadoEstadia, archivada, vencida, version, closureId, cleaningCycleId, cierre]
+      properties:
+        idRecepcion: {type: integer, minimum: 1, example: 1001}
+        idHotel: {type: integer, minimum: 1, example: 1}
+        idCliente: {type: integer, minimum: 1, example: 100}
+        idHabitacion: {type: integer, minimum: 1, example: 101}
+        numero: {type: string, maxLength: 10, example: '101'}
+        categoriaNombre: {type: string, maxLength: 80, example: Individual}
+        pisoNombre: {type: string, maxLength: 80, example: Primer piso}
+        detalleHabitacion: {type: string, maxLength: 500, example: Habitación individual de demostración}
+        precioHabitacion: {type: number, multipleOf: 0.01, exclusiveMinimum: 0, description: Tarifa congelada del snapshot de habitación.}
+        nombre: {type: string, maxLength: 100}
+        apellido: {type: string, maxLength: 100}
+        tipoDocumento: {type: string, enum: [DNI, PASAPORTE, CE]}
+        documento: {type: string, maxLength: 20}
+        correo: {type: string, format: email, maxLength: 254}
+        fechaEntrada: {type: string, format: date}
+        fechaSalida: {type: string, format: date}
+        fechaSalidaConfirmacion: {type: [string, 'null'], format: date-time, description: Timestamp del cierre efectivo; null mientras la estadía sigue ACTIVA/CERRANDO.}
+        precioInicial: {type: number, multipleOf: 0.01, minimum: 0, example: 70.00}
+        adelanto: {type: number, multipleOf: 0.01, minimum: 0, example: 20.00}
+        medioPagoAdelanto:
+          type: [string, 'null']
+          enum: [EFECTIVO, TARJETA, OTRO, null]
+          description: null equivale a NO_REGISTRADO (histórico migrado).
+        precioRestante: {type: number, multipleOf: 0.01, minimum: 0, description: Saldo de alojamiento pendiente antes del cierre.}
+        totalPagado: {type: number, multipleOf: 0.01, minimum: 0, description: Total histórico del alojamiento (adelanto + cobro final); no incluye consumos.}
+        costoPenalidad: {type: number, multipleOf: 0.01, minimum: 0}
+        motivoPenalidad: {type: [string, 'null'], maxLength: 300, description: Obligatorio en el cierre cuando costoPenalidad > 0.}
+        observacion: {type: [string, 'null'], maxLength: 500}
+        estado: {type: boolean, description: Booleano legacy derivado; no es el estado de la estadía.}
+        estadoEstadia: {type: string, enum: [ACTIVA, CERRANDO, CERRADA]}
+        archivada: {type: boolean}
+        vencida: {type: boolean, description: Derivado; true cuando está ACTIVA y fechaSalida < hoy en America/Lima.}
+        version: {type: integer, minimum: 1}
+        closureId: {type: [string, 'null'], format: uuid}
+        cleaningCycleId: {type: [string, 'null'], format: uuid}
+        cierre:
+          description: Intento de cierre vigente; null si no hubo intento.
+          oneOf:
+            - $ref: '#/components/schemas/Cierre'
+            - type: 'null'
+    Cierre:
+      type: object
+      description: >-
+        Intento de cierre vigente. estado VALIDANDO/CONFIRMANDO mientras avanza
+        y COMPLETADO/RECHAZADO al terminar; calculo es null hasta congelarse. En
+        COMPLETADO añade medioPago del desglose final.
+      required: [closureId, estado, lastErrorCode, calculo]
+      properties:
+        closureId: {type: string, format: uuid, example: 20000000-0000-4000-8000-000000000002}
+        estado: {type: string, enum: [VALIDANDO, CONFIRMANDO, COMPLETADO, RECHAZADO]}
+        lastErrorCode: {type: [string, 'null'], description: Último código de error recuperable del cierre.}
+        calculo:
+          description: Cálculo congelado antes de invocar a Sales; null en VALIDANDO/RECHAZADO.
+          oneOf:
+            - $ref: '#/components/schemas/CalculoCierre'
+            - type: 'null'
+        medioPago:
+          type: [string, 'null']
+          enum: [EFECTIVO, TARJETA, OTRO, null]
+          description: Medio de pago del cobro final; solo en COMPLETADO. null = NO_REGISTRADO.
+    CalculoCierre:
+      type: object
+      description: >-
+        Cálculo inmutable y congelado antes de invocar a Sales; importes HALF_UP
+        a 2 decimales. cobroAhora = saldoAlojamiento + consumosPendientes.
+      required: [alojamientoTotal, saldoAlojamiento, consumosPagadosAntes, consumosPendientes, consumosTotal, cobroAhora, totalGeneral, expectedPendingTotal]
+      properties:
+        alojamientoTotal: {type: number, multipleOf: 0.01, minimum: 0, example: 70.00}
+        saldoAlojamiento: {type: number, multipleOf: 0.01, minimum: 0, example: 50.00}
+        consumosPagadosAntes: {type: number, multipleOf: 0.01, minimum: 0, example: 0.00}
+        consumosPendientes: {type: number, multipleOf: 0.01, minimum: 0, example: 7.00}
+        consumosTotal: {type: number, multipleOf: 0.01, minimum: 0, example: 7.00}
+        cobroAhora: {type: number, multipleOf: 0.01, minimum: 0, example: 57.00}
+        totalGeneral: {type: number, multipleOf: 0.01, minimum: 0, example: 77.00}
+        expectedPendingTotal: {type: number, multipleOf: 0.01, minimum: 0, description: Congela lo que Sales debe cobrar; el pagado al cerrar pasa a consumosPagadosAlCerrar.}
     ApiRecepcion:
       type: object
       required: [success, message, data, meta]
       properties:
         success: {type: boolean, const: true}
         message: {type: string}
-        data: {type: object}
-        meta: {type: object}
+        data: {$ref: '#/components/schemas/Recepcion'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListRecepcion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/Recepcion'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    ApiRecepcionOrNull:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data:
+          description: Recepcion de la habitación o null si no hay estadía vigente.
+          oneOf:
+            - $ref: '#/components/schemas/Recepcion'
+            - type: 'null'
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
     ApiCotizacion:
       type: object
       required: [success, message, data, meta]
@@ -1897,108 +2549,394 @@ components:
         message: {type: string}
         data:
           type: object
+          description: Cotización informativa; el frontend no recalcula los importes.
           required: [idRecepcion, alojamiento, adelanto, penalidad, saldoAlojamiento, consumosPagados, consumosPendientes, cobroAhora, moneda, calculadoEn]
           properties:
-            idRecepcion: {type: integer}
-            alojamiento: {type: number}
-            adelanto: {type: number}
-            penalidad: {type: number}
-            saldoAlojamiento: {type: number}
-            consumosPagados: {type: number}
-            consumosPendientes: {type: number}
-            cobroAhora: {type: number}
+            idRecepcion: {type: integer, minimum: 1}
+            alojamiento: {type: number, multipleOf: 0.01, minimum: 0}
+            adelanto: {type: number, multipleOf: 0.01, minimum: 0}
+            penalidad: {type: number, multipleOf: 0.01, minimum: 0}
+            saldoAlojamiento: {type: number, multipleOf: 0.01, minimum: 0}
+            consumosPagados: {type: number, multipleOf: 0.01, minimum: 0}
+            consumosPendientes: {type: number, multipleOf: 0.01, minimum: 0}
+            cobroAhora: {type: number, multipleOf: 0.01, minimum: 0, example: 57.00}
             moneda: {type: string, const: PEN}
             calculadoEn: {type: string, format: date-time}
-        meta: {type: object}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
     ProductoAlta:
       type: object
+      description: Alta de producto global con asignación inicial a la sede indicada; sku único.
+      additionalProperties: false
       required: [sku, nombre, idHotel, precio, cantidadInicial, umbralBajo]
       properties:
-        sku: {type: string}
-        nombre: {type: string}
-        detalle: {type: string}
-        imagenUrl: {type: string}
-        idHotel: {type: integer}
-        precio: {type: number, exclusiveMinimum: 0}
+        sku: {type: string, maxLength: 40, description: Repetirlo devuelve 409 DUPLICATE_RESOURCE.}
+        nombre: {type: string, maxLength: 120}
+        detalle: {type: string, maxLength: 500}
+        imagenUrl: {type: string, maxLength: 500, description: https allowlist o /assets/.}
+        idHotel: {type: integer, minimum: 1}
+        precio: {type: number, multipleOf: 0.01, exclusiveMinimum: 0}
         cantidadInicial: {type: integer, minimum: 0}
         umbralBajo: {type: integer, minimum: 0}
     ProductoUpdate:
       type: object
+      description: >-
+        nombre/detalle/imagenUrl son globales; precio/umbralBajo/estado pertenecen
+        a la sede indicada por idHotel. No permite cantidad. productoVersion y V
+        se validan juntos antes de cualquier cambio.
+      additionalProperties: false
       required: [productoVersion]
       properties:
-        nombre: {type: string}
-        detalle: {type: string}
-        imagenUrl: {type: string}
-        precio: {type: number, exclusiveMinimum: 0}
+        nombre: {type: string, maxLength: 120}
+        detalle: {type: string, maxLength: 500}
+        imagenUrl: {type: string, maxLength: 500}
+        precio: {type: number, multipleOf: 0.01, exclusiveMinimum: 0}
+        umbralBajo: {type: integer, minimum: 0}
+        estado: {type: boolean, description: Pertenece solo a producto_sede (baja/reactivación por sede).}
+        productoVersion: {type: integer, minimum: 1, description: Versión del catálogo global exigida en el body.}
+    Producto:
+      type: object
+      description: >-
+        Producto en una sede. estado es el efectivo (producto AND producto_sede);
+        version alimenta If-Match y productoVersion es la del catálogo global.
+      required: [idProducto, sku, nombre, detalle, imagenUrl, idHotel, precio, cantidad, umbralBajo, estado, fechaCreacion, version, productoVersion]
+      properties:
+        idProducto: {type: integer, minimum: 1, example: 1}
+        sku: {type: string, maxLength: 40, example: AGUA-500}
+        nombre: {type: string, maxLength: 120, example: Agua 500ml}
+        detalle: {type: [string, 'null'], maxLength: 500}
+        imagenUrl: {type: [string, 'null'], maxLength: 500}
+        idHotel: {type: integer, minimum: 1, example: 1}
+        precio: {type: number, multipleOf: 0.01, exclusiveMinimum: 0, example: 3.50}
+        cantidad: {type: integer, minimum: 0, description: Unidades disponibles; nunca negativas.}
         umbralBajo: {type: integer, minimum: 0}
         estado: {type: boolean}
-        productoVersion: {type: integer}
+        fechaCreacion: {type: string, format: date-time}
+        version: {type: integer, minimum: 1, description: Versión de producto_sede; es el V de If-Match.}
+        productoVersion: {type: integer, minimum: 1, description: Versión del catálogo global de producto.}
+    AjusteResultado:
+      type: object
+      required: [ajusteId, cantidad, version]
+      properties:
+        ajusteId: {type: string, format: uuid, example: 40000000-0000-4000-8000-000000000004}
+        cantidad: {type: integer, minimum: 0, description: Saldo resultante tras el ajuste.}
+        version: {type: integer, minimum: 1, description: Nueva versión de producto_sede.}
+    MovimientoVenta:
+      type: object
+      description: >-
+        Movimiento de venta con su estado actual; un solo registro por venta
+        aunque tenga createdAt y updatedAt, sin doble débito en reportes.
+      required: [tipo, idVenta, idHotel, estado, cantidad, precioUnitario, createdAt, updatedAt]
+      properties:
+        tipo: {type: string, const: VENTA}
+        idVenta: {type: integer, minimum: 1, example: 5001}
+        idHotel: {type: integer, minimum: 1, example: 1}
+        estado: {type: string, enum: [DESCONTADO, RECHAZADO, RESTITUIDO]}
+        cantidad: {type: integer, minimum: 1}
+        precioUnitario: {type: number, multipleOf: 0.01, exclusiveMinimum: 0, description: Precio autoritativo usado en el débito; no lo envía sales.}
+        createdAt: {type: string, format: date-time}
+        updatedAt: {type: string, format: date-time}
+    MovimientoAjuste:
+      type: object
+      description: Ajuste manual de stock visible en el historial del producto.
+      required: [tipo, ajusteId, idHotel, delta, motivo, createdAt]
+      properties:
+        tipo: {type: string, const: AJUSTE}
+        ajusteId: {type: string, format: uuid}
+        idHotel: {type: integer, minimum: 1}
+        delta: {type: integer, not: {const: 0}}
+        motivo: {type: string, minLength: 1, maxLength: 300}
+        createdAt: {type: string, format: date-time}
+    Movimiento:
+      description: >-
+        Unión discriminada por tipo; VENTA refleja el movimiento y su estado
+        actual (DESCONTADO/RECHAZADO/RESTITUIDO) y AJUSTE el correo manual de
+        stock (delta distinto de 0).
+      oneOf:
+        - $ref: '#/components/schemas/MovimientoVenta'
+        - $ref: '#/components/schemas/MovimientoAjuste'
+      discriminator:
+        propertyName: tipo
+        mapping:
+          VENTA: '#/components/schemas/MovimientoVenta'
+          AJUSTE: '#/components/schemas/MovimientoAjuste'
     ApiProducto:
       type: object
       required: [success, message, data, meta]
       properties:
         success: {type: boolean, const: true}
         message: {type: string}
-        data: {type: object}
-        meta: {type: object}
-    ApiCarritoItem:
+        data: {$ref: '#/components/schemas/Producto'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListProducto:
       type: object
       required: [success, message, data, meta]
       properties:
         success: {type: boolean, const: true}
         message: {type: string}
-        data:
-          type: object
-          required: [idCarrito, idRecepcion, idPersona, idHotel, idProducto, nombreProducto, precioUnitario, cantidad, fechaRegistro, version]
-          properties:
-            idCarrito: {type: integer}
-            idRecepcion: {type: integer}
-            idPersona: {type: integer}
-            idHotel: {type: integer}
-            idProducto: {type: integer}
-            nombreProducto: {type: string}
-            precioUnitario: {type: number}
-            imagenUrl: {type: string}
-            cantidad: {type: integer}
-            fechaRegistro: {type: string, format: date-time}
-            version: {type: integer}
-        meta: {type: object}
+        data: {type: array, items: {$ref: '#/components/schemas/Producto'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    ApiAjusteResultado:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/AjusteResultado'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListMovimiento:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/Movimiento'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    VentaDetalleAlta:
+      type: object
+      description: Línea pedida; sin precios, subtotales ni nombre de producto.
+      additionalProperties: false
+      required: [idProducto, cantidad]
+      properties:
+        idProducto: {type: integer, minimum: 1}
+        cantidad: {type: integer, minimum: 1, maximum: 9999}
     VentaAlta:
       type: object
+      description: >-
+        Alta de venta; JSON cerrado. idHotel/idCliente se derivan de la recepción
+        y los precios son autoritativos de inventory.
+      additionalProperties: false
       required: [idRecepcion, detalles]
       properties:
-        idRecepcion: {type: integer}
-        estado: {type: string, enum: [PENDIENTE, PAGADO], default: PENDIENTE}
-        detalles:
-          type: array
-          minItems: 1
-          maxItems: 50
-          items:
-            type: object
-            required: [idProducto, cantidad]
-            properties:
-              idProducto: {type: integer}
-              cantidad: {type: integer, minimum: 1, maximum: 9999}
+        idRecepcion: {type: integer, minimum: 1}
+        estado:
+          type: string
+          enum: [PENDIENTE, PAGADO]
+          default: PENDIENTE
+          description: C solo PENDIENTE u omitido; PAGADO (pago manual al crear) es exclusivo de A/E y exige medioPago.
+        medioPago:
+          type: [string, 'null']
+          enum: [EFECTIVO, TARJETA, OTRO, null]
+          description: Obligatorio si estado=PAGADO; null si aún no se paga.
+        detalles: {type: array, minItems: 1, maxItems: 50, items: {$ref: '#/components/schemas/VentaDetalleAlta'}}
+    VentaDetalle:
+      type: object
+      description: Línea confirmada con el snapshot autoritativo de inventory; inmutable tras confirmar.
+      required: [idDetalleVenta, idProducto, nombreProducto, cantidad, precioUnitario, subTotal]
+      properties:
+        idDetalleVenta: {type: integer, minimum: 1}
+        idProducto: {type: integer, minimum: 1}
+        nombreProducto: {type: string, maxLength: 120}
+        cantidad: {type: integer, minimum: 1}
+        precioUnitario: {type: number, multipleOf: 0.01, minimum: 0}
+        subTotal: {type: number, multipleOf: 0.01, minimum: 0}
+    Venta:
+      type: object
+      description: >-
+        Venta con sus líneas inmutables. estadoOperacion refleja la operación
+        vigente y operationId su polling; medioPago null = NO_REGISTRADO mientras
+        no se paga o en históricos migrados sin dato.
+      required: [idVenta, idRecepcion, idCliente, idHotel, total, estado, estadoOperacion, operationId, medioPago, version, fechaCreacion, paidAt, detalles]
+      properties:
+        idVenta: {type: integer, minimum: 1, example: 5001}
+        idRecepcion: {type: integer, minimum: 1, example: 1001}
+        idCliente: {type: integer, minimum: 1, example: 100}
+        idHotel: {type: integer, minimum: 1, example: 1}
+        total: {type: number, multipleOf: 0.01, minimum: 0, example: 7.00}
+        estado: {type: string, enum: [PENDIENTE, PAGADO]}
+        estadoOperacion: {type: string, enum: [PENDIENTE, CONFIRMADA, RECHAZADA, CANCELACION_PENDIENTE, CANCELADA]}
+        operationId: {type: string, format: uuid, description: 'Operación vigente (VENTA al crear, PAGO al pagar, ANULACION al anular).'}
+        medioPago:
+          type: [string, 'null']
+          enum: [EFECTIVO, TARJETA, OTRO, null]
+          description: Obligatorio al registrar cada cobro; null = NO_REGISTRADO.
+        version: {type: integer, minimum: 1, example: 2}
+        fechaCreacion: {type: string, format: date-time}
+        paidAt: {type: [string, 'null'], format: date-time, description: Timestamp del pago; null hasta que la venta se paga.}
+        detalles: {type: array, items: {$ref: '#/components/schemas/VentaDetalle'}}
+    CarritoItem:
+      type: object
+      required: [idCarrito, idRecepcion, idPersona, idHotel, idProducto, nombreProducto, precioUnitario, imagenUrl, cantidad, fechaRegistro, version]
+      properties:
+        idCarrito: {type: integer, minimum: 1, example: 9001}
+        idRecepcion: {type: integer, minimum: 1, example: 1001}
+        idPersona: {type: integer, minimum: 1, example: 100}
+        idHotel: {type: integer, minimum: 1, example: 1}
+        idProducto: {type: integer, minimum: 1, example: 1}
+        nombreProducto: {type: string, maxLength: 120, example: Agua 500ml}
+        precioUnitario: {type: number, multipleOf: 0.01, minimum: 0, example: 3.50}
+        imagenUrl: {type: [string, 'null'], maxLength: 500}
+        cantidad: {type: integer, minimum: 1, maximum: 9999, example: 2}
+        fechaRegistro: {type: string, format: date-time}
+        version: {type: integer, minimum: 1}
+    OperacionVenta:
+      type: object
+      description: Estado de la operación para polling; no expone el payload interno del request.
+      required: [operationId, idVenta, tipo, estado, estadoOperacion]
+      properties:
+        operationId: {type: string, format: uuid}
+        idVenta: {type: integer, minimum: 1}
+        tipo: {type: string, enum: [VENTA, PAGO, ANULACION]}
+        estado: {type: string, enum: [PREPARANDO, ADMITIDA, DEBITO_SOLICITADO, TERMINAL]}
+        estadoOperacion: {type: string, enum: [PENDIENTE, CONFIRMADA, RECHAZADA, CANCELACION_PENDIENTE, CANCELADA]}
     ApiVenta:
       type: object
       required: [success, message, data, meta]
       properties:
         success: {type: boolean, const: true}
         message: {type: string}
-        data:
-          type: object
-          required: [idVenta, idRecepcion, idCliente, idHotel, total, estado, estadoOperacion, operationId, version, fechaCreacion, detalles]
-          properties:
-            idVenta: {type: integer}
-            idRecepcion: {type: integer}
-            idCliente: {type: integer}
-            idHotel: {type: integer}
-            total: {type: number}
-            estado: {type: string, enum: [PENDIENTE, PAGADO]}
-            estadoOperacion: {type: string, enum: [PENDIENTE, CONFIRMADA, RECHAZADA, CANCELACION_PENDIENTE, CANCELADA]}
-            operationId: {type: string, format: uuid}
-            version: {type: integer}
-            fechaCreacion: {type: string, format: date-time}
-            paidAt: {type: string, format: date-time, nullable: true}
-            detalles: {type: array, items: {type: object}}
-        meta: {type: object}
+        data: {$ref: '#/components/schemas/Venta'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListVenta:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/Venta'}}
+        meta: {$ref: '#/components/schemas/ApiMetaPage'}
+    ApiCarritoItem:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/CarritoItem'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiListCarritoItem:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/CarritoItem'}}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ApiOperacionVenta:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/OperacionVenta'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}
+    ReporteBajoStockRow:
+      type: object
+      description: Producto activo con cantidad ≤ limite (proyección de stock).
+      required: [idProducto, nombreProducto, cantidad, precio, estado]
+      properties:
+        idProducto: {type: integer, minimum: 1}
+        nombreProducto: {type: string, maxLength: 120}
+        cantidad: {type: integer, minimum: 0}
+        precio: {type: number, multipleOf: 0.01, exclusiveMinimum: 0}
+        estado: {type: boolean}
+    ReporteVentasRow:
+      type: object
+      description: Agregado por producto de ventas PAGADO por paid_at en [inicio, fin).
+      required: [idProducto, nombreProducto, cantidadTotal, totalIngresado]
+      properties:
+        idProducto: {type: integer, minimum: 1}
+        nombreProducto: {type: string, maxLength: 120}
+        cantidadTotal: {type: integer, minimum: 0}
+        totalIngresado: {type: number, multipleOf: 0.01, minimum: 0}
+    ReporteOcupacionRow:
+      type: object
+      description: Veces que una habitación fue alquilada (check-ins) en el rango de fechas Lima.
+      required: [idHabitacion, numeroHabitacion, descripcionCategoria, vecesAlquilada]
+      properties:
+        idHabitacion: {type: integer, minimum: 1}
+        numeroHabitacion: {type: string, maxLength: 10}
+        descripcionCategoria: {type: string, maxLength: 80}
+        vecesAlquilada: {type: integer, minimum: 0}
+    ReporteCobrosRow:
+      type: object
+      description: Cobro de una recepción CERRADA según el snapshot de su receipt.
+      required: [idRecepcion, numeroHabitacion, nombreCliente, totalAlojamiento, totalConsumos, totalGeneral, medioPagoAdelanto, medioPagoCierre, fechaCierre]
+      properties:
+        idRecepcion: {type: integer, minimum: 1}
+        numeroHabitacion: {type: string, maxLength: 10}
+        nombreCliente: {type: string, maxLength: 200}
+        totalAlojamiento: {type: number, multipleOf: 0.01, minimum: 0}
+        totalConsumos: {type: number, multipleOf: 0.01, minimum: 0}
+        totalGeneral: {type: number, multipleOf: 0.01, minimum: 0}
+        medioPagoAdelanto:
+          type: [string, 'null']
+          enum: [EFECTIVO, TARJETA, OTRO, null]
+          description: null = NO_REGISTRADO (histórico migrado sin dato).
+        medioPagoCierre:
+          type: [string, 'null']
+          enum: [EFECTIVO, TARJETA, OTRO, null]
+          description: null = NO_REGISTRADO (histórico migrado sin dato).
+        fechaCierre: {type: string, format: date-time}
+    Dashboard:
+      type: object
+      description: Métricas del día; ingresosHoy sin doble conteo del cierre.
+      required: [habitacionesOcupadas, habitacionesDisponibles, productosBajoStock, ingresosHoy, moneda]
+      properties:
+        habitacionesOcupadas: {type: integer, minimum: 0}
+        habitacionesDisponibles: {type: integer, minimum: 0}
+        productosBajoStock: {type: integer, minimum: 0}
+        ingresosHoy: {type: number, multipleOf: 0.01, minimum: 0}
+        moneda: {type: string, const: PEN}
+    ApiListReporteBajoStock:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/ReporteBajoStockRow'}}
+        meta: {$ref: '#/components/schemas/ApiMetaReporte'}
+    ApiListReporteVentas:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/ReporteVentasRow'}}
+        meta: {$ref: '#/components/schemas/ApiMetaReporte'}
+    ApiListReporteOcupacion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/ReporteOcupacionRow'}}
+        meta: {$ref: '#/components/schemas/ApiMetaReporte'}
+    ApiListReporteCobros:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {type: array, items: {$ref: '#/components/schemas/ReporteCobrosRow'}}
+        meta: {$ref: '#/components/schemas/ApiMetaReporte'}
+    ApiReporteDashboard:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/Dashboard'}
+        meta: {$ref: '#/components/schemas/ApiMetaReporte'}
+    OperationRef:
+      type: object
+      description: >-
+        Referencia de operación durable aceptada (202); el cliente hace polling
+        en Location según Retry-After y no reinicia la intención. Al menos uno
+        de los identificadores está presente.
+      minProperties: 1
+      properties:
+        operationId: {type: [string, 'null'], format: uuid}
+        closureId: {type: [string, 'null'], format: uuid}
+        blockId: {type: [string, 'null'], format: uuid}
+        estadoOperacion:
+          type: [string, 'null']
+          description: >-
+            Estado de la operación cuando aplica (p. ej. PENDIENTE/CONFIRMADA/
+            CANCELACION_PENDIENTE en ventas, PREPARANDO en habitación).
+    ApiSingleOperationRef:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success: {type: boolean, const: true}
+        message: {type: string}
+        data: {$ref: '#/components/schemas/OperationRef'}
+        meta: {$ref: '#/components/schemas/ApiMetaSingle'}

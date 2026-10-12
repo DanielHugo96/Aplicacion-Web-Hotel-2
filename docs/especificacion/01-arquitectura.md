@@ -65,17 +65,17 @@ La base de datos de un servicio solo la modifica ese servicio. Un PostgreSQL loc
 
 ## 4. Stack
 
-- Java 25 (LTS vigente), Spring Boot 4.1.x y Angular 22. Se abandona Boot 3.5.x por fin de soporte OSS (30-jun-2026); Boot 4.1 es la línea con soporte hasta jul-2027. Prever la guía de migración Boot 3→4 (JUnit 6, Spring Framework 7); el monolito de referencia queda en 3.5.x.
-- Spring Cloud release train 2025.1.x (Oakwood), compatible con Boot 4.0.x/4.1.x según la tabla oficial; 2025.0.x está EOL. OpenFeign + LoadBalancer, Eureka, Gateway, Security Resource Server.
-- Maven Wrapper y package-lock para reproducibilidad. Elegir y fijar los parches compatibles al crear los builds; no usar versiones flotantes ni `latest` en la entrega.
-- PostgreSQL 18 (imagen pineada `postgres:18`), JPA para CRUD sencillo.
+- Versiones fijadas (verificadas el 2026-10-12): Java 25, Spring Boot **4.1.1**, Spring Cloud **2025.1.3** (Oakwood), Angular **22.2.2**, PostgreSQL **18.6**, Kafka **4.3.1** y RabbitMQ **4.3.6**. Boot 4.1 es la línea con soporte OSS hasta jul-2027; se abandona Boot 3.5.x (fin de soporte OSS 30-jun-2026). Prever la guía de migración Boot 3 → 4 (JUnit 6, Spring Framework 7); el monolito de referencia queda en 3.5.x.
+- Spring Cloud 2025.1.x (Oakwood): la tabla oficial aún declara compatibilidad con Boot 4.0.x; el proyecto fija 2025.1.3 junto a Boot 4.1.1 (decisión verificada el 2026-10-12). **Re-verificar la compatibilidad en cada patch de 2025.1.x** y ajustar en el plan de implementación si la tabla cambia. 2025.0.x está EOL. OpenFeign + LoadBalancer, Eureka, Gateway, Security Resource Server.
+- Maven Wrapper y package-lock para reproducibilidad. Angular 22.2.2 requiere Node `^22.22.3 || ^24.15.0 || ^26.0.0` y TypeScript `>=6.0 <6.1`. No usar versiones flotantes ni `latest` en la entrega.
+- PostgreSQL 18 (parche pineado, imagen `postgres:18`), JPA para CRUD sencillo.
 - Flyway por servicio para schema, funciones y procedimientos. Cada servicio aplica sus migraciones al arrancar sobre su propia base; ningún servicio ejecuta migraciones de otro.
   - Ubicación: `src/main/resources/db/migration/`.
   - Nombres `V<n>__descripcion.sql`. Una migración ya aplicada no se edita; los cambios van en una nueva versión.
   - Seeds de demo en `db/seed`, activos solo con perfiles no productivos (`dev`, `demo`). Nunca se activan en producción.
   - Compose espera a que PostgreSQL esté sano (`healthcheck` + `depends_on: service_healthy`) antes de arrancar cada servicio.
 - JPA solo valida el esquema: `ddl-auto=validate`; no `update`.
-- Kafka 4.x en KRaft (solo KRaft desde 4.0), un nodo para desarrollo; RabbitMQ 4.3.x con management; Mailpit para correos de demo. Pinear tags de imagen, no `latest`.
+- Kafka 4.3.1 en KRaft (solo KRaft desde 4.0), un nodo para desarrollo; RabbitMQ 4.3.6 con management; Mailpit para correos de demo. Pinear tags/digests de imagen, no `latest`.
 - Docker Compose: sí. Infraestructura en contenedores desde el inicio; Java/Angular en IDE durante desarrollo; perfil completo en contenedores para demostración.
 - Sin Kubernetes, service mesh, Redis, Debezium ni servidor de configuración en el MVP.
 

@@ -1,0 +1,3341 @@
+openapi: 3.1.0
+info:
+  title: Hotel — contrato de servicio
+  version: 1.0.0
+  description: >-
+    Servicio hotel: catálogo público, sedes, pisos, categorías, habitaciones,
+    estado físico y limpieza. Base externa vía Gateway http://localhost:8080
+    (HTTPS en despliegue); las rutas /internal/** no entran por Gateway y solo se
+    exponen en red privada con token máquina. Fuentes:
+    docs/especificacion/microservicios/hotel/api.md y base-de-datos.md,
+    docs/especificacion/03-contrato-comun.md, docs/contracts/errors.md y
+    docs/contracts/openapi/public-web.yaml. Toda respuesta de negocio usa el
+    envelope {success,message,data,meta}. Roles: A global; E solo sedes asignadas;
+    C nunca usa APIs privadas de habitación. Las públicas son solo lectura con
+    Cache-Control: public,max-age=60.
+servers:
+  - url: http://localhost:8080
+    description: API Gateway local
+tags:
+  - name: publico
+    description: Catálogo público de sedes y categorías (sin token)
+  - name: sedes
+    description: Sedes (A muta; A/E lee su alcance)
+  - name: pisos
+    description: Pisos por sede
+  - name: categorias
+    description: Categorías globales
+  - name: habitaciones
+    description: Habitaciones, físico, operaciones administrativas y limpieza
+  - name: estados
+    description: Estados físicos fijos del catálogo
+  - name: interno
+    description: Rutas /internal/** para servicios (token máquina por scopes)
+security:
+  - bearerAuth: []
+paths:
+  /api/public/hoteles:
+    get:
+      tags: [publico]
+      summary: Listar sedes publicadas
+      operationId: listarHotelesPublicos
+      security: []
+      description: >-
+        Público sin token. Solo sedes publicadas y activas; Cache-Control
+        public,max-age=60. Prohibido exponer huéspedes, números de habitación,
+        ocupación, stock, ingresos o disponibilidad reservable.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Lista pública de sedes
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListHotelPublico'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idHotel: 1
+                    slug: lima-centro
+                    nombre: Hotel Demo Lima Centro
+                    descripcion: Sede de demostración
+                    direccion: Dirección de demostración
+                    ciudad: Lima
+                    telefono: '+51 900 000 001'
+                    correoContacto: contacto@hotel.test
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 3
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /api/public/hoteles/{slug}:
+    get:
+      tags: [publico]
+      summary: Detalle público de sede
+      operationId: detalleHotelPublico
+      security: []
+      description: >-
+        Público sin token. Sede inactiva u oculta → 404 para no enumerar. No
+        incluye fechas ni parámetro “disponible”; la tarifa de la landing es
+        informativa y no constituye reserva.
+      parameters:
+        - $ref: '#/components/parameters/SlugPath'
+      responses:
+        '200':
+          description: HotelPublico
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHotelPublico'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHotel: 1
+                  slug: lima-centro
+                  nombre: Hotel Demo Lima Centro
+                  descripcion: Sede de demostración
+                  direccion: Dirección de demostración
+                  ciudad: Lima
+                  telefono: '+51 900 000 001'
+                  correoContacto: contacto@hotel.test
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /api/public/hoteles/{slug}/categorias:
+    get:
+      tags: [publico]
+      summary: Tipos de habitación por sede
+      operationId: listarCategoriasPublicas
+      security: []
+      description: >-
+        Público sin token. Solo categorías con habitaciones publicadas y activas;
+        precioDesde es el mínimo publicado y la galería es curada (nunca ocupación
+        ni datos operativos). capacidad filtra 1..10. Cache-Control
+        public,max-age=60.
+      parameters:
+        - $ref: '#/components/parameters/SlugPath'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: capacidad
+          in: query
+          required: false
+          description: Filtro por capacidad exacta de la categoría (1..10).
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 10
+          example: 1
+      responses:
+        '200':
+          description: Categorías públicas de la sede
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListCategoriaPublica'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idCategoria: 1
+                    descripcion: Individual
+                    detalle: Habitación individual de demostración
+                    capacidad: 1
+                    precioDesde: 70.00
+                    moneda: PEN
+                    imagenes:
+                      - url: /assets/demo/hab-101-1.jpg
+                        alt: Habitación de demostración
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 2
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /api/public/hoteles/{slug}/categorias/{idCategoria}:
+    get:
+      tags: [publico]
+      summary: Detalle de tipo/categoría
+      operationId: detalleCategoriaPublica
+      security: []
+      description: >-
+        Público sin token. Categoría sin habitaciones publicadas en la sede → 404.
+        precioDesde se calcula con fn_catalogo_publico (mínimo de habitaciones
+        publicadas/activas); moneda fija PEN. Cache-Control public,max-age=60.
+      parameters:
+        - $ref: '#/components/parameters/SlugPath'
+        - name: idCategoria
+          in: path
+          required: true
+          description: Categoría global.
+          schema:
+            type: integer
+            minimum: 1
+          example: 2
+      responses:
+        '200':
+          description: CategoriaPublica con precioDesde y galería curada
+          headers:
+            Cache-Control:
+              $ref: '#/components/headers/CacheControl'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleCategoriaPublica'
+              example:
+                success: true
+                message: OK
+                data:
+                  idCategoria: 2
+                  descripcion: Doble
+                  detalle: Habitación doble de demostración
+                  capacidad: 2
+                  precioDesde: 100.00
+                  moneda: PEN
+                  imagenes:
+                    - url: /assets/demo/hab-102-1.jpg
+                      alt: Habitación de demostración
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /api/hotel/listar:
+    get:
+      tags: [sedes]
+      summary: Listar sedes de alcance (A/E)
+      operationId: listarHoteles
+      description: >-
+        A todas las sedes; E solo las sedes asignadas en su JWT (nunca por filtro
+        de UI). Orden estable por idHotel ascendente. Las listas de maestros
+        aceptan ?estado= (default true).
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/EstadoQuery'
+      responses:
+        '200':
+          description: Hotel[] del alcance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListHotel'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idHotel: 1
+                    slug: lima-centro
+                    nombre: Hotel Demo Lima Centro
+                    descripcion: Sede de demostración
+                    direccion: Dirección de demostración
+                    ciudad: Lima
+                    telefono: '+51 900 000 001'
+                    correoContacto: contacto@hotel.test
+                    estado: true
+                    publicado: true
+                    version: 1
+                  - idHotel: 2
+                    slug: miraflores
+                    nombre: Hotel Demo Miraflores
+                    descripcion: Sede de demostración
+                    direccion: Dirección de demostración
+                    ciudad: Lima
+                    telefono: '+51 900 000 001'
+                    correoContacto: contacto@hotel.test
+                    estado: true
+                    publicado: true
+                    version: 1
+                  - idHotel: 3
+                    slug: arequipa
+                    nombre: Hotel Demo Arequipa
+                    descripcion: Sede de demostración
+                    direccion: Dirección de demostración
+                    ciudad: Arequipa
+                    telefono: '+51 900 000 001'
+                    correoContacto: contacto@hotel.test
+                    estado: true
+                    publicado: true
+                    version: 1
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 3
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/hotel/buscar/{id}:
+    get:
+      tags: [sedes]
+      summary: Buscar sede (A/E)
+      operationId: buscarHotel
+      description: >-
+        A/E. Para E la sede debe pertenecer a sus sedes asignadas; una sede ajena
+        responde 404 (anti-enumeración). Devuelve el ETag/version para el If-Match
+        de las mutaciones.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Hotel
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHotel'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHotel: 1
+                  slug: lima-centro
+                  nombre: Hotel Demo Lima Centro
+                  descripcion: Sede de demostración
+                  direccion: Dirección de demostración
+                  ciudad: Lima
+                  telefono: '+51 900 000 001'
+                  correoContacto: contacto@hotel.test
+                  estado: true
+                  publicado: true
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/hotel/registrar:
+    post:
+      tags: [sedes]
+      summary: Crear sede (A)
+      operationId: registrarHotel
+      description: >-
+        Solo A con Idempotency-Key. slug lowercase [a-z0-9-] único (≤ 80) y estable
+        tras la publicación; 409 DUPLICATE_RESOURCE si ya existe. Límites comunes:
+        descripcion ≤ 300, telefono ≤ 20, correoContacto ≤ 254. Emite SedeSnapshot
+        (hotel.sede.v1) con outbox en la misma transacción.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HotelInput'
+            example:
+              slug: lima-norte
+              nombre: Hotel Demo Lima Norte
+              descripcion: Sede de demostración
+              direccion: Dirección de demostración
+              ciudad: Lima
+              telefono: '+51 900 000 001'
+              correoContacto: contacto@hotel.test
+              publicado: false
+              estado: true
+      responses:
+        '201':
+          description: Sede creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHotel'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHotel: 4
+                  slug: lima-norte
+                  nombre: Hotel Demo Lima Norte
+                  descripcion: Sede de demostración
+                  direccion: Dirección de demostración
+                  ciudad: Lima
+                  telefono: '+51 900 000 001'
+                  correoContacto: contacto@hotel.test
+                  estado: true
+                  publicado: false
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/hotel/actualizar/{id}:
+    put:
+      tags: [sedes]
+      summary: Actualizar sede (A, V)
+      operationId: actualizarHotel
+      description: >-
+        Solo A con If-Match e Idempotency-Key. PUT estado=false aplica la misma
+        regla que DELETE: sp_hotel_desactivar solo si no quedan habitaciones
+        activas (409 ACTIVE_DEPENDENCIES); tampoco una categoría o piso se inactiva
+        si tiene habitaciones activas. slug estable tras publicación.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HotelInput'
+            example:
+              slug: lima-centro
+              nombre: Hotel Demo Lima Centro
+              descripcion: Sede de demostración actualizada
+              direccion: Dirección de demostración
+              ciudad: Lima
+              telefono: '+51 900 000 001'
+              correoContacto: contacto@hotel.test
+              publicado: true
+              estado: true
+      responses:
+        '200':
+          description: Sede actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHotel'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHotel: 1
+                  slug: lima-centro
+                  nombre: Hotel Demo Lima Centro
+                  descripcion: Sede de demostración actualizada
+                  direccion: Dirección de demostración
+                  ciudad: Lima
+                  telefono: '+51 900 000 001'
+                  correoContacto: contacto@hotel.test
+                  estado: true
+                  publicado: true
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ActiveDependencies'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/hotel/eliminar/{id}:
+    delete:
+      tags: [sedes]
+      summary: Baja lógica de sede (A, V)
+      operationId: eliminarHotel
+      description: >-
+        Solo A con If-Match e Idempotency-Key. Baja lógica solo si no quedan
+        habitaciones activas (409 ACTIVE_DEPENDENCIES) y sin comprobar
+        dependencias fuera de la transacción de lock hotel → categoria → piso.
+        DELETE repetido con la misma clave devuelve el resultado original.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '200':
+          description: Sede inactiva
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHotel'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHotel: 3
+                  slug: arequipa
+                  nombre: Hotel Demo Arequipa
+                  descripcion: Sede de demostración
+                  direccion: Dirección de demostración
+                  ciudad: Arequipa
+                  telefono: '+51 900 000 001'
+                  correoContacto: contacto@hotel.test
+                  estado: false
+                  publicado: true
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ActiveDependencies'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/piso/listar:
+    get:
+      tags: [pisos]
+      summary: Listar pisos por sede (A/E)
+      operationId: listarPisos
+      description: >-
+        H: idHotel es obligatorio y E solo puede consultar una sede asignada
+        (ajena → 404). Orden estable por idPiso; ?estado= filtra maestros
+        (default true).
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/IdHotelQuery'
+        - $ref: '#/components/parameters/EstadoQuery'
+      responses:
+        '200':
+          description: Piso[] de la sede
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListPiso'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idPiso: 11
+                    idHotel: 1
+                    descripcion: Primer piso
+                    estado: true
+                    version: 1
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 1
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/piso/buscar/{id}:
+    get:
+      tags: [pisos]
+      summary: Buscar piso (A/E)
+      operationId: buscarPiso
+      description: >-
+        A/E. La sede se deriva de BD y se valida contra el alcance del usuario;
+        piso de sede ajena → 404.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Piso
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePiso'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPiso: 11
+                  idHotel: 1
+                  descripcion: Primer piso
+                  estado: true
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/piso/registrar:
+    post:
+      tags: [pisos]
+      summary: Crear piso (A)
+      operationId: registrarPiso
+      description: >-
+        Solo A con Idempotency-Key. descripcion ≤ 80 y UNIQUE(id_hotel,descripcion);
+        409 DUPLICATE_RESOURCE si se repite en la sede. La sede debe existir.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PisoInput'
+            example:
+              idHotel: 1
+              descripcion: Segundo piso
+      responses:
+        '201':
+          description: Piso creado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePiso'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPiso: 12
+                  idHotel: 1
+                  descripcion: Segundo piso
+                  estado: true
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/piso/actualizar/{id}:
+    put:
+      tags: [pisos]
+      summary: Actualizar piso (A, V)
+      operationId: actualizarPiso
+      description: >-
+        Solo A con If-Match e Idempotency-Key. Solo descripcion y estado: la sede
+        de un piso no cambia por PUT. No se inactiva el piso si tiene habitaciones
+        activas (409 ACTIVE_DEPENDENCIES); 409 DUPLICATE_RESOURCE si la nueva
+        descripcion se repite en la sede.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [descripcion, estado]
+              properties:
+                descripcion:
+                  type: string
+                  minLength: 1
+                  maxLength: 80
+                estado:
+                  type: boolean
+            example:
+              descripcion: Primer piso
+              estado: true
+      responses:
+        '200':
+          description: Piso actualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePiso'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPiso: 11
+                  idHotel: 1
+                  descripcion: Primer piso
+                  estado: true
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/piso/eliminar/{id}:
+    delete:
+      tags: [pisos]
+      summary: Baja lógica de piso (A, V)
+      operationId: eliminarPiso
+      description: >-
+        Solo A con If-Match e Idempotency-Key. Baja lógica solo sin habitaciones
+        activas en el piso: 409 ACTIVE_DEPENDENCIES en caso contrario, verificando
+        dependencias dentro del lock y no antes.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '200':
+          description: Piso inactivo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePiso'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPiso: 11
+                  idHotel: 1
+                  descripcion: Primer piso
+                  estado: false
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ActiveDependencies'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/categoria/listar:
+    get:
+      tags: [categorias]
+      summary: Listar categorías globales (A/E)
+      operationId: listarCategorias
+      description: >-
+        A/E. Categorías globales (no por sede), orden estable por idCategoria;
+        ?estado= filtra maestros (default true).
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/EstadoQuery'
+      responses:
+        '200':
+          description: Categoria[] global
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListCategoria'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idCategoria: 1
+                    descripcion: Individual
+                    detalle: Habitación individual de demostración
+                    capacidad: 1
+                    estado: true
+                    version: 1
+                  - idCategoria: 2
+                    descripcion: Doble
+                    detalle: Habitación doble de demostración
+                    capacidad: 2
+                    estado: true
+                    version: 1
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 2
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/categoria/buscar/{id}:
+    get:
+      tags: [categorias]
+      summary: Buscar categoría (A/E)
+      operationId: buscarCategoria
+      description: >-
+        A/E. Devuelve la categoría global con su version para el If-Match de las
+        mutaciones.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Categoria
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleCategoria'
+              example:
+                success: true
+                message: OK
+                data:
+                  idCategoria: 1
+                  descripcion: Individual
+                  detalle: Habitación individual de demostración
+                  capacidad: 1
+                  estado: true
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/categoria/registrar:
+    post:
+      tags: [categorias]
+      summary: Crear categoría (A)
+      operationId: registrarCategoria
+      description: >-
+        Solo A con Idempotency-Key. descripcion ≤ 80 y UNIQUE; 409
+        DUPLICATE_RESOURCE si ya existe. capacidad entre 1 y 10; detalle ≤ 500.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaInput'
+            example:
+              descripcion: Suite
+              detalle: Suite de demostración
+              capacidad: 3
+              estado: true
+      responses:
+        '201':
+          description: Categoría creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleCategoria'
+              example:
+                success: true
+                message: OK
+                data:
+                  idCategoria: 3
+                  descripcion: Suite
+                  detalle: Suite de demostración
+                  capacidad: 3
+                  estado: true
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/categoria/actualizar/{id}:
+    put:
+      tags: [categorias]
+      summary: Actualizar categoría (A, V)
+      operationId: actualizarCategoria
+      description: >-
+        Solo A con If-Match e Idempotency-Key. No se inactiva si hay habitaciones
+        activas (409 ACTIVE_DEPENDENCIES). Todo cambio de categoría que afecte
+        snapshots dispara, en la misma transacción de catálogo, la actualización de
+        las habitaciones afectadas incrementando su version y su outbox; si alguna
+        está en operación administrativa PREPARANDO se devuelve 409 sin aplicar el
+        cambio.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoriaInput'
+            example:
+              descripcion: Doble
+              detalle: Habitación doble de demostración actualizada
+              capacidad: 2
+              estado: true
+      responses:
+        '200':
+          description: Categoría actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleCategoria'
+              example:
+                success: true
+                message: OK
+                data:
+                  idCategoria: 2
+                  descripcion: Doble
+                  detalle: Habitación doble de demostración actualizada
+                  capacidad: 2
+                  estado: true
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ActiveDependencies'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/categoria/eliminar/{id}:
+    delete:
+      tags: [categorias]
+      summary: Baja lógica de categoría (A, V)
+      operationId: eliminarCategoria
+      description: >-
+        Solo A con If-Match e Idempotency-Key. Baja lógica solo si no quedan
+        habitaciones activas (409 ACTIVE_DEPENDENCIES). No se “arregla” una
+        dependencia fuera de la transacción del lock.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '200':
+          description: Categoría inactiva
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleCategoria'
+              example:
+                success: true
+                message: OK
+                data:
+                  idCategoria: 1
+                  descripcion: Individual
+                  detalle: Habitación individual de demostración
+                  capacidad: 1
+                  estado: false
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ActiveDependencies'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/habitacion/listar:
+    get:
+      tags: [habitaciones]
+      summary: Listar habitaciones por sede (A/E)
+      operationId: listarHabitaciones
+      description: >-
+        H: idHotel obligatorio; idCategoria opcional. E solo sedes asignadas
+        (ajena → 404). Orden estable por idHabitacion. La ocupación de la respuesta
+        es informativa (proyección) y no sustituye al gate de reception.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/IdHotelQuery'
+        - name: idCategoria
+          in: query
+          required: false
+          description: Filtro por categoría global.
+          schema:
+            type: integer
+            minimum: 1
+          example: 1
+      responses:
+        '200':
+          description: Habitacion[] de la sede
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idHabitacion: 101
+                    idHotel: 1
+                    numero: '101'
+                    idPiso: 11
+                    pisoNombre: Primer piso
+                    idCategoria: 1
+                    categoriaNombre: Individual
+                    detalle: Habitación individual de demostración
+                    precio: 70.00
+                    publicada: true
+                    estado: true
+                    idEstadoHabitacion: 1
+                    estadoFisico:
+                      idEstadoHabitacion: 1
+                      codigo: LISTA
+                      descripcion: Lista
+                      estado: true
+                      version: 1
+                    ocupacion:
+                      estadoEstadia: LIBRE
+                      idRecepcion: null
+                      updatedAt: '2026-10-12T15:00:00Z'
+                    blockId: null
+                    endpoint: null
+                    version: 1
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 2
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/habitacion/buscar/{id}:
+    get:
+      tags: [habitaciones]
+      summary: Buscar habitación (A/E)
+      operationId: buscarHabitacion
+      description: >-
+        A/E. La sede se deriva de BD y se valida contra el alcance: habitación de
+        sede ajena → 404. Devuelve ocupacion informativa, blockId/endpoint de la
+        operación vigente y version para el If-Match.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: Habitacion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHabitacion: 101
+                  idHotel: 1
+                  numero: '101'
+                  idPiso: 11
+                  pisoNombre: Primer piso
+                  idCategoria: 1
+                  categoriaNombre: Individual
+                  detalle: Habitación individual de demostración
+                  precio: 70.00
+                  publicada: true
+                  estado: true
+                  idEstadoHabitacion: 1
+                  estadoFisico:
+                    idEstadoHabitacion: 1
+                    codigo: LISTA
+                    descripcion: Lista
+                    estado: true
+                    version: 1
+                  ocupacion:
+                    estadoEstadia: LIBRE
+                    idRecepcion: null
+                    updatedAt: '2026-10-12T15:00:00Z'
+                  blockId: null
+                  endpoint: null
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/habitacion/registrar:
+    post:
+      tags: [habitaciones]
+      summary: Crear habitación LISTA (A)
+      operationId: registrarHabitacion
+      description: >-
+        Solo A con Idempotency-Key. La habitación nace activa con físico LISTA y
+        sincroniza el gate por Kafka (HabitacionCreada). idPiso debe ser de la
+        misma sede (FK compuesta (id_piso,id_hotel)); numero ≤ 10 y UNIQUE parcial
+        solo sobre activas (reutilizable tras la baja); precio > 0 (múltiplo de
+        0.01); máximo 10 imágenes; URL https allowlist o /assets/ (≤ 500) y alt
+        ≤ 150; no file:// ni fetch arbitrario. 409 DUPLICATE_RESOURCE si el número
+        ya existe activo en la sede.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HabitacionInput'
+            example:
+              idHotel: 1
+              numero: '103'
+              idPiso: 11
+              idCategoria: 1
+              detalle: Habitación individual de demostración
+              precio: 75.00
+              publicada: false
+              urlsImagenes:
+                - url: /assets/demo/hab-103-1.jpg
+                  alt: Habitación de demostración
+                  orden: 1
+      responses:
+        '201':
+          description: Habitación creada LISTA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHabitacion: 103
+                  idHotel: 1
+                  numero: '103'
+                  idPiso: 11
+                  pisoNombre: Primer piso
+                  idCategoria: 1
+                  categoriaNombre: Individual
+                  detalle: Habitación individual de demostración
+                  precio: 75.00
+                  publicada: false
+                  estado: true
+                  idEstadoHabitacion: 1
+                  estadoFisico:
+                    idEstadoHabitacion: 1
+                    codigo: LISTA
+                    descripcion: Lista
+                    estado: true
+                    version: 1
+                  ocupacion:
+                    estadoEstadia: DESCONOCIDA
+                    idRecepcion: null
+                    updatedAt: '2026-10-12T16:00:00Z'
+                  blockId: null
+                  endpoint: null
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/habitacion/actualizar/{id}:
+    put:
+      tags: [habitaciones]
+      summary: Actualizar catálogo de habitación (A, V)
+      operationId: actualizarHabitacion
+      description: >-
+        Solo A con If-Match e Idempotency-Key. fn_habitacion_guardar cambia
+        idPiso/idCategoria/detalle/precio/publicada/urlsImagenes; nunca estado
+        físico, ocupación, numero ni sede. 409 ROOM_OPERATION_IN_PROGRESS si existe
+        una operación MANTENIMIENTO/BAJA sin liberar. Los cambios que afectan
+        snapshots incrementan version y publican outbox de la habitación.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HabitacionUpdate'
+            example:
+              idPiso: 11
+              idCategoria: 1
+              detalle: Habitación individual de demostración
+              precio: 75.00
+              publicada: true
+              urlsImagenes:
+                - url: /assets/demo/hab-101-1.jpg
+                  alt: Habitación de demostración
+                  orden: 1
+      responses:
+        '200':
+          description: Habitación actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHabitacion: 101
+                  idHotel: 1
+                  numero: '101'
+                  idPiso: 11
+                  pisoNombre: Primer piso
+                  idCategoria: 1
+                  categoriaNombre: Individual
+                  detalle: Habitación individual de demostración
+                  precio: 75.00
+                  publicada: true
+                  estado: true
+                  idEstadoHabitacion: 1
+                  estadoFisico:
+                    idEstadoHabitacion: 1
+                    codigo: LISTA
+                    descripcion: Lista
+                    estado: true
+                    version: 1
+                  ocupacion:
+                    estadoEstadia: LIBRE
+                    idRecepcion: null
+                    updatedAt: '2026-10-12T15:00:00Z'
+                  blockId: null
+                  endpoint: null
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/RoomOperationConflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/habitacion/eliminar/{id}:
+    delete:
+      tags: [habitaciones]
+      summary: Baja de habitación (A, V; puede 202 con blockId)
+      operationId: eliminarHabitacion
+      description: >-
+        Solo A con If-Match e Idempotency-Key. V valida la versión antes de crear
+        la operación y se revalida al aplicar el cambio local. Semántica:
+        200 = reception admitió el bloqueo (gate BLOQUEADA) y hotel aplicó el
+        cambio local (CAS PREPARANDO → APLICADA) dentro del request; respuesta
+        terminal con Habitacion y blockId.
+        202 = la operación quedó persistida PREPARANDO porque la admisión no se
+        confirmó en el request (timeout, 503, ROOM_NOT_SYNCED); no significa
+        “habitación bloqueada”: hacer polling con Location/Retry-After en
+        GET /api/habitacion/operaciones/{blockId}.
+        409 = reception rechazó por gate OCUPADA/LIMPIEZA_PENDIENTE: rechazo
+        durable por blockId, no se admite después aunque la habitación quede libre;
+        otra intención usa otro blockId. El número es reutilizable tras la baja y
+        el histórico se identifica por idHabitacion.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '200':
+          description: Baja aplicada en el request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHabitacion: 101
+                  idHotel: 1
+                  numero: '101'
+                  idPiso: 11
+                  pisoNombre: Primer piso
+                  idCategoria: 1
+                  categoriaNombre: Individual
+                  detalle: Habitación individual de demostración
+                  precio: 70.00
+                  publicada: false
+                  estado: false
+                  idEstadoHabitacion: 3
+                  estadoFisico:
+                    idEstadoHabitacion: 3
+                    codigo: MANTENIMIENTO
+                    descripcion: Mantenimiento
+                    estado: true
+                    version: 1
+                  ocupacion:
+                    estadoEstadia: LIBRE
+                    idRecepcion: null
+                    updatedAt: '2026-10-12T16:00:00Z'
+                  blockId: 33333333-3333-4333-8333-333333333333
+                  endpoint: /api/habitacion/operaciones/33333333-3333-4333-8333-333333333333
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '202':
+          $ref: '#/components/responses/AcceptedOp'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/RoomOperationConflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/habitacion/{id}/mantenimiento:
+    post:
+      tags: [habitaciones]
+      summary: Iniciar mantenimiento (A, V; 200/202/409)
+      operationId: iniciarMantenimiento
+      description: >-
+        Solo A con If-Match e Idempotency-Key; se obtiene el gate de reception por
+        Feign antes de la transacción SQL. 200 = gate BLOQUEADA y CAS
+        PREPARANDO → APLICADA en el request (terminal con habitacion y blockId);
+        202 = operación PREPARANDO con blockId + Location + Retry-After y job que
+        reintenta con el mismo blockId; 409 = rechazo durable del gate
+        (ROOM_OCCUPIED/ROOM_NOT_READY/GATE_NOT_AVAILABLE) o ROOM_OPERATION_IN_PROGRESS
+        por operación vigente. motivo 1..300.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [motivo]
+              properties:
+                motivo:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+            example:
+              motivo: Revisión de aire acondicionado
+      responses:
+        '200':
+          description: Mantenimiento aplicado en el request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHabitacion: 102
+                  idHotel: 1
+                  numero: '102'
+                  idPiso: 11
+                  pisoNombre: Primer piso
+                  idCategoria: 2
+                  categoriaNombre: Doble
+                  detalle: Habitación doble de demostración
+                  precio: 100.00
+                  publicada: true
+                  estado: true
+                  idEstadoHabitacion: 3
+                  estadoFisico:
+                    idEstadoHabitacion: 3
+                    codigo: MANTENIMIENTO
+                    descripcion: Mantenimiento
+                    estado: true
+                    version: 1
+                  ocupacion:
+                    estadoEstadia: LIBRE
+                    idRecepcion: null
+                    updatedAt: '2026-10-12T16:00:00Z'
+                  blockId: 33333333-3333-4333-8333-333333333333
+                  endpoint: /api/habitacion/operaciones/33333333-3333-4333-8333-333333333333
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '202':
+          $ref: '#/components/responses/AcceptedOp'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/RoomOperationConflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/habitacion/{id}/mantenimiento-completado:
+    put:
+      tags: [habitaciones]
+      summary: Completar mantenimiento (A, V)
+      operationId: completarMantenimiento
+      description: >-
+        Solo A con If-Match e Idempotency-Key. El blockId debe ser la operación
+        MANTENIMIENTO vigente; libera el gate vía Kafka (HabitacionHabilitada) y
+        deja el físico en LISTA. 409 si la operación no está aplicada o el blockId
+        no corresponde; 412/428 por versión.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [blockId]
+              properties:
+                blockId:
+                  type: string
+                  format: uuid
+            example:
+              blockId: 33333333-3333-4333-8333-333333333333
+      responses:
+        '200':
+          description: Habitación LISTA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHabitacion: 102
+                  idHotel: 1
+                  numero: '102'
+                  idPiso: 11
+                  pisoNombre: Primer piso
+                  idCategoria: 2
+                  categoriaNombre: Doble
+                  detalle: Habitación doble de demostración
+                  precio: 100.00
+                  publicada: true
+                  estado: true
+                  idEstadoHabitacion: 1
+                  estadoFisico:
+                    idEstadoHabitacion: 1
+                    codigo: LISTA
+                    descripcion: Lista
+                    estado: true
+                    version: 1
+                  ocupacion:
+                    estadoEstadia: LIBRE
+                    idRecepcion: null
+                    updatedAt: '2026-10-12T17:00:00Z'
+                  blockId: null
+                  endpoint: null
+                  version: 3
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/habitacion/{id}/reactivar:
+    put:
+      tags: [habitaciones]
+      summary: Reactivar habitación (A, V)
+      operationId: reactivarHabitacion
+      description: >-
+        Solo A con If-Match e Idempotency-Key. Requiere operación BAJA APLICADA y
+        sede/piso/categoría activos; sp_habitacion_habilitar deja estado=true,
+        físico LISTA y emite la habilitación correlacionada (libera gate vía
+        Kafka). 409 si falta algún padre activo o la operación no está aplicada.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [blockId]
+              properties:
+                blockId:
+                  type: string
+                  format: uuid
+            example:
+              blockId: 33333333-3333-4333-8333-333333333333
+      responses:
+        '200':
+          description: Habitación reactivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHabitacion: 101
+                  idHotel: 1
+                  numero: '101'
+                  idPiso: 11
+                  pisoNombre: Primer piso
+                  idCategoria: 1
+                  categoriaNombre: Individual
+                  detalle: Habitación individual de demostración
+                  precio: 70.00
+                  publicada: true
+                  estado: true
+                  idEstadoHabitacion: 1
+                  estadoFisico:
+                    idEstadoHabitacion: 1
+                    codigo: LISTA
+                    descripcion: Lista
+                    estado: true
+                    version: 1
+                  ocupacion:
+                    estadoEstadia: DESCONOCIDA
+                    idRecepcion: null
+                    updatedAt: '2026-10-12T17:30:00Z'
+                  blockId: null
+                  endpoint: null
+                  version: 3
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/habitacion/operaciones/{blockId}:
+    get:
+      tags: [habitaciones]
+      summary: Consultar operación administrativa (A)
+      operationId: consultarOperacionHabitacion
+      description: >-
+        Solo A. Polling de una operación creada por mantenimiento o baja: estado
+        PREPARANDO/APLICADA/LIBERADA/RECHAZADA. Las rutas estáticas
+        limpiezas/operaciones tienen prioridad frente a los IDs de la ruta
+        genérica.
+      parameters:
+        - name: blockId
+          in: path
+          required: true
+          description: Identificador UUID de la operación.
+          schema:
+            type: string
+            format: uuid
+          example: 33333333-3333-4333-8333-333333333333
+      responses:
+        '200':
+          description: OperacionHabitacion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleOperacionHabitacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  blockId: 33333333-3333-4333-8333-333333333333
+                  idHabitacion: 101
+                  tipo: MANTENIMIENTO
+                  estado: APLICADA
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/habitacion/limpiezas:
+    get:
+      tags: [habitaciones]
+      summary: Listar limpiezas por sede/estado (A/E)
+      operationId: listarLimpiezas
+      description: >-
+        H: idHotel obligatorio; E solo sedes asignadas. estado=PENDIENTE/COMPLETADA
+        opcional; una misma habitación admitió máximo un ciclo PENDIENTE a la vez.
+        Orden estable por limpieza; el version listado es el If-Match de la
+        tarea para completarla.
+      parameters:
+        - $ref: '#/components/parameters/IdHotelQuery'
+        - name: estado
+          in: query
+          required: false
+          description: Filtro por estado del ciclo de limpieza.
+          schema:
+            type: string
+            enum: [PENDIENTE, COMPLETADA]
+          example: PENDIENTE
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+      responses:
+        '200':
+          description: Limpieza[] de la sede
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListLimpieza'
+              example:
+                success: true
+                message: OK
+                data:
+                  - cleaningCycleId: 33333333-3333-4333-8333-333333333333
+                    idHabitacion: 101
+                    idRecepcion: 1001
+                    estado: PENDIENTE
+                    roomVersion: 5
+                    version: 1
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 1
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/habitacion/{id}/limpieza-completada:
+    put:
+      tags: [habitaciones]
+      summary: Completar limpieza (A/E; V = versión de la tarea)
+      operationId: completarLimpieza
+      description: >-
+        A/E con If-Match e Idempotency-Key; V y ETag corresponden a la version de
+        la tarea de limpieza (no de la habitación). Valida ciclo/habitación/sede y
+        la versión de la tarea; PENDIENTE → COMPLETADA con completed_at, físico
+        LISTA y roomVersion/version incrementados. Emite HabitacionLista con el
+        cleaningRoomVersion de la tarea: un evento viejo jamás libera un ciclo
+        posterior. Devuelve {limpieza,habitacion}.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [cleaningCycleId]
+              properties:
+                cleaningCycleId:
+                  type: string
+                  format: uuid
+            example:
+              cleaningCycleId: 33333333-3333-4333-8333-333333333333
+      responses:
+        '200':
+          description: Limpieza completada y habitación LISTA
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleLimpiezaResultado'
+              example:
+                success: true
+                message: OK
+                data:
+                  limpieza:
+                    cleaningCycleId: 33333333-3333-4333-8333-333333333333
+                    idHabitacion: 101
+                    idRecepcion: 1001
+                    estado: COMPLETADA
+                    roomVersion: 5
+                    version: 2
+                  habitacion:
+                    idHabitacion: 101
+                    idHotel: 1
+                    numero: '101'
+                    idPiso: 11
+                    pisoNombre: Primer piso
+                    idCategoria: 1
+                    categoriaNombre: Individual
+                    detalle: Habitación individual de demostración
+                    precio: 70.00
+                    publicada: true
+                    estado: true
+                    idEstadoHabitacion: 1
+                    estadoFisico:
+                      idEstadoHabitacion: 1
+                      codigo: LISTA
+                      descripcion: Lista
+                      estado: true
+                      version: 1
+                    ocupacion:
+                      estadoEstadia: LIBRE
+                      idRecepcion: null
+                      updatedAt: '2026-10-12T18:00:00Z'
+                    blockId: null
+                    endpoint: null
+                    version: 6
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/estadohabitacion/listar:
+    get:
+      tags: [estados]
+      summary: Listar estados físicos (A/E)
+      operationId: listarEstadosHabitacion
+      description: >-
+        A/E. Catálogo fijo: 1 LISTA, 2 EN_LIMPIEZA, 3 MANTENIMIENTO. Los códigos no
+        se reutilizan numéricamente (el 2 legacy significaba OCUPADO); la
+        ocupación no es un estado físico.
+      responses:
+        '200':
+          description: EstadoFisico[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListEstadoFisico'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idEstadoHabitacion: 1
+                    codigo: LISTA
+                    descripcion: Lista
+                    estado: true
+                    version: 1
+                  - idEstadoHabitacion: 2
+                    codigo: EN_LIMPIEZA
+                    descripcion: En limpieza
+                    estado: true
+                    version: 1
+                  - idEstadoHabitacion: 3
+                    codigo: MANTENIMIENTO
+                    descripcion: Mantenimiento
+                    estado: true
+                    version: 1
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 3
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/estadohabitacion/buscar/{id}:
+    get:
+      tags: [estados]
+      summary: Buscar estado físico (A/E)
+      operationId: buscarEstadoHabitacion
+      description: >-
+        A/E. Devuelve el estado físico fijo con su código y version para el
+        If-Match.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: EstadoFisico
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleEstadoFisico'
+              example:
+                success: true
+                message: OK
+                data:
+                  idEstadoHabitacion: 1
+                  codigo: LISTA
+                  descripcion: Lista
+                  estado: true
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/estadohabitacion/actualizar/{id}:
+    put:
+      tags: [estados]
+      summary: Editar etiqueta de estado físico (A, V)
+      operationId: actualizarEstadoHabitacion
+      description: >-
+        Solo A con If-Match e Idempotency-Key. Edita solo la etiqueta descripcion
+        (≤ 80); codigo, semántica y estado del catálogo fijo no cambian.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [descripcion]
+              properties:
+                descripcion:
+                  type: string
+                  minLength: 1
+                  maxLength: 80
+            example:
+              descripcion: Disponible
+      responses:
+        '200':
+          description: Etiqueta actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleEstadoFisico'
+              example:
+                success: true
+                message: OK
+                data:
+                  idEstadoHabitacion: 1
+                  codigo: LISTA
+                  descripcion: Disponible
+                  estado: true
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/estadohabitacion/registrar:
+    post:
+      tags: [estados]
+      summary: RETIRADA — no crear estados físicos
+      operationId: registrarEstadoHabitacionRetirada
+      description: >-
+        RETIRADA. Los estados físicos del catálogo fijo no se crean por REST:
+        responde 409 FIXED_STATE_CATALOG, sin Idempotency-Key porque no ejecuta
+        efectos. Editar solo la etiqueta con PUT /api/estadohabitacion/actualizar/{id}.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/FixedStateCatalog'
+  /api/estadohabitacion/eliminar/{id}:
+    delete:
+      tags: [estados]
+      summary: RETIRADA — no eliminar estados físicos
+      operationId: eliminarEstadoHabitacionRetirada
+      description: >-
+        RETIRADA. Los estados físicos del catálogo fijo nunca se eliminan por
+        REST: responde 409 FIXED_STATE_CATALOG, sin Idempotency-Key porque no
+        ejecuta efectos.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/FixedStateCatalog'
+  /internal/habitaciones/{id}:
+    get:
+      tags: [interno]
+      summary: Habitación interna para admisión
+      operationId: habitacionInterna
+      security:
+        - machineToken: [habitaciones:read]
+      description: >-
+        Máquina con scope habitaciones:read (reception). Datos mínimos para validar
+        admisión de operaciones y check-in; no entra por Gateway. 404 si la
+        habitación no existe; una respuesta caída de hotel se traduce en 503 en el
+        caller (nunca admisión optimista).
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: HabitacionInterna
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHabitacionInterna'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHabitacion: 101
+                  idHotel: 1
+                  numero: '101'
+                  detalle: Habitación individual de demostración
+                  idCategoria: 1
+                  categoriaNombre: Individual
+                  pisoNombre: Primer piso
+                  precio: 70.00
+                  estadoFisico: LISTA
+                  estado: true
+                  hotelActivo: true
+                  hotelNombre: Hotel Demo Lima Centro
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /internal/hoteles/{id}:
+    get:
+      tags: [interno]
+      summary: Sede interna para validar sedes
+      operationId: hotelInterno
+      security:
+        - machineToken: [hoteles:read]
+      description: >-
+        Máquina con scope hoteles:read (identity e inventory). Valida que una sede
+        exista y esté activa antes de asignar personas o productos; nunca asignación
+        optimista con hotel caído (el caller responde 503). No entra por Gateway.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: HotelInterno
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleHotelInterno'
+              example:
+                success: true
+                message: OK
+                data:
+                  idHotel: 1
+                  nombre: Hotel Demo Lima Centro
+                  estado: true
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        JWT RS256 de usuario humano (iss=hotel-identity, aud=hotel-api, TTL 15 min).
+        Claims sub=idPersona, roles y sedes; A global, E solo sedes asignadas.
+    machineToken:
+      type: oauth2
+      description: >-
+        Token máquina por client_credentials obtenido en POST /internal/auth/token
+        con Basic clientId:secret. Solo para /internal/**; un token humano no basta.
+      flows:
+        clientCredentials:
+          tokenUrl: /internal/auth/token
+          scopes:
+            habitaciones:read: Leer habitación interna para admisión de operaciones y check-in (reception).
+            hoteles:read: Leer sede interna para validar sedes activas (identity e inventory).
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Página 0-based; orden estable por ID ascendente.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      required: false
+      description: Tamaño de página (máximo 100).
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      example: 101
+    IdHotelQuery:
+      name: idHotel
+      in: query
+      required: true
+      description: H — obligatorio en listados por sede; E solo sedes asignadas.
+      schema:
+        type: integer
+        minimum: 1
+      example: 1
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID por intención; mismo valor al reintentar (retención ≥ 30 días).
+      schema:
+        type: string
+        format: uuid
+      example: 22222222-2222-4222-8222-222222222222
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: Versión vigente "<version>"; sin él 428, distinta 412.
+      schema:
+        type: string
+        example: '"1"'
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: UUID opcional; el Gateway lo genera si falta y lo propaga/responde.
+      schema:
+        type: string
+        format: uuid
+      example: 11111111-1111-4111-8111-111111111111
+    EstadoQuery:
+      name: estado
+      in: query
+      required: false
+      description: Filtro de maestros por estado (activo/inactivo); default true.
+      schema:
+        type: boolean
+        default: true
+      example: true
+    SlugPath:
+      name: slug
+      in: path
+      required: true
+      description: Slug lowercase de la sede.
+      schema:
+        type: string
+        pattern: '^[a-z0-9-]+$'
+        maxLength: 80
+      example: lima-centro
+  headers:
+    CacheControl:
+      description: Caché pública de la landing (60 segundos).
+      schema:
+        type: string
+        example: public,max-age=60
+  responses:
+    BadRequest:
+      description: 400 validación/formato; error.fields mapea campo → motivo
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Revisa los datos marcados.
+            data: null
+            error:
+              code: VALIDATION_ERROR
+              fields:
+                precio: debe ser mayor que 0 y múltiplo de 0.01
+                urlsImagenes: máximo 10 imágenes con URL https allowlist o /assets/
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Unauthorized:
+      description: 401 no autenticado, token ausente/expirado o firma/issuer inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Tu sesión expiró. Vuelve a iniciar sesión.
+            data: null
+            error:
+              code: UNAUTHENTICATED
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Forbidden:
+      description: 403 rol, scope o sede insuficientes (deny-by-default)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: No tienes permiso para esta acción.
+            data: null
+            error:
+              code: FORBIDDEN
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    NotFound:
+      description: 404 inexistente o ajeno a sede (anti-enumeración)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: No encontramos lo que buscas.
+            data: null
+            error:
+              code: RESOURCE_NOT_FOUND
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Conflict:
+      description: 409 regla de negocio o duplicado (DUPLICATE_RESOURCE, IDEMPOTENCY_CONFLICT)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Ese valor ya está registrado.
+            data: null
+            error:
+              code: DUPLICATE_RESOURCE
+              fields:
+                numero: ya existe una habitación activa 101 en la sede 1
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    RoomOperationConflict:
+      description: >-
+        409 de habitación: rechazo durable del gate (ROOM_OCCUPIED, ROOM_NOT_READY,
+        GATE_NOT_AVAILABLE) u operación vigente sin liberar
+        (ROOM_OPERATION_IN_PROGRESS). El rechazo por blockId no se admite después
+        aunque la habitación quede libre; otra intención usa otro blockId.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: 'No se puede bloquear la habitación: está ocupada o en limpieza.'
+            data: null
+            error:
+              code: GATE_NOT_AVAILABLE
+              fields:
+                idHabitacion: gate OCUPADA
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    ActiveDependencies:
+      description: 409 baja lógica con habitaciones activas o elementos hijos activos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: No se puede dar de baja mientras tenga elementos activos.
+            data: null
+            error:
+              code: ACTIVE_DEPENDENCIES
+              fields:
+                idHotel: aún tiene habitaciones activas
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    FixedStateCatalog:
+      description: 409 catálogo fijo; los estados físicos no se crean ni eliminan
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Los estados físicos del sistema no se crean ni eliminan.
+            data: null
+            error:
+              code: FIXED_STATE_CATALOG
+              fields:
+                ruta: /api/estadohabitacion
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    PreconditionFailed:
+      description: 412 versión distinta al ETag vigente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Otra persona modificó este registro. Recarga para ver los cambios.
+            data: null
+            error:
+              code: PRECONDITION_FAILED
+              fields:
+                If-Match: la versión enviada no es la vigente
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    PreconditionRequired:
+      description: 428 falta If-Match en PUT/DELETE con V
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Falta la versión del registro.
+            data: null
+            error:
+              code: PRECONDITION_REQUIRED
+              fields:
+                If-Match: obligatorio
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    RateLimited:
+      description: 429 límite del Gateway (60/min por IP en rutas públicas)
+      headers:
+        Retry-After:
+          description: Segundos antes de reintentar.
+          schema:
+            type: integer
+            example: 60
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Demasiados intentos. Espera un momento.
+            data: null
+            error:
+              code: RATE_LIMITED
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Unavailable:
+      description: 503 dependencia no disponible (servicio de destino caído o circuit breaker abierto)
+      headers:
+        Retry-After:
+          description: Segundos antes de reintentar (misma Idempotency-Key si aplica).
+          schema:
+            type: integer
+            example: 5
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: El servicio no está disponible. Reintenta en unos segundos.
+            data: null
+            error:
+              code: DEPENDENCY_UNAVAILABLE
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    AcceptedOp:
+      description: >-
+        202 operación persistida PREPARANDO: no significa “habitación bloqueada”.
+        Hacer polling en Location con Retry-After; el job reintenta con el mismo
+        blockId.
+      headers:
+        Location:
+          description: Ruta de consulta de la operación.
+          schema:
+            type: string
+            example: /api/habitacion/operaciones/33333333-3333-4333-8333-333333333333
+        Retry-After:
+          description: Segundos antes del siguiente polling.
+          schema:
+            type: integer
+            example: 2
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiSingleOperacionRef'
+          example:
+            success: true
+            message: Operación en curso
+            data:
+              blockId: 33333333-3333-4333-8333-333333333333
+              idHabitacion: 101
+              tipo: MANTENIMIENTO
+              estado: PREPARANDO
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+  schemas:
+    ApiMetaSingle:
+      type: object
+      required: [correlationId]
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+          example: 11111111-1111-4111-8111-111111111111
+    ApiMetaPage:
+      type: object
+      required: [page, size, totalElements, correlationId]
+      properties:
+        page:
+          type: integer
+          minimum: 0
+          example: 0
+        size:
+          type: integer
+          minimum: 1
+          example: 20
+        totalElements:
+          type: integer
+          minimum: 0
+          example: 2
+        correlationId:
+          type: string
+          format: uuid
+          example: 11111111-1111-4111-8111-111111111111
+    ApiNull:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: 'null'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiError:
+      type: object
+      required: [success, message, data, error, meta]
+      properties:
+        success:
+          type: boolean
+          const: false
+        message:
+          type: string
+          example: Revisa los datos marcados.
+        data:
+          type: 'null'
+        error:
+          type: object
+          required: [code, fields]
+          properties:
+            code:
+              type: string
+              example: ROOM_NOT_READY
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                idHabitacion: la habitación tiene limpieza pendiente
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ImagenPublica:
+      type: object
+      required: [url, alt]
+      properties:
+        url:
+          type: string
+          description: https allowlist o /assets/
+          example: /assets/demo/hab-102-1.jpg
+        alt:
+          type: string
+          example: Habitación de demostración
+    HotelPublico:
+      type: object
+      required: [idHotel, slug, nombre, descripcion, direccion, ciudad, telefono, correoContacto]
+      properties:
+        idHotel:
+          type: integer
+          minimum: 1
+        slug:
+          type: string
+        nombre:
+          type: string
+        descripcion:
+          type: string
+        direccion:
+          type: string
+        ciudad:
+          type: string
+        telefono:
+          type: string
+        correoContacto:
+          type: string
+          format: email
+    CategoriaPublica:
+      type: object
+      required: [idCategoria, descripcion, detalle, capacidad, precioDesde, moneda, imagenes]
+      properties:
+        idCategoria:
+          type: integer
+        descripcion:
+          type: string
+        detalle:
+          type: string
+        capacidad:
+          type: integer
+          minimum: 1
+          maximum: 10
+        precioDesde:
+          type: number
+          format: double
+          minimum: 0
+          example: 100.00
+        moneda:
+          type: string
+          const: PEN
+        imagenes:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/ImagenPublica'
+    HotelInput:
+      type: object
+      additionalProperties: false
+      required: [slug, nombre, descripcion, direccion, ciudad, telefono, correoContacto, publicado, estado]
+      properties:
+        slug:
+          type: string
+          pattern: '^[a-z0-9-]+$'
+          maxLength: 80
+          description: UNIQUE; estable tras la publicación.
+          example: lima-centro
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 120
+          example: Hotel Demo Lima Centro
+        descripcion:
+          type: string
+          maxLength: 300
+          example: Sede de demostración
+        direccion:
+          type: string
+          maxLength: 200
+          example: Dirección de demostración
+        ciudad:
+          type: string
+          maxLength: 80
+          example: Lima
+        telefono:
+          type: string
+          maxLength: 20
+          example: '+51 900 000 001'
+        correoContacto:
+          type: string
+          format: email
+          maxLength: 254
+          example: contacto@hotel.test
+        publicado:
+          type: boolean
+          description: Solo las sedes publicadas/activas aparecen en el catálogo público.
+          example: true
+        estado:
+          type: boolean
+          example: true
+    Hotel:
+      type: object
+      required: [idHotel, slug, nombre, descripcion, direccion, ciudad, telefono, correoContacto, estado, publicado, version]
+      properties:
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        slug:
+          type: string
+          maxLength: 80
+          example: lima-centro
+        nombre:
+          type: string
+          maxLength: 120
+          example: Hotel Demo Lima Centro
+        descripcion:
+          type: string
+          maxLength: 300
+          example: Sede de demostración
+        direccion:
+          type: string
+          maxLength: 200
+          example: Dirección de demostración
+        ciudad:
+          type: string
+          maxLength: 80
+          example: Lima
+        telefono:
+          type: string
+          maxLength: 20
+          example: '+51 900 000 001'
+        correoContacto:
+          type: string
+          format: email
+          maxLength: 254
+          example: contacto@hotel.test
+        estado:
+          type: boolean
+          example: true
+        publicado:
+          type: boolean
+          example: true
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    PisoInput:
+      type: object
+      additionalProperties: false
+      required: [idHotel, descripcion]
+      properties:
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: UNIQUE(idHotel, descripcion).
+          example: Primer piso
+    Piso:
+      type: object
+      required: [idPiso, idHotel, descripcion, estado, version]
+      properties:
+        idPiso:
+          type: integer
+          minimum: 1
+          example: 11
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        descripcion:
+          type: string
+          maxLength: 80
+          example: Primer piso
+        estado:
+          type: boolean
+          example: true
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    CategoriaInput:
+      type: object
+      additionalProperties: false
+      required: [descripcion, detalle, capacidad, estado]
+      properties:
+        descripcion:
+          type: string
+          minLength: 1
+          maxLength: 80
+          description: UNIQUE; la categoría es global, no por sede.
+          example: Individual
+        detalle:
+          type: string
+          maxLength: 500
+          example: Habitación individual de demostración
+        capacidad:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 1
+        estado:
+          type: boolean
+          example: true
+    Categoria:
+      type: object
+      required: [idCategoria, descripcion, detalle, capacidad, estado, version]
+      properties:
+        idCategoria:
+          type: integer
+          minimum: 1
+          example: 1
+        descripcion:
+          type: string
+          maxLength: 80
+          example: Individual
+        detalle:
+          type: string
+          maxLength: 500
+          example: Habitación individual de demostración
+        capacidad:
+          type: integer
+          minimum: 1
+          maximum: 10
+          example: 1
+        estado:
+          type: boolean
+          example: true
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    ImagenHabitacion:
+      type: object
+      additionalProperties: false
+      required: [url, alt, orden]
+      properties:
+        url:
+          type: string
+          maxLength: 500
+          description: https allowlist o /assets/; no file:// ni hotlinks no permitidos.
+          example: /assets/demo/hab-101-1.jpg
+        alt:
+          type: string
+          minLength: 1
+          maxLength: 150
+          example: Habitación de demostración
+        orden:
+          type: integer
+          minimum: 0
+          description: UNIQUE(id_habitacion, orden); máximo 10 imágenes.
+          example: 1
+    HabitacionInput:
+      type: object
+      additionalProperties: false
+      required: [idHotel, numero, idPiso, idCategoria, detalle, precio, publicada, urlsImagenes]
+      properties:
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        numero:
+          type: string
+          minLength: 1
+          maxLength: 10
+          description: UNIQUE parcial (idHotel, numero) solo entre activas; reutilizable tras la baja.
+          example: '103'
+        idPiso:
+          type: integer
+          minimum: 1
+          description: Debe pertenecer a la misma sede (FK compuesta).
+          example: 11
+        idCategoria:
+          type: integer
+          minimum: 1
+          example: 1
+        detalle:
+          type: string
+          maxLength: 500
+          example: Habitación individual de demostración
+        precio:
+          type: number
+          multipleOf: 0.01
+          exclusiveMinimum: 0
+          example: 75.00
+        publicada:
+          type: boolean
+          example: false
+        urlsImagenes:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/ImagenHabitacion'
+    HabitacionUpdate:
+      type: object
+      additionalProperties: false
+      required: [idPiso, idCategoria, detalle, precio, publicada, urlsImagenes]
+      properties:
+        idPiso:
+          type: integer
+          minimum: 1
+          example: 11
+        idCategoria:
+          type: integer
+          minimum: 1
+          example: 1
+        detalle:
+          type: string
+          maxLength: 500
+          example: Habitación individual de demostración
+        precio:
+          type: number
+          multipleOf: 0.01
+          exclusiveMinimum: 0
+          example: 75.00
+        publicada:
+          type: boolean
+          example: true
+        urlsImagenes:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/ImagenHabitacion'
+    Habitacion:
+      type: object
+      required: [idHabitacion, idHotel, numero, idPiso, idCategoria, detalle, precio, publicada, estado, idEstadoHabitacion, estadoFisico, ocupacion, blockId, endpoint, version]
+      properties:
+        idHabitacion:
+          type: integer
+          minimum: 1
+          example: 101
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        numero:
+          type: string
+          maxLength: 10
+          example: '101'
+        idPiso:
+          type: integer
+          minimum: 1
+          example: 11
+        pisoNombre:
+          type: string
+          example: Primer piso
+        idCategoria:
+          type: integer
+          minimum: 1
+          example: 1
+        categoriaNombre:
+          type: string
+          example: Individual
+        detalle:
+          type: string
+          maxLength: 500
+          example: Habitación individual de demostración
+        precio:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 70.00
+        publicada:
+          type: boolean
+          example: true
+        urlsImagenes:
+          type: array
+          maxItems: 10
+          items:
+            $ref: '#/components/schemas/ImagenHabitacion'
+        estado:
+          type: boolean
+          description: Activo/inactivo del catálogo; no es ocupación.
+          example: true
+        idEstadoHabitacion:
+          type: integer
+          minimum: 1
+          description: 1 LISTA, 2 EN_LIMPIEZA, 3 MANTENIMIENTO.
+          example: 1
+        estadoFisico:
+          $ref: '#/components/schemas/EstadoFisico'
+        ocupacion:
+          type: [object, 'null']
+          description: >-
+            Proyección informativa de ocupación (reception.recepcion.v1); puede ser
+            DESCONOCIDA hasta el bootstrap y nunca se convierte a disponible.
+          required: [estadoEstadia, idRecepcion, updatedAt]
+          properties:
+            estadoEstadia:
+              type: string
+              enum: [LIBRE, OCUPADA, DESCONOCIDA]
+              example: LIBRE
+            idRecepcion:
+              type: [integer, 'null']
+              minimum: 1
+              example: null
+            updatedAt:
+              type: string
+              format: date-time
+              example: '2026-10-12T15:00:00Z'
+        blockId:
+          type: [string, 'null']
+          format: uuid
+          readOnly: true
+          description: >-
+            Operación vigente MANTENIMIENTO/BAJA mientras no se libere; la baja
+            conserva blockId hasta la reactivación. null si no hay operación.
+          example: null
+        endpoint:
+          type: [string, 'null']
+          readOnly: true
+          description: >-
+            Ruta relativa de polling de la operación vigente
+            (GET /api/habitacion/operaciones/{blockId}); null si no hay operación.
+          example: /api/habitacion/operaciones/33333333-3333-4333-8333-333333333333
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    EstadoFisico:
+      type: object
+      required: [idEstadoHabitacion, codigo, descripcion, estado, version]
+      properties:
+        idEstadoHabitacion:
+          type: integer
+          minimum: 1
+          example: 1
+        codigo:
+          type: string
+          enum: [LISTA, EN_LIMPIEZA, MANTENIMIENTO]
+          description: Código fijo; no se reutilizan los valores numéricos legacy.
+          example: LISTA
+        descripcion:
+          type: string
+          maxLength: 80
+          description: Etiqueta editable por PUT; no cambia la semántica del código.
+          example: Lista
+        estado:
+          type: boolean
+          example: true
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    Limpieza:
+      type: object
+      required: [cleaningCycleId, idHabitacion, idRecepcion, estado, roomVersion, version]
+      properties:
+        cleaningCycleId:
+          type: string
+          format: uuid
+          example: 33333333-3333-4333-8333-333333333333
+        idHabitacion:
+          type: integer
+          minimum: 1
+          example: 101
+        idRecepcion:
+          type: integer
+          minimum: 1
+          example: 1001
+        estado:
+          type: string
+          enum: [PENDIENTE, COMPLETADA]
+          example: PENDIENTE
+        roomVersion:
+          type: integer
+          minimum: 0
+          description: roomVersion del comando de limpieza (no es hotel.version).
+          example: 5
+        version:
+          type: integer
+          minimum: 1
+          description: Versión de la tarea; es el If-Match de limpieza-completada.
+          example: 1
+    OperacionRef:
+      type: object
+      required: [blockId, idHabitacion, tipo, estado]
+      properties:
+        blockId:
+          type: string
+          format: uuid
+          example: 33333333-3333-4333-8333-333333333333
+        idHabitacion:
+          type: integer
+          minimum: 1
+          example: 101
+        tipo:
+          type: string
+          enum: [MANTENIMIENTO, BAJA]
+          example: MANTENIMIENTO
+        estado:
+          type: string
+          enum: [PREPARANDO, APLICADA, LIBERADA, RECHAZADA]
+          example: PREPARANDO
+    OperacionHabitacion:
+      type: object
+      required: [blockId, idHabitacion, tipo, estado]
+      properties:
+        blockId:
+          type: string
+          format: uuid
+          example: 33333333-3333-4333-8333-333333333333
+        idHabitacion:
+          type: integer
+          minimum: 1
+          example: 101
+        tipo:
+          type: string
+          enum: [MANTENIMIENTO, BAJA]
+          example: MANTENIMIENTO
+        estado:
+          type: string
+          enum: [PREPARANDO, APLICADA, LIBERADA, RECHAZADA]
+          description: PREPARANDO/APLICADA son vigentes; LIBERADA/RECHAZADA no se reaplican.
+          example: APLICADA
+    LimpiezaResultado:
+      type: object
+      required: [limpieza, habitacion]
+      properties:
+        limpieza:
+          $ref: '#/components/schemas/Limpieza'
+        habitacion:
+          $ref: '#/components/schemas/Habitacion'
+    HabitacionInterna:
+      type: object
+      required: [idHabitacion, idHotel, numero, detalle, idCategoria, categoriaNombre, pisoNombre, precio, estadoFisico, estado, hotelActivo, hotelNombre, version]
+      properties:
+        idHabitacion:
+          type: integer
+          minimum: 1
+          example: 101
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        numero:
+          type: string
+          maxLength: 10
+          example: '101'
+        detalle:
+          type: string
+          maxLength: 500
+          example: Habitación individual de demostración
+        idCategoria:
+          type: integer
+          minimum: 1
+          example: 1
+        categoriaNombre:
+          type: string
+          example: Individual
+        pisoNombre:
+          type: string
+          example: Primer piso
+        precio:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 70.00
+        estadoFisico:
+          type: string
+          enum: [LISTA, EN_LIMPIEZA, MANTENIMIENTO]
+          description: Código físico; “libre” se decide en reception con su gate.
+          example: LISTA
+        estado:
+          type: boolean
+          example: true
+        hotelActivo:
+          type: boolean
+          example: true
+        hotelNombre:
+          type: string
+          example: Hotel Demo Lima Centro
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    HotelInterno:
+      type: object
+      required: [idHotel, nombre, estado, version]
+      properties:
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        nombre:
+          type: string
+          example: Hotel Demo Lima Centro
+        estado:
+          type: boolean
+          description: Solo sedes activas son asignables; nunca asignación optimista.
+          example: true
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    ApiSingleHotelPublico:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/HotelPublico'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListHotelPublico:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/HotelPublico'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleCategoriaPublica:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/CategoriaPublica'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListCategoriaPublica:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CategoriaPublica'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleHotel:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/Hotel'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListHotel:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hotel'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSinglePiso:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/Piso'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListPiso:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Piso'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleCategoria:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/Categoria'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListCategoria:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Categoria'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleHabitacion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/Habitacion'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListHabitacion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Habitacion'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleEstadoFisico:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/EstadoFisico'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListEstadoFisico:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/EstadoFisico'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleLimpieza:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/Limpieza'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListLimpieza:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Limpieza'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleLimpiezaResultado:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/LimpiezaResultado'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleOperacionRef:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: Operación en curso
+        data:
+          $ref: '#/components/schemas/OperacionRef'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleOperacionHabitacion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/OperacionHabitacion'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleHabitacionInterna:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/HabitacionInterna'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleHotelInterno:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/HotelInterno'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'

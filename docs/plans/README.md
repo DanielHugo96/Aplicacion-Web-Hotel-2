@@ -8,3 +8,7 @@ Un plan no es código ni documentación del sistema. Es la hoja de ruta de una t
 
 > La especificación dice qué es el sistema. El plan dice cómo lo construimos paso a paso.
 > Spec en ../especificacion, planes en esta carpeta.
+
+## Reglas al escribir planes
+
+- La identidad nunca se propaga por headers (`X-User-Id`, `X-Role`, `X-Hotel-Id`): cada servicio la obtiene del JWT validado (algoritmo/issuer/audience/exp/scope), según [`03-contrato-comun.md`](../especificacion/03-contrato-comun.md). No usar ejemplos antiguos que propagaban esos headers.

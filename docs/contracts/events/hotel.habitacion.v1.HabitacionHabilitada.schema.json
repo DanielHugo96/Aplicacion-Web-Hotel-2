@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hotel.test/contracts/events/hotel.habitacion.v1.HabitacionHabilitada.schema.json",
+  "title": "hotel.habitacion.v1 — HabitacionHabilitada",
+  "description": "Evento emitido por hotel cuando una operación administrativa (mantenimiento, baja o reactivación) libera su bloqueo (topic hotel.habitacion.v1, key=idHabitacion). Exige blockId; reception solo libera el gate si coincide ese bloqueo y nunca acepta un LISTA genérico como permiso.",
+  "allOf": [
+    {
+      "$ref": "./envelope.v1.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "HabitacionHabilitada"
+        },
+        "aggregateType": {
+          "const": "habitacion"
+        },
+        "aggregateId": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "idHabitacion serializado como texto (Kafka key)."
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Versión de la habitación al emitir el evento."
+        },
+        "idHotel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "idHabitacion",
+            "idHotel",
+            "numero",
+            "idCategoria",
+            "categoriaNombre",
+            "pisoNombre",
+            "precio",
+            "estado",
+            "estadoFisico",
+            "version",
+            "cleaningCycleId",
+            "cleaningRoomVersion",
+            "blockId"
+          ],
+          "properties": {
+            "idHabitacion": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Identificador de la habitación."
+            },
+            "idHotel": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Sede de la habitación."
+            },
+            "numero": {
+              "type": "string",
+              "description": "Número visible de la habitación."
+            },
+            "idCategoria": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Categoría de la habitación."
+            },
+            "categoriaNombre": {
+              "type": "string",
+              "description": "Nombre de la categoría al emitir el evento."
+            },
+            "pisoNombre": {
+              "type": "string",
+              "description": "Nombre del piso al emitir el evento."
+            },
+            "precio": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "multipleOf": 0.01,
+              "description": "Precio por noche de la habitación."
+            },
+            "estado": {
+              "type": "boolean",
+              "description": "Estado activo de la habitación."
+            },
+            "estadoFisico": {
+              "type": "string",
+              "enum": [
+                "LISTA",
+                "EN_LIMPIEZA",
+                "MANTENIMIENTO"
+              ],
+              "description": "Código físico fijo de la habitación al habilitarse."
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versión de la habitación."
+            },
+            "cleaningCycleId": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "uuid",
+              "description": "Ciclo de limpieza vigente si lo hubiera; null en la liberación de un bloqueo administrativo."
+            },
+            "cleaningRoomVersion": {
+              "type": [
+                "integer",
+                "null"
+              ],
+              "minimum": 0,
+              "description": "roomVersion del ciclo vigente si lo hubiera; null si no hay ciclo."
+            },
+            "blockId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Bloqueo liberado; obligatorio en este evento."
+            }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "eventId": "11111111-1111-4111-8111-111111111111",
+      "type": "HabitacionHabilitada",
+      "schemaVersion": 1,
+      "aggregateType": "habitacion",
+      "aggregateId": "101",
+      "aggregateVersion": 5,
+      "idHotel": 1,
+      "occurredAt": "2026-10-06T10:00:00Z",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "payload": {
+        "idHabitacion": 101,
+        "idHotel": 1,
+        "numero": "101",
+        "idCategoria": 1,
+        "categoriaNombre": "Individual",
+        "pisoNombre": "Primer piso",
+        "precio": 75.00,
+        "estado": true,
+        "estadoFisico": "LISTA",
+        "version": 5,
+        "cleaningCycleId": null,
+        "cleaningRoomVersion": null,
+        "blockId": "66666666-6666-4666-8666-666666666666"
+      }
+    }
+  ]
+}

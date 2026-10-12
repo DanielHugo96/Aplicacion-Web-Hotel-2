@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hotel.test/contracts/events/command-envelope.v1.schema.json",
+  "title": "Envelope de comando RabbitMQ v1",
+  "description": "Envelope común de los comandos publicados en el exchange durable direct hotel.commands.v1 (routing key = nombre de cola). Los esquemas de cada comando lo referencian con allOf y restringen type y payload. Props AMQP: messageId=commandId, contentType=application/json, deliveryMode=2, correlationId y header x-schema-version=1.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "commandId",
+    "type",
+    "schemaVersion",
+    "idHotel",
+    "correlationId",
+    "issuedAt",
+    "payload"
+  ],
+  "properties": {
+    "commandId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador único del comando (= AMQP messageId). Los reintentos y reencolados conservan el mismo commandId."
+    },
+    "type": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Tipo de comando en PascalCase; p. ej. LimpiezaSolicitada, StockRestituir, NotificacionCheckout."
+    },
+    "schemaVersion": {
+      "const": 1,
+      "description": "Versión del esquema del mensaje; viaja también en el header x-schema-version. Esta carpeta cubre la v1."
+    },
+    "idHotel": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1,
+      "description": "Sede del comando (entero positivo) o null en notificacion.bienvenida, porque el cliente recién registrado es global."
+    },
+    "correlationId": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Identificador de correlación con la transacción de origen; se propaga en el header correlationId."
+    },
+    "issuedAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Fecha y hora de emisión en UTC (sufijo Z), p. ej. 2026-10-05T16:00:00Z."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Cuerpo del comando. Cada tipo concreto lo restringe con additionalProperties:false, tipos y enums en su propio esquema."
+    }
+  },
+  "examples": [
+    {
+      "commandId": "33333333-3333-4333-8333-333333333333",
+      "type": "LimpiezaSolicitada",
+      "schemaVersion": 1,
+      "idHotel": 1,
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "issuedAt": "2026-10-05T16:00:00Z",
+      "payload": {
+        "idHabitacion": 101,
+        "idRecepcion": 1001,
+        "cleaningCycleId": "44444444-4444-4444-8444-444444444444",
+        "roomVersion": 2
+      }
+    }
+  ]
+}

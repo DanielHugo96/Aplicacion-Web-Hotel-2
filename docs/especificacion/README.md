@@ -1,15 +1,22 @@
-# Especificación del hotel — v1.1
+# Especificación del hotel — v1.2
 
 ## Leer en este orden
 
-1. [Decisiones y arquitectura](01-arquitectura.md): alcance, dueños, monorepo y Docker.
-2. [Landing y panel](02-landing-y-panel.md): qué permite cada frontend.
-3. [Contrato común y seguridad](03-contrato-comun.md): headers, respuestas, roles, sedes, idempotencia.
-4. [Flujos y consistencia](04-flujos.md): stock, check-in, check-out, limpieza y mantenimiento.
-5. [Mensajería](05-mensajeria.md): todos los topics, colas, consumidores y envelopes.
-6. [Migración y aceptación](06-migracion-y-pruebas.md): diferencias del monolito, secuencia y pruebas.
-7. [Infraestructura](infraestructura/gateway-eureka-docker.md): rutas del Gateway, Eureka, puertos y configuración.
-8. [Revisión y arranque](07-revision-y-arranque.md): incoherencias corregidas, validación realizada y primer incremento.
+1. [Decisiones y arquitectura](01-arquitectura.md): alcance, dueños, monorepo, stack fijado y Docker.
+2. [Landing y panel](02-landing-y-panel.md): qué permite cada frontend, formatos de UI y textos.
+3. [Contrato común y seguridad](03-contrato-comun.md): headers, respuestas, roles, sedes, idempotencia, dinero, límites, privacidad y tablas técnicas.
+4. [Flujos y consistencia](04-flujos.md): stock, check-in, check-out, anulación, limpieza y mantenimiento.
+5. [Mensajería](05-mensajeria.md): todos los topics, grupos, colas, consumidores, DLT/DLQ y envelopes.
+6. [Migración y aceptación](06-migracion-y-pruebas.md): diferencias del monolito, secuencia, fixtures y matriz detallada.
+7. [Panel admin-web](08-admin-web.md): rutas, pantallas, formularios y estados del panel y del área de cliente.
+8. [Infraestructura](infraestructura/gateway-eureka-docker.md): rutas del Gateway, Eureka, puertos; [configuración](infraestructura/configuracion.md) por servicio y [runbooks](infraestructura/runbooks.md) de operación, backups y alertas.
+9. [Revisión y arranque](07-revision-y-arranque.md): incoherencias corregidas, validación realizada y primer incremento.
+
+## Contratos máquina
+
+- [Catálogo de errores](../contracts/errors.md): código, HTTP, servicio, campo, mensaje de UI y acción.
+- [OpenAPI](../contracts/openapi/): un YAML por servicio backend (`identity`, `hotel`, `reception`, `inventory`, `sales`, `reporting`) más los contratos de frontend `admin-web.yaml` y `public-web.yaml`.
+- [JSON Schemas de eventos](../contracts/events/): envelope y un schema v1 por tipo Kafka/Rabbit, con ejemplos.
 
 ## Documento por microservicio
 

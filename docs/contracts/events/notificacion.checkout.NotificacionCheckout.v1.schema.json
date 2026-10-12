@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hotel.test/contracts/events/notificacion.checkout.NotificacionCheckout.v1.schema.json",
+  "title": "notificacion.checkout — NotificacionCheckout",
+  "description": "Comando RabbitMQ emitido por reception hacia notification (routing key y cola notificacion.checkout; exchange hotel.commands.v1) tras cerrar una estadía; genera la plantilla CHECKOUT. El correo es efecto secundario: su caída no revierte el cierre ni el cobro. idHotel del envelope obligatorio.",
+  "allOf": [
+    {
+      "$ref": "./command-envelope.v1.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "NotificacionCheckout"
+        },
+        "idHotel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "idPersona",
+            "idRecepcion",
+            "destinatario",
+            "nombre",
+            "hotel",
+            "totalAlojamiento",
+            "totalConsumos",
+            "templateVersion"
+          ],
+          "properties": {
+            "idPersona": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Cliente de la estadía."
+            },
+            "idRecepcion": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Estadía cerrada."
+            },
+            "destinatario": {
+              "type": "string",
+              "format": "email",
+              "description": "Correo destino; solo viaja por las colas privadas de notification."
+            },
+            "nombre": {
+              "type": "string",
+              "description": "Nombre con el que se personaliza la plantilla CHECKOUT."
+            },
+            "hotel": {
+              "type": "string",
+              "description": "Nombre de la sede para el correo."
+            },
+            "totalAlojamiento": {
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "description": "Total de alojamiento de la estadía."
+            },
+            "totalConsumos": {
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "description": "Total de consumos de la estadía."
+            },
+            "templateVersion": {
+              "const": 1,
+              "description": "Versión de la plantilla CHECKOUT; no se aceptan plantillas desconocidas."
+            }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "commandId": "33333333-3333-4333-8333-333333333333",
+      "type": "NotificacionCheckout",
+      "schemaVersion": 1,
+      "idHotel": 1,
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "issuedAt": "2026-10-05T16:00:00Z",
+      "payload": {
+        "idPersona": 100,
+        "idRecepcion": 1001,
+        "destinatario": "cliente.uno@hotel.test",
+        "nombre": "Cliente Uno",
+        "hotel": "Hotel Demo Lima Centro",
+        "totalAlojamiento": 70.00,
+        "totalConsumos": 7.00,
+        "templateVersion": 1
+      }
+    }
+  ]
+}

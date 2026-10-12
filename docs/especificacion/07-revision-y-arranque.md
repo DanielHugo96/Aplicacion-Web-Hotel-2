@@ -10,16 +10,16 @@ No se leyó ni modificó el plan antiguo. El código del monolito de referencia 
 
 | Problema anterior | Regla corregida | Contratos afectados |
 |---|---|---|
-| Sales podía pagar y Reception caer antes de guardar el recibo; el retry podía recalcular saldo0 | Cierre VALIDANDO→CONFIRMANDO→COMPLETADO; cálculo congelado y búsqueda de recibo antes de recalcular; RECHAZADO no se borra | Flujos, Reception, Sales |
+| Sales podía pagar y Reception caer antes de guardar el recibo; el retry podía recalcular saldo 0 | Cierre VALIDANDO → CONFIRMANDO → COMPLETADO; cálculo congelado y búsqueda de recibo antes de recalcular; RECHAZADO no se borra | Flujos, Reception, Sales |
 | Finalizar antes de admitir no podía insertar tipo NOT NULL; callback tardío podía iniciar débito | Mensaje completo con tipo y tupla validada; estado DEBITO_SOLICITADO y CAS antes del HTTP; lápida terminal | Mensajería, Reception, Sales |
-| blockId rechazado podía aceptarse más tarde y dejar un bloqueo sin dueño | Persistir rechazo por clave; aplicar mantenimiento solo PREPARANDO→APLICADA | Reception, Hotel |
+| blockId rechazado podía aceptarse más tarde y dejar un bloqueo sin dueño | Persistir rechazo por clave; aplicar mantenimiento solo PREPARANDO → APLICADA | Reception, Hotel |
 | Se protegía último ADMIN en DELETE, no en degradación/inactivación por PUT | Mutex sobre rol ADMIN y comprobación en todas las mutaciones de rol/estado | Identity |
 | Versiones físicas y de ocupación podían confundirse; evento de limpieza podía llegar antes de salida | Ciclo con cleaningRoomVersion, historial de completados y reconciliación sin liberar una ocupación posterior | Hotel, Reception, Reporting |
 | Bootstrap dependía de mensajes que no existen en una demo sin ventas | Manifiesto/watermarks y checkpoints de particiones vacías; LISTO explícito | Reporting |
 | Angular no tenía declarados headers necesarios; reintento podía fallar por la versión que él mismo cambió | CORS completo; autenticar, resolver idempotencia y solo para intención nueva evaluar If-Match | Común, Gateway |
 | Lease SMTP y purga no coincidían con el esquema | Token de lease; destinatario/variables nullable solo tras envío/purga; auditoría y reintentos acotados | Notification |
 | Baja de padre competía con alta/reactivación de habitación; producto tenía estado ambiguo | Locks locales de padres; sede/número inmutables; estado de producto editado por sede | Hotel, Inventory |
-| Cierre sin ventas no podía determinar sede; importación podía inventar fecha de pago | idHotel explícito en resumen y receipt de0; historia sin paid_at verificable no se importa como ingreso fechado | Sales, migración |
+| Cierre sin ventas no podía determinar sede; importación podía inventar fecha de pago | idHotel explícito en resumen y receipt de 0; historia sin paid_at verificable no se importa como ingreso fechado | Sales, migración |
 
 Los rechazos durables se guardan mediante commit de un resultado de negocio; no se lanza una excepción que borre la lápida al hacer rollback.
 
@@ -44,6 +44,12 @@ Los rechazos durables se guardan mediante commit de un resultado de negocio; no 
 6. Ejecutar la [matriz de aceptación](06-migracion-y-pruebas.md) con PostgreSQL y brokers reales antes de la demostración.
 
 No hace falta decidir otra arquitectura para empezar. Los parches exactos de dependencias, migraciones SQL y schemas ejecutables se fijan en el primer incremento: son trabajo de implementación, no capacidades presentes en el monolito.
+
+## Actualización 2026-10-12 — consolidación de decisiones
+
+Se incorporaron a la especificación las decisiones del registro de pendientes (`docs/pendientes-especificacion.md`): catálogo único de errores (`contracts/errors.md`), configuración por servicio (`infraestructura/configuracion.md`), runbooks/backups/alertas (`infraestructura/runbooks.md`), mapa del panel (`08-admin-web.md`), envelopes y JSON Schemas de eventos (`contracts/events/`), OpenAPI por servicio (`contracts/openapi/`), DDL de referencia y esquemas JSONB por base, fixtures y matriz de aceptación detallada (`06-migracion-y-pruebas.md`), versiones fijadas (Boot 4.1.1 / Cloud 2025.1.3 / Angular 22.2.2 / PostgreSQL 18.6 / Kafka 4.3.1 / RabbitMQ 4.3.6) y reglas cerradas: `montoRecibido`, `medioPago`, penalidad acotada, anulación de check-in, estadía `vencida`, horario 15:00/12:00, número de habitación reutilizable, baja de producto con stock, auditoría de lectura de PII y retención sin job automático.
+
+La cifra de “24 Markdown” corresponde a la revisión del 05-oct; después de esta consolidación el paquete crece con los documentos y contratos nuevos listados arriba. Las pruebas de la matriz siguen pendientes de implementación.
 
 ## Qué valida esta revisión
 

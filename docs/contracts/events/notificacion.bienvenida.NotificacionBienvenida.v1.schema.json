@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hotel.test/contracts/events/notificacion.bienvenida.NotificacionBienvenida.v1.schema.json",
+  "title": "notificacion.bienvenida — NotificacionBienvenida",
+  "description": "Comando RabbitMQ emitido por identity hacia notification (routing key y cola notificacion.bienvenida; exchange hotel.commands.v1) solo después de un registro público confirmado. idHotel=null porque el cliente es global. No se envía correo desde la transacción de registro; la caída de SMTP no revierte el alta.",
+  "allOf": [
+    {
+      "$ref": "./command-envelope.v1.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "NotificacionBienvenida"
+        },
+        "idHotel": {
+          "type": "null",
+          "description": "null: el cliente recién registrado no pertenece a una sede."
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "idPersona",
+            "destinatario",
+            "nombre",
+            "templateVersion"
+          ],
+          "properties": {
+            "idPersona": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Persona recién registrada."
+            },
+            "destinatario": {
+              "type": "string",
+              "format": "email",
+              "description": "Correo destino; solo viaja por las colas privadas de notification."
+            },
+            "nombre": {
+              "type": "string",
+              "description": "Nombre con el que se personaliza la plantilla BIENVENIDA."
+            },
+            "templateVersion": {
+              "const": 1,
+              "description": "Versión de la plantilla BIENVENIDA; no se aceptan plantillas desconocidas."
+            }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "commandId": "33333333-3333-4333-8333-333333333333",
+      "type": "NotificacionBienvenida",
+      "schemaVersion": 1,
+      "idHotel": null,
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "issuedAt": "2026-10-04T14:00:00Z",
+      "payload": {
+        "idPersona": 100,
+        "destinatario": "cliente.uno@hotel.test",
+        "nombre": "Cliente Uno",
+        "templateVersion": 1
+      }
+    }
+  ]
+}

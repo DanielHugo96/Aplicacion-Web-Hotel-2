@@ -52,6 +52,27 @@ Texto de tarifa: “Desde S/ 70.00 por noche. Consulta disponibilidad con recepc
 
 Cliente nunca envía un rol, propietario o precio que el servidor acepte como autoridad. Los guards de Angular son UX; el backend aplica todas las restricciones.
 
+En el cierre de estadía, A/E fijan `costoPenalidad` (0..precioInicial) y, si es > 0, `motivoPenalidad` (1..300); el panel muestra el desglose de la cotización y resalta la penalidad. La habitación con estadía vencida (ACTIVA con `fechaSalida` anterior a hoy Lima) se muestra con la etiqueta “estadía vencida sin cierre”; no se libera ni se cierra sola. El detalle de pantallas, formularios y estados del panel está en [`08-admin-web.md`](08-admin-web.md); este documento es la visión general.
+
+Política operativa visible: check-in desde las 15:00 y check-out hasta las 12:00 (America/Lima). Una noche es la diferencia de días entre entrada y salida; no hay estancias por horas.
+
+## Formatos de UI (obligatorios)
+
+- Moneda: `S/ 70.00` (símbolo `S/`, dos decimales); separador de miles con coma: `S/ 1,234.50`. La API sigue en ISO-8601 y PEN; los pipes de Angular convierten.
+- Fechas: `dd/MM/yyyy`; timestamps `dd/MM/yyyy HH:mm`; locale **es-PE** registrado con `registerLocaleData` en ambas apps.
+- Estados de venta: mostrar `estado` (pago) y `estadoOperacion` por separado; un 202 se muestra como “pendiente”, nunca como éxito definitivo.
+- “Monto recibido ahora” es la etiqueta del campo `montoRecibido` del cierre; el total histórico del alojamiento se rotula como tal.
+
+## Textos y assets (public-web)
+
+- **Inicio (hero):** “Hoteles de demostración en Lima y Arequipa” + propuesta de valor en una frase (“Catálogo, sedes y contacto; sin reservas ni pagos en línea”) + llamada a contacto.
+- **Sedes/categorías:** descripciones de los seeds de demostración; tarifa con el texto obligatorio “Desde S/ 70.00 por noche. Consulta disponibilidad con recepción. No constituye una reserva.”
+- **Contacto (demo):** `contacto@hotel.test` y teléfono ficticio mostrado como texto no clicable (`tel:` solo con datos reales del equipo); WhatsApp igual.
+- **Privacidad:** borrador informativo sin datos reales ni promesas de cumplimiento legal; enlaza a contacto.
+- **Imágenes:** placeholders propios en `/assets/demo/` con `alt` explícito (“Habitación de demostración”); sin hotlinks, acortadores ni imágenes de terceros. Un fallo de imagen no altera precio ni layout.
+
+Los textos viven en la app (i18n preparado para es-PE); no se sirven desde el backend.
+
 ## UX y pruebas mínimas
 
 - Público sin token recibe 200 en las cuatro rutas públicas y 401 en las privadas.

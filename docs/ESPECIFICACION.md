@@ -1,6 +1,6 @@
 # Hotel: especificación para la migración a microservicios
 
-Versión 1.1 · 2026-10-05 · Estado: diseño para implementar, no funcionalidades ya desplegadas.
+Versión 1.2 · 2026-10-12 · Estado: diseño para implementar, no funcionalidades ya desplegadas.
 
 Entrada única: [índice de la especificación](especificacion/README.md).
 
