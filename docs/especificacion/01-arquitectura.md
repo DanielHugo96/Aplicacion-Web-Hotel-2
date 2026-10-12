@@ -16,13 +16,13 @@ Estructura objetivo para la implementación. Este repositorio contiene hoy la es
     public-web/            Angular: landing y catálogo público
   services/
     pom.xml                agregador Maven y versiones comunes
-    identity-service/
-    hotel-service/
-    reception-service/
-    inventory-service/
-    sales-service/
-    reporting-service/
-    notification-service/
+    identity-service/       src/main/resources/db/migration/ (Flyway propio)
+    hotel-service/          src/main/resources/db/migration/ (Flyway propio)
+    reception-service/      src/main/resources/db/migration/ (Flyway propio)
+    inventory-service/      src/main/resources/db/migration/ (Flyway propio)
+    sales-service/          src/main/resources/db/migration/ (Flyway propio)
+    reporting-service/      src/main/resources/db/migration/ (Flyway propio)
+    notification-service/   src/main/resources/db/migration/ (Flyway propio)
     api-gateway/
     discovery-server/
   contracts/
@@ -68,7 +68,13 @@ La base de datos de un servicio solo la modifica ese servicio. Un PostgreSQL loc
 - Java 25 (LTS vigente), Spring Boot 4.1.x y Angular 22. Se abandona Boot 3.5.x por fin de soporte OSS (30-jun-2026); Boot 4.1 es la línea con soporte hasta jul-2027. Prever la guía de migración Boot 3→4 (JUnit 6, Spring Framework 7); el monolito de referencia queda en 3.5.x.
 - Spring Cloud release train 2025.1.x (Oakwood), compatible con Boot 4.0.x/4.1.x según la tabla oficial; 2025.0.x está EOL. OpenFeign + LoadBalancer, Eureka, Gateway, Security Resource Server.
 - Maven Wrapper y package-lock para reproducibilidad. Elegir y fijar los parches compatibles al crear los builds; no usar versiones flotantes ni `latest` en la entrega.
-- PostgreSQL 18 (imagen pineada `postgres:18`), JPA para CRUD sencillo, Flyway para schema/funciones/procedimientos. `ddl-auto=validate`; no `update`.
+- PostgreSQL 18 (imagen pineada `postgres:18`), JPA para CRUD sencillo.
+- Flyway por servicio para schema, funciones y procedimientos. Cada servicio aplica sus migraciones al arrancar sobre su propia base; ningún servicio ejecuta migraciones de otro.
+  - Ubicación: `src/main/resources/db/migration/`.
+  - Nombres `V<n>__descripcion.sql`. Una migración ya aplicada no se edita; los cambios van en una nueva versión.
+  - Seeds de demo en `db/seed`, activos solo con perfiles no productivos (`dev`, `demo`). Nunca se activan en producción.
+  - Compose espera a que PostgreSQL esté sano (`healthcheck` + `depends_on: service_healthy`) antes de arrancar cada servicio.
+- JPA solo valida el esquema: `ddl-auto=validate`; no `update`.
 - Kafka 4.x en KRaft (solo KRaft desde 4.0), un nodo para desarrollo; RabbitMQ 4.3.x con management; Mailpit para correos de demo. Pinear tags de imagen, no `latest`.
 - Docker Compose: sí. Infraestructura en contenedores desde el inicio; Java/Angular en IDE durante desarrollo; perfil completo en contenedores para demostración.
 - Sin Kubernetes, service mesh, Redis, Debezium ni servidor de configuración en el MVP.
