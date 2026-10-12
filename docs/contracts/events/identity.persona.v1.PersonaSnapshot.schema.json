@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hotel.test/contracts/events/identity.persona.v1.PersonaSnapshot.schema.json",
+  "title": "identity.persona.v1 — PersonaSnapshot",
+  "description": "Snapshot de persona emitido por identity (topic identity.persona.v1, key=idPersona, idHotel=null por ser un hecho global). Lo consume reporting. No incluye documento, correo, clave, hash ni sedes.",
+  "allOf": [
+    {
+      "$ref": "./envelope.v1.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "PersonaSnapshot"
+        },
+        "aggregateType": {
+          "const": "persona"
+        },
+        "aggregateId": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "idPersona serializado como texto (Kafka key)."
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "idHotel": {
+          "type": "null",
+          "description": "null: la persona es global y no pertenece a una sede."
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "idPersona",
+            "nombre",
+            "apellido",
+            "idTipoPersona",
+            "estado",
+            "version"
+          ],
+          "properties": {
+            "idPersona": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Identificador de la persona."
+            },
+            "nombre": {
+              "type": "string",
+              "description": "Nombre; dato personal de uso interno (Reporting)."
+            },
+            "apellido": {
+              "type": "string",
+              "description": "Apellido; dato personal de uso interno (Reporting)."
+            },
+            "idTipoPersona": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Tipo de persona del catálogo fijo (ADMIN/EMPLEADO/CLIENTE)."
+            },
+            "estado": {
+              "type": "boolean",
+              "description": "false en una baja; el snapshot de baja conserva el resto de campos."
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versión de la persona."
+            }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "eventId": "11111111-1111-4111-8111-111111111111",
+      "type": "PersonaSnapshot",
+      "schemaVersion": 1,
+      "aggregateType": "persona",
+      "aggregateId": "100",
+      "aggregateVersion": 1,
+      "idHotel": null,
+      "occurredAt": "2026-10-04T15:00:00Z",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "payload": {
+        "idPersona": 100,
+        "nombre": "Cliente",
+        "apellido": "Uno",
+        "idTipoPersona": 3,
+        "estado": true,
+        "version": 1
+      }
+    }
+  ]
+}

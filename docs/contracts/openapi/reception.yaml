@@ -1,0 +1,1815 @@
+openapi: 3.1.0
+info:
+  title: Hotel reception — contrato API
+  version: 1.0.0
+  description: >-
+    Estadías y cierre de recepción. Rutas /api/** vía API Gateway
+    (http://localhost:8080) para A=ADMIN, E=EMPLEADO (solo sedes asignadas) y
+    C=CLIENTE (solo lectura de su propia estadía). Rutas /internal/** exclusivas
+    de Feign máquina a máquina en red privada, con scope. Deny-by-default.
+    POST/PUT/DELETE de negocio exigen Idempotency-Key; PUT/DELETE con V exigen
+    If-Match. Envelope {success,message,data,meta}; dinero numeric(12,2) con
+    redondeo HALF_UP y comparación exacta contra el cálculo del servidor.
+    Fuentes: especificacion/microservicios/reception/api.md y base-de-datos.md,
+    especificacion/03-contrato-comun.md, contracts/errors.md.
+servers:
+  - url: http://localhost:8080
+    description: API Gateway local (rutas humanas /api/**)
+  - url: http://reception:8081
+    description: Servicio reception directo (solo rutas /internal/**)
+security:
+  - bearerAuth: []
+tags:
+  - name: recepcion
+    description: Operaciones humanas A/E y lectura propia de C
+  - name: interno
+    description: Feign entrante con token máquina y scope
+paths:
+  /api/recepcion/listar:
+    get:
+      tags: [recepcion]
+      summary: Listar estadías por sede
+      description: >-
+        A ve todas las sedes y E solo las asignadas (403 fuera de alcance).
+        Filtro opcional estadoEstadia y paginación L con orden estable por ID
+        ascendente; cada ítem usa la forma completa de Recepcion.
+      operationId: listarRecepciones
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - $ref: '#/components/parameters/IdHotelQuery'
+        - name: estadoEstadia
+          in: query
+          required: false
+          description: Filtra por estado de la estadía; omitido devuelve todos.
+          schema:
+            type: string
+            enum: [ACTIVA, CERRANDO, CERRADA]
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Recepcion[] de la sede
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListRecepcion'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idRecepcion: 1001
+                    idHotel: 1
+                    idCliente: 100
+                    idHabitacion: 101
+                    numero: '101'
+                    categoriaNombre: Individual
+                    pisoNombre: Primer piso
+                    detalleHabitacion: Habitación de demostración
+                    precioHabitacion: 70.00
+                    nombre: Cliente
+                    apellido: Uno
+                    tipoDocumento: DNI
+                    documento: '90000100'
+                    correo: cliente.uno@hotel.test
+                    fechaEntrada: 2026-10-04
+                    fechaSalida: 2026-10-05
+                    fechaSalidaConfirmacion: null
+                    precioInicial: 70.00
+                    adelanto: 20.00
+                    medioPagoAdelanto: EFECTIVO
+                    precioRestante: 50.00
+                    totalPagado: 20.00
+                    costoPenalidad: 0.00
+                    motivoPenalidad: null
+                    observacion: Ingreso presencial
+                    estado: true
+                    estadoEstadia: ACTIVA
+                    archivada: false
+                    vencida: false
+                    version: 1
+                    closureId: null
+                    cleaningCycleId: null
+                    cierre: null
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 1
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/recepcion/{id}:
+    get:
+      tags: [recepcion]
+      summary: Ver estadía (A/E; C solo la propia)
+      description: >-
+        A/E según sede y C solo si el idCliente de la estadía coincide con el
+        sub del token; otra estadía responde 404 para evitar enumeración, nunca
+        403 que revele existencia. C recibe su propio snapshot.
+      operationId: buscarRecepcion
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Recepcion
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleRecepcion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/recepcion/cliente/{idCliente}:
+    get:
+      tags: [recepcion]
+      summary: Estadías por cliente (C solo sub)
+      description: >-
+        C consulta exclusivamente su propio idCliente (sub); un id ajeno no se
+        revela. E debe indicar idHotel y solo ve esa sede; A filtra cualquiera.
+        Un cliente puede tener estadías ACTIVA/CERRANDO simultáneas en
+        habitaciones o sedes distintas (familia/grupo).
+      operationId: recepcionesPorCliente
+      parameters:
+        - name: idCliente
+          in: path
+          required: true
+          description: Identificador comercial del cliente (identity).
+          schema:
+            type: integer
+            minimum: 1
+            example: 100
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: estadoEstadia
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [ACTIVA, CERRANDO, CERRADA]
+        - name: idHotel
+          in: query
+          required: false
+          description: Obligatorio para EMPLEADO (filtro de sede); CLIENTE lo omite porque usa su sub.
+          schema:
+            type: integer
+            minimum: 1
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Recepcion[] del cliente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListRecepcion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/recepcion/habitacion-activa/{idHabitacion}:
+    get:
+      tags: [recepcion]
+      summary: Estadía activa por habitación (A/E)
+      description: >-
+        Devuelve la estadía ACTIVA/CERRANDO de la habitación o data=null si no
+        hay ninguna. Valida la sede del empleado aun cuando no exista estadía,
+        para no filtrar ocupación de otra sede.
+      operationId: habitacionActiva
+      parameters:
+        - name: idHabitacion
+          in: path
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+            example: 101
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Recepcion o data=null si la habitación está libre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleRecepcionOrNull'
+              example:
+                success: true
+                message: OK
+                data:
+                  idRecepcion: 1001
+                  idHotel: 1
+                  idCliente: 100
+                  idHabitacion: 101
+                  numero: '101'
+                  categoriaNombre: Individual
+                  pisoNombre: Primer piso
+                  detalleHabitacion: Habitación de demostración
+                  precioHabitacion: 70.00
+                  nombre: Cliente
+                  apellido: Uno
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  correo: cliente.uno@hotel.test
+                  fechaEntrada: 2026-10-04
+                  fechaSalida: 2026-10-05
+                  fechaSalidaConfirmacion: null
+                  precioInicial: 70.00
+                  adelanto: 20.00
+                  medioPagoAdelanto: EFECTIVO
+                  precioRestante: 50.00
+                  totalPagado: 20.00
+                  costoPenalidad: 0.00
+                  motivoPenalidad: null
+                  observacion: null
+                  estado: true
+                  estadoEstadia: ACTIVA
+                  archivada: false
+                  vencida: false
+                  version: 1
+                  closureId: null
+                  cleaningCycleId: null
+                  cierre: null
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/recepcion/registrar:
+    post:
+      tags: [recepcion]
+      summary: Check-in inmediato (A/E; 201)
+      description: >-
+        No hay reservas futuras. fechaEntrada la fija el servidor en hoy
+        America/Lima; enviarla o mandar precios/nombre/documento devuelve 400 y
+        el cliente debe existir primero en identity. fechaSalida hoy o posterior
+        con máximo 365 noches y mínimo de cobro una noche; adelanto 0..alojamiento
+        y medioPago obligatorio si adelanto>0. La misma Idempotency-Key no
+        duplica la estadía. Política de horario: check-in desde las 15:00 y
+        check-out hasta las 12:00, horas informativas que no cambian precio ni
+        esquema.
+      operationId: checkin
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CheckIn'
+            example:
+              idHotel: 1
+              idCliente: 100
+              idHabitacion: 101
+              fechaSalida: 2026-10-05
+              adelanto: 20.00
+              medioPago: EFECTIVO
+              observacion: Ingreso presencial
+      responses:
+        '201':
+          description: Recepcion ACTIVA creada con la habitación ocupada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleRecepcion'
+              example:
+                success: true
+                message: Check-in registrado
+                data:
+                  idRecepcion: 1001
+                  idHotel: 1
+                  idCliente: 100
+                  idHabitacion: 101
+                  numero: '101'
+                  categoriaNombre: Individual
+                  pisoNombre: Primer piso
+                  detalleHabitacion: Habitación de demostración
+                  precioHabitacion: 70.00
+                  nombre: Cliente
+                  apellido: Uno
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  correo: cliente.uno@hotel.test
+                  fechaEntrada: 2026-10-04
+                  fechaSalida: 2026-10-05
+                  fechaSalidaConfirmacion: null
+                  precioInicial: 70.00
+                  adelanto: 20.00
+                  medioPagoAdelanto: EFECTIVO
+                  precioRestante: 50.00
+                  totalPagado: 20.00
+                  costoPenalidad: 0.00
+                  motivoPenalidad: null
+                  observacion: Ingreso presencial
+                  estado: true
+                  estadoEstadia: ACTIVA
+                  archivada: false
+                  vencida: false
+                  version: 1
+                  closureId: null
+                  cleaningCycleId: null
+                  cierre: null
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >-
+            409 sin efectos: ROOM_OCCUPIED (gate OCUPADA), ROOM_NOT_READY
+            (físico no LISTA o gate LIMPIEZA_PENDIENTE) o ROOM_NOT_SYNCED
+            (bootstrap Kafka aún no alcanzó la habitación; puede responder 503
+            transitorio).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                success: false
+                message: La habitación ya está ocupada.
+                data: null
+                error:
+                  code: ROOM_OCCUPIED
+                  fields:
+                    idHabitacion: '101'
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /api/recepcion/actualizar/{id}:
+    put:
+      tags: [recepcion]
+      summary: Cambiar fechaSalida/observación (A/E, V; solo ACTIVA)
+      description: >-
+        Solo sobre estadía ACTIVA; recalcula el precio por noches y nunca altera
+        adelanto ni pagos. Una estadía CERRADA no vuelve a ACTIVA. Acortar
+        fechaSalida no puede reducir precioInicial por debajo del adelanto
+        (409 ADVANCE_EXCEEDS_NEW_TOTAL) y no existe reembolso en el MVP.
+        Reintento con la misma Idempotency-Key no repite el efecto.
+      operationId: actualizarRecepcion
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fechaSalida]
+              properties:
+                fechaSalida:
+                  type: string
+                  format: date
+                  description: Hoy (America/Lima) o posterior; máximo 365 noches desde fechaEntrada.
+                observacion:
+                  type: [string, 'null']
+                  maxLength: 500
+            example:
+              fechaSalida: 2026-10-06
+              observacion: Extiende una noche
+      responses:
+        '200':
+          description: Recepcion actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleRecepcion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >-
+            STAY_NOT_ACTIVE si la estadía no está ACTIVA;
+            ADVANCE_EXCEEDS_NEW_TOTAL si la nueva fecha deja precioInicial por
+            debajo del adelanto registrado; OPERATIONS_IN_PROGRESS si hay
+            operaciones de consumo ABIERTAS.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                success: false
+                message: La nueva fecha deja el alojamiento por debajo del adelanto registrado.
+                data: null
+                error:
+                  code: ADVANCE_EXCEEDS_NEW_TOTAL
+                  fields:
+                    fechaSalida: '2026-10-04'
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/recepcion/{id}/cotizacion-salida:
+    get:
+      tags: [recepcion]
+      summary: Cotización informativa de salida (A/E; 200)
+      description: >-
+        Calcula el desglose vigente que el panel debe mostrar y resaltar; el
+        frontend no recalcula. Redondeo HALF_UP a 2 decimales por componente con
+        BigDecimal; la penalidad opcional debe estar entre 0 y precioInicial.
+        Ejemplo con tarifa 70, adelanto 20 y consumo pendiente 7: cobroAhora 57.
+      operationId: cotizarSalida
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: costoPenalidad
+          in: query
+          required: false
+          description: Penalidad simulada; 0 por defecto y nunca mayor que precioInicial.
+          schema:
+            type: number
+            multipleOf: 0.01
+            minimum: 0
+            default: 0
+            example: 0.00
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Cotizacion vigente del cierre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleCotizacion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idRecepcion: 1001
+                  alojamiento: 70.00
+                  adelanto: 20.00
+                  penalidad: 0.00
+                  saldoAlojamiento: 50.00
+                  consumosPagados: 0.00
+                  consumosPendientes: 7.00
+                  cobroAhora: 57.00
+                  moneda: PEN
+                  calculadoEn: 2026-10-05T15:55:00Z
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/recepcion/registrar-salida:
+    post:
+      tags: [recepcion]
+      summary: Registrar salida/cierre (A/E; 200 cerrada o 202 CERRANDO)
+      description: >-
+        montoRecibido es el pago manual recibido AHORA, incluido el consumo
+        pendiente (etiqueta de panel “Monto recibido ahora”); no es el total
+        histórico. El backend verifica contra el cálculo estable y compara de
+        forma exacta: cualquier diferencia, aunque sea 0.01, devuelve 409
+        AMOUNT_MISMATCH con la nueva cotización y el closureId. costoPenalidad
+        solo lo fijan A/E, con 0 <= costoPenalidad <= precioInicial, y si es > 0
+        exige motivoPenalidad 1..300 que queda en el request del cierre y en la
+        auditoría. El idHabitacion se valida contra la recepción y no cierra otra
+        habitación. 200 devuelve la estadía CERRADA; 202 indica cierre en curso
+        (CERRANDO) con Location y Retry-After, y no se debe reiniciar el cobro.
+        El mismo Idempotency-Key reanuda o devuelve el resultado terminal; con
+        operaciones en vuelo responde 409 OPERATIONS_IN_PROGRESS y con otro
+        cierre vigente 409 CLOSURE_IN_PROGRESS.
+      operationId: checkout
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Salida'
+            example:
+              idRecepcion: 1001
+              idHabitacion: 101
+              costoPenalidad: 0.00
+              montoRecibido: 57.00
+              medioPago: EFECTIVO
+      responses:
+        '200':
+          description: Recepcion CERRADA con el desglose final del cierre
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleRecepcion'
+              example:
+                success: true
+                message: Salida registrada
+                data:
+                  idRecepcion: 1001
+                  idHotel: 1
+                  idCliente: 100
+                  idHabitacion: 101
+                  numero: '101'
+                  categoriaNombre: Individual
+                  pisoNombre: Primer piso
+                  detalleHabitacion: Habitación de demostración
+                  precioHabitacion: 70.00
+                  nombre: Cliente
+                  apellido: Uno
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  correo: cliente.uno@hotel.test
+                  fechaEntrada: 2026-10-04
+                  fechaSalida: 2026-10-05
+                  fechaSalidaConfirmacion: 2026-10-05T16:00:00Z
+                  precioInicial: 70.00
+                  adelanto: 20.00
+                  medioPagoAdelanto: EFECTIVO
+                  precioRestante: 0.00
+                  totalPagado: 70.00
+                  costoPenalidad: 0.00
+                  motivoPenalidad: null
+                  observacion: Ingreso presencial
+                  estado: false
+                  estadoEstadia: CERRADA
+                  archivada: false
+                  vencida: false
+                  version: 3
+                  closureId: 20000000-0000-4000-8000-000000000002
+                  cleaningCycleId: 30000000-0000-4000-8000-000000000003
+                  cierre:
+                    closureId: 20000000-0000-4000-8000-000000000002
+                    estado: COMPLETADO
+                    lastErrorCode: null
+                    medioPago: EFECTIVO
+                    calculo:
+                      alojamientoTotal: 70.00
+                      saldoAlojamiento: 50.00
+                      consumosPagadosAntes: 0.00
+                      consumosPendientes: 7.00
+                      consumosTotal: 7.00
+                      cobroAhora: 57.00
+                      totalGeneral: 77.00
+                      expectedPendingTotal: 7.00
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '202':
+          description: >-
+            Cierre aceptado y aún en curso (estadía CERRANDO); el cliente hace
+            polling en Location según Retry-After y no reinicia el cobro.
+          headers:
+            Location:
+              schema: {type: string, example: /api/recepcion/1001}
+            Retry-After:
+              schema: {type: integer, example: 2}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleRecepcion'
+              example:
+                success: true
+                message: Cierre en curso
+                data:
+                  idRecepcion: 1001
+                  idHotel: 1
+                  idCliente: 100
+                  idHabitacion: 101
+                  numero: '101'
+                  categoriaNombre: Individual
+                  pisoNombre: Primer piso
+                  detalleHabitacion: Habitación de demostración
+                  precioHabitacion: 70.00
+                  nombre: Cliente
+                  apellido: Uno
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  correo: cliente.uno@hotel.test
+                  fechaEntrada: 2026-10-04
+                  fechaSalida: 2026-10-05
+                  fechaSalidaConfirmacion: null
+                  precioInicial: 70.00
+                  adelanto: 20.00
+                  medioPagoAdelanto: EFECTIVO
+                  precioRestante: 50.00
+                  totalPagado: 20.00
+                  costoPenalidad: 0.00
+                  motivoPenalidad: null
+                  observacion: null
+                  estado: true
+                  estadoEstadia: CERRANDO
+                  archivada: false
+                  vencida: false
+                  version: 2
+                  closureId: 20000000-0000-4000-8000-000000000002
+                  cleaningCycleId: null
+                  cierre:
+                    closureId: 20000000-0000-4000-8000-000000000002
+                    estado: CONFIRMANDO
+                    lastErrorCode: null
+                    calculo:
+                      alojamientoTotal: 70.00
+                      saldoAlojamiento: 50.00
+                      consumosPagadosAntes: 0.00
+                      consumosPendientes: 7.00
+                      consumosTotal: 7.00
+                      cobroAhora: 57.00
+                      totalGeneral: 77.00
+                      expectedPendingTotal: 7.00
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >-
+            AMOUNT_MISMATCH si montoRecibido difiere en cualquier centavo del
+            cobroAhora calculado (devuelve nueva cotización y closureId);
+            OPERATIONS_IN_PROGRESS con ventas admitidas en vuelo;
+            CLOSURE_IN_PROGRESS si ya hay un cierre vigente; STAY_NOT_ACTIVE
+            fuera de ACTIVA; ROOM_NOT_SYNCED si el gate no está sincronizado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiErrorCotizacion'
+              example:
+                success: false
+                message: El monto no coincide con el calculado. Revisa la nueva cotización.
+                data:
+                  cotizacion:
+                    idRecepcion: 1001
+                    alojamiento: 70.00
+                    adelanto: 20.00
+                    penalidad: 0.00
+                    saldoAlojamiento: 50.00
+                    consumosPagados: 0.00
+                    consumosPendientes: 7.00
+                    cobroAhora: 57.00
+                    moneda: PEN
+                    calculadoEn: 2026-10-05T15:55:00Z
+                  closureId: 20000000-0000-4000-8000-000000000002
+                error:
+                  code: AMOUNT_MISMATCH
+                  fields:
+                    montoRecibido: '57.01'
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /api/recepcion/{id}/anular-checkin:
+    post:
+      tags: [recepcion]
+      summary: Anular check-in errado (A, V; 200 archivada)
+      description: >-
+        Corrige una estadía ACTIVA creada por error. Admisible solo si está
+        ACTIVA, sin ventas admitidas ni cierre en curso. Hace CAS ACTIVA →
+        CERRADA con archivada=true, libera room_gate a LIBRE con roomVersion++
+        (sin limpieza ni notificación de checkout), publica RecepcionActualizada
+        y audita en audit_log. No genera receipt ni cobro. Con operaciones
+        ABIERTAS responde 409 OPERATIONS_IN_PROGRESS; con cierre vigente 409
+        CLOSURE_IN_PROGRESS. Requiere motivo 1..300, If-Match e Idempotency-Key.
+      operationId: anularCheckin
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [motivo]
+              properties:
+                motivo:
+                  type: string
+                  minLength: 1
+                  maxLength: 300
+      responses:
+        '200':
+          description: Recepcion CERRADA archivada sin cobro
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleRecepcion'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >-
+            OPERATIONS_IN_PROGRESS si hay operaciones de consumo ABIERTAS;
+            CLOSURE_IN_PROGRESS si existe cierre vigente; STAY_NOT_ACTIVE si la
+            estadía no está ACTIVA. El rechazo no cambia nada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                success: false
+                message: Hay consumos en proceso. Espera a que terminen.
+                data: null
+                error:
+                  code: OPERATIONS_IN_PROGRESS
+                  fields:
+                    idRecepcion: '1001'
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/recepcion/eliminar/{id}:
+    delete:
+      tags: [recepcion]
+      summary: Archivar estadía (A, V; 200 archivada)
+      description: >-
+        Baja lógica solo de estadías CERRADA (sp_recepcion_archivar): marca
+        archivada=true y conserva importes y snapshots. Con otro estado responde
+        409 STAY_NOT_ACTIVE. DELETE repetido con la misma Idempotency-Key
+        devuelve el resultado original aunque el recurso ya haya cambiado.
+      operationId: archivarRecepcion
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Recepcion archivada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleRecepcion'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: STAY_NOT_ACTIVE si la estadía no está CERRADA; no se borra ni archiva nada más.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                success: false
+                message: La estadía no está activa para esa operación.
+                data: null
+                error:
+                  code: STAY_NOT_ACTIVE
+                  fields:
+                    idRecepcion: '1001'
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /internal/recepciones/{id}:
+    get:
+      tags: [interno]
+      summary: Resumen de estadía para admisión (máquina)
+      description: >-
+        Solo caller sales con token máquina y scope recepciones:read; un token
+        humano no basta para /internal/**. Devuelve el resumen mínimo de
+        admisión sin documento ni correo.
+      operationId: obtenerRecepcionInterna
+      security:
+        - machineToken: [recepciones:read]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Resumen de la estadía
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleResumenRecepcion'
+              example:
+                success: true
+                message: OK
+                data:
+                  idRecepcion: 1001
+                  idHotel: 1
+                  idCliente: 100
+                  idHabitacion: 101
+                  estadoEstadia: ACTIVA
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /internal/recepciones/{id}/operaciones:
+    post:
+      tags: [interno]
+      summary: Admitir operación de consumo (máquina)
+      description: >-
+        Solo caller sales con scope operaciones:write. Idempotency-Key estable
+        derivada de operationId. El caller valida antes el JWT humano/sede y
+        pasa actorId solo para auditoría; si actorRol=CLIENTE, reception
+        comprueba idCliente=actorId y tipo=VENTA. Exige estadía ACTIVA y
+        devuelve la admisión en estado ABIERTA; un rechazo tardío queda como
+        resultado durable (FINALIZADA/RECHAZADA) y no revive una lápida.
+      operationId: admitirOperacionRecepcion
+      security:
+        - machineToken: [operaciones:write]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OperacionRecepcion'
+            example:
+              operationId: 40000000-0000-4000-8000-000000000004
+              idVenta: 5001
+              idHotel: 1
+              tipo: VENTA
+              actorId: 100
+              actorRol: CLIENTE
+      responses:
+        '200':
+          description: Operación admitida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleOperacionRecepcionEstado'
+              example:
+                success: true
+                message: OK
+                data:
+                  operationId: 40000000-0000-4000-8000-000000000004
+                  tipo: VENTA
+                  estado: ABIERTA
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >-
+            STAY_NOT_ACTIVE si la estadía no está ACTIVA o la admisión ya
+            finalizó; el rechazo es durable y no se reintenta con otra clave.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                success: false
+                message: La estadía no está activa para esa operación.
+                data: null
+                error:
+                  code: STAY_NOT_ACTIVE
+                  fields:
+                    idRecepcion: '1001'
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+  /internal/habitaciones/{id}/bloqueos:
+    post:
+      tags: [interno]
+      summary: Bloquear habitación (máquina; decisión durable)
+      description: >-
+        Solo caller hotel con scope bloqueos:write. Idempotency-Key estable
+        derivada de blockId. La decisión se guarda por blockId inmutable: si el
+        gate está LIBRE queda ACTIVO y bloqueada; si no, se persiste RECHAZADO
+        con 409 durable GATE_NOT_AVAILABLE y el mismo blockId no se admite
+        aunque el gate se libere después. Un payload distinto con el mismo
+        blockId responde 409.
+      operationId: bloquearHabitacion
+      security:
+        - machineToken: [bloqueos:write]
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Bloqueo'
+            example:
+              blockId: 50000000-0000-4000-8000-000000000005
+              idHotel: 1
+              motivo: Mantenimiento preventivo
+      responses:
+        '200':
+          description: Habitación bloqueada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleBloqueoResultado'
+              example:
+                success: true
+                message: Habitación bloqueada
+                data:
+                  blockId: 50000000-0000-4000-8000-000000000005
+                  idHabitacion: 101
+                  estado: BLOQUEADA
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: >-
+            GATE_NOT_AVAILABLE con decisión durable por blockId: el gate está
+            OCUPADA o LIMPIEZA_PENDIENTE y no procede el bloqueo.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                success: false
+                message: 'No se puede bloquear la habitación: está ocupada o en limpieza.'
+                data: null
+                error:
+                  code: GATE_NOT_AVAILABLE
+                  fields:
+                    blockId: 50000000-0000-4000-8000-000000000005
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        JWT humano RS256 de identity (iss=hotel-identity, aud=hotel-api,
+        TTL 15min) con claim sedes para A/E y sub para CLIENTE.
+    machineToken:
+      type: oauth2
+      description: >-
+        JWT máquina obtenido en POST /internal/auth/token con
+        grant_type=client_credentials y Basic clientId:secret por TLS; aud=destino,
+        TTL 5min y scope limitado por audiencia. Solo para /internal/** en red
+        privada; un token humano no basta.
+      flows:
+        clientCredentials:
+          tokenUrl: /internal/auth/token
+          scopes:
+            recepciones:read: sales consulta el resumen de la estadía para admitir ventas
+            operaciones:write: sales admite y finaliza operaciones de consumo
+            bloqueos:write: hotel solicita el bloqueo administrativo de una habitación
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Página L base 0.
+      schema: {type: integer, minimum: 0, default: 0}
+    Size:
+      name: size
+      in: query
+      required: false
+      description: Tamaño de página L entre 1 y 100.
+      schema: {type: integer, minimum: 1, maximum: 100, default: 20}
+    IdPath:
+      name: id
+      in: path
+      required: true
+      description: Identificador comercial del recurso.
+      schema: {type: integer, minimum: 1}
+    IdHotelQuery:
+      name: idHotel
+      in: query
+      required: true
+      description: Sede H; E solo puede operar en sus sedes asignadas.
+      schema: {type: integer, minimum: 1}
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: >-
+        UUID obligatorio en POST/PUT/DELETE de negocio; el mismo valor al
+        reintentar. Misma clave con request distinto devuelve 409
+        IDEMPOTENCY_CONFLICT.
+      schema: {type: string, format: uuid}
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: >-
+        Versión V del recurso entre comillas, por ejemplo "1"; ausente 428,
+        distinta 412.
+      schema: {type: string}
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: UUID opcional del cliente; el Gateway lo genera si falta y lo propaga/responde.
+      schema: {type: string, format: uuid}
+  responses:
+    BadRequest:
+      description: 400 validación/formato, JSON cerrado o campo calculado enviado por el cliente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Revisa los datos marcados.
+            data: null
+            error:
+              code: VALIDATION_ERROR
+              fields:
+                fechaSalida: La fecha de salida debe ser hoy o posterior
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Unauthorized:
+      description: 401 token ausente, expirado o con firma/issuer/audience inválidos.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Tu sesión expiró. Vuelve a iniciar sesión.
+            data: null
+            error:
+              code: UNAUTHENTICATED
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Forbidden:
+      description: 403 rol, scope o sede insuficientes; cliente intentando operación de personal.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: No tienes permiso para esta acción.
+            data: null
+            error:
+              code: FORBIDDEN
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    NotFound:
+      description: 404 inexistente o ajeno a sede/propietario (anti-enumeración).
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: No encontramos lo que buscas.
+            data: null
+            error:
+              code: RESOURCE_NOT_FOUND
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Conflict:
+      description: 409 regla de negocio o duplicado sin efectos parciales.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: La estadía no está activa para esa operación.
+            data: null
+            error:
+              code: STAY_NOT_ACTIVE
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    PreconditionFailed:
+      description: 412 If-Match con versión distinta al ETag vigente.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Otra persona modificó este registro. Recarga para ver los cambios.
+            data: null
+            error:
+              code: PRECONDITION_FAILED
+              fields:
+                If-Match: '1'
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    PreconditionRequired:
+      description: 428 falta If-Match en un PUT/DELETE con V.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Falta la versión del registro.
+            data: null
+            error:
+              code: PRECONDITION_REQUIRED
+              fields:
+                If-Match: ausente
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Unavailable:
+      description: 503 dependencia no disponible antes de crear una operación durable.
+      headers:
+        Retry-After:
+          schema: {type: integer, example: 5}
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: El servicio no está disponible. Reintenta en unos segundos.
+            data: null
+            error:
+              code: DEPENDENCY_UNAVAILABLE
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+  schemas:
+    CheckIn:
+      type: object
+      description: >-
+        Alta de estadía inmediata. fechaEntrada la fija el servidor en hoy
+        America/Lima; enviarla o mandar precios/nombre/documento devuelve 400.
+        El cliente debe existir en identity.
+      required: [idHotel, idCliente, idHabitacion, fechaSalida, adelanto]
+      properties:
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        idCliente:
+          type: integer
+          minimum: 1
+          example: 100
+        idHabitacion:
+          type: integer
+          minimum: 1
+          example: 101
+        fechaSalida:
+          type: string
+          format: date
+          description: Hoy (America/Lima) o posterior; máximo 365 noches; mínimo de cobro una noche.
+          example: 2026-10-05
+        adelanto:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          description: No negativo y menor o igual al alojamiento calculado.
+          example: 20.00
+        medioPago:
+          type: string
+          enum: [EFECTIVO, TARJETA, OTRO]
+          description: Obligatorio cuando adelanto > 0; sin cobro inicial se omite.
+        observacion:
+          type: string
+          maxLength: 500
+          example: Ingreso presencial
+    Salida:
+      type: object
+      description: >-
+        Cierre solicitado por A/E. montoRecibido es el pago manual recibido
+        AHORA (etiqueta de panel “Monto recibido ahora”) e incluye el consumo
+        pendiente; no es el total histórico. El backend lo compara de forma
+        exacta contra cobroAhora y devuelve 409 AMOUNT_MISMATCH ante cualquier
+        diferencia. costoPenalidad 0..precioInicial; si es > 0, motivoPenalidad
+        1..300 es obligatorio y queda en el request del cierre y en la auditoría.
+      required: [idRecepcion, idHabitacion, costoPenalidad, montoRecibido, medioPago]
+      properties:
+        idRecepcion:
+          type: integer
+          minimum: 1
+          example: 1001
+        idHabitacion:
+          type: integer
+          minimum: 1
+          description: Se valida contra la recepción; nunca se usa para cerrar otra habitación.
+          example: 101
+        costoPenalidad:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          description: Solo A/E; no puede superar precioInicial.
+          example: 0.00
+        motivoPenalidad:
+          type: string
+          minLength: 1
+          maxLength: 300
+          description: Obligatorio cuando costoPenalidad > 0.
+        montoRecibido:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          description: Pago manual recibido ahora; comparación exacta contra cobroAhora.
+          example: 57.00
+        medioPago:
+          type: string
+          enum: [EFECTIVO, TARJETA, OTRO]
+          description: Obligatorio en cada cobro.
+    Recepcion:
+      type: object
+      description: >-
+        Estadía con snapshots de cliente y habitación. estado es el booleano
+        legacy derivado (true para ACTIVA/CERRANDO; false para CERRADA).
+        vencida es derivado (ACTIVA con fechaSalida < hoy America/Lima) y el
+        gate sigue OCUPADA hasta el cierre normal por A/E. medioPagoAdelanto
+        null equivale a NO_REGISTRADO en históricos migrados. totalPagado es el
+        total histórico del alojamiento (adelanto + cobro final) sin mezclar
+        consumos; el detalle del cierre viaja en cierre.
+      required: [idRecepcion, idHotel, idCliente, idHabitacion, numero, categoriaNombre,
+        pisoNombre, detalleHabitacion, precioHabitacion, nombre, apellido, tipoDocumento,
+        documento, correo, fechaEntrada, fechaSalida, fechaSalidaConfirmacion, precioInicial,
+        adelanto, medioPagoAdelanto, precioRestante, totalPagado, costoPenalidad,
+        motivoPenalidad, observacion, estado, estadoEstadia, archivada, vencida, version,
+        closureId, cleaningCycleId, cierre]
+      properties:
+        idRecepcion:
+          type: integer
+          minimum: 1
+          example: 1001
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        idCliente:
+          type: integer
+          minimum: 1
+          example: 100
+        idHabitacion:
+          type: integer
+          minimum: 1
+          example: 101
+        numero:
+          type: string
+          example: '101'
+        categoriaNombre:
+          type: string
+          example: Individual
+        pisoNombre:
+          type: string
+          example: Primer piso
+        detalleHabitacion:
+          type: string
+          example: Habitación de demostración
+        precioHabitacion:
+          type: number
+          multipleOf: 0.01
+          exclusiveMinimum: 0
+          description: Tarifa congelada del snapshot de habitación.
+          example: 70.00
+        nombre:
+          type: string
+          example: Cliente
+        apellido:
+          type: string
+          example: Uno
+        tipoDocumento:
+          type: string
+          enum: [DNI, PASAPORTE, CE]
+        documento:
+          type: string
+          example: '90000100'
+        correo:
+          type: string
+          format: email
+          example: cliente.uno@hotel.test
+        fechaEntrada:
+          type: string
+          format: date
+          example: 2026-10-04
+        fechaSalida:
+          type: string
+          format: date
+          example: 2026-10-05
+        fechaSalidaConfirmacion:
+          type: [string, 'null']
+          format: date-time
+          description: Timestamp del cierre efectivo; null mientras la estadía sigue ACTIVA/CERRANDO.
+        precioInicial:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 70.00
+        adelanto:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 20.00
+        medioPagoAdelanto:
+          type: [string, 'null']
+          enum: [EFECTIVO, TARJETA, OTRO, null]
+          description: null equivale a NO_REGISTRADO (histórico migrado).
+        precioRestante:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          description: Saldo de alojamiento pendiente antes del cierre.
+          example: 50.00
+        totalPagado:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          description: Total histórico del alojamiento (adelanto + cobro final); no mezcla consumo.
+          example: 20.00
+        costoPenalidad:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 0.00
+        motivoPenalidad:
+          type: [string, 'null']
+          maxLength: 300
+        observacion:
+          type: [string, 'null']
+          maxLength: 500
+        estado:
+          type: boolean
+          description: Legacy derivado; true para ACTIVA/CERRANDO y false para CERRADA.
+        estadoEstadia:
+          type: string
+          enum: [ACTIVA, CERRANDO, CERRADA]
+        archivada:
+          type: boolean
+        vencida:
+          type: boolean
+          description: true cuando está ACTIVA y fechaSalida < hoy en America/Lima.
+        version:
+          type: integer
+          minimum: 1
+        closureId:
+          type: [string, 'null']
+          format: uuid
+        cleaningCycleId:
+          type: [string, 'null']
+          format: uuid
+        cierre:
+          description: Intento de cierre vigente; null sin intento. En GET no se sustituye por historial rechazado.
+          oneOf:
+            - $ref: '#/components/schemas/Cierre'
+            - type: 'null'
+    Cierre:
+      type: object
+      description: >-
+        Intento de cierre vigente. estado VALIDANDO/CONFIRMANDO mientras avanza
+        y COMPLETADO/RECHAZADO al terminar; calculo es null hasta congelarse,
+        obligatorio desde CONFIRMANDO y no se recalcula. En COMPLETADO añade
+        medioPago del desglose final.
+      required: [closureId, estado, lastErrorCode, calculo]
+      properties:
+        closureId:
+          type: string
+          format: uuid
+          example: 20000000-0000-4000-8000-000000000002
+        estado:
+          type: string
+          enum: [VALIDANDO, CONFIRMANDO, COMPLETADO, RECHAZADO]
+        lastErrorCode:
+          type: [string, 'null']
+          description: Último código de error recuperable del cierre.
+        calculo:
+          description: Cálculo congelado antes de invocar a Sales; null en VALIDANDO/RECHAZADO.
+          oneOf:
+            - $ref: '#/components/schemas/CalculoCierre'
+            - type: 'null'
+        medioPago:
+          type: [string, 'null']
+          enum: [EFECTIVO, TARJETA, OTRO, null]
+          description: Medio de pago del cobro final; solo en COMPLETADO.
+    CalculoCierre:
+      type: object
+      description: >-
+        Cálculo inmutable y congelado antes de invocar a Sales; importes
+        HALF_UP a 2 decimales. alojamientoTotal = precioInicial + penalidad;
+        cobroAhora = saldoAlojamiento + consumosPendientes; totalGeneral =
+        alojamientoTotal + consumosTotal.
+      required: [alojamientoTotal, saldoAlojamiento, consumosPagadosAntes,
+        consumosPendientes, consumosTotal, cobroAhora, totalGeneral, expectedPendingTotal]
+      properties:
+        alojamientoTotal:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 70.00
+        saldoAlojamiento:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 50.00
+        consumosPagadosAntes:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 0.00
+        consumosPendientes:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 7.00
+        consumosTotal:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 7.00
+        cobroAhora:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 57.00
+        totalGeneral:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 77.00
+        expectedPendingTotal:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          description: Congela lo que Sales debe cobrar; el pagado al cerrar pasa a consumosPagadosAlCerrar.
+          example: 7.00
+    Cotizacion:
+      type: object
+      description: >-
+        Cotización informativa calculada por el backend con BigDecimal HALF_UP
+        por componente; el frontend no recalcula. Ejemplo con tarifa 70,
+        adelanto 20 y consumo pendiente 7 da cobroAhora 57.
+      required: [idRecepcion, alojamiento, adelanto, penalidad, saldoAlojamiento,
+        consumosPagados, consumosPendientes, cobroAhora, moneda, calculadoEn]
+      properties:
+        idRecepcion:
+          type: integer
+          minimum: 1
+          example: 1001
+        alojamiento:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 70.00
+        adelanto:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 20.00
+        penalidad:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 0.00
+        saldoAlojamiento:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 50.00
+        consumosPagados:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 0.00
+        consumosPendientes:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 7.00
+        cobroAhora:
+          type: number
+          multipleOf: 0.01
+          minimum: 0
+          example: 57.00
+        moneda:
+          type: string
+          const: PEN
+        calculadoEn:
+          type: string
+          format: date-time
+          example: 2026-10-05T15:55:00Z
+    OperacionRecepcion:
+      type: object
+      description: >-
+        Admisión de operación de consumo solicitada por sales. actorId es solo
+        auditoría; nunca otorga permisos al servicio. Si actorRol=CLIENTE,
+        reception comprueba idCliente=actorId y tipo=VENTA.
+      required: [operationId, idVenta, idHotel, tipo, actorId, actorRol]
+      properties:
+        operationId:
+          type: string
+          format: uuid
+          example: 40000000-0000-4000-8000-000000000004
+        idVenta:
+          type: integer
+          minimum: 1
+          example: 5001
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        tipo:
+          type: string
+          enum: [VENTA, PAGO, ANULACION]
+        actorId:
+          type: integer
+          minimum: 1
+          example: 100
+        actorRol:
+          type: string
+          enum: [ADMIN, EMPLEADO, CLIENTE]
+    OperacionRecepcionEstado:
+      type: object
+      required: [operationId, tipo, estado]
+      properties:
+        operationId:
+          type: string
+          format: uuid
+        tipo:
+          type: string
+          enum: [VENTA, PAGO, ANULACION]
+        estado:
+          type: string
+          const: ABIERTA
+    Bloqueo:
+      type: object
+      description: >-
+        Bloqueo administrativo solicitado por hotel. blockId es la decisión
+        durable: el mismo blockId con el mismo hash conserva su decisión aunque
+        el gate cambie después; un payload distinto devuelve 409.
+      required: [blockId, idHotel, motivo]
+      properties:
+        blockId:
+          type: string
+          format: uuid
+          example: 50000000-0000-4000-8000-000000000005
+        idHotel:
+          type: integer
+          minimum: 1
+          example: 1
+        motivo:
+          type: string
+          minLength: 1
+          maxLength: 300
+          example: Mantenimiento preventivo
+    BloqueoResultado:
+      type: object
+      required: [blockId, idHabitacion, estado]
+      properties:
+        blockId:
+          type: string
+          format: uuid
+        idHabitacion:
+          type: integer
+          minimum: 1
+        estado:
+          type: string
+          const: BLOQUEADA
+    ResumenRecepcion:
+      type: object
+      description: Resumen mínimo de admisión para sales; sin documento ni correo.
+      required: [idRecepcion, idHotel, idCliente, idHabitacion, estadoEstadia, version]
+      properties:
+        idRecepcion:
+          type: integer
+          minimum: 1
+        idHotel:
+          type: integer
+          minimum: 1
+        idCliente:
+          type: integer
+          minimum: 1
+        idHabitacion:
+          type: integer
+          minimum: 1
+        estadoEstadia:
+          type: string
+          enum: [ACTIVA, CERRANDO, CERRADA]
+        version:
+          type: integer
+          minimum: 1
+    ApiMetaSingle:
+      type: object
+      required: [correlationId]
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+    ApiMetaPage:
+      type: object
+      required: [page, size, totalElements, correlationId]
+      properties:
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+        correlationId:
+          type: string
+          format: uuid
+    ApiSingleRecepcion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Recepcion'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListRecepcion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recepcion'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleRecepcionOrNull:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          description: Recepcion de la habitación o null si no hay estadía vigente.
+          oneOf:
+            - $ref: '#/components/schemas/Recepcion'
+            - type: 'null'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleCotizacion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/Cotizacion'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleResumenRecepcion:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/ResumenRecepcion'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleOperacionRecepcionEstado:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/OperacionRecepcionEstado'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleBloqueoResultado:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          $ref: '#/components/schemas/BloqueoResultado'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiNull:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+        data:
+          type: 'null'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiError:
+      type: object
+      required: [success, message, data, error, meta]
+      properties:
+        success:
+          type: boolean
+          const: false
+        message:
+          type: string
+        data:
+          type: 'null'
+        error:
+          type: object
+          required: [code, fields]
+          properties:
+            code:
+              type: string
+              example: ROOM_OCCUPIED
+            fields:
+              type: object
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiErrorCotizacion:
+      type: object
+      description: >-
+        409 de cierre con la nueva cotización vigente y el closureId; el
+        frontend muestra estos importes y no recalcula.
+      required: [success, message, data, error, meta]
+      properties:
+        success:
+          type: boolean
+          const: false
+        message:
+          type: string
+        data:
+          type: object
+          required: [cotizacion, closureId]
+          properties:
+            cotizacion:
+              $ref: '#/components/schemas/Cotizacion'
+            closureId:
+              type: string
+              format: uuid
+        error:
+          type: object
+          required: [code, fields]
+          properties:
+            code:
+              type: string
+              example: AMOUNT_MISMATCH
+            fields:
+              type: object
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'

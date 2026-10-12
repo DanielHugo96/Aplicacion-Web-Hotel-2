@@ -8,7 +8,7 @@
 
 El ejemplo ilustra envelope; payload completo obligatorio según cada API/tabla siguiente. Kafka key=aggregateId salvo clave compuesta indicada. Headers `content-type=application/json`, `schema-version=1`, `correlation-id`. Fecha UTC, eventId UUID. idHotel es null para PersonaSnapshot global y un entero positivo para hechos de una sede. Nunca JWT, clave ni hash.
 
-Payload snapshot incluye todos los campos de proyección indicados en la API productora. Evento de baja mantiene el snapshot completo, con id,estado=false,version y el resto de campos del contrato; las bajas de venta son snapshots de anulación, no DELETE físico.
+Payload snapshot incluye todos los campos de proyección indicados en la API productora. Evento de baja mantiene el snapshot completo, con id, estado=false, version y el resto de campos del contrato; las bajas de venta son snapshots de anulación, no DELETE físico.
 
 ## Topics y asignación exacta
 
@@ -22,9 +22,18 @@ Payload snapshot incluye todos los campos de proyección indicados en la API pro
 | inventory.movimiento.v1 | inventory | MovimientoStockResuelto; idVenta | sales (compensación) |
 | sales.venta.v1 | sales | VentaSnapshot; idVenta | reporting |
 
-Cada consumidor tiene grupo propio `<servicio>-<proyeccion>-v1`; réplicas del mismo servicio comparten grupo. Demo1 partición/topic, replication-factor1 (no alta disponibilidad). Producción requeriría dimensionamiento distinto. Retención demo7d; la reconstrucción no depende de que exista todo el historial: snapshot de bootstrap + stream.
+Grupos de consumidor y DLT concretos (una fila por topic+grupo; réplicas del mismo servicio comparten grupo):
 
-Productor con acks=all e idempotencia habilitada; esto no elimina necesidad de outbox/inbox. Consumer confirma offset después del commit local. Hasta5 reintentos con espera1,5,30,120,300s después del intento inicial; luego `<topic>.<consumerGroup>.dlt` conserva envelope original, key, topic/partición/offset, consumerGroup y error no sensible. Alertar; reenvío manual conserva eventId y key, y se procesa con el consumerGroup que falló; no confundir fallos de Reporting con fallos de Reception. No habilitar admisión por un evento perdido. Reporting marca proyección degradada ante DLT; el operador no declara paridad hasta reparar.
+| consumerGroup | Consumidor | Topics | DLT |
+|---|---|---|---|
+| `reporting-proyeccion-v1` | reporting | identity.persona.v1, hotel.sede.v1, hotel.habitacion.v1, reception.recepcion.v1, inventory.stock.v1, sales.venta.v1 | `<topic>.reporting-proyeccion-v1.dlt` (p. ej. `reception.recepcion.v1.reporting-proyeccion-v1.dlt`) |
+| `hotel-ocupacion-v1` | hotel | reception.recepcion.v1 | `reception.recepcion.v1.hotel-ocupacion-v1.dlt` |
+| `reception-gates-v1` | reception | hotel.habitacion.v1 | `hotel.habitacion.v1.reception-gates-v1.dlt` |
+| `sales-compensacion-v1` | sales | inventory.movimiento.v1, reception.recepcion.v1 | `inventory.movimiento.v1.sales-compensacion-v1.dlt`, `reception.recepcion.v1.sales-compensacion-v1.dlt` |
+
+Demo: 1 partición/topic, replication-factor 1 (no alta disponibilidad). Producción requeriría dimensionamiento distinto. Retención en demo: 7d; la reconstrucción no depende de que exista todo el historial: snapshot de bootstrap + stream.
+
+Productor con acks=all e idempotencia habilitada; esto no elimina necesidad de outbox/inbox. Consumer confirma offset después del commit local. Hasta 5 reintentos con espera de 1s, 5s, 30s, 120s y 300s después del intento inicial; luego `<topic>.<consumerGroup>.dlt` conserva envelope original, key, topic/partición/offset, consumerGroup y error no sensible. Alertar; reenvío manual conserva eventId y key, y se procesa con el consumerGroup que falló; no confundir fallos de Reporting con fallos de Reception. No habilitar admisión por un evento perdido. Reporting marca proyección degradada ante DLT; el operador no declara paridad hasta reparar.
 
 ## Envelope de comando RabbitMQ
 
@@ -38,14 +47,14 @@ Props AMQP: messageId=commandId, contentType=application/json, deliveryMode=2, c
 
 | Routing key = cola | Productor → consumidor | Payload obligatorio |
 |---|---|---|
-| limpieza.solicitada | reception → hotel | idHabitacion:int,idRecepcion:int,cleaningCycleId:uuid,roomVersion:long |
-| stock.restituir | sales → inventory | idVenta:int,idRecepcion:int,motivo:string; idHotel del envelope |
-| recepcion.operacion-finalizar | sales → reception | operationId:uuid,idRecepcion:int,idVenta:int,tipo:VENTA/PAGO/ANULACION,resultado:CONFIRMADA/RECHAZADA/CANCELADA/PAGO_REGISTRADO |
-| notificacion.bienvenida | identity → notification | idPersona:int,destinatario:email,nombre:string,templateVersion:1 |
-| notificacion.checkin | reception → notification | idPersona:int,idRecepcion:int,destinatario:email,nombre:string,hotel:string,fechaSalida:date,templateVersion:1 |
-| notificacion.checkout | reception → notification | idPersona:int,idRecepcion:int,destinatario:email,nombre:string,hotel:string,totalAlojamiento:decimal,totalConsumos:decimal,templateVersion:1 |
+| limpieza.solicitada | reception → hotel | idHabitacion:int, idRecepcion:int, cleaningCycleId:uuid, roomVersion:long |
+| stock.restituir | sales → inventory | idVenta:int, idRecepcion:int, motivo:string; idHotel del envelope |
+| recepcion.operacion-finalizar | sales → reception | operationId:uuid, idRecepcion:int, idVenta:int, tipo:VENTA/PAGO/ANULACION, resultado:CONFIRMADA/RECHAZADA/CANCELADA/PAGO_REGISTRADO |
+| notificacion.bienvenida | identity → notification | idPersona:int, destinatario:email, nombre:string, templateVersion:1 |
+| notificacion.checkin | reception → notification | idPersona:int, idRecepcion:int, destinatario:email, nombre:string, hotel:string, fechaSalida:date, templateVersion:1 |
+| notificacion.checkout | reception → notification | idPersona:int, idRecepcion:int, destinatario:email, nombre:string, hotel:string, totalAlojamiento:decimal, totalConsumos:decimal, templateVersion:1 |
 
-Finalizar incluye tipo para poder crear una lápida completa aun antes de admitir. Combinaciones: VENTA→CONFIRMADA/RECHAZADA/CANCELADA; PAGO→PAGO_REGISTRADO/RECHAZADA; ANULACION→CANCELADA/RECHAZADA. Verificar tupla de IDs e idHotel antes de liberar la operación; una contradicción va a DLQ sin desbloquear otra venta.
+Finalizar incluye tipo para poder crear una lápida completa aun antes de admitir. Combinaciones: VENTA → CONFIRMADA/RECHAZADA/CANCELADA; PAGO → PAGO_REGISTRADO/RECHAZADA; ANULACION → CANCELADA/RECHAZADA. Verificar tupla de IDs e idHotel antes de liberar la operación; una contradicción va a DLQ sin desbloquear otra venta.
 
 Bienvenida tiene idHotel=null porque el cliente es global. Restituir no acepta cantidades/precios del emisor: inventory usa su movimiento original, o crea lápida si no existe.
 
@@ -53,7 +62,20 @@ No se añade alerta de stock-bajo por correo en MVP; se ve en reportes. No exist
 
 ## Reintentos y DLQ Rabbit
 
-Por cada cola `q`: `q.retry.5s`, `q.retry.30s`, `q.retry.120s` con TTL y dead-letter hacia la cola principal; agotados3 reintentos → `q.dlq` mediante exchange `hotel.dlx.v1`. Cola principal sin TTL que descarte silenciosamente trabajos. Reintento conserva commandId; original ack solo cuando re-publicación queda confirmada. Errores de schema permanentes van directo a DLQ. Controlar x-death/intentos, no hacer nack-requeue infinito.
+Por cada cola `q`: `q.retry.5s`, `q.retry.30s`, `q.retry.120s` con TTL y dead-letter hacia la cola principal; agotados 3 reintentos → `q.dlq` mediante exchange `hotel.dlx.v1`. Cola principal sin TTL que descarte silenciosamente trabajos. Reintento conserva commandId; original ack solo cuando re-publicación queda confirmada. Errores de schema permanentes van directo a DLQ. Controlar x-death/intentos, no hacer nack-requeue infinito.
+
+Nombres concretos de las 6 colas y sus derivadas:
+
+| Cola principal | Reintentos (TTL → principal) | DLQ |
+|---|---|---|
+| `limpieza.solicitada` | `limpieza.solicitada.retry.5s`, `.retry.30s`, `.retry.120s` | `limpieza.solicitada.dlq` |
+| `stock.restituir` | `stock.restituir.retry.5s`, `.retry.30s`, `.retry.120s` | `stock.restituir.dlq` |
+| `recepcion.operacion-finalizar` | `recepcion.operacion-finalizar.retry.5s`, `.retry.30s`, `.retry.120s` | `recepcion.operacion-finalizar.dlq` |
+| `notificacion.bienvenida` | `notificacion.bienvenida.retry.5s`, `.retry.30s`, `.retry.120s` | `notificacion.bienvenida.dlq` |
+| `notificacion.checkin` | `notificacion.checkin.retry.5s`, `.retry.30s`, `.retry.120s` | `notificacion.checkin.dlq` |
+| `notificacion.checkout` | `notificacion.checkout.retry.5s`, `.retry.30s`, `.retry.120s` | `notificacion.checkout.dlq` |
+
+Exchanges durables tipo direct: `hotel.commands.v1` (principal; routing key = nombre de cola) y `hotel.dlx.v1` (dead-letter; enruta `q.<tipo>` agotado a `q.<tipo>.dlq`). Los reintentos usan la cola `.retry.<ttl>` con TTL y dead-letter de vuelta a la principal; la principal apunta su DLX a `hotel.dlx.v1`.
 
 Stock/limpieza no se consideran completados por llegar a DLQ. Sale queda CANCELACION_PENDIENTE, habitación sigue bloqueada; alerta y acción del operador. Broker permissions por producer/consumer y vhost del proyecto.
 

@@ -1,0 +1,1720 @@
+openapi: 3.1.0
+info:
+  title: Identity — contrato de servicio
+  version: 1.0.0
+  description: >-
+    Servicio identity: personas, catálogo fijo de roles, sedes autorizadas y
+    credenciales. Base externa vía Gateway http://localhost:8080 (HTTPS en
+    despliegue); las rutas /internal/** no entran por Gateway y solo se exponen en
+    red privada con token máquina. Fuentes: docs/especificacion/microservicios/identity/api.md
+    y base-de-datos.md, docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
+    Toda respuesta de negocio usa el envelope {success,message,data,meta}; el token
+    máquina y JWKS son las únicas excepciones. Nunca se devuelve clave ni claveHash,
+    ni con null.
+servers:
+  - url: http://localhost:8080
+    description: API Gateway local
+tags:
+  - name: auth
+    description: Autenticación, cuenta propia y JWKS
+  - name: personas
+    description: Personas (PII con lectura humana auditada) y tipos de persona
+  - name: interno
+    description: Rutas /internal/** para servicios (token máquina por scopes)
+security:
+  - bearerAuth: []
+paths:
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: Login
+      operationId: login
+      security: []
+      description: >-
+        Público y sin Idempotency-Key: cada intento es un login nuevo, no una
+        mutación idempotente. 401 genérico (INVALID_CREDENTIALS) sin distinguir
+        correo ausente de clave inválida; 429 tras 5 intentos/min por IP+cuenta.
+        El token RS256 dura 15 min (iss=hotel-identity, aud=hotel-api); no hay
+        refresh en el MVP y logout es local.
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Login'
+            example:
+              correo: cliente.uno@hotel.test
+              clave: '<clave-de-ejemplo>'
+      responses:
+        '200':
+          description: Auth legacy con token de 15 min (expiresIn 900)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleAuth'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 100
+                  nombre: Cliente Uno
+                  apellido: Demo
+                  correo: cliente.uno@hotel.test
+                  tipoPersona: Cliente
+                  token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImhvdGVsLWlkZW50aXR5LTIwMjYtMTAifQ.eyJzdWIiOiIxMDAifQ
+                  expiresIn: 900
+                  sedes: []
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/InvalidCredentials'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/auth/registro:
+    post:
+      tags: [auth]
+      summary: Registro público (fuerza CLIENTE)
+      operationId: registroPublico
+      security: []
+      description: >-
+        Público con Idempotency-Key. Fuerza rol CLIENTE sin potestades
+        administrativas; rechaza con 400 los campos idTipoPersona/roles/sedes/estado
+        (JSON cerrado, sin elevación). Máximo 3/min/IP. 409 DUPLICATE_RESOURCE si el
+        correo normalizado o el (tipoDocumento,documento) ya existen: no se toma
+        control de una cuenta preexistente. La bienvenida se publica a Rabbit solo
+        después de confirmar la transacción; no se envía correo desde ella.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Registro'
+            example:
+              tipoDocumento: DNI
+              documento: '90000102'
+              nombre: Cliente Tres
+              apellido: Demo
+              correo: cliente.tres@hotel.test
+              clave: '<clave-de-ejemplo>'
+      responses:
+        '201':
+          description: Persona CLIENTE creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 102
+                  tipoDocumento: DNI
+                  documento: '90000102'
+                  nombre: Cliente Tres
+                  apellido: Demo
+                  correo: cliente.tres@hotel.test
+                  fotoUrl: null
+                  idTipoPersona: 3
+                  tipoPersona: Cliente
+                  sedes: []
+                  estado: true
+                  fechaCreacion: '2026-10-12T15:00:00Z'
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /api/auth/me:
+    get:
+      tags: [auth]
+      summary: Sesión propia
+      operationId: me
+      description: >-
+        A/E/C. Devuelve la Persona propia mientras el token siga vigente (re-login
+        al expirar, sin refresh). La lectura propia no genera registros
+        PERSONA_SEARCH/PERSONA_READ. Nunca incluye clave ni hash.
+      responses:
+        '200':
+          description: Persona propia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 100
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  nombre: Cliente Uno
+                  apellido: Demo
+                  correo: cliente.uno@hotel.test
+                  fotoUrl: null
+                  idTipoPersona: 3
+                  tipoPersona: Cliente
+                  sedes: []
+                  estado: true
+                  fechaCreacion: '2026-10-01T10:00:00Z'
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    put:
+      tags: [auth]
+      summary: Editar perfil propio (V)
+      operationId: actualizarPerfil
+      description: >-
+        A/E/C con If-Match e Idempotency-Key. Solo nombre, apellido y fotoUrl (null
+        para quitarla); no cambia rol, sedes, documento, estado ni contraseña.
+        428 si falta If-Match y 412 si la version no es la vigente.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Perfil'
+            example:
+              nombre: Cliente Uno
+              apellido: Demo
+              fotoUrl: null
+      responses:
+        '200':
+          description: Persona propia actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 100
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  nombre: Cliente Uno
+                  apellido: Demo
+                  correo: cliente.uno@hotel.test
+                  fotoUrl: null
+                  idTipoPersona: 3
+                  tipoPersona: Cliente
+                  sedes: []
+                  estado: true
+                  fechaCreacion: '2026-10-01T10:00:00Z'
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/auth/password:
+    put:
+      tags: [auth]
+      summary: Cambiar contraseña propia
+      operationId: cambiarPassword
+      description: >-
+        A/E/C con Idempotency-Key obligatoria. Verifica la clave actual con
+        BCryptPasswordEncoder.matches en Java (nunca comparación de texto plano en
+        SQL); la clave es write-only y no se persiste. El request_hash se calcula
+        con HMAC porque el body contiene credenciales y la clave nunca se guarda en
+        payloads de idempotencia: un reintento devuelve el resultado terminal
+        original (data=null). 400 PASSWORD_POLICY si la clave nueva no cumple
+        12–72 bytes UTF-8; no se trunca silenciosamente.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+            example:
+              claveActual: '<clave-de-ejemplo>'
+              claveNueva: '<clave-nueva-de-ejemplo>'
+      responses:
+        '200':
+          description: Cambio aplicado (data=null; nunca devuelve la clave)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiNull'
+              example:
+                success: true
+                message: OK
+                data: null
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /api/auth/social:
+    post:
+      tags: [auth]
+      summary: RETIRADA — login social deshabilitado
+      operationId: socialRetirada
+      security: []
+      description: >-
+        RETIRADA. El login con redes sociales no existe en el MVP: responde 410
+        SOCIAL_LOGIN_DISABLED sin alternativa ni alta implícita. Retirar el botón en
+        la UI; sin Idempotency-Key porque no ejecuta efectos.
+      responses:
+        '410':
+          $ref: '#/components/responses/SocialDisabled'
+  /api/persona/listar:
+    get:
+      tags: [personas]
+      summary: Listar personas (A/E; E solo CLIENTE con documento exacto)
+      operationId: listarPersonas
+      description: >-
+        A/E con paginación page/size y orden estable por idPersona ascendente.
+        idTipoPersona y documento son opcionales para A; EMPLEADO exige documento
+        exacto y solo ve CLIENTE (sin documento → 400) y nunca puede leer
+        ADMIN/EMPLEADO ajeno. No se acepta SQL ni sort del cliente. La consulta
+        humana de PII ajena se audita en audit_log como PERSONA_SEARCH (actor,
+        resource_id, id_hotel, correlation_id) con changes sin documento ni correo.
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Size'
+        - name: idTipoPersona
+          in: query
+          required: false
+          description: Filtro por rol (1 ADMIN, 2 EMPLEADO, 3 CLIENTE).
+          schema:
+            type: integer
+            minimum: 1
+          example: 3
+        - name: documento
+          in: query
+          required: false
+          description: Búsqueda exacta; obligatoria para EMPLEADO, que solo lista CLIENTE.
+          schema:
+            type: string
+            maxLength: 20
+          example: '90000100'
+      responses:
+        '200':
+          description: Persona[] de alcance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListPersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idPersona: 100
+                    tipoDocumento: DNI
+                    documento: '90000100'
+                    nombre: Cliente Uno
+                    apellido: Demo
+                    correo: cliente.uno@hotel.test
+                    fotoUrl: null
+                    idTipoPersona: 3
+                    tipoPersona: Cliente
+                    sedes: []
+                    estado: true
+                    fechaCreacion: '2026-10-01T10:00:00Z'
+                    version: 1
+                  - idPersona: 101
+                    tipoDocumento: DNI
+                    documento: '90000101'
+                    nombre: Cliente Dos
+                    apellido: Demo
+                    correo: cliente.dos@hotel.test
+                    fotoUrl: null
+                    idTipoPersona: 3
+                    tipoPersona: Cliente
+                    sedes: []
+                    estado: true
+                    fechaCreacion: '2026-10-02T11:00:00Z'
+                    version: 1
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 2
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/persona/buscar/{id}:
+    get:
+      tags: [personas]
+      summary: Buscar persona (A/E/C; C solo propia)
+      operationId: buscarPersona
+      description: >-
+        A/E/C. CLIENTE solo puede leer su propio id (ajeno → 404 anti-enumeración);
+        no puede enumerar clientes. EMPLEADO exige ?documento= exacto y solo puede
+        leer CLIENTE con documento coincidente; sin documento → 400. La lectura A/E
+        de PII ajena se audita como PERSONA_READ (actor, resource_id, id_hotel,
+        correlation_id); la lectura propia no genera registro.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - name: documento
+          in: query
+          required: false
+          description: Obligatorio para EMPLEADO; se comprueba contra la persona de destino.
+          schema:
+            type: string
+            maxLength: 20
+          example: '90000100'
+      responses:
+        '200':
+          description: Persona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 100
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  nombre: Cliente Uno
+                  apellido: Demo
+                  correo: cliente.uno@hotel.test
+                  fotoUrl: null
+                  idTipoPersona: 3
+                  tipoPersona: Cliente
+                  sedes: []
+                  estado: true
+                  fechaCreacion: '2026-10-01T10:00:00Z'
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/persona/registrar:
+    post:
+      tags: [personas]
+      summary: Alta de persona (A/E; E solo CLIENTE)
+      operationId: registrarPersona
+      description: >-
+        A/E con Idempotency-Key. EMPLEADO solo crea CLIENTE sin sedes. ADMIN/EMPLEADO
+        requieren clave: un huésped sin credenciales no puede ser personal y se
+        rechaza con 409 STAFF_CREDENTIAL_REQUIRED (no se inventa contraseña). La
+        clave se entrega BCrypt ya hasheada al procedimiento y nunca se responde.
+        409 DUPLICATE_RESOURCE por correo normalizado o (tipoDocumento,documento).
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaAlta'
+            example:
+              tipoDocumento: DNI
+              documento: '90000103'
+              nombre: Huésped Demo
+              apellido: Presencial
+              correo: huesped.demo@hotel.test
+              idTipoPersona: 3
+              sedes: []
+      responses:
+        '201':
+          description: Persona creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 103
+                  tipoDocumento: DNI
+                  documento: '90000103'
+                  nombre: Huésped Demo
+                  apellido: Presencial
+                  correo: huesped.demo@hotel.test
+                  fotoUrl: null
+                  idTipoPersona: 3
+                  tipoPersona: Cliente
+                  sedes: []
+                  estado: true
+                  fechaCreacion: '2026-10-12T16:00:00Z'
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/persona/actualizar/{id}:
+    put:
+      tags: [personas]
+      summary: Actualizar persona (A, V; protege último ADMIN)
+      operationId: actualizarPersona
+      description: >-
+        A con If-Match e Idempotency-Key. Cambia nombre, apellido, correo, fotoUrl,
+        idTipoPersona, sedes y estado; no cambia documento ni contraseña. Toda alta,
+        cambio de rol o estado y baja bloquea primero la fila tipo_persona
+        ADMIN con SELECT FOR UPDATE y después la persona, verificando en la misma
+        transacción al menos un ADMIN activo con clave (409 LAST_ADMIN_PROTECTED).
+        Promover a ADMIN/EMPLEADO exige clave_hash existente (409
+        STAFF_CREDENTIAL_REQUIRED). Las sedes se validan por Feign con
+        GET /internal/hoteles/{id} de hotel (scope hoteles:read): solo sedes
+        existentes/activas y, si hotel está caído, 503 sin asignación optimista.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PersonaUpdate'
+            example:
+              nombre: Cliente Uno
+              apellido: Demo
+              correo: cliente.uno@hotel.test
+              fotoUrl: null
+              idTipoPersona: 3
+              sedes: []
+              estado: true
+      responses:
+        '200':
+          description: Persona actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 100
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  nombre: Cliente Uno
+                  apellido: Demo
+                  correo: cliente.uno@hotel.test
+                  fotoUrl: null
+                  idTipoPersona: 3
+                  tipoPersona: Cliente
+                  sedes: []
+                  estado: true
+                  fechaCreacion: '2026-10-01T10:00:00Z'
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ConflictPersona'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /api/persona/eliminar/{id}:
+    delete:
+      tags: [personas]
+      summary: Baja lógica de persona (A, V; no último ADMIN)
+      operationId: eliminarPersona
+      description: >-
+        A con If-Match e Idempotency-Key. Baja lógica (estado=false) compartiendo el
+        bloqueo y la protección del último ADMIN con fn_persona_guardar: 409
+        LAST_ADMIN_PROTECTED si dejaría cero administradores activos, también en
+        bajas concurrentes. DELETE repetido con la misma Idempotency-Key devuelve el
+        resultado original aunque el recurso cambie de estado.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      responses:
+        '200':
+          description: Persona inactiva
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSinglePersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 101
+                  tipoDocumento: DNI
+                  documento: '90000101'
+                  nombre: Cliente Dos
+                  apellido: Demo
+                  correo: cliente.dos@hotel.test
+                  fotoUrl: null
+                  idTipoPersona: 3
+                  tipoPersona: Cliente
+                  sedes: []
+                  estado: false
+                  fechaCreacion: '2026-10-02T11:00:00Z'
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/ConflictPersona'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/tipopersona/listar:
+    get:
+      tags: [personas]
+      summary: Listar tipos de persona (A/E)
+      operationId: listarTiposPersona
+      description: >-
+        A/E. Catálogo fijo: 1 ADMIN/Administrador, 2 EMPLEADO/Empleado,
+        3 CLIENTE/Cliente. codigo es inmutable y estado de los tres roles permanece
+        true; tipoPersona en Persona/Auth usa este nombre canónico derivado del
+        código, no la descripcion editable.
+      responses:
+        '200':
+          description: TipoPersona[]
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiListTipoPersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  - idTipoPersona: 1
+                    descripcion: Administrador
+                    codigo: ADMIN
+                    estado: true
+                    version: 1
+                  - idTipoPersona: 2
+                    descripcion: Empleado
+                    codigo: EMPLEADO
+                    estado: true
+                    version: 1
+                  - idTipoPersona: 3
+                    descripcion: Cliente
+                    codigo: CLIENTE
+                    estado: true
+                    version: 1
+                meta:
+                  page: 0
+                  size: 20
+                  totalElements: 3
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/tipopersona/buscar/{id}:
+    get:
+      tags: [personas]
+      summary: Buscar tipo de persona (A/E)
+      operationId: buscarTipoPersona
+      description: >-
+        A/E. Devuelve el rol del catálogo fijo con su código inmutable y su version.
+        Un id fuera de 1..3 no existe: 404 RESOURCE_NOT_FOUND.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '200':
+          description: TipoPersona
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleTipoPersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idTipoPersona: 3
+                  descripcion: Cliente
+                  codigo: CLIENTE
+                  estado: true
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/tipopersona/actualizar/{id}:
+    put:
+      tags: [personas]
+      summary: Editar etiqueta de rol (A, V; código inmutable)
+      operationId: actualizarTipoPersona
+      description: >-
+        A con If-Match e Idempotency-Key. sp_tipo_persona_descripcion edita solo la
+        etiqueta descripcion (≤ 80); el código ADMIN/EMPLEADO/CLIENTE, los permisos
+        y el estado true de los tres roles nunca cambian por REST. La autorización
+        usa el código, no esta etiqueta.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [descripcion]
+              properties:
+                descripcion:
+                  type: string
+                  minLength: 1
+                  maxLength: 80
+            example:
+              descripcion: Cliente
+      responses:
+        '200':
+          description: TipoPersona con etiqueta actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleTipoPersona'
+              example:
+                success: true
+                message: OK
+                data:
+                  idTipoPersona: 3
+                  descripcion: Cliente frecuente
+                  codigo: CLIENTE
+                  estado: true
+                  version: 2
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '412':
+          $ref: '#/components/responses/PreconditionFailed'
+        '428':
+          $ref: '#/components/responses/PreconditionRequired'
+  /api/tipopersona/registrar:
+    post:
+      tags: [personas]
+      summary: RETIRADA — no crear roles
+      operationId: registrarTipoPersonaRetirada
+      description: >-
+        RETIRADA. Los roles del catálogo fijo ADMIN/EMPLEADO/CLIENTE no se crean por
+        REST: responde 409 FIXED_ROLE_CATALOG, sin Idempotency-Key porque no ejecuta
+        efectos. Editar solo la etiqueta con PUT /api/tipopersona/actualizar/{id}.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/FixedRoleCatalog'
+  /api/tipopersona/eliminar/{id}:
+    delete:
+      tags: [personas]
+      summary: RETIRADA — no eliminar roles
+      operationId: eliminarTipoPersonaRetirada
+      description: >-
+        RETIRADA. Los roles del catálogo fijo nunca se eliminan por REST: responde
+        409 FIXED_ROLE_CATALOG, sin Idempotency-Key porque no ejecuta efectos. El
+        estado de los tres roles permanece true.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/FixedRoleCatalog'
+  /.well-known/jwks.json:
+    get:
+      tags: [auth]
+      summary: Claves públicas del emisor (JWKS)
+      operationId: jwks
+      security: []
+      description: >-
+        Público, sin token y sin envelope. JWKS estándar con las claves públicas
+        RS256 del emisor hotel-identity; la clave privada nunca se expone ni vive en
+        Git. Los servicios validan con issuer fijo y jwk-set-uri explícito (este
+        MVP no usa descubrimiento OIDC) y las claves deben poder rotarse.
+      responses:
+        '200':
+          description: JWKS estándar {keys:[...]}
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JWKS'
+              example:
+                keys:
+                  - kty: RSA
+                    use: sig
+                    alg: RS256
+                    kid: hotel-identity-2026-10
+                    n: 0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368Q
+                    e: AQAB
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /internal/auth/token:
+    post:
+      tags: [interno]
+      summary: Token máquina (client_credentials)
+      operationId: tokenMaquina
+      security: []
+      description: >-
+        Autenticación servicio a servicio con Basic clientId:secret por TLS (loopback
+        permitido en dev); no usa credenciales del hotel ni de personas. Form
+        grant_type=client_credentials&audience=<destino>: identity verifica la
+        allowlist de audiencia y emite TTL 5 min (expires_in 300), sub=nombre de
+        servicio, aud=destino y scope como string separado por espacios, limitado
+        por la audiencia. Sin envelope y sin Idempotency-Key. Un token de usuario no
+        sirve para /internal/**.
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+            example:
+              grant_type: client_credentials
+              audience: hotel
+      responses:
+        '200':
+          description: Token máquina estándar (sin envelope)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenResponse'
+              example:
+                access_token: eyJhbGciOiJSUzI1NiIsImtpZCI6ImhvdGVsLWlkZW50aXR5LTIwMjYtMTAifQ.eyJzdWIiOiJyZWNlcHRpb24tc2VydmljZSJ9
+                token_type: Bearer
+                expires_in: 300
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '503':
+          $ref: '#/components/responses/Unavailable'
+  /internal/clientes/{id}:
+    get:
+      tags: [interno]
+      summary: Cliente vigente para servicios
+      operationId: clienteVigente
+      security:
+        - machineToken: [clientes:read]
+      description: >-
+        Máquina con scope clientes:read (reception). Devuelve la persona activa tipo
+        CLIENTE mediante fn_cliente_vigente, sin secreto; 404 si no existe, está
+        inactiva o no es CLIENTE. No genera PERSONA_SEARCH/PERSONA_READ: la lectura
+        máquina ya queda cubierta por el scope y el log de acceso. No entra por
+        Gateway.
+      parameters:
+        - $ref: '#/components/parameters/IdPath'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: ClienteVigente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiSingleClienteVigente'
+              example:
+                success: true
+                message: OK
+                data:
+                  idPersona: 100
+                  tipoDocumento: DNI
+                  documento: '90000100'
+                  nombre: Cliente Uno
+                  apellido: Demo
+                  correo: cliente.uno@hotel.test
+                  estado: true
+                  idTipoPersona: 3
+                  version: 1
+                meta:
+                  correlationId: 11111111-1111-4111-8111-111111111111
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >-
+        JWT RS256 de usuario humano (iss=hotel-identity, aud=hotel-api, TTL 15 min,
+        sin refresh). Claims sub=idPersona, tipoPersona, roles y sedes. Nunca en query.
+    machineToken:
+      type: oauth2
+      description: >-
+        Token máquina por client_credentials obtenido en POST /internal/auth/token
+        con Basic clientId:secret. Solo para /internal/**; un token humano no basta.
+      flows:
+        clientCredentials:
+          tokenUrl: /internal/auth/token
+          scopes:
+            clientes:read: Leer persona vigente tipo CLIENTE (reception).
+  parameters:
+    Page:
+      name: page
+      in: query
+      required: false
+      description: Página 0-based; orden estable por ID ascendente.
+      schema:
+        type: integer
+        minimum: 0
+        default: 0
+    Size:
+      name: size
+      in: query
+      required: false
+      description: Tamaño de página (máximo 100).
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: integer
+        minimum: 1
+      example: 100
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUID por intención; mismo valor al reintentar (retención ≥ 30 días).
+      schema:
+        type: string
+        format: uuid
+      example: 22222222-2222-4222-8222-222222222222
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: Versión vigente "<version>"; sin él 428, distinta 412.
+      schema:
+        type: string
+        example: '"1"'
+    CorrelationId:
+      name: X-Correlation-Id
+      in: header
+      required: false
+      description: UUID opcional; el Gateway lo genera si falta y lo propaga/responde.
+      schema:
+        type: string
+        format: uuid
+      example: 11111111-1111-4111-8111-111111111111
+  responses:
+    BadRequest:
+      description: 400 validación/formato; error.fields mapea campo → motivo
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Revisa los datos marcados.
+            data: null
+            error:
+              code: VALIDATION_ERROR
+              fields:
+                clave: 12–72 bytes UTF-8
+                correo: formato de correo inválido
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Unauthorized:
+      description: 401 no autenticado, token ausente/expirado o firma/issuer inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Tu sesión expiró. Vuelve a iniciar sesión.
+            data: null
+            error:
+              code: UNAUTHENTICATED
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Forbidden:
+      description: 403 rol o scope insuficientes (deny-by-default)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: No tienes permiso para esta acción.
+            data: null
+            error:
+              code: FORBIDDEN
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    NotFound:
+      description: 404 inexistente o ajeno al propietario (anti-enumeración)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: No encontramos lo que buscas.
+            data: null
+            error:
+              code: RESOURCE_NOT_FOUND
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Conflict:
+      description: 409 regla de negocio o duplicado (DUPLICATE_RESOURCE, IDEMPOTENCY_CONFLICT)
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Ese valor ya está registrado.
+            data: null
+            error:
+              code: DUPLICATE_RESOURCE
+              fields:
+                correo: ya registrado por otra persona
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    ConflictPersona:
+      description: >-
+        409 de reglas de persona: LAST_ADMIN_PROTECTED (último ADMIN activo),
+        STAFF_CREDENTIAL_REQUIRED (personal sin clave) o DUPLICATE_RESOURCE.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Debe quedar al menos un administrador activo.
+            data: null
+            error:
+              code: LAST_ADMIN_PROTECTED
+              fields:
+                idTipoPersona: la operación dejaría cero administradores activos
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    FixedRoleCatalog:
+      description: 409 catálogo fijo; los roles ADMIN/EMPLEADO/CLIENTE no se crean ni eliminan
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Los roles del sistema no se crean ni eliminan.
+            data: null
+            error:
+              code: FIXED_ROLE_CATALOG
+              fields:
+                ruta: /api/tipopersona
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    InvalidCredentials:
+      description: 401 genérico de login; no revela si el correo existe ni si la clave es incorrecta
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Correo o contraseña incorrectos.
+            data: null
+            error:
+              code: INVALID_CREDENTIALS
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    SocialDisabled:
+      description: 410 ruta retirada; no hay login alternativo en el MVP
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: El acceso con redes sociales ya no está disponible.
+            data: null
+            error:
+              code: SOCIAL_LOGIN_DISABLED
+              fields:
+                ruta: /api/auth/social
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    PreconditionFailed:
+      description: 412 versión distinta al ETag vigente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Otra persona modificó este registro. Recarga para ver los cambios.
+            data: null
+            error:
+              code: PRECONDITION_FAILED
+              fields:
+                If-Match: la versión enviada no es la vigente
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    PreconditionRequired:
+      description: 428 falta If-Match en PUT/DELETE con V
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Falta la versión del registro.
+            data: null
+            error:
+              code: PRECONDITION_REQUIRED
+              fields:
+                If-Match: obligatorio
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    RateLimited:
+      description: 429 límite por IP/cuenta (login 5/min, registro 3/min)
+      headers:
+        Retry-After:
+          description: Segundos antes de reintentar.
+          schema:
+            type: integer
+            example: 60
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: Demasiados intentos. Espera un momento.
+            data: null
+            error:
+              code: RATE_LIMITED
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+    Unavailable:
+      description: 503 dependencia no disponible antes de crear una operación durable
+      headers:
+        Retry-After:
+          description: Segundos antes de reintentar (misma Idempotency-Key si aplica).
+          schema:
+            type: integer
+            example: 5
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            success: false
+            message: El servicio no está disponible. Reintenta en unos segundos.
+            data: null
+            error:
+              code: DEPENDENCY_UNAVAILABLE
+              fields: {}
+            meta:
+              correlationId: 11111111-1111-4111-8111-111111111111
+  schemas:
+    ApiMetaSingle:
+      type: object
+      required: [correlationId]
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+          example: 11111111-1111-4111-8111-111111111111
+    ApiMetaPage:
+      type: object
+      required: [page, size, totalElements, correlationId]
+      properties:
+        page:
+          type: integer
+          minimum: 0
+          example: 0
+        size:
+          type: integer
+          minimum: 1
+          example: 20
+        totalElements:
+          type: integer
+          minimum: 0
+          example: 2
+        correlationId:
+          type: string
+          format: uuid
+          example: 11111111-1111-4111-8111-111111111111
+    ApiNull:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: 'null'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiError:
+      type: object
+      required: [success, message, data, error, meta]
+      properties:
+        success:
+          type: boolean
+          const: false
+        message:
+          type: string
+          example: Revisa los datos marcados.
+        data:
+          type: 'null'
+        error:
+          type: object
+          required: [code, fields]
+          properties:
+            code:
+              type: string
+              example: VALIDATION_ERROR
+            fields:
+              type: object
+              additionalProperties:
+                type: string
+              example:
+                clave: 12–72 bytes UTF-8
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    Login:
+      type: object
+      additionalProperties: false
+      required: [correo, clave]
+      properties:
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+          example: cliente.uno@hotel.test
+        clave:
+          type: string
+          description: '12–72 bytes UTF-8. Write-only: nunca se responde, registra ni persiste en claro.'
+          x-minBytes: 12
+          x-maxBytes: 72
+          example: '<clave-de-ejemplo>'
+    Registro:
+      type: object
+      additionalProperties: false
+      required: [tipoDocumento, documento, nombre, apellido, correo, clave]
+      properties:
+        tipoDocumento:
+          type: string
+          enum: [DNI, PASAPORTE, CE]
+          example: DNI
+        documento:
+          type: string
+          maxLength: 20
+          description: DNI 8 dígitos; PASAPORTE/CE 6–20 alfanuméricos.
+          example: '90000102'
+        nombre:
+          type: string
+          maxLength: 100
+          example: Cliente Tres
+        apellido:
+          type: string
+          maxLength: 100
+          example: Demo
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+          description: Se normaliza a lowercase; UNIQUE.
+          example: cliente.tres@hotel.test
+        clave:
+          type: string
+          description: 12–72 bytes UTF-8 (límite BCrypt); nunca truncar silenciosamente.
+          x-minBytes: 12
+          x-maxBytes: 72
+          example: '<clave-de-ejemplo>'
+    PersonaAlta:
+      type: object
+      additionalProperties: false
+      required: [tipoDocumento, documento, nombre, apellido, correo]
+      properties:
+        tipoDocumento:
+          type: string
+          enum: [DNI, PASAPORTE, CE]
+          example: DNI
+        documento:
+          type: string
+          maxLength: 20
+          example: '90000103'
+        nombre:
+          type: string
+          maxLength: 100
+          example: Huésped Demo
+        apellido:
+          type: string
+          maxLength: 100
+          example: Presencial
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+          example: huesped.demo@hotel.test
+        clave:
+          type: string
+          description: >-
+            Opcional solo para cliente presencial sin cuenta; obligatoria si
+            idTipoPersona es ADMIN/EMPLEADO. 12–72 bytes UTF-8, write-only.
+          x-minBytes: 12
+          x-maxBytes: 72
+          example: '<clave-de-ejemplo>'
+        idTipoPersona:
+          type: integer
+          minimum: 1
+          default: 3
+          description: 1 ADMIN, 2 EMPLEADO, 3 CLIENTE (por defecto CLIENTE).
+          example: 3
+        sedes:
+          type: array
+          description: >-
+            Vacío para CLIENTE; EMPLEADO exige al menos una sede existente/activa;
+            vacío en ADMIN significa alcance global.
+          items:
+            type: integer
+            minimum: 1
+          example: []
+    PersonaUpdate:
+      type: object
+      additionalProperties: false
+      required: [nombre, apellido, correo, idTipoPersona, sedes, estado]
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+          example: Cliente Uno
+        apellido:
+          type: string
+          maxLength: 100
+          example: Demo
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+          example: cliente.uno@hotel.test
+        fotoUrl:
+          type: [string, 'null']
+          maxLength: 500
+          description: https allowlist o /assets/; null para quitarla. No hay descarga de URL por backend.
+          example: null
+        idTipoPersona:
+          type: integer
+          minimum: 1
+          example: 3
+        sedes:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          example: []
+        estado:
+          type: boolean
+          example: true
+    Perfil:
+      type: object
+      additionalProperties: false
+      required: [nombre, apellido]
+      properties:
+        nombre:
+          type: string
+          maxLength: 100
+          example: Cliente Uno
+        apellido:
+          type: string
+          maxLength: 100
+          example: Demo
+        fotoUrl:
+          type: [string, 'null']
+          maxLength: 500
+          description: https allowlist o /assets/; null para quitarla.
+          example: null
+    PasswordChange:
+      type: object
+      additionalProperties: false
+      required: [claveActual, claveNueva]
+      properties:
+        claveActual:
+          type: string
+          description: Clave vigente, write-only; se verifica con BCrypt matches, nunca en SQL.
+          x-minBytes: 12
+          x-maxBytes: 72
+          example: '<clave-de-ejemplo>'
+        claveNueva:
+          type: string
+          description: 12–72 bytes UTF-8; distinta política de BCrypt, no se trunca.
+          x-minBytes: 12
+          x-maxBytes: 72
+          example: '<clave-nueva-de-ejemplo>'
+    Persona:
+      type: object
+      required: [idPersona, tipoDocumento, documento, nombre, apellido, correo, fotoUrl, idTipoPersona, tipoPersona, sedes, estado, fechaCreacion, version]
+      properties:
+        idPersona:
+          type: integer
+          minimum: 1
+          example: 100
+        tipoDocumento:
+          type: string
+          enum: [DNI, PASAPORTE, CE]
+          example: DNI
+        documento:
+          type: string
+          example: '90000100'
+        nombre:
+          type: string
+          maxLength: 100
+          example: Cliente Uno
+        apellido:
+          type: string
+          maxLength: 100
+          example: Demo
+        correo:
+          type: string
+          format: email
+          maxLength: 254
+          example: cliente.uno@hotel.test
+        fotoUrl:
+          type: [string, 'null']
+          maxLength: 500
+          example: null
+        idTipoPersona:
+          type: integer
+          minimum: 1
+          example: 3
+        tipoPersona:
+          type: string
+          enum: [Administrador, Empleado, Cliente]
+          description: Nombre canónico derivado del código inmutable del rol, no de la etiqueta editable.
+          example: Cliente
+        sedes:
+          type: array
+          description: Sedes autorizadas; vacío en CLIENTE.
+          items:
+            type: integer
+            minimum: 1
+          example: []
+        estado:
+          type: boolean
+          example: true
+        fechaCreacion:
+          type: string
+          format: date-time
+          example: '2026-10-01T10:00:00Z'
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    TipoPersona:
+      type: object
+      required: [idTipoPersona, descripcion, codigo, estado, version]
+      properties:
+        idTipoPersona:
+          type: integer
+          minimum: 1
+          example: 3
+        descripcion:
+          type: string
+          maxLength: 80
+          description: Etiqueta editable por PUT; no otorga permisos.
+          example: Cliente
+        codigo:
+          type: string
+          enum: [ADMIN, EMPLEADO, CLIENTE]
+          description: Código inmutable; la autorización usa este valor.
+          example: CLIENTE
+        estado:
+          type: boolean
+          description: True para los tres roles fijos del sistema.
+          example: true
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    Auth:
+      type: object
+      required: [idPersona, nombre, apellido, correo, tipoPersona, token, expiresIn, sedes]
+      properties:
+        idPersona:
+          type: integer
+          minimum: 1
+          example: 100
+        nombre:
+          type: string
+          example: Cliente Uno
+        apellido:
+          type: string
+          example: Demo
+        correo:
+          type: string
+          format: email
+          example: cliente.uno@hotel.test
+        tipoPersona:
+          type: string
+          enum: [Administrador, Empleado, Cliente]
+          example: Cliente
+        token:
+          type: string
+          description: JWT RS256 (iss=hotel-identity, aud=hotel-api); solo en memoria del frontend.
+        expiresIn:
+          type: integer
+          const: 900
+        sedes:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+          example: []
+    ClienteVigente:
+      type: object
+      required: [idPersona, tipoDocumento, documento, nombre, apellido, correo, estado, idTipoPersona, version]
+      properties:
+        idPersona:
+          type: integer
+          minimum: 1
+          example: 100
+        tipoDocumento:
+          type: string
+          enum: [DNI, PASAPORTE, CE]
+          example: DNI
+        documento:
+          type: string
+          example: '90000100'
+        nombre:
+          type: string
+          example: Cliente Uno
+        apellido:
+          type: string
+          example: Demo
+        correo:
+          type: string
+          format: email
+          example: cliente.uno@hotel.test
+        estado:
+          type: boolean
+          const: true
+        idTipoPersona:
+          type: integer
+          const: 3
+        version:
+          type: integer
+          minimum: 1
+          example: 1
+    TokenRequest:
+      type: object
+      additionalProperties: false
+      required: [grant_type, audience]
+      properties:
+        grant_type:
+          type: string
+          const: client_credentials
+        audience:
+          type: string
+          maxLength: 80
+          description: Audiencia destino verificada contra allowlist (p. ej. hotel, reception, sales, inventory).
+          example: hotel
+    TokenResponse:
+      type: object
+      required: [access_token, token_type, expires_in]
+      properties:
+        access_token:
+          type: string
+          description: >-
+            JWT máquina: sub=nombre servicio, aud=destino, scope separado por
+            espacios y limitado por audiencia. TTL 5 min; sin roles humanos.
+        token_type:
+          type: string
+          const: Bearer
+        expires_in:
+          type: integer
+          const: 300
+    JWKS:
+      type: object
+      required: [keys]
+      properties:
+        keys:
+          type: array
+          description: Solo claves públicas; la privada nunca se publica.
+          items:
+            type: object
+            required: [kty, use, alg, kid, n, e]
+            properties:
+              kty:
+                type: string
+                const: RSA
+              use:
+                type: string
+                const: sig
+              alg:
+                type: string
+                const: RS256
+              kid:
+                type: string
+                example: hotel-identity-2026-10
+              n:
+                type: string
+                description: Módulo RSA público (base64url).
+              e:
+                type: string
+                example: AQAB
+    ApiSinglePersona:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/Persona'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListPersona:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Persona'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleTipoPersona:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/TipoPersona'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiListTipoPersona:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/TipoPersona'
+        meta:
+          $ref: '#/components/schemas/ApiMetaPage'
+    ApiSingleAuth:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/Auth'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'
+    ApiSingleClienteVigente:
+      type: object
+      required: [success, message, data, meta]
+      properties:
+        success:
+          type: boolean
+          const: true
+        message:
+          type: string
+          example: OK
+        data:
+          $ref: '#/components/schemas/ClienteVigente'
+        meta:
+          $ref: '#/components/schemas/ApiMetaSingle'

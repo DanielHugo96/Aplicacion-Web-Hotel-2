@@ -6,10 +6,13 @@ Nunca puertos de servicios (`8081-8087`), Eureka (`8761`), brokers ni DB.
 Fuentes: `especificacion/02-landing-y-panel.md`, `03-contrato-comun.md`,
 `microservicios/*/api.md`, `infraestructura/gateway-eureka-docker.md`.
 
-Artefactos máquina:
+Artefactos:
 
+- [`errors.md`](errors.md) — catálogo único de errores: código, HTTP, servicio, campo, mensaje para UI y acción esperada.
 - `openapi/public-web.yaml` — landing (`public-web`), 4 endpoints públicos.
 - `openapi/admin-web.yaml` — panel (`admin-web`), superficie privada por rol.
+- `openapi/identity.yaml`, `hotel.yaml`, `reception.yaml`, `inventory.yaml`, `sales.yaml`, `reporting.yaml` — contrato por servicio backend, incluidas `/internal/**`.
+- `events/` — envelope y JSON Schemas v1 por evento Kafka y comando RabbitMQ, con ejemplos.
 
 ## 1. Reglas transversales
 
@@ -51,6 +54,13 @@ Códigos: `201` creación, `200` update/baja y GET, `204` sin cuerpo,
 `403` rol insuficiente, `404` inexistente o ajeno a sede/propietario (anti-enumeración),
 `409` negocio/duplicado, `410` retirada, `412` versión, `428` falta `If-Match`,
 `429` límite, `503` dependencia caída.
+
+El detalle por código (campo afectado, **mensaje para UI** y acción esperada) vive en
+[`errors.md`](errors.md): la app usa ese catálogo como fuente única y no redacta errores propios.
+
+Formatos de UI (locale **es-PE**, `registerLocaleData`): moneda `S/ 70.00` con separador de miles
+`S/ 1,234.50`; fechas `dd/MM/yyyy`; timestamps `dd/MM/yyyy HH:mm`. La API se mantiene en
+ISO-8601 y PEN; los pipes de Angular convierten.
 
 ### 1.3 Convenciones L / H / V
 
@@ -110,7 +120,7 @@ Todos los PUT/DELETE con `V` llevan `If-Match`. Ver `openapi/admin-web.yaml`.
 |---|---|---|
 | Login | `POST /api/auth/login {correo,clave}` → `Auth{idPersona,nombre,apellido,correo,tipoPersona,token,expiresIn:900,sedes}` | P. 401 genérico, 429 tras 5/min IP+cuenta. Sin idempotencia |
 | Registro público | `POST /api/auth/registro {tipoDocumento,documento,nombre,apellido,correo,clave}` | P. Fuerza CLIENTE; rechaza `idTipoPersona/roles/sedes/estado` con 400. Máx 3/min IP |
-| Sesión / perfil | `GET /api/auth/me`, `PUT /api/auth/me {nombre,apellido,fotoUrl?}` (V), `PUT /api/auth/password {claveActual,claveNueva}` | A/E/C. Clave 12–72 bytes UTF-8, BCrypt, write-only |
+| Sesión / perfil | `GET /api/auth/me`, `PUT /api/auth/me {nombre,apellido,fotoUrl?}` (V), `PUT /api/auth/password {claveActual,claveNueva}` (+ `Idempotency-Key`) | A/E/C. Clave 12–72 bytes UTF-8, BCrypt, write-only |
 | Social | `POST /api/auth/social` → `410 SOCIAL_LOGIN_DISABLED` | No usar, retirar botón |
 | Listar/buscar personas | `GET /api/persona/listar?page=&size=&idTipoPersona?=&documento?`, `GET /api/persona/buscar/{id}` | A/E. E solo CLIENTE y con `?documento=` exacto (sin él → 400). C solo propio |
 | Alta persona | `POST /api/persona/registrar` | A/E. E solo CLIENTE sin sedes. ADMIN/EMPLEADO exigen clave; presencial sin cuenta → solo cliente |
@@ -133,17 +143,20 @@ Todos los PUT/DELETE con `V` llevan `If-Match`. Ver `openapi/admin-web.yaml`.
 
 `Habitacion = {idHabitacion,...,estado,estadoFisico,version,ocupacion:{estadoEstadia,idRecepcion,updatedAt},idEstadoHabitacion}` (+ `Limpieza{cleaningCycleId,idHabitacion,idRecepcion,estado,roomVersion,version}`).
 
+Baja/mantenimiento: **200** = reception admitió el bloqueo y hotel aplicó el cambio en el request (respuesta terminal con `blockId`); **202** = operación persistida `PREPARANDO` (polling `GET /api/habitacion/operaciones/{blockId}` con `Location` + `Retry-After`); **409** = rechazo durable del gate (no se admite aunque la habitación quede libre después). El número de habitación es reutilizable tras la baja; el histórico se identifica por `idHabitacion`.
+
 ### 3.3 Estadías (reception)
 
 | Acción | Endpoint | Rol |
 |---|---|---|
 | Listar / ver | `GET /api/recepcion/listar?page=&size=&idHotel=&estadoEstadia?`, `GET /api/recepcion/{id}`, `GET /api/recepcion/cliente/{idCliente}?`, `GET /api/recepcion/habitacion-activa/{idHabitacion}` | A/E sede; C solo propia (`cliente/{sub}`, `/{id}` propio) |
-| Check-in | `POST /api/recepcion/registrar {idHotel,idCliente,idHabitacion,fechaSalida,adelanto,observacion?}` | A/E sede. `fechaEntrada` = hoy Lima (servidor). 409 `ROOM_OCCUPIED/ROOM_NOT_READY`. Cliente primero existe en identity |
+| Check-in | `POST /api/recepcion/registrar {idHotel,idCliente,idHabitacion,fechaSalida,adelanto,medioPago?,observacion?}` | A/E sede. `fechaEntrada` = hoy Lima (servidor). `medioPago` obligatorio si `adelanto > 0`. 409 `ROOM_OCCUPIED/ROOM_NOT_READY`. Cliente primero existe en identity |
 | Editar salida | `PUT /api/recepcion/actualizar/{id} {fechaSalida,observacion?}` (V) | A/E. Solo ACTIVA. No baja `precioInicial` bajo `adelanto` (409) |
-| Cotizar / cerrar | `GET /api/recepcion/{id}/cotizacion-salida?costoPenalidad=0`, `POST /api/recepcion/registrar-salida {idRecepcion,idHabitacion,costoPenalidad,totalPagado}` | A/E. `totalPagado` = efectivo recibido AHORA. 409 `AMOUNT_MISMATCH/OPERATIONS_IN_PROGRESS`, 202 si queda CERRANDO con `Location + Retry-After`. Panel muestra “cierre pendiente, no volver a cobrar” |
+| Cotizar / cerrar | `GET /api/recepcion/{id}/cotizacion-salida?costoPenalidad=0`, `POST /api/recepcion/registrar-salida {idRecepcion,idHabitacion,costoPenalidad,motivoPenalidad?,montoRecibido,medioPago}` | A/E. `montoRecibido` = efectivo recibido AHORA (etiqueta “Monto recibido ahora”), comparación exacta; `medioPago` obligatorio; penalidad 0..precioInicial con motivo si > 0. 409 `AMOUNT_MISMATCH/OPERATIONS_IN_PROGRESS`, 202 si queda CERRANDO con `Location + Retry-After`. Panel muestra “cierre pendiente, no volver a cobrar” |
+| Anular check-in | `POST /api/recepcion/{id}/anular-checkin {motivo}` (V, `Idempotency-Key`) | A. Solo ACTIVA sin ventas admitidas ni cierre en curso; libera gate sin limpieza ni cobro; 409 `OPERATIONS_IN_PROGRESS/CLOSURE_IN_PROGRESS` |
 | Archivar | `DELETE /api/recepcion/eliminar/{id}` (V) | A. Solo CERRADA (409 si no) |
 
-`Recepcion` incluye snapshots cliente/habitación, `precioInicial/adelanto/precioRestante/totalPagado(historial alojamiento)/costoPenalidad`, `estadoEstadia ACTIVA/CERRANDO/CERRADA`, `version/closureId/cleaningCycleId` + `cierre{closureId,estado,lastErrorCode,calculo}`.
+`Recepcion` incluye snapshots cliente/habitación, `precioInicial/adelanto/medioPagoAdelanto/precioRestante/totalPagado` (historial alojamiento)/`costoPenalidad/motivoPenalidad`, `estadoEstadia ACTIVA/CERRANDO/CERRADA`, `vencida` (ACTIVA con salida pasada, sin cierre; la habitación sigue ocupada) y `version/closureId/cleaningCycleId` + `cierre{closureId,estado,lastErrorCode,calculo}`.
 
 ### 3.4 Productos y stock (inventory — sin CLIENTE directo)
 
@@ -152,7 +165,7 @@ Todos los PUT/DELETE con `V` llevan `If-Match`. Ver `openapi/admin-web.yaml`.
 | Acción | Endpoint | Rol |
 |---|---|---|
 | Listar / ver | `GET /api/producto/listar?page=&size=&idHotel=`, `GET /api/producto/buscar/{id}?idHotel=` | A/E sede |
-| Alta / editar / baja sede | `POST /api/producto/registrar {sku,nombre,detalle?,imagenUrl?,idHotel,precio,cantidadInicial,umbralBajo}`, `PUT /api/producto/actualizar/{id}?idHotel=` (V + `productoVersion`), `DELETE /api/producto/eliminar/{id}?idHotel=` (V) | A. Precio>0, inicial>=0. Baja impide ventas nuevas pero permite restituir previas |
+| Alta / editar / baja sede | `POST /api/producto/registrar {sku,nombre,detalle?,imagenUrl?,idHotel,precio,cantidadInicial,umbralBajo}`, `PUT /api/producto/actualizar/{id}?idHotel=` (V + `productoVersion`), `DELETE /api/producto/eliminar/{id}?idHotel=` (V) | A. Precio>0, inicial>=0. Baja lógica conservando unidades: no admite ventas nuevas (`PRODUCT_INACTIVE`), permite restituir previas y reactivar conserva la cantidad |
 | Asignar sede / ajustar | `POST /api/producto/{id}/sedes {idHotel,precio,cantidadInicial,umbralBajo}`, `POST /api/producto/{id}/ajustes {idHotel,delta,motivo}` (V) | A. `delta != 0`, motivo 1..300 |
 | Movimientos | `GET /api/producto/{id}/movimientos?idHotel=&page=&size=&inicio?=&fin?` | A/E. Unión `VENTA{...DESCONTADO/RECHAZADO/RESTITUIDO}` / `AJUSTE{...}` |
 
@@ -163,13 +176,13 @@ Todos los PUT/DELETE con `V` llevan `If-Match`. Ver `openapi/admin-web.yaml`.
 | Acción | Endpoint | Rol |
 |---|---|---|
 | Catálogo privado | `GET /api/venta/catalogo?idRecepcion=&page=&size=` | A/E/C. Solo recepción ACTIVA; precio/stock informativos. 503 sin fallback inventado |
-| Carrito | `POST /api/carrito/agregar?idRecepcion=&idProducto=&cantidad=` (+ `Idempotency-Key`), `GET /api/carrito/listar/{idRecepcion}`, `DELETE /api/carrito/eliminar?idRecepcion=&idProducto=` | A/E/C (C solo propia ACTIVA; cerrada → `[]`). Cantidad 1..9999, upsert suma. Cambiar cantidad = eliminar + agregar |
+| Carrito | `POST /api/carrito/agregar?idRecepcion=&idProducto=&cantidad=` (+ `Idempotency-Key`), `GET /api/carrito/listar/{idRecepcion}`, `DELETE /api/carrito/eliminar?idRecepcion=&idProducto=` (+ `Idempotency-Key`) | A/E/C (C solo propia ACTIVA; cerrada → `[]`). Cantidad 1..9999, upsert suma. Cambiar cantidad = eliminar + agregar |
 | Ventas listar/ver | `GET /api/venta?page=&size=&idHotel=&estado?=&estadoOperacion?=`, `GET /api/venta/buscar/{id}`, `GET /api/venta/recepcion/{idRecepcion}?` | A/E sede; C solo propia |
 | Crear venta | `POST /api/venta {idRecepcion,estado?,detalles:[{idProducto,cantidad}]}` | A/E/C. C solo `PENDIENTE`/omitido; A/E pueden `PAGADO` (cobro manual). Sin precios/total en body (400). Máx 50 líneas. 201 CONFIRMADA o 202 en recuperación |
-| Pagar / anular | `PUT /api/venta/{id} {estado:"PAGADO"}` (V), `DELETE /api/venta/{id}?motivo=` (V) | A/E sede. Anulación impagada → 202 `CANCELACION_PENDIENTE`; PAGADA → 409, historial intacto |
+| Pagar / anular | `PUT /api/venta/{id} {estado:"PAGADO",medioPago}` (V), `DELETE /api/venta/{id}?motivo=` (V) | A/E sede. `medioPago` obligatorio (EFECTIVO/TARJETA/OTRO). Anulación impagada → 202 `CANCELACION_PENDIENTE`; PAGADA → 409, historial intacto |
 | Operación | `GET /api/venta/operaciones/{operationId}` | A/E/C (C solo suya). Polling tras 202 (`Location + Retry-After: 2`) |
 
-`Venta = {idVenta,idRecepcion,idCliente,idHotel,total,estado:PENDIENTE|PAGADO,estadoOperacion:PENDIENTE|CONFIRMADA|RECHAZADA|CANCELACION_PENDIENTE|CANCELADA,operationId,version,fechaCreacion,paidAt,detalles:[{idDetalleVenta,idProducto,nombreProducto,cantidad,precioUnitario,subTotal}]}`.
+`Venta = {idVenta,idRecepcion,idCliente,idHotel,total,estado:PENDIENTE|PAGADO,estadoOperacion:PENDIENTE|CONFIRMADA|RECHAZADA|CANCELACION_PENDIENTE|CANCELADA,operationId,medioPago,version,fechaCreacion,paidAt,detalles:[{idDetalleVenta,idProducto,nombreProducto,cantidad,precioUnitario,subTotal}]}`. `medioPago` es `null` hasta el cobro (`NO_REGISTRADO` en históricos).
 `202` mantiene la forma con `estadoOperacion` PENDIENTE/CANCELACION_PENDIENTE.
 
 ### 3.6 Reportes (reporting — sin CLIENTE)

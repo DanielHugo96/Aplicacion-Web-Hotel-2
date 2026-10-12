@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hotel.test/contracts/events/stock.restituir.StockRestituir.v1.schema.json",
+  "title": "stock.restituir — StockRestituir",
+  "description": "Comando RabbitMQ emitido por sales hacia inventory (routing key y cola stock.restituir; exchange hotel.commands.v1) al anular una venta. No acepta cantidades ni precios del emisor: inventory usa su movimiento original o crea una lápida si no existe; una contradicción de idHotel con el movimiento existente va a DLQ sin mover stock ajeno.",
+  "allOf": [
+    {
+      "$ref": "./command-envelope.v1.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "StockRestituir"
+        },
+        "idHotel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "idVenta",
+            "idRecepcion",
+            "motivo"
+          ],
+          "properties": {
+            "idVenta": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Venta anulada cuyo movimiento de stock se restituye."
+            },
+            "idRecepcion": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Estadía de la venta; se valida contra la tupla del movimiento."
+            },
+            "motivo": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 300,
+              "description": "Motivo de la anulación registrado en la operación."
+            }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "commandId": "33333333-3333-4333-8333-333333333333",
+      "type": "StockRestituir",
+      "schemaVersion": 1,
+      "idHotel": 1,
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "issuedAt": "2026-10-04T16:30:00Z",
+      "payload": {
+        "idVenta": 5001,
+        "idRecepcion": 1001,
+        "motivo": "Anulación de la venta desde el panel"
+      }
+    }
+  ]
+}

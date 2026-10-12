@@ -1,0 +1,431 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hotel.test/contracts/events/reception.recepcion.v1.SalidaRegistrada.schema.json",
+  "title": "reception.recepcion.v1 — SalidaRegistrada",
+  "description": "Evento de salida emitido por reception cuando el cierre queda COMPLETADO (topic reception.recepcion.v1, key=idHabitacion, aggregateVersion=roomVersion). Payload = snapshot completo de la estadía con cierre = {alojamientoTotal,consumosPagadosAntes,consumosPagadosAlCerrar,consumosTotal,cobroAhora,totalGeneral,medioPago,closedAt}. Lo consumen reporting, hotel (proyección de ocupación) y sales (limpia el carrito al cerrar).",
+  "allOf": [
+    {
+      "$ref": "./envelope.v1.schema.json"
+    },
+    {
+      "properties": {
+        "type": {
+          "const": "SalidaRegistrada"
+        },
+        "aggregateType": {
+          "const": "habitacion-ocupacion"
+        },
+        "aggregateId": {
+          "type": "string",
+          "pattern": "^[0-9]+$",
+          "description": "idHabitacion serializado como texto (Kafka key)."
+        },
+        "aggregateVersion": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "roomVersion del room_gate tras confirmarse el cierre."
+        },
+        "idHotel": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "idRecepcion",
+            "idHotel",
+            "idHabitacion",
+            "idCliente",
+            "numero",
+            "nombreCliente",
+            "fechaEntrada",
+            "fechaSalida",
+            "fechaSalidaConfirmacion",
+            "estadoEstadia",
+            "tarifa",
+            "precioInicial",
+            "adelanto",
+            "medioPagoAdelanto",
+            "costoPenalidad",
+            "motivoPenalidad",
+            "totalPagado",
+            "observacion",
+            "archivada",
+            "version",
+            "roomVersion",
+            "closureId",
+            "cleaningCycleId",
+            "cierre",
+            "ocupacionActual"
+          ],
+          "properties": {
+            "idRecepcion": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Identificador de la estadía."
+            },
+            "idHotel": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Sede de la estadía."
+            },
+            "idHabitacion": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Habitación de la estadía."
+            },
+            "idCliente": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Cliente de la estadía."
+            },
+            "numero": {
+              "type": "string",
+              "description": "Número visible de la habitación al emitir el evento."
+            },
+            "nombreCliente": {
+              "type": "string",
+              "description": "Nombre del cliente; dato personal de uso interno."
+            },
+            "fechaEntrada": {
+              "type": "string",
+              "format": "date",
+              "description": "Fecha de entrada (America/Lima)."
+            },
+            "fechaSalida": {
+              "type": "string",
+              "format": "date",
+              "description": "Fecha de salida (America/Lima)."
+            },
+            "fechaSalidaConfirmacion": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "format": "date-time",
+              "description": "Sello UTC del cierre confirmado."
+            },
+            "estadoEstadia": {
+              "type": "string",
+              "enum": [
+                "CERRANDO",
+                "CERRADA"
+              ],
+              "description": "Estado de la estadía tras el hecho; la salida confirmada la deja CERRADA."
+            },
+            "tarifa": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "multipleOf": 0.01,
+              "description": "Tarifa congelada por noche."
+            },
+            "precioInicial": {
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "description": "Precio de alojamiento de la estadía."
+            },
+            "adelanto": {
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "description": "Adelanto cobrado en el check-in."
+            },
+            "medioPagoAdelanto": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "enum": [
+                "EFECTIVO",
+                "TARJETA",
+                "OTRO",
+                null
+              ],
+              "description": "Medio de pago del adelanto; null = NO_REGISTRADO (histórico migrado)."
+            },
+            "costoPenalidad": {
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "description": "Penalidad aplicada en el cierre."
+            },
+            "motivoPenalidad": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 300,
+              "description": "Motivo obligatorio cuando costoPenalidad > 0; null sin penalidad."
+            },
+            "totalPagado": {
+              "type": "number",
+              "minimum": 0,
+              "multipleOf": 0.01,
+              "description": "Total histórico pagado del alojamiento (adelanto + cobro final)."
+            },
+            "observacion": {
+              "type": "null",
+              "description": "null por contrato: no se publican observaciones personales en Kafka."
+            },
+            "archivada": {
+              "type": "boolean",
+              "description": "true si la estadía fue archivada."
+            },
+            "version": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versión de la estadía en la base de reception."
+            },
+            "roomVersion": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Versión del room_gate; coincide con aggregateVersion."
+            },
+            "closureId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Cierre confirmado de consumos."
+            },
+            "cleaningCycleId": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Ciclo de limpieza creado al cerrar; el gate queda LIMPIEZA_PENDIENTE."
+            },
+            "cierre": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Desglose final del cierre con medio de pago y sello de cierre.",
+              "required": [
+                "alojamientoTotal",
+                "consumosPagadosAntes",
+                "consumosPagadosAlCerrar",
+                "consumosTotal",
+                "cobroAhora",
+                "totalGeneral",
+                "medioPago",
+                "closedAt"
+              ],
+              "properties": {
+                "alojamientoTotal": {
+                  "type": "number",
+                  "minimum": 0,
+                  "multipleOf": 0.01,
+                  "description": "precioInicial + penalidad."
+                },
+                "consumosPagadosAntes": {
+                  "type": "number",
+                  "minimum": 0,
+                  "multipleOf": 0.01,
+                  "description": "Consumos ya pagados antes del cierre."
+                },
+                "consumosPagadosAlCerrar": {
+                  "type": "number",
+                  "minimum": 0,
+                  "multipleOf": 0.01,
+                  "description": "Consumos pendientes pagados en esta confirmación."
+                },
+                "consumosTotal": {
+                  "type": "number",
+                  "minimum": 0,
+                  "multipleOf": 0.01,
+                  "description": "consumosPagadosAntes + consumosPagadosAlCerrar."
+                },
+                "cobroAhora": {
+                  "type": "number",
+                  "minimum": 0,
+                  "multipleOf": 0.01,
+                  "description": "Importe cobrado en el cierre (alojamiento + consumos pendientes)."
+                },
+                "totalGeneral": {
+                  "type": "number",
+                  "minimum": 0,
+                  "multipleOf": 0.01,
+                  "description": "alojamientoTotal + consumosTotal."
+                },
+                "medioPago": {
+                  "type": "string",
+                  "enum": [
+                    "EFECTIVO",
+                    "TARJETA",
+                    "OTRO"
+                  ],
+                  "description": "Medio de pago del cobro del cierre."
+                },
+                "closedAt": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Sello UTC del cierre confirmado."
+                }
+              }
+            },
+            "ocupacionActual": {
+              "type": "object",
+              "additionalProperties": false,
+              "description": "Estado del room_gate al momento del evento; la salida confirmada lo deja LIMPIEZA_PENDIENTE.",
+              "required": [
+                "idRecepcion",
+                "estadoGate",
+                "cleaningCycleId",
+                "blockId"
+              ],
+              "properties": {
+                "idRecepcion": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 1,
+                  "description": "Estadía que ocupa el gate; null si el gate no está OCUPADA."
+                },
+                "estadoGate": {
+                  "type": "string",
+                  "enum": [
+                    "LIBRE",
+                    "OCUPADA",
+                    "LIMPIEZA_PENDIENTE",
+                    "BLOQUEADA"
+                  ],
+                  "description": "Estado del gate tras el hecho."
+                },
+                "cleaningCycleId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid",
+                  "description": "Ciclo de limpieza del gate, o null."
+                },
+                "blockId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid",
+                  "description": "Bloqueo del gate, o null."
+                }
+              },
+              "allOf": [
+                {
+                  "if": {
+                    "properties": {
+                      "estadoGate": {
+                        "const": "OCUPADA"
+                      }
+                    },
+                    "required": [
+                      "estadoGate"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "idRecepcion": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "estadoGate": {
+                        "const": "LIMPIEZA_PENDIENTE"
+                      }
+                    },
+                    "required": [
+                      "estadoGate"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "cleaningCycleId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  }
+                },
+                {
+                  "if": {
+                    "properties": {
+                      "estadoGate": {
+                        "const": "BLOQUEADA"
+                      }
+                    },
+                    "required": [
+                      "estadoGate"
+                    ]
+                  },
+                  "then": {
+                    "properties": {
+                      "blockId": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "eventId": "11111111-1111-4111-8111-111111111111",
+      "type": "SalidaRegistrada",
+      "schemaVersion": 1,
+      "aggregateType": "habitacion-ocupacion",
+      "aggregateId": "101",
+      "aggregateVersion": 3,
+      "idHotel": 1,
+      "occurredAt": "2026-10-05T16:00:00Z",
+      "correlationId": "22222222-2222-4222-8222-222222222222",
+      "payload": {
+        "idRecepcion": 1001,
+        "idHotel": 1,
+        "idHabitacion": 101,
+        "idCliente": 100,
+        "numero": "101",
+        "nombreCliente": "Cliente Uno",
+        "fechaEntrada": "2026-10-04",
+        "fechaSalida": "2026-10-05",
+        "fechaSalidaConfirmacion": "2026-10-05T16:00:00Z",
+        "estadoEstadia": "CERRADA",
+        "tarifa": 70.00,
+        "precioInicial": 70.00,
+        "adelanto": 20.00,
+        "medioPagoAdelanto": "EFECTIVO",
+        "costoPenalidad": 0.00,
+        "motivoPenalidad": null,
+        "totalPagado": 77.00,
+        "observacion": null,
+        "archivada": false,
+        "version": 3,
+        "roomVersion": 3,
+        "closureId": "77777777-7777-4777-8777-777777777777",
+        "cleaningCycleId": "44444444-4444-4444-8444-444444444444",
+        "cierre": {
+          "alojamientoTotal": 70.00,
+          "consumosPagadosAntes": 0.00,
+          "consumosPagadosAlCerrar": 7.00,
+          "consumosTotal": 7.00,
+          "cobroAhora": 57.00,
+          "totalGeneral": 77.00,
+          "medioPago": "EFECTIVO",
+          "closedAt": "2026-10-05T16:00:00Z"
+        },
+        "ocupacionActual": {
+          "idRecepcion": 1001,
+          "estadoGate": "LIMPIEZA_PENDIENTE",
+          "cleaningCycleId": "44444444-4444-4444-8444-444444444444",
+          "blockId": null
+        }
+      }
+    }
+  ]
+}
