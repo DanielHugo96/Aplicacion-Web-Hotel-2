@@ -18,6 +18,10 @@
 - [OpenAPI](../contracts/openapi/): un YAML por servicio backend (`identity`, `hotel`, `reception`, `inventory`, `sales`, `reporting`) más los contratos de frontend `admin-web.yaml` y `public-web.yaml`.
 - [JSON Schemas de eventos](../contracts/events/): envelope y un schema v1 por tipo Kafka/Rabbit, con ejemplos.
 
+## Diseño frontend
+
+- [Sistema de diseño](../DESIGN.md): guía visual y de interacción de `public-web` y `admin-web` (paleta, tipografía, componentes, tokens y checklist por pantalla).
+
 ## Documento por microservicio
 
 | Servicio | Base de datos, procedimientos y seeds | API REST e integración |
