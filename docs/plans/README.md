@@ -11,7 +11,7 @@ Este documento es la norma de ambos. Un plan que no pasa `scripts/validar-planes
 | `README.md` | Esta norma | Solo por PR revisado |
 | `catalogo.md` | Planes previstos, dependencias, dueños de mensajes, endpoints y casos | Quien planifica, en el mismo PR que añade o cambia un plan |
 | `_plantilla.md` | Esqueleto de un plan nuevo | Solo por PR revisado |
-| `_prompts.md` | Prompts sugeridos para que un asistente redacte un plan | Solo por PR revisado |
+| `_prompts.md` | Secuencia de prompts para generar los 25 planes uno tras otro | Solo por PR revisado |
 | `<ámbito>-<tema>.md` | Un plan | Planificador (estado `propuesto`) y ejecutora (estado y progreso) |
 
 Spec: [`../especificacion`](../especificacion) · Contratos: [`../contracts`](../contracts) · Validador: [`../../scripts/validar-planes.py`](../../scripts/validar-planes.py)
