@@ -2,7 +2,7 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "Hotel — Arquitectura objetivo microservicios",
+    "title": "Hotel — Arquitectura objetivo de microservicios",
     "quality_profile": "showcase",
     "views": [
       {
@@ -15,7 +15,7 @@
           "hotel",
           "postgres"
         ],
-        "note": "Del panel y landing al Gateway y a recepcion y hotel hasta su BD propia."
+        "note": "Del panel y landing al Gateway y a recepción y hotel hasta su BD propia."
       },
       {
         "id": "eventos-comandos",
@@ -27,7 +27,7 @@
           "reporting",
           "notification"
         ],
-        "note": "Hechos Kafka a reporting y comandos RabbitMQ a hotel, inventory y notificacion."
+        "note": "Hechos Kafka a reporting y comandos RabbitMQ a hotel, inventory y notificación."
       },
       {
         "id": "identidad-datos",
@@ -38,7 +38,7 @@
           "postgres",
           "brokers"
         ],
-        "note": "JWT de identity validado en Gateway con siete BDs logicas separadas."
+        "note": "JWT de identity validado en Gateway con siete BDs lógicas separadas."
       }
     ]
   },
@@ -103,7 +103,7 @@
       "id": "reception",
       "type": "backend",
       "label": "reception-service",
-      "sublabel": "estadias y bloqueos :8083",
+      "sublabel": "estadías y bloqueos :8083",
       "pos": [
         380,
         310
@@ -187,7 +187,7 @@
       "id": "postgres",
       "type": "database",
       "label": "PostgreSQL",
-      "sublabel": "7 BDs logicas Flyway",
+      "sublabel": "7 BDs lógicas Flyway",
       "pos": [
         550,
         452
@@ -314,6 +314,7 @@
       "from": "reception",
       "to": "hotel",
       "label": "limpieza.solicitada",
+      "variant": "dashed",
       "labelAt": [
         375,
         402
@@ -360,27 +361,27 @@
   "cards": [
     {
       "dot": "cyan",
-      "title": "Borde",
+      "title": "Borde · Gateway :8080",
       "items": [
-        "Gateway :8080 rutas explicitas: auth, hotel, recepcion, producto, venta, reportes",
-        "CORS allowlist, JWT aud hotel-api, rate limit demo"
+        "Rutas: auth, persona, public, hotel, recepción, producto, venta, carrito, reportes",
+        "CORS :4200/:4300 · JWT hotel-api · 60/min · 1 MiB"
       ]
     },
     {
       "dot": "emerald",
-      "title": "Aplicacion",
+      "title": "Aplicación · dueño único",
       "items": [
-        "Java 25, Boot 4.1.x, Cloud 2025.1.x, Feign + Eureka :8761",
-        "Kafka hechos confirmados, RabbitMQ comandos dirigidos",
-        "Reception decide ocupacion, sales cobra, inventory descuenta"
+        "Java 25 · Boot 4.1.1 · Cloud 2025.1.3 · Angular 22.2.2",
+        "Kafka 4.3.1 (7 topics) · RabbitMQ 4.3.6 (6 colas)",
+        "Feign · reception ocupa · sales cobra · inventory descuenta"
       ]
     },
     {
       "dot": "amber",
-      "title": "Datos",
+      "title": "Datos · 7 BDs lógicas",
       "items": [
-        "Flyway por servicio, ddl-auto validate, seeds demo",
-        "Mailpit SMTP :1025 y UI :8025, correo no revierte negocio"
+        "PostgreSQL 18.6 · 7 BDs · Flyway por servicio · validate",
+        "Outbox/inbox · DLT/DLQ operada · Mailpit :1025/:8025"
       ]
     }
   ]
