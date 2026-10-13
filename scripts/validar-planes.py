@@ -229,6 +229,8 @@ def revisar_plan(archivo, planes, casos06, topics, grupos, comandos, rutas, erro
         error(donde, f"Estado inválido: «{v('Estado')}»")
     if v("Modo") == "openspec" and not v("Change").startswith("openspec/changes/"):
         error(donde, "modo openspec exige Change: openspec/changes/<plan>/")
+    if ambito == "front" and "DESIGN.md" not in texto:
+        error(donde, "los planes front deben citar ../DESIGN.md (sistema de diseño)")
 
     deps = set(re.findall(r"`([a-z0-9-]+)`", cab.get("Depende de", "")))
     for d in sorted(deps):
@@ -301,7 +303,11 @@ def main():
         error(cat, "hay un ciclo en las dependencias del catálogo")
 
     for nombre in sorted(set(RE_PLAN_EN_TEXTO.findall(cat_txt))):
-        if "*" in nombre or nombre not in planes:
+        if "*" in nombre:
+            base = nombre.split("*")[0]
+            if not any(p.startswith(base) for p in planes):
+                error(cat, f"«{nombre}» no coincide con ningún plan del catálogo")
+        elif nombre not in planes:
             error(cat, f"«{nombre}» no es un plan del catálogo")
 
     sec2 = seccion(sec, "2.")

@@ -4,6 +4,8 @@ Inventario de los planes previstos, con sus dependencias, dueños de mensajes, e
 
 ## 1. Planes
 
+Los planes `front-*` planifican con [`../DESIGN.md`](../DESIGN.md) (sistema de diseño v1.0): tokens, componentes y checklist por pantalla. El validador exige que cada plan de front lo cite.
+
 | Fase | Plan | Ámbito | Modo | Depende de | Contenido |
 |---|---|---|---|---|---|
 | F0 | `infra-monorepo` | infra | `directo` | — | Estructura de [01](../especificacion/01-arquitectura.md) §1, Maven agregador y wrappers, Angular 22.2.2, versiones fijadas, `.env.example`, CI mínima y README raíz con sección «Verificación» (comandos canónicos). |
