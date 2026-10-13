@@ -9,6 +9,8 @@ Un plan no es código ni documentación del sistema. Es la hoja de ruta de una t
 > La especificación dice qué es el sistema. El plan dice cómo lo construimos paso a paso.
 > Spec en [`../especificacion`](../especificacion), contratos en [`../contracts`](../contracts), planes en esta carpeta.
 
+Este documento es la **norma del agente planificador**: cualquier plan generado (por una IA o por una persona) debe cumplir lo que sigue. Un plan que no cumple la estructura de §6, el proceso de §5 y las reglas de §7 no se acepta en PR.
+
 ## 1. Ámbito: back, front, infra o qa
 
 Cada plan cubre un solo ámbito, y su nombre de archivo lo declara:
@@ -31,8 +33,8 @@ Las fases equivalen a los 6 pasos del [primer incremento implementable](../espec
 | Fase | Nombre | Objetivo | Criterio de salida | Modo por defecto |
 |---|---|---|---|---|
 | F0 | Fundación | Monorepo, versiones fijadas, plantillas y CI | Compila vacío con versiones pinneadas; los PRs pasan CI | `directo` |
-| F1 | Plataforma | Compose (PostgreSQL 18.6, Kafka 4.3.1, RabbitMQ 4.3.6, Mailpit), Gateway/Eureka, seguridad común y mensajería fiable | `compose up` sano; login demo y token máquina funcionan por el Gateway; outbox/inbox con pruebas | `directo`, con `openspec` en mensajería |
-| F2 | Dominio base | identity y hotel con seeds; landing pública; login/layout y CRUD del panel | Login, aislamiento por sede, último ADMIN, catálogo público y CRUD operativos | `directo` |
+| F1 | Plataforma | Compose (PostgreSQL 18.6, Kafka 4.3.1, RabbitMQ 4.3.6, Mailpit), Gateway/Eureka, seguridad común y mensajería fiable | `compose up` con healthchecks verdes; Gateway enruta y devuelve 401 sin token; rutas internas no expuestas; configuración de [`configuracion.md`](../especificacion/infraestructura/configuracion.md) aplicable | `directo`, con `openspec` en mensajería |
+| F2 | Dominio base | identity y hotel con seeds; landing pública; login/layout y CRUD del panel | Login, aislamiento por sede, último ADMIN, catálogo público y CRUD operativos; eventos de identity/hotel publicados por outbox | `directo` |
 | F3 | Operación | reception (gate/check-in), inventory y sales (consumo con débito) y estado físico/limpieza de hotel | Check-in y venta PAGADA con débito y compensación probados; mantenimiento 200/202 y limpieza visibles en el panel | `openspec` en flujos críticos |
 | F4 | Cierre y asíncronos | Cierre de estadía con cobro, área de cliente, notification y proyecciones de reporting | Cierre completo con penalidad y cobro; correos demo; reportes al día con desglose por medio de pago | `openspec` en flujos críticos |
 | F5 | Aceptación | Matriz completa, runbooks y endurecimiento | Matriz de ~41 casos verde con evidencia; simulacros de DLQ, cierre atascado y restauración | `directo` |
@@ -88,7 +90,43 @@ Estos archivos aún no existen: son la ruta de trabajo y se crean al abrir cada 
 | F5 | `qa-matriz-aceptacion.md` | qa | `directo` | Ejecutar la matriz completa con fixtures, evidencias y las correcciones de spec que salgan. Depende de F1–F4. |
 | F5 | `qa-runbooks.md` | qa | `directo` | Simulacros de DLQ, cierre CONFIRMANDO, operación PREPARANDO y outbox atrasado; backup y restauración. |
 
-## 5. Estructura obligatoria de un plan
+## 5. Proceso del agente planificador
+
+Este README es el contrato que sigue quien redacte un plan (humano o IA). El flujo es:
+
+1. **Elegir** el plan del catálogo (§4) y revisar su pendiente: ámbito, fase, modo y dependencias.
+2. **Leer lo obligatorio** para su ámbito (tabla siguiente). Un plan redactado sin esa lectura se rechaza si contradice la spec.
+3. **Redactar** con la estructura de §6 y en el modo que fija §3.
+4. **Autorevisar** con el checklist de esta sección; cada punto se verifica con un enlace o un grep sobre el repo.
+5. **Publicar** en `docs/plans/` con estado `propuesto` y abrir PR según [`../guia-git.md`](../guia-git.md).
+
+### Lectura obligatoria por ámbito
+
+| Ámbito | Siempre | Además |
+|---|---|---|
+| Todos | este README, [`../especificacion/README.md`](../especificacion/README.md), [`03-contrato-comun.md`](../especificacion/03-contrato-comun.md), [`../contracts/errors.md`](../contracts/errors.md) | — |
+| `back` | `microservicios/<servicio>/api.md` y `base-de-datos.md`, `contracts/openapi/<servicio>.yaml`, [`05-mensajeria.md`](../especificacion/05-mensajeria.md) si emite o consume mensajes, [`06-migracion-y-pruebas.md`](../especificacion/06-migracion-y-pruebas.md) (casos y fixtures de su dominio) | [`04-flujos.md`](../especificacion/04-flujos.md) si toca check-in, venta/stock, cierre, limpieza o mantenimiento; `contracts/events/` si publica o consume eventos |
+| `front` | [`02-landing-y-panel.md`](../especificacion/02-landing-y-panel.md), [`08-admin-web.md`](../especificacion/08-admin-web.md), [`../contracts/README.md`](../contracts/README.md) (sección de su módulo), `contracts/openapi/admin-web.yaml` o `public-web.yaml` | [`06-migracion-y-pruebas.md`](../especificacion/06-migracion-y-pruebas.md) §4 (cambios frontend obligatorios) |
+| `infra` | [`01-arquitectura.md`](../especificacion/01-arquitectura.md), [`gateway-eureka-docker.md`](../especificacion/infraestructura/gateway-eureka-docker.md), [`configuracion.md`](../especificacion/infraestructura/configuracion.md) | [`06-migracion-y-pruebas.md`](../especificacion/06-migracion-y-pruebas.md) §2 (orden de implementación) |
+| `qa` | [`06-migracion-y-pruebas.md`](../especificacion/06-migracion-y-pruebas.md), [`runbooks.md`](../especificacion/infraestructura/runbooks.md) | contratos de los flujos que cubre |
+| Modo `openspec` | además, la sección de `04-flujos.md` o `05-mensajeria.md` que describe su máquina de estados o su entrega fiable | [`../contracts/events/README.md`](../contracts/events/README.md) y los JSON Schema del flujo |
+
+Los archivos `microservicios/*/api.md` y `base-de-datos.md` son el detalle por servicio (endpoints, tablas, DDL de referencia, esquemas JSONB y seeds); se leen por plan, no de una sola vez.
+
+### Checklist de validación (antes del PR)
+
+- [ ] Cabecera completa: plan, ámbito, componente, fase, modo, estado, dependencias, spec, casos.
+- [ ] Todo enlace relativo del plan resuelve (sin rutas rotas).
+- [ ] Cada endpoint citado existe en el OpenAPI de su servicio o en [`../contracts/README.md`](../contracts/README.md).
+- [ ] Cada código de error citado existe en [`../contracts/errors.md`](../contracts/errors.md).
+- [ ] Cada ID de caso y fixture citado existe en la matriz de [`06-migracion-y-pruebas.md`](../especificacion/06-migracion-y-pruebas.md).
+- [ ] Cada topic, cola, evento o comando citado existe en [`05-mensajeria.md`](../especificacion/05-mensajeria.md) y en [`../contracts/events/`](../contracts/events/).
+- [ ] El modo `openspec` se aplica si se cumplen ≥ 2 criterios de §3, o se explica por qué no.
+- [ ] Alcance de un solo servicio (`back`) o una sola app (`front`); dependencias listadas.
+- [ ] Sin alcance ni tecnología fuera de [`01-arquitectura.md`](../especificacion/01-arquitectura.md) y del alcance cerrado de la spec.
+- [ ] Nada aparece como "probado" o "ejecutado": las evidencias se adjuntan al cerrar el plan.
+
+## 6. Estructura obligatoria de un plan
 
 ### Cabecera (tabla al inicio)
 
@@ -115,7 +153,7 @@ Estos archivos aún no existen: son la ruta de trabajo y se crean al abrir cada 
 6. **Pruebas y evidencia** — pruebas por ID de caso, fixtures usados y qué se adjunta al PR (salidas, capturas, logs con `correlationId`).
 7. **Criterio de terminado** — lista corta y objetiva; el plan se cierra con el PR mergeado y la matriz actualizada.
 
-## 6. Reglas al escribir planes
+## 7. Reglas al escribir planes
 
 - La spec manda: no inventar endpoints, eventos ni reglas. Si falta algo, se corrige la spec en el mismo PR (contrato, BD, flujo y prueba relacionada).
 - La identidad nunca se propaga por headers (`X-User-Id`, `X-Role`, `X-Hotel-Id`): cada servicio la obtiene del JWT validado (algoritmo/issuer/audience/exp/scope), según [`03-contrato-comun.md`](../especificacion/03-contrato-comun.md). No usar ejemplos antiguos que propagaban esos headers.
@@ -123,9 +161,12 @@ Estos archivos aún no existen: son la ruta de trabajo y se crean al abrir cada 
 - Cada plan cita los IDs de la matriz de aceptación que cubre; nada se marca como ejecutado por estar escrito (la evidencia se adjunta al cerrar).
 - Los planes de front consumen el Gateway (`localhost:8080`) y se cierran con integración real; pueden avanzar contra `contracts/openapi/*.yaml` con mocks, nunca contra puertos de servicios.
 - Sin secretos reales en planes ni ejemplos: solo nombres de variables (`DEMO_PASSWORD`, `JWT_JWK_SET_URI`…).
+- Alcance cerrado: no se proponen reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server. Si un plan los necesitara, se escala como decisión de spec antes de continuar.
+- Versiones: solo las fijadas en [`01-arquitectura.md`](../especificacion/01-arquitectura.md) (Java 25, Boot 4.1.1, Cloud 2025.1.3, Angular 22.2.2, PostgreSQL 18.6, Kafka 4.3.1, RabbitMQ 4.3.6), sin `latest`; re-verificar la compatibilidad de Spring Cloud en cada patch de 2025.1.x.
+- No copiar bloques largos de la spec en el plan: enlaza la sección exacta. El plan aporta orden, alcance, dependencias y criterios; la spec aporta el contenido.
 - Rama y PR siguen [`../guia-git.md`](../guia-git.md): una rama por plan en minúsculas con guiones (p. ej. `identity-auth`), nunca commit directo a `main` y PR revisado por alguien más.
 
-## 7. Ciclo de vida
+## 8. Ciclo de vida
 
 - Activo: está en esta carpeta y en trabajo.
 - Cerrado: se mueve a `archivados/` o se elimina tras el merge del PR que lo implementó. Esta carpeta solo contiene trabajo pendiente o en curso.
