@@ -42,13 +42,15 @@ Ver [`proposal.md`](proposal.md) para la motivación. El cambio se implementa en
 
 9. **Pruebas con dependencias reales.** PostgreSQL y Kafka reales (Testcontainers o Compose), sin sustituir consumidores ni constraints por mocks; los fixtures de eventos validan contra los JSON Schemas de [`contracts/events/`](../../../docs/contracts/events/README.md) y los invariantes del [§Validación](../../../docs/especificacion/microservicios/reporting/base-de-datos.md#validación) se prueban con entregas duplicadas, versiones viejas y reordenamientos.
 
+10. **Anulación de check-in sin recibo.** La anulación llega como `RecepcionActualizada` con CERRADA, archivada y `cierre=null`, y el CHECK de `recepcion_projection` exige importes en CERRADA. Decisión: proyectarla con `total_alojamiento`, `total_consumos`, `total_general` y `cobro_ahora` en 0.00 y `closure_id`, `fecha_cierre` y `medio_pago_cierre` en null; el CHECK queda intacto, la fila es distinguible por la ausencia de fecha de cierre y no entra en cobros ni en el cierre de la caja del día. Alternativas descartadas: guardar nulls relajando el CHECK (exigía tocar la spec en un PR aparte) y llenar el alojamiento devengado (fabricaba un desglose de recibo inexistente).
+
 ## Risks / Trade-offs
 
 - [DLT con proyección parcial] → `degraded` visible al operador y aviso en la UI; no se declara paridad hasta reparar; el reenvío manual conserva `eventId` y key (runbook RB4/DLT).
 - [Topics sin tráfico que simulan frescura] → los checkpoints se crean en el bootstrap y `updatedAt` no promete frescura absoluta; un topic sin tráfico no prueba atraso.
 - [Kafka caído] → antes del umbral se responde con `degraded=true`; superados los 5 minutos, 503 `REPORTING_UNAVAILABLE` con `Retry-After`, sin habilitar datos incompletos como completos.
 - [Reordenación entre hotel y reception] → correlación por ciclo/`blockId`, `limpieza_completada_projection` y pruebas de ambos órdenes; un LISTA genérico nunca libera.
-- [Anulación de check-in en la proyección] → la spec no decide cómo proyectar `RecepcionActualizada` de anulación (`estadoEstadia=CERRADA` con `cierre=null`) sin violar el CHECK de importes de cierre de `recepcion_projection`; se registra como pregunta abierta del plan y la ejecución espera su resolución.
+- [Anulación de check-in en la proyección] → decidida en la decisión 10 (importes 0.00 sin recibo); el riesgo residual es leer esos 0.00 como un cobro, mitigado porque la fila no tiene fecha de cierre ni `closure_id` y las pruebas cubren su exclusión de cobros y de la caja del día.
 - [Histórico LEGACY sin medio de pago] → `null` se conserva como NO_REGISTRADO; los reportes no lo reemplazan ni lo inventan.
 - [Zona horaria] → fechas de negocio en America/Lima calculadas en servidor (medianoche para ocupación y día de caja para `ingresosHoy`); nunca horas inventadas.
 

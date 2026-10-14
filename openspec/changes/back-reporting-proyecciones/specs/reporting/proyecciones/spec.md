@@ -60,7 +60,7 @@ reporting SHALL mantener `gate_projection` alimentada por eventos físicos de `h
 
 ### Requirement: Proyección de estadías y cierres
 
-reporting SHALL proyectar `recepcion_projection` con upsert por `version` de la estadía: CheckInRegistrado y RecepcionActualizada fijan snapshots, importes y estado; SalidaRegistrada fija el desglose del cierre (`total_alojamiento`, `total_consumos`, `total_general`, `cobro_ahora`, `closure_id` y medio de pago del cierre) y la fecha de cierre del recibo. La proyección SHALL conservar importes y snapshots de una estadía archivada, sin borrarlos; el reporte de cobros SHALL usar ese snapshot y SHALL NOT volver a sumar ventas.
+reporting SHALL proyectar `recepcion_projection` con upsert por `version` de la estadía: CheckInRegistrado y RecepcionActualizada fijan snapshots, importes y estado; SalidaRegistrada fija el desglose del cierre (`total_alojamiento`, `total_consumos`, `total_general`, `cobro_ahora`, `closure_id` y medio de pago del cierre) y la fecha de cierre del recibo. Una anulación de check-in (RecepcionActualizada con CERRADA, archivada y `cierre=null`) SHALL proyectarse con los importes del recibo en 0.00 y sin `closure_id`, `fecha_cierre` ni `medio_pago_cierre`, cumpliendo el CHECK de CERRADA sin fabricar un recibo. La proyección SHALL conservar importes y snapshots de una estadía archivada, sin borrarlos; el reporte de cobros SHALL usar ese snapshot y SHALL NOT volver a sumar ventas.
 
 #### Scenario: Cierre proyectado
 
@@ -71,6 +71,11 @@ reporting SHALL proyectar `recepcion_projection` con upsert por `version` de la 
 
 - **WHEN** una estadía CERRADA se archiva
 - **THEN** sus importes y snapshots permanecen disponibles para los reportes
+
+#### Scenario: Anulación de check-in
+
+- **WHEN** llega la RecepcionActualizada de una anulación (CERRADA, archivada y sin cierre)
+- **THEN** la fila queda CERRADA con importes de recibo en 0.00 y sin fecha de cierre, y no aparece en cobros ni suma cobro final de alojamiento en la caja del día
 
 ### Requirement: Proyección de stock y ventas
 
