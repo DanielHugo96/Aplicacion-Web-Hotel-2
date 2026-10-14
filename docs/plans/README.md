@@ -91,7 +91,7 @@ La cabecera es una tabla con estos campos. El validador comprueba que existan, q
 |---|---|
 | Plan | Igual al nombre del archivo sin `.md` |
 | Ámbito | `back`, `front`, `infra` o `qa`; igual al prefijo del nombre |
-| Componente | Servicio o app exactos: `identity-service`, `admin-web`, `infra` |
+| Componente | Servicio o app exactos: `identity-service`, `admin-web`, `infra`; en `back-plataforma-*`, `services/*-service`; en `qa-*`, `tests` y `scripts` |
 | Fase | `F0` a `F5` |
 | Modo | `directo` u `openspec` |
 | Estado | `propuesto`, `en curso` o `cerrado` (sección 8) |
