@@ -47,6 +47,14 @@ Este plan depende de `infra-compose` (Compose, PostgreSQL, Kafka/RabbitMQ y desc
 
 Cada servicio valida el JWT emitido por identity (`iss=hotel-identity`, `aud=hotel-api`, `exp`, `scope`) y el Gateway elimina cabeceras de identidad falsificables, según [03-contrato-comun.md § Headers](../especificacion/03-contrato-comun.md) y [§ Identidad y sedes](../especificacion/03-contrato-comun.md). Lo relativo a `/actuator/health` y seguridad de los `api.md` se limita a: salud y operación de notification en [notification/api.md](../especificacion/microservicios/notification/api.md), token máquina en [identity/api.md](../especificacion/microservicios/identity/api.md), y referencias a headers/idempotencia y `scope` en los `api.md` de hotel, reception, inventory y sales. Este plan no toca `docs/especificacion/**`, `docs/contracts/errors.md`, `docs/plans/README.md` ni `docs/plans/_prompts.md`.
 
+Decisiones de este plan (lo que la spec no fijaba):
+
+- Logs: una línea JSON por evento con `service`, `correlationId` y `eventId`/`commandId` cuando aplique.
+- Salud: cuerpo JSON estándar de Spring Boot Actuator tal cual, sin envolverlo en el envelope común.
+- Rotación RS256: solape de `kid` (la clave nueva convive en el JWKS con la anterior hasta migrar los servicios; luego se retira la anterior).
+- Correlación: filtro común en cada servicio que genera `X-Correlation-Id` si falta y lo propaga a las llamadas Feign, con y sin Gateway.
+- Idempotencia: job diario que purga filas COMPLETADA con más de 30 días, conservando las claves de venta/stock/cierre con el historial.
+
 ## 4 Pasos
 
 - [ ] 1. Confirmar la dependencia `infra-compose` disponible (Compose sano, PostgreSQL acepta conexiones, `.env.example` solo con nombres y valores no sensibles). Verificación: `docker compose -f infra/compose.yaml ps` muestra servicios de infra en estado sano y `grep -R "password\|secret" .env.example` no devuelve secretos reales.
@@ -81,11 +89,7 @@ Cada servicio valida el JWT emitido por identity (`iss=hotel-identity`, `aud=hot
 
 ## 7 Preguntas abiertas
 
-- ¿Cuál es el formato físico de los logs estructurados (JSON de una línea frente a texto con campos) y el `appender` común? La spec exige los campos (`service`, `correlationId`, `eventId`/`commandId`) pero no fija el formato.
-- ¿Cuál es la forma exacta del cuerpo JSON de `/actuator/health/liveness` y `/readiness` (claves de `UP`/`DOWN`/OUT_OF_SERVICE por dependencia)? La spec fija el código y la semántica, no el esquema del cuerpo.
-- ¿Cómo se rota la clave RS256 (`kid`, JWKS) sin caída y con qué procedimiento documentado? La spec exige que las claves puedan rotarse, sin fijar el procedimiento.
-- ¿Cómo se genera y propaga `X-Correlation-Id` en llamadas directas a servicios en desarrollo (sin Gateway) y en clientes Feign máquina? La spec lo fija para el Gateway; el comportamiento directo queda por decidir.
-- ¿Cuál es la purga operativa de `api_idempotency` más allá de la retención mínima de 30 días? La spec fija el mínimo, no el trabajo de purga.
+Ninguna. Las cinco cuestiones iniciales se decidieron en §3.
 
 ## 8 Criterio de terminado
 
