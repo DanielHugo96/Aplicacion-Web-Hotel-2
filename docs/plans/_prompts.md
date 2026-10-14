@@ -13,7 +13,7 @@ Un plan por prompt: el asistente trabaja con contexto limpio y cada salida cabe 
 5. Puedes encadenar el siguiente prompt sin esperar el merge (planificar no exige dependencias cerradas), pero nunca mezcles dos planes en una rama ni en un archivo.
 6. Al terminar el prompt 25, ejecuta el **prompt final de verificación**. Si pasa, no queda ningún plan por escribir: solo queda implementar, en orden de fases.
 
-El orden sigue [`catalogo.md`](catalogo.md): cada plan aparece después de sus dependencias (planificables o no, el orden ayuda a que la lectura sea coherente).
+El orden sigue [`catalogo.md`](catalogo.md): cada plan aparece después de sus dependencias (planificables o no, el orden ayuda a que la lectura sea coherente). El «Contenido» de cada bloque resume fielmente su fila del catálogo (puede omitir enlaces).
 
 ---
 
@@ -187,7 +187,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md (el DDL de outbox/inbox) y docs/contracts/errors.md.
-5. docs/especificacion/05-mensajeria.md completo (entrega, reintentos, DLT/DLQ, orden por agregado); docs/contracts/events/envelope.v1.schema.json y command-envelope.v1.schema.json.
+5. Norma back: docs/especificacion/05-mensajeria.md completo (entrega, reintentos, DLT/DLQ, orden por agregado); docs/contracts/events/envelope.v1.schema.json y command-envelope.v1.schema.json.
 Lectura dirigida: de los api.md y OpenAPI, solo lo que este plan toca.
 
 Método openspec (obligatorio, este plan es modo `openspec`):
@@ -254,46 +254,7 @@ Cierre obligatorio:
 3. Entrega el archivo. Después: rama `back-identity-auth` desde `main` actualizado, commit `docs: agrega el plan back-identity-auth`, push y PR a `main`; lo revisa una persona y no lo mergees tú.
 ```
 
-## 7. `back-identity-personas` (F2 · back · directo)
-
-```text
-Rol: eres el planificador del monorepo Aplicacion-Web-Hotel-2; la documentación vive en docs/ y este repo aún no tiene código. Tarea: redactar UN (1) plan de ejecución, solo uno: `back-identity-personas`. No implementes código; al terminar, detente.
-
-Datos del plan (fila de docs/plans/catalogo.md; van tal cual en la cabecera):
-- Plan: `back-identity-personas` · Ámbito: `back` · Componente: `identity-service`
-- Fase: `F2` · Modo: `directo` · Estado: `propuesto` · Change: `—`
-- Depende de: `back-identity-auth`, `back-hotel-catalogo`
-- Casos: `SEC01`, `SEC07`
-- Contenido: personas y tipos de persona con mutex del último ADMIN, sedes asignadas validadas contra hotel, GET /internal/clientes/{id}, auditoría PERSONA_SEARCH y PERSONA_READ, anonimización manual, identity.persona.v1.
-
-Lecturas obligatorias, en este orden:
-1. docs/plans/README.md completo (la norma; en especial §4, §5, §7 y §8).
-2. docs/plans/_plantilla.md (estructura exacta de la salida).
-3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
-4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma back: docs/especificacion/microservicios/identity/api.md y base-de-datos.md; de docs/especificacion/microservicios/hotel/api.md solo la validación de sedes asignadas (rutas /internal/hoteles); docs/especificacion/05-mensajeria.md por identity.persona.v1 y su JSON Schema.
-Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
-
-Reglas no negociables:
-- Español; la spec se enlaza por sección concreta, sin copiarla.
-- Cabecera: tabla con los valores de arriba; completa `Spec` con enlaces a secciones concretas.
-- Secciones, en orden: 1 Objetivo · 2 Alcance · 3 Contexto · 4 Pasos · 5 Contratos afectados · 6 Pruebas · 7 Preguntas abiertas · 8 Criterio de terminado.
-- Pasos: 1 a 20 tareas `- [ ]` sin marcar, cada una con verificación observable (comando o criterio).
-- Nada inventado: endpoints, eventos, códigos de error, formatos y mensajes salen de la spec; lo que la spec no decida va a «Preguntas abiertas».
-- Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
-- Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
-- Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Un plan back toca un solo servicio: este plan solo toca Identity.
-- No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
-- Si docs/plans/back-identity-personas.md ya existe, detente y avísalo.
-
-Cierre obligatorio:
-1. Corre `python scripts/validar-planes.py` desde la raíz: 0 errores; cada aviso, resuelto o justificado.
-2. Auto-revisión (norma §4.5): objetivo verificable, cada paso comprobable, sin reglas que la spec ya fija.
-3. Entrega el archivo. Después: rama `back-identity-personas` desde `main` actualizado, commit `docs: agrega el plan back-identity-personas`, push y PR a `main`; lo revisa una persona y no lo mergees tú.
-```
-
-## 8. `back-hotel-catalogo` (F2 · back · directo)
+## 7. `back-hotel-catalogo` (F2 · back · directo)
 
 ```text
 Rol: eres el planificador del monorepo Aplicacion-Web-Hotel-2; la documentación vive en docs/ y este repo aún no tiene código. Tarea: redactar UN (1) plan de ejecución, solo uno: `back-hotel-catalogo`. No implementes código; al terminar, detente.
@@ -330,6 +291,45 @@ Cierre obligatorio:
 1. Corre `python scripts/validar-planes.py` desde la raíz: 0 errores; cada aviso, resuelto o justificado.
 2. Auto-revisión (norma §4.5): objetivo verificable, cada paso comprobable, sin reglas que la spec ya fija.
 3. Entrega el archivo. Después: rama `back-hotel-catalogo` desde `main` actualizado, commit `docs: agrega el plan back-hotel-catalogo`, push y PR a `main`; lo revisa una persona y no lo mergees tú.
+```
+
+## 8. `back-identity-personas` (F2 · back · directo)
+
+```text
+Rol: eres el planificador del monorepo Aplicacion-Web-Hotel-2; la documentación vive en docs/ y este repo aún no tiene código. Tarea: redactar UN (1) plan de ejecución, solo uno: `back-identity-personas`. No implementes código; al terminar, detente.
+
+Datos del plan (fila de docs/plans/catalogo.md; van tal cual en la cabecera):
+- Plan: `back-identity-personas` · Ámbito: `back` · Componente: `identity-service`
+- Fase: `F2` · Modo: `directo` · Estado: `propuesto` · Change: `—`
+- Depende de: `back-identity-auth`, `back-hotel-catalogo`
+- Casos: `SEC01`, `SEC07`
+- Contenido: personas y tipos de persona con mutex del último ADMIN, sedes asignadas validadas contra hotel, GET /internal/clientes/{id}, auditoría PERSONA_SEARCH y PERSONA_READ, anonimización manual, identity.persona.v1.
+
+Lecturas obligatorias, en este orden:
+1. docs/plans/README.md completo (la norma; en especial §4, §5, §7 y §8).
+2. docs/plans/_plantilla.md (estructura exacta de la salida).
+3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
+4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
+5. Norma back: docs/especificacion/microservicios/identity/api.md y base-de-datos.md; de docs/especificacion/microservicios/hotel/api.md solo la validación de sedes asignadas (rutas /internal/hoteles); docs/especificacion/05-mensajeria.md por identity.persona.v1 y su JSON Schema.
+Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
+
+Reglas no negociables:
+- Español; la spec se enlaza por sección concreta, sin copiarla.
+- Cabecera: tabla con los valores de arriba; completa `Spec` con enlaces a secciones concretas.
+- Secciones, en orden: 1 Objetivo · 2 Alcance · 3 Contexto · 4 Pasos · 5 Contratos afectados · 6 Pruebas · 7 Preguntas abiertas · 8 Criterio de terminado.
+- Pasos: 1 a 20 tareas `- [ ]` sin marcar, cada una con verificación observable (comando o criterio).
+- Nada inventado: endpoints, eventos, códigos de error, formatos y mensajes salen de la spec; lo que la spec no decida va a «Preguntas abiertas».
+- Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
+- Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
+- Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
+- Un plan back toca un solo servicio: este plan solo toca Identity.
+- No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
+- Si docs/plans/back-identity-personas.md ya existe, detente y avísalo.
+
+Cierre obligatorio:
+1. Corre `python scripts/validar-planes.py` desde la raíz: 0 errores; cada aviso, resuelto o justificado.
+2. Auto-revisión (norma §4.5): objetivo verificable, cada paso comprobable, sin reglas que la spec ya fija.
+3. Entrega el archivo. Después: rama `back-identity-personas` desde `main` actualizado, commit `docs: agrega el plan back-identity-personas`, push y PR a `main`; lo revisa una persona y no lo mergees tú.
 ```
 
 ## 9. `front-public-web-landing` (F2 · front · directo)
