@@ -24,6 +24,12 @@ Ver `proposal.md - Why`. Los siete servicios comparten PostgreSQL lógico por ba
 - Productor Kafka con `acks=all` e idempotencia más confirmación de offset tras commit local, frente a solo `acks=all`: el primero evita pérdidas del productor y el segundo evita reprocesar tras reinicio.
 - Reintentos RabbitMQ con colas de TTL y exchange hotel.dlx.v1, frente a `nack-requeue` infinito: acota reintentos a 3, conserva `commandId` y deriva a DLQ observable.
 - Validación estricta contra JSON Schemas v1 en ambos extremos, con errores permanentes directo a DLT/DLQ: evita envenenar el poller con filas inválidas.
+- Alertas vía log estructurado más consulta SQL de RB4 por el operador, frente a métrica/Prometheus: sin infra extra para el MVP y con umbrales ya fijados.
+- Purga de `inbox` con job diario por servicio tras 30 días sin borrar pendientes, frente a particionado: simple, auditable y alineado con la retención de idempotencia.
+- Topología RabbitMQ declarada por código al arranque con usuarios/vhost/permisos en infra, frente a definiciones manuales: reproducible en cada entorno.
+- Dimensionado queda en demo (1 partición, factor 1, 7 días) sin perfil prod: producción fuera del MVP.
+- Reenvío DLT/DLQ manual vía runbook más CLI conservando identificadores, frente a herramienta admin nueva: sin código extra y con evidencia auditada.
+- Este change solo deja la interfaz común; el cableado por servicio lo detalla cada plan de dominio según el catálogo.
 
 ## Risks / Trade-offs
 
