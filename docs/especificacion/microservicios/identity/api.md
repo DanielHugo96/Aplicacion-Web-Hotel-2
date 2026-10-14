@@ -10,7 +10,7 @@ Usa [headers, JWT, errores, L/V e idempotencia comunes](../../03-contrato-comun.
 | POST /api/auth/registro · NUEVA | P | Registro, Idempotency-Key | 201 Persona; fuerza CLIENTE; bienvenida |
 | GET /api/auth/me · NUEVA | A/E/C | — | 200 Persona propia |
 | PUT /api/auth/me · NUEVA | A/E/C, V | Perfil | 200 Persona; no rol/sede/documento/estado |
-| PUT /api/auth/password · NUEVA | A/E/C | claveActual, claveNueva, Idempotency-Key | 200 data=null; verifica contraseña |
+| PUT /api/auth/password · NUEVA | A/E/C | claveActual, claveNueva, Idempotency-Key | 200 data=null; verifica contraseña; 400 CURRENT_PASSWORD_MISMATCH / PASSWORD_POLICY / VALIDATION_ERROR |
 | POST /api/auth/social · RETIRADA | P | — | 410 SOCIAL_LOGIN_DISABLED; sin login alternativo |
 | GET /api/persona/listar · LEGACY | A/E | L; idTipoPersona?; documento? | 200 Persona[]; E solo clientes y búsqueda exacta por documento obligatoria |
 | GET /api/persona/buscar/{id} · LEGACY | A/E/C | id; E requiere documento exacto | 200 Persona; C solo propio; E solo CLIENTE con documento coincidente |
@@ -28,7 +28,7 @@ Usa [headers, JWT, errores, L/V e idempotencia comunes](../../03-contrato-comun.
 
 Para GET persona de EMPLEADO se exige query documento exacto y se comprueba contra la persona de destino; no se confía en que la UI haya hecho una búsqueda antes. Sin documento: 400. Nunca permite leer ADMIN/EMPLEADO ajeno. C no puede enumerar clientes. Las consultas humanas de PII ajena se auditan en `audit_log`: action `PERSONA_SEARCH` en listar (A/E) y `PERSONA_READ` en buscar/{id} (A/E), con actor, resource_id, id_hotel y correlation_id; `changes` sin documento ni correo. La lectura propia (`/api/auth/me`) y la máquina (`/internal/clientes/{id}`) no generan ese registro.
 
-`PUT /api/auth/password` exige `Idempotency-Key` (el body contiene credenciales): el `request_hash` se calcula con HMAC y la clave nunca se guarda en payloads de idempotencia; un reintento devuelve el resultado terminal original.
+`PUT /api/auth/password` exige `Idempotency-Key` (el body contiene credenciales): el `request_hash` se calcula con HMAC y la clave nunca se guarda en payloads de idempotencia; un reintento devuelve el resultado terminal original. La clave actual incorrecta responde 400 `CURRENT_PASSWORD_MISMATCH` (`error.fields.claveActual`); una clave nueva igual a la actual, 400 `VALIDATION_ERROR` (`error.fields.claveNueva`).
 
 Login: 401 genérico sin distinguir correo ausente/clave inválida, 429 tras 5 intentos/min/IP+cuenta. Registro: máximo 3/min/IP y validación antiabuso al desplegar públicamente. El MVP no verifica correo para operar como personal: el registro solo da rol cliente sin potestades administrativas.
 

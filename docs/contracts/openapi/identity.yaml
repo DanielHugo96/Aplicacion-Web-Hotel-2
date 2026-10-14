@@ -237,7 +237,10 @@ paths:
         con HMAC porque el body contiene credenciales y la clave nunca se guarda en
         payloads de idempotencia: un reintento devuelve el resultado terminal
         original (data=null). 400 PASSWORD_POLICY si la clave nueva no cumple
-        12–72 bytes UTF-8; no se trunca silenciosamente.
+        12–72 bytes UTF-8; 400 CURRENT_PASSWORD_MISMATCH si la clave actual no
+        coincide con la vigente (error.fields.claveActual); 400 VALIDATION_ERROR
+        si la clave nueva no es distinta de la actual (error.fields.claveNueva);
+        no se trunca silenciosamente.
       parameters:
         - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:

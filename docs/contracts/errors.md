@@ -33,6 +33,7 @@ Reglas:
 |---|---|---|---|---|---|---|
 | `INVALID_CREDENTIALS` | 401 | identity | `correo`/`clave` | Login fallido; no revela si el correo existe | "Correo o contraseña incorrectos." | Verificar datos; esperar el límite tras 5 intentos/min |
 | `PASSWORD_POLICY` | 400 | identity | `clave`/`claveNueva` | Clave < 12 o > 72 bytes UTF-8 | "La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8)." | Corregir la clave |
+| `CURRENT_PASSWORD_MISMATCH` | 400 | identity | `claveActual` | Cambio de clave con la clave actual incorrecta | "La contraseña actual no es correcta." | Volver a escribir la clave actual |
 | `SOCIAL_LOGIN_DISABLED` | 410 | identity | `POST /api/auth/social` | Ruta retirada del MVP | "El acceso con redes sociales ya no está disponible." | Usar correo y contraseña |
 | `FIXED_ROLE_CATALOG` | 409 | identity | `/api/tipopersona` | Crear/eliminar roles del catálogo fijo ADMIN/EMPLEADO/CLIENTE | "Los roles del sistema no se crean ni eliminan." | Editar solo la etiqueta del rol |
 | `STAFF_CREDENTIAL_REQUIRED` | 409 | identity | `idTipoPersona` | Promover a ADMIN/EMPLEADO a una persona sin clave | "Para crear personal, la persona necesita credenciales de acceso." | Crear la cuenta con clave o registrar solo cliente |
