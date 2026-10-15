@@ -7,7 +7,7 @@
 | Componente | `infra` |
 | Fase | `F1` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `infra-monorepo` |
 | Spec | [`01-arquitectura.md` §3](../especificacion/01-arquitectura.md#3-frontends-y-entrada) y [§4 Stack](../especificacion/01-arquitectura.md#4-stack); [`gateway-eureka-docker.md` §Compose y puertos propuestos](../especificacion/infraestructura/gateway-eureka-docker.md#compose-y-puertos-propuestos) y [§Bases/usuarios](../especificacion/infraestructura/gateway-eureka-docker.md#basesusuarios); [`configuracion.md` §Comunes a todos los servicios](../especificacion/infraestructura/configuracion.md#comunes-a-todos-los-servicios), [§Health y readiness por servicio](../especificacion/infraestructura/configuracion.md#health-y-readiness-por-servicio) y [§Flyway y seeds](../especificacion/infraestructura/configuracion.md#flyway-y-seeds); [`03-contrato-comun.md` §Persistencia transversal](../especificacion/03-contrato-comun.md#persistencia-transversal); [`05-mensajeria.md` §Topics y asignación exacta](../especificacion/05-mensajeria.md#topics-y-asignación-exacta) y [§Reintentos y DLQ Rabbit](../especificacion/05-mensajeria.md#reintentos-y-dlq-rabbit); [`06-migracion-y-pruebas.md` §2](../especificacion/06-migracion-y-pruebas.md#2-orden-simple-elegido) |
 | Casos | `—` |
