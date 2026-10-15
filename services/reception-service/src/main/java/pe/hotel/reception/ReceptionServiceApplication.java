@@ -1,5 +1,6 @@
 package pe.hotel.reception;
 
+import org.slf4j.MDC;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
@@ -7,6 +8,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 public class ReceptionServiceApplication {
 
   public static void main(String[] args) {
+    // Los logs estructurados emiten `service` en cada línea (ver back-plataforma-comunes).
+    MDC.put("service", "reception-service");
     SpringApplication.run(ReceptionServiceApplication.class, args);
   }
 }
