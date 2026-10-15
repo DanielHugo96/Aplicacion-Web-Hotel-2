@@ -8,7 +8,7 @@ PR en borrador (ver [`README.md` §3](README.md#3-cómo-se-implementa-un-plan)).
 
 | Fase | Plan | Tanda | Estado en `main` | Rama | PR |
 |---|---|---|---|---|---|
-| F0 | [`infra-monorepo`](../plans/infra-monorepo.md) | T0 | `propuesto` | — | — |
+| F0 | [`infra-monorepo`](../plans/infra-monorepo.md) | T0 | `cerrado` | `infra-monorepo` | [#43](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/43) |
 | F1 | [`infra-compose`](../plans/infra-compose.md) | T1 | `propuesto` | — | — |
 | F1 | [`back-plataforma-comunes`](../plans/back-plataforma-comunes.md) | T2 | `propuesto` | — | — |
 | F1 | [`infra-gateway-eureka`](../plans/infra-gateway-eureka.md) | T2 | `propuesto` | — | — |
