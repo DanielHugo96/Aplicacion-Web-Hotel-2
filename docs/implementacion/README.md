@@ -6,7 +6,7 @@ Aquí no hay autoridad propia: todo lo que dice se deriva de la norma y de los p
 | Archivo | Qué es |
 |---|---|
 | [`orden.md`](orden.md) | Calendario de los 25 planes, qué puede ir en paralelo y qué debe ir en serie. |
-| [`estado.md`](estado.md) | Resumen por plan. Puede estar atrasado: si hay duda, manda el plan en `main`. |
+| [`estado.md`](estado.md) | Registro de cada plan ejecutado: estado, rama y PR. Si hay duda, manda el plan en `main`. |
 
 ## 1. Fuentes de verdad, en este orden
 
@@ -46,8 +46,8 @@ Aquí no hay autoridad propia: todo lo que dice se deriva de la norma y de los p
 5. **Cerrar** en el último commit del plan: `Estado: cerrado`, todos los pasos marcados, *Preguntas abiertas*
    vacías y, si es `openspec`, el change archivado con `openspec-archive-change`. Quita el borrador y pide revisión.
 6. **Revisión y merge** los hace **otra persona**. Quien implementó no mergea su PR.
-7. **Después del merge**, el plan cuenta como cerrado y sus dependientes ya pueden empezar. Actualizar
-   `estado.md` es tarea de coordinación, en un PR `docs:` aparte.
+7. **Después del merge**, el plan cuenta como cerrado y sus dependientes ya pueden empezar. Quien ejecutó el plan lo registra en
+   [`estado.md`](estado.md) con su rama y su PR, en un PR `docs:` aparte.
 
 ## 4. Qué significa «cerrado»
 
@@ -58,6 +58,7 @@ Deben cumplirse todas estas condiciones en `main`:
 - Todos los pasos `- [x]` y todos los casos de *Pruebas* con evidencia.
 - *Preguntas abiertas* vacías.
 - Si es `openspec`, change archivado.
+- Registrado en [`estado.md`](estado.md) con su rama y su PR.
 
 Un plan cerrado solo en una rama **no** desbloquea a nadie.
 

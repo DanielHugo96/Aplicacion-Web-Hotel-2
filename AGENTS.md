@@ -17,3 +17,9 @@ Instrucciones para agentes de IA que trabajan en este repositorio.
 - Los planes de ejecución siguen [`docs/plans/README.md`](docs/plans/README.md).
 - El registro de implementación y su orden están en [`docs/implementacion/`](docs/implementacion/README.md).
 - Los contratos de frontend están en `docs/contracts/`.
+
+## Ejecución de planes
+
+- Antes de ejecutar un plan, sigue el método y las reglas de [`docs/implementacion/README.md`](docs/implementacion/README.md) y el orden de [`docs/implementacion/orden.md`](docs/implementacion/orden.md).
+- Cada vez que se ejecute un plan, regístralo en [`docs/implementacion/estado.md`](docs/implementacion/estado.md) con su estado, rama y PR.
+- El registro va en un PR `docs:` aparte, después de que el PR de implementación se mergea. Nunca dentro de ese PR.
