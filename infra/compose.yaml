@@ -1,0 +1,149 @@
+# Infraestructura local de F1: PostgreSQL, Kafka, RabbitMQ y Mailpit.
+#
+# Uso (desde la raíz del repo):
+#   docker compose -f infra/compose.yaml --env-file .env up -d --wait
+#
+# Por qué `--env-file .env`: con `-f infra/compose.yaml` Compose busca el `.env`
+# junto al compose (infra/), no en la raíz, así que hay que apuntarlo a mano.
+#
+# Orden de arranque para los planes que añadan contenedores
+# (docs/especificacion/infraestructura/configuracion.md §Flyway y seeds):
+# Kafka/Rabbit/PostgreSQL sanos (healthcheck) → identity y hotel → inventory →
+# reception → sales y reporting → notification. Se implementa con
+# `depends_on: { <servicio>: { condition: service_healthy } }`; `depends_on` por
+# sí solo no garantiza readiness. Mailpit no ordena el arranque de nadie.
+#
+# Los cuatro servicios quedan sin `profiles` (modo infra por defecto); el perfil
+# `full` queda reservado para los contenedores que añadan planes posteriores.
+
+name: hotel
+
+services:
+  postgres:
+    image: postgres:18.6
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?define POSTGRES_PASSWORD en .env}
+      # El init (infra/postgres/init/01-bases-y-roles.sh) lee del entorno las
+      # contraseñas de cada runtime y migrador para crear los catorce roles.
+      POSTGRES_IDENTITY_APP_PASSWORD: ${POSTGRES_IDENTITY_APP_PASSWORD:?define POSTGRES_IDENTITY_APP_PASSWORD en .env}
+      POSTGRES_IDENTITY_MIGRATOR_PASSWORD: ${POSTGRES_IDENTITY_MIGRATOR_PASSWORD:?define POSTGRES_IDENTITY_MIGRATOR_PASSWORD en .env}
+      POSTGRES_HOTEL_APP_PASSWORD: ${POSTGRES_HOTEL_APP_PASSWORD:?define POSTGRES_HOTEL_APP_PASSWORD en .env}
+      POSTGRES_HOTEL_MIGRATOR_PASSWORD: ${POSTGRES_HOTEL_MIGRATOR_PASSWORD:?define POSTGRES_HOTEL_MIGRATOR_PASSWORD en .env}
+      POSTGRES_RECEPTION_APP_PASSWORD: ${POSTGRES_RECEPTION_APP_PASSWORD:?define POSTGRES_RECEPTION_APP_PASSWORD en .env}
+      POSTGRES_RECEPTION_MIGRATOR_PASSWORD: ${POSTGRES_RECEPTION_MIGRATOR_PASSWORD:?define POSTGRES_RECEPTION_MIGRATOR_PASSWORD en .env}
+      POSTGRES_INVENTORY_APP_PASSWORD: ${POSTGRES_INVENTORY_APP_PASSWORD:?define POSTGRES_INVENTORY_APP_PASSWORD en .env}
+      POSTGRES_INVENTORY_MIGRATOR_PASSWORD: ${POSTGRES_INVENTORY_MIGRATOR_PASSWORD:?define POSTGRES_INVENTORY_MIGRATOR_PASSWORD en .env}
+      POSTGRES_SALES_APP_PASSWORD: ${POSTGRES_SALES_APP_PASSWORD:?define POSTGRES_SALES_APP_PASSWORD en .env}
+      POSTGRES_SALES_MIGRATOR_PASSWORD: ${POSTGRES_SALES_MIGRATOR_PASSWORD:?define POSTGRES_SALES_MIGRATOR_PASSWORD en .env}
+      POSTGRES_REPORTING_APP_PASSWORD: ${POSTGRES_REPORTING_APP_PASSWORD:?define POSTGRES_REPORTING_APP_PASSWORD en .env}
+      POSTGRES_REPORTING_MIGRATOR_PASSWORD: ${POSTGRES_REPORTING_MIGRATOR_PASSWORD:?define POSTGRES_REPORTING_MIGRATOR_PASSWORD en .env}
+      POSTGRES_NOTIFICATION_APP_PASSWORD: ${POSTGRES_NOTIFICATION_APP_PASSWORD:?define POSTGRES_NOTIFICATION_APP_PASSWORD en .env}
+      POSTGRES_NOTIFICATION_MIGRATOR_PASSWORD: ${POSTGRES_NOTIFICATION_MIGRATOR_PASSWORD:?define POSTGRES_NOTIFICATION_MIGRATOR_PASSWORD en .env}
+    ports:
+      - "127.0.0.1:55432:5432"
+    volumes:
+      # En postgres:18 el PGDATA es /var/lib/postgresql/18/docker y el VOLUME
+      # declarado por la imagen es /var/lib/postgresql.
+      - postgres_data:/var/lib/postgresql
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d postgres -h 127.0.0.1 -p 5432"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 10s
+
+  kafka:
+    image: apache/kafka:4.3.1
+    restart: unless-stopped
+    environment:
+      # KRaft de un nodo: broker y controller en el mismo proceso.
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: INTERNAL://:9092,CONTROLLER://:9093,EXTERNAL://:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      # Defaults de demo (docs/especificacion/05-mensajeria.md §Topics): 1 partición,
+      # replicación 1 y retención de 7 días.
+      KAFKA_NUM_PARTITIONS: 1
+      KAFKA_DEFAULT_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    ports:
+      - "127.0.0.1:29092:29092"
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 20s
+
+  rabbitmq:
+    image: rabbitmq:4.3.6-management
+    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/etc/rabbitmq/entrypoint.sh"]
+    environment:
+      # El vhost y los usuarios se cargan con las definiciones nativas generadas
+      # al arrancar (infra/rabbitmq/entrypoint.sh) desde estas variables.
+      RABBITMQ_ADMIN_USER: ${RABBITMQ_ADMIN_USER:?define RABBITMQ_ADMIN_USER en .env}
+      RABBITMQ_ADMIN_PASSWORD: ${RABBITMQ_ADMIN_PASSWORD:?define RABBITMQ_ADMIN_PASSWORD en .env}
+      RABBITMQ_IDENTITY_PASSWORD: ${RABBITMQ_IDENTITY_PASSWORD:?define RABBITMQ_IDENTITY_PASSWORD en .env}
+      RABBITMQ_HOTEL_PASSWORD: ${RABBITMQ_HOTEL_PASSWORD:?define RABBITMQ_HOTEL_PASSWORD en .env}
+      RABBITMQ_RECEPTION_PASSWORD: ${RABBITMQ_RECEPTION_PASSWORD:?define RABBITMQ_RECEPTION_PASSWORD en .env}
+      RABBITMQ_INVENTORY_PASSWORD: ${RABBITMQ_INVENTORY_PASSWORD:?define RABBITMQ_INVENTORY_PASSWORD en .env}
+      RABBITMQ_SALES_PASSWORD: ${RABBITMQ_SALES_PASSWORD:?define RABBITMQ_SALES_PASSWORD en .env}
+      RABBITMQ_NOTIFICATION_PASSWORD: ${RABBITMQ_NOTIFICATION_PASSWORD:?define RABBITMQ_NOTIFICATION_PASSWORD en .env}
+    ports:
+      - "127.0.0.1:5673:5672"
+      - "127.0.0.1:15673:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf:ro
+      - ./rabbitmq/entrypoint.sh:/etc/rabbitmq/entrypoint.sh:ro
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 10s
+      retries: 30
+      start_period: 20s
+
+  mailpit:
+    image: axllent/mailpit:v1.31.5
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"
+      - "127.0.0.1:8025:8025"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "/mailpit", "readyz"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  postgres_data:
+  kafka_data:
+  rabbitmq_data:
+
+networks:
+  backend:
+    driver: bridge
