@@ -49,7 +49,7 @@ El monorepo de [§1](../especificacion/01-arquitectura.md#1-monorepo-sí) existe
 
 ## 4. Pasos
 
-- [x] 1. Re-verificar la compatibilidad Boot 4.1.1 ↔ Cloud 2025.1.3 contra la tabla oficial que cita [`01` §4](../especificacion/01-arquitectura.md#4-stack) y anotar el resultado en el PR de ejecución. Verificación: el PR enlaza la tabla y registra «sin cambio» o un ajuste dentro de la línea 2025.1.x; un cambio que exija salir de la línea fijada deja el paso sin marcar y se registra en Preguntas abiertas.
+- [x] 1. Re-verificar la compatibilidad Boot 4.1.1 ↔ Cloud 2025.1.3 contra la tabla oficial que cita [`01` §4](../especificacion/01-arquitectura.md#4-stack) y anotar el resultado en el PR de ejecución. Verificación: el PR enlaza la tabla y registra «sin cambio» o un ajuste dentro de la línea 2025.1.x; un cambio que exija salir de la línea fijada deja el paso sin marcar y se registra en Preguntas abiertas. Resultado (2026-10-14): sin cambio; la tabla oficial 1 de `spring.io/projects/spring-cloud` declara la línea 2025.1.x compatible con Boot 4.0.x y 4.1.x (desde 2025.1.2), así que Boot 4.1.1 ↔ Cloud 2025.1.3 queda dentro de la tabla.
 - [x] 2. Crear el árbol raíz de [§1](../especificacion/01-arquitectura.md#1-monorepo-sí): `apps/`, `services/`, `infra/` con `postgres/init/`, `rabbitmq/`, `kafka/`, `nginx/`, y `tests/` con `postman/`, `integration/`, con `.gitkeep` donde queden vacías. Verificación: `git ls-files` lista esas carpetas y `infra/compose.yaml` no existe (lo crea `infra-compose`).
 - [x] 3. Generar el Maven Wrapper en la raíz con `distributionUrl` fijado a un patch exacto de Maven 3.9.x (sin `latest`) y bit de ejecución en git. Verificación: `./mvnw -v` (y `mvnw.cmd -v`) imprime la versión fijada con Java 25, y `git ls-files -s mvnw` muestra modo ejecutable.
 - [x] 4. Crear `services/pom.xml` (agregador, packaging `pom`): groupId `pe.hotel`, properties con Java 25, `dependencyManagement` importando `spring-boot-dependencies` 4.1.1 y `spring-cloud-dependencies` 2025.1.3, y `pluginManagement` con compiler release 25 y `spring-boot-maven-plugin` 4.1.1; sin módulos aún. Verificación: `./mvnw -f services/pom.xml validate` termina en BUILD SUCCESS.
@@ -60,7 +60,7 @@ El monorepo de [§1](../especificacion/01-arquitectura.md#1-monorepo-sí) existe
 - [x] 9. Crear `.gitignore` raíz para Java/Maven, Node/Angular, entorno y editores (`target/`, `node_modules/`, `dist/`, `.angular/`, `.env`, IDE). Verificación: tras compilar y probar, `git status --porcelain` no lista artefactos y `git check-ignore` confirma las rutas típicas de salida.
 - [x] 10. Crear `README.md` raíz con una descripción breve y la sección «Verificación» con los comandos canónicos: build backend (`./mvnw -f services/pom.xml verify` y variante Windows), pruebas de cada app (`npm ci && npm run build && npm test -- --watch=false` en `apps/public-web` y `apps/admin-web`), Compose (`docker compose -f infra/compose.yaml config`, `up -d` y `down`) y validador (`python scripts/validar-planes.py`). Verificación: la sección existe con los cuatro grupos; los tres comandos ejecutables en F0 terminan en verde desde un clon limpio y Compose queda publicado como canónico para F1.
 - [x] 11. Crear la CI mínima en `.github/workflows/ci.yml` con tres jobs — backend (Temurin 25, cache Maven, `./mvnw -f services/pom.xml verify`), frontend (Node 24.15.0, matriz con las dos apps: `npm ci`, `npm run build`, `npm test -- --watch=false`) y planes (`python scripts/validar-planes.py`) — disparados en push a `main` y en PRs a `main`. Verificación: en la rama de ejecución los tres jobs aparecen en verde y usan exactamente los comandos de la sección «Verificación».
-- [ ] 12. Verificación final desde un clon limpio: `npm ci` en ambas apps, `./mvnw -f services/pom.xml clean verify` y `python scripts/validar-planes.py`. Verificación: todo en verde y 0 errores del validador; el log queda adjunto al PR de ejecución.
+- [x] 12. Verificación final desde un clon limpio: `npm ci` en ambas apps, `./mvnw -f services/pom.xml clean verify` y `python scripts/validar-planes.py`. Verificación: todo en verde y 0 errores del validador; el log queda adjunto al PR de ejecución.
 
 ## 5. Contratos afectados
 
@@ -78,6 +78,14 @@ No hay casos de la [matriz de aceptación](../especificacion/06-migracion-y-prue
 - Build y pruebas de las apps: `npm ci && npm run build && npm test -- --watch=false` en `apps/public-web` y `apps/admin-web`; resultado esperado verde; evidencia en el job frontend de CI.
 - Validador: `python scripts/validar-planes.py`; resultado esperado 0 errores; evidencia en el job planes de CI.
 - Compose: `docker compose -f infra/compose.yaml config`; documentado como canónico y ejecutable a partir de `infra-compose` (F1).
+
+Evidencia de la ejecución (clon limpio de la rama `infra-monorepo`, 2026-10-14):
+
+- `./mvnw -f services/pom.xml clean verify`: BUILD SUCCESS del agregador y de los nueve módulos, con la prueba de contexto de cada módulo en verde.
+- `npm ci && npm run build && npm test -- --watch=false` en `apps/public-web` y `apps/admin-web`: build sin errores y 2 pruebas en verde por app; `npm ls @angular/core typescript` sin `latest` ni rangos flotantes.
+- `python scripts/validar-planes.py`: 25 planes revisados, 0 errores y 0 avisos.
+- `docker compose -f infra/compose.yaml config`: no ejecutable en F0 (no existe `infra/compose.yaml`); queda publicado como canónico para `infra-compose` (F1).
+- Los jobs de la CI de esta rama se confirman verdes en el PR de ejecución, que adjunta los logs anteriores.
 
 ## 7. Preguntas abiertas
 
