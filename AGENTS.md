@@ -15,4 +15,5 @@ Instrucciones para agentes de IA que trabajan en este repositorio.
 
 - La especificación vive en `docs/`. Punto de entrada: [`docs/ESPECIFICACION.md`](docs/ESPECIFICACION.md).
 - Los planes de ejecución siguen [`docs/plans/README.md`](docs/plans/README.md).
+- El registro de implementación y su orden están en [`docs/implementacion/`](docs/implementacion/README.md).
 - Los contratos de frontend están en `docs/contracts/`.
