@@ -11,7 +11,7 @@ PR en borrador (ver [`README.md` §3](README.md#3-cómo-se-implementa-un-plan)).
 | F0 | [`infra-monorepo`](../plans/infra-monorepo.md) | T0 | `cerrado` | `infra-monorepo` | [#43](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/43) |
 | F1 | [`infra-compose`](../plans/infra-compose.md) | T1 | `cerrado` | `infra-compose` | [#45](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/45) |
 | F1 | [`back-plataforma-comunes`](../plans/back-plataforma-comunes.md) | T2 | `cerrado` | `back-plataforma-comunes` | [#46](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/46) |
-| F1 | [`infra-gateway-eureka`](../plans/infra-gateway-eureka.md) | T2 | `propuesto` | — | — |
+| F1 | [`infra-gateway-eureka`](../plans/infra-gateway-eureka.md) | T2 | `cerrado` | `infra-gateway-eureka` | [#48](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/48) |
 | F1 | [`back-plataforma-mensajeria`](../plans/back-plataforma-mensajeria.md) | T3 | `propuesto` | — | — |
 | F2 | [`back-identity-auth`](../plans/back-identity-auth.md) | T4 | `propuesto` | — | — |
 | F4 | [`back-notification-worker`](../plans/back-notification-worker.md) | T4 | `propuesto` | — | — |
