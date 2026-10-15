@@ -7,7 +7,7 @@
 | Componente | los siete servicios (`services/*-service`) |
 | Fase | `F1` |
 | Modo | `openspec` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Change | `openspec/changes/back-plataforma-mensajeria/` |
 | Depende de | `infra-compose`, `back-plataforma-comunes` |
 | Casos | `MSG01–MSG02` |
