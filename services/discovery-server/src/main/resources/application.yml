@@ -1,9 +1,36 @@
 spring:
   application:
     name: discovery-server
+  security:
+    user:
+      # Credenciales propias de Eureka (distintas de usuarios del hotel).
+      # Sin valores por defecto sensibles: se inyectan por entorno.
+      name: ${EUREKA_USERNAME:eureka}
+      password: ${EUREKA_PASSWORD:}
 server:
   port: 8761
 eureka:
+  instance:
+    hostname: localhost
   client:
+    # Demo single-node: no se registra a sí mismo ni lee el registro.
     register-with-eureka: false
     fetch-registry: false
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  server:
+    enable-self-preservation: false
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: ping
+        readiness:
+          include: ping
