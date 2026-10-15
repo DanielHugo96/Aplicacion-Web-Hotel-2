@@ -21,8 +21,10 @@ import org.springframework.test.web.servlet.MockMvc;
       "spring.flyway.enabled=false",
       "spring.autoconfigure.exclude="
           + "org.springframework.boot.hibernate.autoconfigure.HibernateJpaAutoConfiguration,"
-          + "org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration",
-      "spring.datasource.hikari.initialization-fail-timeout=-1"
+          + "org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration"
+          + ",org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration",
+      "spring.datasource.hikari.initialization-fail-timeout=-1",
+      "hotel.messaging.enabled=false"
     })
 @AutoConfigureMockMvc
 class SecurityConventionTests {

@@ -25,6 +25,26 @@ spring:
           issuer-uri: ${JWT_ISSUER:hotel-identity}
           jwk-set-uri: ${JWK_SET_URI:http://identity-service/.well-known/jwks.json}
 
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      properties:
+        enable.idempotence: true
+        # Sin metadatos (broker caido) el poller no debe bloquearse: falla y reintenta.
+        max.block.ms: 5000
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5673}
+    username: ${RABBITMQ_USER:identity}
+    password: ${RABBITMQ_PASSWORD:}
+    virtual-host: ${RABBITMQ_VHOST:/hotel-demo}
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    template:
+      mandatory: true
 server:
   port: 8081
 
@@ -67,6 +87,11 @@ hotel:
     alert-pending-minutes: ${OUTBOX_ALERT_PENDING_MINUTES:15}
   inbox:
     retention-days: ${INBOX_RETENTION_DAYS:30}
+  messaging:
+    enabled: ${MESSAGING_ENABLED:true}
+    schemas-location: ${MESSAGING_SCHEMAS_LOCATION:schemas}
+    kafka:
+      consumer-group: ${MESSAGING_KAFKA_CONSUMER_GROUP:}
 
 resilience4j:
   circuitbreaker:
