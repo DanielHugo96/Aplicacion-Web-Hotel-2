@@ -1,0 +1,7 @@
+# Los archivos de infra/ se montan dentro de contenedores Linux (init de
+# PostgreSQL, entrypoint de RabbitMQ, compose). Deben viajar en LF: con
+# `core.autocrlf=true` (Windows) un `#!/bin/bash\r` rompe el shebang.
+*.sh   text eol=lf
+*.conf text eol=lf
+*.yaml text eol=lf
+*.md   text eol=lf
