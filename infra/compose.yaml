@@ -139,6 +139,66 @@ services:
       retries: 10
       start_period: 5s
 
+  # -----------------------------------------------------------------------
+  # Perfil full: Gateway y Eureka en contenedores (plan infra-gateway-eureka)
+  # -----------------------------------------------------------------------
+  discovery-server:
+    build:
+      context: ..
+      dockerfile: services/discovery-server/Dockerfile
+    image: hotel/discovery-server:0.0.1
+    restart: unless-stopped
+    profiles: ["full"]
+    environment:
+      EUREKA_USERNAME: ${EUREKA_USERNAME:?define EUREKA_USERNAME en .env}
+      EUREKA_PASSWORD: ${EUREKA_PASSWORD:?define EUREKA_PASSWORD en .env}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "127.0.0.1:8761:8761"
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8761/actuator/health/liveness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
+  api-gateway:
+    build:
+      context: ..
+      dockerfile: services/api-gateway/Dockerfile
+    image: hotel/api-gateway:0.0.1
+    restart: unless-stopped
+    profiles: ["full"]
+    environment:
+      EUREKA_URL: http://discovery-server:8761/eureka
+      EUREKA_USERNAME: ${EUREKA_USERNAME:?define EUREKA_USERNAME en .env}
+      EUREKA_PASSWORD: ${EUREKA_PASSWORD:?define EUREKA_PASSWORD en .env}
+      JWT_ISSUER: ${JWT_ISSUER:-hotel-identity}
+      JWK_SET_URI: ${JWK_SET_URI:-http://identity-service/.well-known/jwks.json}
+      RATE_LIMIT_PUBLIC_RPM: ${RATE_LIMIT_PUBLIC_RPM:-60}
+      ROUTE_CONNECT_TIMEOUT_MS: ${ROUTE_CONNECT_TIMEOUT_MS:-2000}
+      ROUTE_READ_TIMEOUT_MS: ${ROUTE_READ_TIMEOUT_MS:-5000}
+      GATEWAY_MAX_BODY_BYTES: ${GATEWAY_MAX_BODY_BYTES:-1048576}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-dev}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "127.0.0.1:8080:8080"
+    networks:
+      - backend
+    depends_on:
+      discovery-server:
+        condition: service_healthy
+    healthcheck:
+      # Actuator vive en el puerto de gestión interno 8090 (no expuesto).
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8090/actuator/health/liveness || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 15s
+
 volumes:
   postgres_data:
   kafka_data:

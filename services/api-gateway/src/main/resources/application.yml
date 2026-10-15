@@ -1,5 +1,144 @@
 spring:
   application:
     name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Sin discovery-locator: solo las rutas explícitas de la tabla de la spec.
+          discovery:
+            locator:
+              enabled: false
+          # Timeouts del HttpClient subyacente (valores por defecto de la spec).
+          httpclient:
+            connect-timeout: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+            response-timeout: ${ROUTE_READ_TIMEOUT_MS:5000}
+          routes:
+            - id: identity-auth
+              uri: lb://identity-service
+              predicates:
+                - Path=/api/auth/**,/api/persona/**,/api/tipopersona/**
+              metadata:
+                connect-timeout: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+                response-timeout: ${ROUTE_READ_TIMEOUT_MS:5000}
+            - id: identity-jwks
+              uri: lb://identity-service
+              predicates:
+                - Path=/.well-known/jwks.json
+              metadata:
+                connect-timeout: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+                response-timeout: ${ROUTE_READ_TIMEOUT_MS:5000}
+            - id: hotel
+              uri: lb://hotel-service
+              predicates:
+                - Path=/api/public/**,/api/hotel/**,/api/piso/**,/api/categoria/**,/api/habitacion/**,/api/estadohabitacion/**
+              metadata:
+                connect-timeout: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+                response-timeout: ${ROUTE_READ_TIMEOUT_MS:5000}
+            - id: reception
+              uri: lb://reception-service
+              predicates:
+                - Path=/api/recepcion/**
+              metadata:
+                connect-timeout: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+                response-timeout: ${ROUTE_READ_TIMEOUT_MS:5000}
+            - id: inventory
+              uri: lb://inventory-service
+              predicates:
+                - Path=/api/producto/**
+              metadata:
+                connect-timeout: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+                response-timeout: ${ROUTE_READ_TIMEOUT_MS:5000}
+            - id: sales
+              uri: lb://sales-service
+              predicates:
+                - Path=/api/carrito/**,/api/venta/**
+              metadata:
+                connect-timeout: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+                response-timeout: ${ROUTE_READ_TIMEOUT_MS:5000}
+            - id: reporting
+              uri: lb://reporting-service
+              predicates:
+                - Path=/api/reportes/**
+              metadata:
+                # Lectura de 10s solo en reportes (spec §API Gateway).
+                connect-timeout: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+                response-timeout: 10000
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins:
+                  - http://localhost:4200
+                  - http://localhost:4300
+                allowedMethods:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders:
+                  - Authorization
+                  - Content-Type
+                  - Accept
+                  - Idempotency-Key
+                  - If-Match
+                  - X-Correlation-Id
+                exposedHeaders:
+                  - ETag
+                  - Location
+                  - Retry-After
+                  - X-Correlation-Id
+                allowCredentials: false
+                maxAge: 600
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Validación local con issuer y JWKS explícitos, sin descubrimiento OIDC.
+          issuer-uri: ${JWT_ISSUER:hotel-identity}
+          jwk-set-uri: ${JWK_SET_URI:http://identity-service/.well-known/jwks.json}
 server:
   port: 8080
+eureka:
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    username: ${EUREKA_USERNAME:}
+    password: ${EUREKA_PASSWORD:}
+  instance:
+    prefer-ip-address: true
+hotel:
+  gateway:
+    rate-limit:
+      public-rpm: ${RATE_LIMIT_PUBLIC_RPM:60}
+    route:
+      default-connect-timeout-ms: ${ROUTE_CONNECT_TIMEOUT_MS:2000}
+      default-read-timeout-ms: ${ROUTE_READ_TIMEOUT_MS:5000}
+    max-body-bytes: ${GATEWAY_MAX_BODY_BYTES:1048576}
+    jwt:
+      issuer: ${JWT_ISSUER:hotel-identity}
+      jwk-set-uri: ${JWK_SET_URI:http://identity-service/.well-known/jwks.json}
+      audience: hotel-api
+management:
+  # Actuator solo en el puerto de gestión interno (no expuesto en Compose).
+  server:
+    port: 8090
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: ping
+        readiness:
+          include: ping
+logging:
+  level:
+    root: ${LOG_LEVEL:INFO}
