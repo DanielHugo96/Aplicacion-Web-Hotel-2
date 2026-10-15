@@ -73,15 +73,15 @@ Un plan cerrado solo en una rama **no** desbloquea a nadie.
 7. Nunca commit ni push directo a `main`, nunca `push --force`, nunca mergear el propio PR.
 8. Si el plan que te toca está bloqueado, no esperes: toma el siguiente plan **listo** de [`orden.md`](orden.md).
 
-## 6. Decisiones abiertas del registro
+## 6. Decisiones del registro
 
-- **Mocks en el front.** La norma es contradictoria: §7 dice que un front «puede avanzar contra
-  `contracts/openapi/*.yaml` con mocks», y §6.2 dice que no empieza un plan hasta cerrar todas sus
-  dependencias. Este registro aplica **§6.2 (estricto)**: ningún front arranca con mocks antes de que su
-  back esté cerrado. Si se quiere permitir mocks, hace falta un PR a `docs/plans/README.md` aprobado por una persona.
-- **`front-admin-web-catalogo` no tiene archivo en `main`.** No puede ejecutarse. Además bloquea
-  `qa-matriz-aceptacion`, porque ese plan depende de todos los F1–F4. Hasta que su plan entre, el calendario
-  queda incompleto en la última tanda.
+Tomadas el 14/10/2026. Cada una tiene un momento de revisión.
+
+| # | Tema | Decisión | Cuándo se revisa |
+|---|---|---|---|
+| 1 | Mocks en el front | Se aplica **§6.2 (estricto)**: ningún front arranca antes de tener cerradas sus dependencias, y no se usan mocks. §7 de la norma dice lo contrario; la contradicción se resolvería con un PR aprobado a `docs/plans/README.md`. | En T5. Si la cola de `admin-web` va atrasada, se propone ese PR con datos reales. |
+| 2 | Modo de ejecución | **Seguro:** una cola de `admin-web` (siete planes) y una de `qa` (dos planes). Calendario de 15 tandas. | Pasar a modo rápido solo si hay una fecha de entrega que aprieta o si la cola de front se atrasa respecto al calendario. |
+| 3 | `front-admin-web-catalogo` | El plan está en la rama `front-admin-web-catalogo` de OscarEdu2709 (commit `aedeea3`) y pasa el validador. Lo revisa y mergea alguien distinto de Oscar, antes de T5. | Pendiente. Hasta el merge no puede ejecutarse, y bloquea `qa-matriz-aceptacion`. |
 
 ## 7. Índice de planes (agrupado sin mover archivos)
 
@@ -100,7 +100,7 @@ lee solo el nivel raíz, así que este índice es la vista agrupada.
   [`back-identity-personas`](../plans/back-identity-personas.md) ·
   [`front-public-web-landing`](../plans/front-public-web-landing.md) ·
   [`front-admin-web-base`](../plans/front-admin-web-base.md) ·
-  `front-admin-web-catalogo` (sin archivo en `main` todavía)
+  `front-admin-web-catalogo` (en revisión: rama de Oscar, pendiente de merge)
 - **F3 · Operación (6):** [`back-reception-operacion`](../plans/back-reception-operacion.md) ·
   [`back-hotel-operaciones`](../plans/back-hotel-operaciones.md) ·
   [`back-inventory-stock`](../plans/back-inventory-stock.md) ·

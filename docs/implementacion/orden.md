@@ -8,8 +8,8 @@ libre. La tanda es la referencia para saber qué puede ir a la vez, no una barre
 
 - Los 25 planes están en `propuesto` en `main`. **Nada está implementado todavía.**
 - Se empieza por **T0** (`infra-monorepo`), que no tiene dependencias.
-- `front-admin-web-catalogo` no tiene archivo en `main`: no puede ejecutarse, y bloquea
-  `qa-matriz-aceptacion` (ver [`README.md` §6](README.md#6-decisiones-abiertas-del-registro)).
+- `front-admin-web-catalogo` no tiene archivo en `main`: está en la rama de Oscar, pendiente de revisión y
+  merge. Hasta entonces no puede ejecutarse, y bloquea `qa-matriz-aceptacion` (ver [`README.md` §6](README.md#6-decisiones-del-registro)).
 
 ## 2. Calendario
 
@@ -22,7 +22,7 @@ libre. La tanda es la referencia para saber qué puede ir a la vez, no una barre
 | **T4** | `back-identity-auth` ‖ `back-notification-worker` | `back-plataforma-mensajeria` |
 | **T5** | `back-hotel-catalogo` ‖ `front-admin-web-base` | `back-identity-auth` (y mensajería para hotel) |
 | **T6** | `back-identity-personas` ‖ `back-inventory-stock` ‖ `front-public-web-landing` | identity-auth y hotel-catalogo, hotel-catalogo y mensajería, hotel-catalogo |
-| **T7** | `back-reception-operacion` ‖ `front-admin-web-catalogo` ⚠ bloqueado | personas, hotel-catalogo y mensajería; base, personas y hotel-catalogo |
+| **T7** | `back-reception-operacion` ‖ `front-admin-web-catalogo` ⚠ pendiente de merge | personas, hotel-catalogo y mensajería; base, personas y hotel-catalogo |
 | **T8** | `back-hotel-operaciones` ‖ `back-sales-ventas` | reception-operacion; reception-operacion, inventory-stock y mensajería |
 | **T9** | `back-reception-cierre` ‖ `front-admin-web-area-cliente` | reception-operacion y sales-ventas; base, reception-operacion y sales-ventas |
 | **T10** | `back-reporting-proyecciones` ‖ `front-admin-web-recepcion` | los siete back de su `Depende de` (incluye reception-cierre); base, reception-operacion y hotel-operaciones |
@@ -70,6 +70,7 @@ Regla: el segundo plan solo empieza cuando el primero está **cerrado en `main`*
   y la cola de `qa` son **15 tandas** (T0 a T14), con una duración similar por plan. Serializar cuesta
   dos tandas: es el precio de la seguridad.
 - El cuello de botella es la **cola de `admin-web`**: siete planes en serie, desde T5 hasta T13.
+- En T0 a T4 solo hay un plan de back por tanda. Quien lleve el front puede revisar PRs y ayudar con la planificación hasta T5.
 - Para acelerar sin arriesgar: que una persona lleve la cola de front de principio a fin, y que las
   demás adelanten back en los carriles libres (ver la tabla de tandas).
 - Las duraciones reales no son iguales. La cola de front manda: si un plan de front tarda más, retrasa T13 y T14.

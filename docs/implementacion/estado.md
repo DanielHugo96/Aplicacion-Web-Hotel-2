@@ -21,7 +21,7 @@ rama y el borrador de cada plan (ver [`README.md` §3](README.md#3-cómo-se-impl
 | F3 | [`back-inventory-stock`](../plans/back-inventory-stock.md) | T6 | `propuesto` |
 | F2 | [`front-public-web-landing`](../plans/front-public-web-landing.md) | T6 | `propuesto` |
 | F3 | [`back-reception-operacion`](../plans/back-reception-operacion.md) | T7 | `propuesto` |
-| F2 | `front-admin-web-catalogo` (sin archivo en `main`) | T7 | — |
+| F2 | `front-admin-web-catalogo` (en revisión: rama de OscarEdu2709, pendiente de merge) | T7 | — |
 | F3 | [`back-hotel-operaciones`](../plans/back-hotel-operaciones.md) | T8 | `propuesto` |
 | F3 | [`back-sales-ventas`](../plans/back-sales-ventas.md) | T8 | `propuesto` |
 | F4 | [`back-reception-cierre`](../plans/back-reception-cierre.md) | T9 | `propuesto` |
