@@ -7,7 +7,7 @@
 | Componente | `infra` |
 | Fase | `F0` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `—` |
 | Spec | [`01-arquitectura.md` §1 Monorepo](../especificacion/01-arquitectura.md#1-monorepo-sí) y [§4 Stack](../especificacion/01-arquitectura.md#4-stack); [`gateway-eureka-docker.md` §Compose y puertos propuestos](../especificacion/infraestructura/gateway-eureka-docker.md#compose-y-puertos-propuestos) y [§Construcción y arranque futuro](../especificacion/infraestructura/gateway-eureka-docker.md#construcción-y-arranque-futuro); [`configuracion.md` §Comunes a todos los servicios](../especificacion/infraestructura/configuracion.md#comunes-a-todos-los-servicios) y [§Por servicio](../especificacion/infraestructura/configuracion.md#por-servicio); [`06-migracion-y-pruebas.md` §2](../especificacion/06-migracion-y-pruebas.md#2-orden-simple-elegido) y [§6](../especificacion/06-migracion-y-pruebas.md#6-doble-validación-antes-de-implementar-y-antes-de-entregar); [`07-revision-y-arranque.md` §Primer incremento](../especificacion/07-revision-y-arranque.md#primer-incremento-implementable) |
 | Casos | `—` |
