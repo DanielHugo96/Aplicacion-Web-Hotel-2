@@ -49,11 +49,21 @@ Resultado esperado: build sin errores y pruebas en verde.
 
 **3. Infraestructura local con Compose** (disponible a partir del plan `infra-compose`, fase F1):
 
+Copia la plantilla y rellena las credenciales locales; sin `.env` Compose no arranca:
+
 ```bash
-docker compose -f infra/compose.yaml config   # valida el archivo
-docker compose -f infra/compose.yaml up -d    # levanta la infraestructura
-docker compose -f infra/compose.yaml down     # la detiene
+cp .env.example .env   # y completa las credenciales (los valores no van a Git)
 ```
+
+```bash
+docker compose -f infra/compose.yaml --env-file .env config        # valida el archivo
+docker compose -f infra/compose.yaml --env-file .env up -d --wait  # levanta y espera healthchecks verdes
+docker compose -f infra/compose.yaml --env-file .env down          # la detiene
+```
+
+`--env-file .env` es obligatorio: con `-f infra/compose.yaml` Compose buscaría el `.env` junto
+al compose (`infra/`), no en la raíz. `down` sin `-v` conserva los volúmenes (`postgres_data`,
+`kafka_data`, `rabbitmq_data`); usa `down -v` solo para reiniciar la infraestructura de cero.
 
 **4. Validador de planes** (norma de `docs/plans/`):
 
