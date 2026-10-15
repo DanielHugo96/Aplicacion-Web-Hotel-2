@@ -1,5 +1,77 @@
 spring:
   application:
     name: sales-service
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:55432/sales_db}
+    username: ${SPRING_DATASOURCE_USERNAME:sales_app}
+    password: ${SPRING_DATASOURCE_PASSWORD:}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    # Migrador separado del runtime: en dev se provee por entorno; si falta, hereda el datasource.
+    user: ${SPRING_FLYWAY_USER:${SPRING_DATASOURCE_USERNAME:sales_app}}
+    password: ${SPRING_FLYWAY_PASSWORD:${SPRING_DATASOURCE_PASSWORD:}}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Validación local del issuer fijo y JWKS explícito, sin descubrimiento OIDC.
+          issuer-uri: ${JWT_ISSUER:hotel-identity}
+          jwk-set-uri: ${JWK_SET_URI:http://identity-service/.well-known/jwks.json}
+
 server:
   port: 8085
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      group:
+        liveness:
+          include: livenessState
+        # readiness solo con la base de datos del servicio arriba.
+        readiness:
+          include: readinessState,db
+
+logging:
+  structured:
+    format:
+      console: logstash
+  level:
+    root: ${LOG_LEVEL:INFO}
+
+hotel:
+  security:
+    machine:
+      # Token máquina: este servicio llama rutas /internal/** de otros servicios. Secreto fuera de Git.
+      client-id: ${SERVICE_CLIENT_ID:}
+      client-secret: ${SERVICE_CLIENT_SECRET:}
+  feign:
+    connect-timeout-ms: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
+    read-timeout-ms: ${FEIGN_READ_TIMEOUT_MS:5000}
+  outbox:
+    poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
+    batch-size: ${OUTBOX_BATCH_SIZE:50}
+    alert-attempts: ${OUTBOX_ALERT_ATTEMPTS:10}
+    alert-pending-minutes: ${OUTBOX_ALERT_PENDING_MINUTES:15}
+  inbox:
+    retention-days: ${INBOX_RETENTION_DAYS:30}
+
+resilience4j:
+  circuitbreaker:
+    sliding-window-size: ${CB_WINDOW_SIZE:10}
+    failure-rate-threshold: ${CB_FAILURE_RATE:50}
+    minimum-number-of-calls: ${CB_MIN_CALLS:5}
+    wait-duration-in-open-state: ${CB_OPEN_MS:10000}
+    permitted-number-of-calls-in-half-open-state: ${CB_HALF_OPEN_CALLS:3}
