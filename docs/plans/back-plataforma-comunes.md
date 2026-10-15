@@ -7,7 +7,7 @@
 | Componente | los siete servicios (`services/*-service`) |
 | Fase | `F1` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Change | `—` |
 | Depende de | `infra-compose` |
 | Casos | `SEC06` |
