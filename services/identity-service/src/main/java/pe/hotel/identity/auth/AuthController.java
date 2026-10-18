@@ -1,5 +1,6 @@
 package pe.hotel.identity.auth;
 
+import java.util.Map;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -11,8 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import pe.hotel.identity.platform.ApiException;
 import pe.hotel.identity.platform.ApiResponse;
 import pe.hotel.identity.platform.CorrelationId;
+import pe.hotel.identity.platform.ErrorCode;
 import pe.hotel.identity.platform.Meta;
 
 /**
@@ -77,6 +80,16 @@ public class AuthController {
       @AuthenticationPrincipal Jwt jwt, @RequestBody PasswordChangeRequest request) {
     authService.cambiarClave(jwt.getSubject(), request);
     return ResponseEntity.ok(ApiResponse.ok(null, Meta.of(CorrelationId.current())));
+  }
+
+  /**
+   * RETIRADA: el login con redes sociales no existe en el MVP. Responde 410 {@code
+   * SOCIAL_LOGIN_DISABLED} sin alternativa ni alta implícita, y sin {@code Idempotency-Key} porque no
+   * ejecuta ningún efecto.
+   */
+  @PostMapping("/social")
+  public ResponseEntity<ApiResponse<Void>> socialRetirada() {
+    throw new ApiException(ErrorCode.SOCIAL_LOGIN_DISABLED, Map.of("ruta", "/api/auth/social"));
   }
 
   /**
