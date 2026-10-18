@@ -54,5 +54,9 @@ toca `docs/contracts/**`.
 
 `services/identity-service/src/main/java/pe/hotel/identity/platform/IdempotencyFilter.java`,
 `PlatformConfig.java`, `IdempotencyCustomizer.java` (nuevo), `IdempotencyHashes.java` (nuevo) y
-`auth/IdentityIdempotencyCustomizer.java` (nuevo). Other services mantienen el comportamiento por
-defecto sin tocar nada.
+`auth/IdentityIdempotencyCustomizer.java` (nuevo). El resto de servicios mantienen el comportamiento
+por defecto sin tocar nada.
+
+**Ningún contrato cambia.** `Idempotency-Key` ya figuraba como parámetro requerido en
+`identity.yaml` § Registro; lo que se corrigió es que la convención lo tenía en su lista de rutas
+exentas y, por tanto, no lo exigía. `git diff origin/main..HEAD -- docs/contracts/` sale vacío.

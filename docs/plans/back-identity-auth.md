@@ -74,7 +74,7 @@ En el perfil dev, `identity-service` queda operativo como emisor de autenticaci�
 
 ## 5. Contratos afectados
 
-- **OpenAPI**: sin rutas nuevas; la única actualización de [`identity.yaml`](../contracts/openapi/identity.yaml) es la descripción del 400 de `PUT /api/auth/password` (CURRENT_PASSWORD_MISMATCH y VALIDATION_ERROR); las rutas ya declaradas de login, registro, me, password, social, JWKS y token máquina se implementan tal cual.
+- **OpenAPI**: sin rutas nuevas y **sin ninguna modificación de [`identity.yaml`](../contracts/openapi/identity.yaml)**. El plan anticipaba actualizar la descripción del 400 de `PUT /api/auth/password` (`CURRENT_PASSWORD_MISMATCH` y `VALIDATION_ERROR`), pero al implementarlo se comprobó que el contrato publicado ya la traía completa (líneas 234-243: «400 PASSWORD_POLICY …; 400 CURRENT_PASSWORD_MISMATCH si la clave actual no coincide con la vigente (error.fields.claveActual); 400 VALIDATION_ERROR si la clave nueva no es distinta de la actual (error.fields.claveNueva)»), así que no había nada que añadir y no se tocó el fichero. Verificable con `git diff origin/main..HEAD -- docs/contracts/` (vacío) y `python scripts/validar-contratos.py --base origin/main`. Las rutas ya declaradas de login, registro, me, password, social, JWKS y token máquina se implementan tal cual.
 - **Eventos y comandos**: `notificacion.bienvenida` (comando RabbitMQ, productor identity y consumidor `back-notification-worker` según [catálogo §2](catalogo.md#2-mensajería)), con el payload de [05 §Envelope de comando RabbitMQ](../especificacion/05-mensajeria.md#envelope-de-comando-rabbitmq) y el schema [`notificacion.bienvenida.NotificacionBienvenida.v1.schema.json`](../contracts/events/notificacion.bienvenida.NotificacionBienvenida.v1.schema.json): `idPersona`, `destinatario`, `nombre` y `templateVersion:1`, con `idHotel:null`. Sin topics Kafka: `identity.persona.v1` es de `back-identity-personas`.
 - **Persistencia**: migraciones Flyway V<n>__ en `services/identity-service/`, derivadas del [DDL de base-de-datos](../especificacion/microservicios/identity/base-de-datos.md#ddl-de-referencia): `tipo_persona`, `persona`, `persona_sede` y `service_client`, más los seeds dev; uso de `api_idempotency` (con hash HMAC en password) y `outbox` (bienvenida). Las tablas técnicas que ya provea `back-plataforma-*` no se duplican.
 - **Errores**: `VALIDATION_ERROR`, `UNAUTHENTICATED`, `INVALID_CREDENTIALS`, `PASSWORD_POLICY`, `CURRENT_PASSWORD_MISMATCH`, `SOCIAL_LOGIN_DISABLED`, `RATE_LIMITED`, `DUPLICATE_RESOURCE`, `IDEMPOTENCY_CONFLICT`, `PRECONDITION_REQUIRED`, `PRECONDITION_FAILED`, `DEPENDENCY_UNAVAILABLE` e `INTERNAL_ERROR` de [`errors.md`](../contracts/errors.md), con los mensajes y acciones del catálogo.
@@ -96,13 +96,75 @@ Corrida de aceptación del 2026-10-18 contra Compose (`docker compose -f infra/c
   - JWKS (paso 15): `GET /.well-known/jwks.json` → 200 con `kty/use/alg/kid/n/e` (validado contra el schema `JWKS` de `identity.yaml`), sin `d` ni `PRIVATE`; `grep -rli "BEGIN PRIVATE KEY" services/ docs/` → 0.
   - Token máquina (paso 16): `POST /internal/auth/token` con Basic `reception-service:…` → 200 `{"access_token":…,"token_type":"Bearer","expires_in":300}` con `sub=reception-service`, `aud=identity`, `scope=clientes:read` y 300 s; audiencia no permitida → 400 `VALIDATION_ERROR`; `grant_type` distinto → 400; Basic inválido, sin credencial o con JWT humano → 401 `UNAUTHENTICATED`.
   - Envelope (pasos 5 a 14): todas las respuestas de negocio llevan `success/message/data/meta` con `meta.correlationId`, propagado desde `X-Correlation-Id` a través del Gateway; el token máquina y el JWKS son las dos excepciones sin envelope que fija el contrato.
-- Pruebas automatizadas (paso 17): `bash scripts/mvn.sh -f services/pom.xml verify` → `BUILD SUCCESS` de los nueve módulos; identity-service con 64 pruebas en verde (`AuthControllerTests` 30, `SecurityConventionTests` 6, `IdempotencyFilterTests` 5, `ClavesTests` 5, `ETagYDatosTests` 5, `JwtValidatorTests` 4, `MessageValidatorTest` 2, `MessagingPolicyTest` 2, `RateLimiterTests` 3, `RabbitTopologyTest` 1, `IdentityServiceApplicationTests` 1). Reporte en `services/identity-service/target/surefire-reports/`, adjunto al PR.
+- Pruebas automatizadas (paso 17): `bash scripts/mvn.sh -f services/pom.xml clean verify` → `BUILD SUCCESS` de los nueve módulos, **67 pruebas en verde en identity-service** y 0 fallos, 0 errores. El recuento se leyó del reporte de Surefire de la corrida, no de memoria, y coincide con `grep -h 'Tests run' services/identity-service/target/surefire-reports/*.txt`. Salida real de la corrida:
+
+  ```
+  Tests run: 30, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.auth.AuthControllerTests
+  Tests run:  5, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.auth.ClavesTests
+  Tests run:  5, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.auth.ETagYDatosTests
+  Tests run:  4, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.persona.DemoDataSeederTests
+  Tests run:  6, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.platform.SecurityConventionTests
+  Tests run:  5, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.platform.IdempotencyFilterTests
+  Tests run:  4, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.platform.JwtValidatorTests
+  Tests run:  3, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.ratelimit.RateLimiterTests
+  Tests run:  2, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.messaging.MessageValidatorTest
+  Tests run:  2, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.messaging.MessagingPolicyTest
+  Tests run:  1, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.IdentityServiceApplicationTests
+  Tests run: 67, Failures: 0, Errors: 0, Skipped: 0        (total de identity-service)
+  ```
+
+  Una versión anterior de esta línea decía 64 pruebas e incluía un `RabbitTopologyTest`: ambas cosas eran falsas. `RabbitTopologyTest` existe en `notification`, `inventory`, `hotel` y `reception`, **no** en identity, y el 64 salía de un `.txt` obsoleto que había quedado en `target/surefire-reports/` de una construcción anterior (y de no haber contado las 4 pruebas de `DemoDataSeederTests`, que se añadieron después). La corrida se repitió con `clean` para que el recuento venga solo de la ejecución actual.
+
+- **Arranque sin la clave de demo en el entorno (defecto corregido en la revisión)**. Reproducido antes del arreglo: `spring-boot:run` sin la variable de contraseña de demo terminaba con `Application run failed` por `ERROR: insert or update on table "persona_sede" violates foreign key constraint "persona_sede_id_persona_fkey"` y el puerto 8081 no escuchaba, porque `sembrarSedes()` corría fuera de la guarda de `sembrarPersonas()` y `persona_sede.id_persona` tiene FK a `persona`. Tras mover `sembrarSedes()` dentro de la guarda, la misma corrida da: `Started IdentityServiceApplication in 8.909 s`, `GET /actuator/health/readiness` → **200**, y en `identity_db`: `persona` 0 filas, `persona_sede` 0 filas, `tipo_persona` 3 filas, `service_client` 5 filas. Logs: `seed_demo personas_omitidas motivo=demo_password_ausente`. Con la variable de demo presente vuelve a sembrar 6 personas y 3 sedes y el login responde 200. Lo fijan cuatro pruebas nuevas en `DemoDataSeederTests` (sin clave no se escribe ni `INSERT INTO persona (` ni `INSERT INTO persona_sede`, y `run()` no lanza; con clave, 6 personas y 3 sedes).
 - **Nota de la corrida**: el `400 VALIDATION_ERROR` de SEC02 deja su fila en `api_idempotency` marcada `COMPLETADA` con el 400 como resultado terminal, que es la regla de la convención común (`back-plataforma-comunes`): una petición rechazada devuelve el mismo resultado si se reintenta con la misma clave. No hay operación inconclusa: no se creó persona ni fila de outbox.
-- Comandos: los de la sección «Verificación» del `README.md` raíz (build y pruebas) y `python scripts/validar-planes.py`; la evidencia queda adjunta al PR de ejecución ([norma §6.8](README.md#6-contrato-con-la-ejecutora)).
+
+### Comandos canónicos ejecutados y su salida
+
+Salida real, ejecutada desde la raíz el 2026-10-18:
+
+```
+$ bash scripts/mvn.sh -f services/pom.xml clean verify
+[INFO] Tests run: 67, Failures: 0, Errors: 0, Skipped: 0          <- identity-service
+[INFO] Hotel services (agregador) ......................... SUCCESS [  0.154 s]
+[INFO] identity-service ................................... SUCCESS [ 33.957 s]
+[INFO] hotel-service ...................................... SUCCESS [  8.353 s]
+[INFO] reception-service .................................. SUCCESS [  8.600 s]
+[INFO] inventory-service .................................. SUCCESS [  7.099 s]
+[INFO] sales-service ...................................... SUCCESS [  7.926 s]
+[INFO] reporting-service .................................. SUCCESS [  7.109 s]
+[INFO] notification-service ............................... SUCCESS [  7.049 s]
+[INFO] api-gateway ........................................ SUCCESS [ 42.160 s]
+[INFO] discovery-server ................................... SUCCESS [ 15.487 s]
+[INFO] BUILD SUCCESS
+
+$ python scripts/validar-planes.py
+25 plan(es) revisado(s); 25 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+$ python scripts/validar-contratos.py --base origin/main
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
+```
+
+### Alcance de archivos de la rama
+
+`git diff --name-only origin/main..HEAD` devuelve **63 archivos**, todos dentro de la zona que la norma permite a un plan `back`:
+
+| N.º | Ruta | Zona |
+|---:|---|---|
+| 41 | `services/identity-service/src/main/java/**` | `back`: código del servicio |
+| 3 | `services/identity-service/src/main/resources/**` (`application.yml` y migraciones Flyway V3/V4) | `back`: configuración y esquema |
+| 8 | `services/identity-service/src/test/java/**` | `back`: pruebas |
+| 1 | `services/identity-service/pom.xml` | `back`: solo se añadió `spring-cloud-starter-netflix-eureka-client` sin versión (la aporta el BOM de Spring Cloud); **ninguna versión fijada se tocó** |
+| 1 | `docs/plans/back-identity-auth.md` | el propio plan (siempre permitido) |
+| 9 | `docs/implementacion/decisiones/IA-back-identity-auth-*.md` | bitácora de la IA (siempre permitida) |
+
+Comprobación explícita de que no se salió de zona (todas a 0): `docs/especificacion/**`, `docs/plans/README.md`, `docs/plans/catalogo.md`, `docs/plans/_plantilla.md`, `docs/guia-git.md`, `docs/contracts/**`, `infra/**`, `services/api-gateway/**`, `services/discovery-server/**`, `apps/**`, `tests/**`, `scripts/**`, `.env.example`, `README.md`, `services/pom.xml`. Tampoco hay `openspec/changes/`: el plan es de modo `directo`.
 
 ## 7. Preguntas abiertas
 
-Ninguna (resuelto por IA: la secuencia de `persona` se ajusta en la migración porque el usuario runtime no puede hacer `setval`; las semillas corren en Java porque BCrypt no se calcula en SQL y no se emite `identity.persona.v1`, que es de `back-identity-personas`; los secretos de los cinco clientes de servicio y la clave HMAC de idempotencia reciben nombre propio, la segunda con valor por defecto en el secreto propio del servicio; actor y hash de idempotencia se ajustan por ruta con un gancho en la convención; el login responde 401 genérico también sin cuerpo completo, porque su ruta no declara 400; el rate limit cuenta por par remoto real; el cambio de clave no incrementa `version`; y las pruebas de contexto usan el perfil `test`). Las nueve decisiones están en [`../implementacion/decisiones/`](../implementacion/decisiones/). No hubo ninguna decisión de contrato: `docs/contracts/**` no se modificó y `python scripts/validar-contratos.py --base origin/main` sigue en verde.
+Ninguna (resuelto por IA: la secuencia de `persona` se ajusta en la migración porque el usuario runtime no puede hacer `setval`; las semillas corren en Java porque BCrypt no se calcula en SQL y no se emite `identity.persona.v1`, que es de `back-identity-personas`; los secretos de los cinco clientes de servicio y la clave HMAC de idempotencia reciben nombre propio, la segunda con valor por defecto en el secreto propio del servicio; actor y hash de idempotencia se ajustan por ruta con un gancho en la convención; el login responde 401 genérico también sin cuerpo completo, porque su ruta no declara 400; el rate limit cuenta por par remoto real; el cambio de clave no incrementa `version`; y las pruebas de contexto usan el perfil `test`). Las nueve decisiones están en [`../implementacion/decisiones/`](../implementacion/decisiones/).
+
+**No hubo ninguna decisión de contrato.** `docs/contracts/**` no se modificó: `git diff origin/main..HEAD -- docs/contracts/` sale vacío y `python scripts/validar-contratos.py --base origin/main` responde «Los contratos solo se han ampliado. Correcto.». El §5 de este plan anticipaba retocar la descripción del 400 de `PUT /api/auth/password` en `identity.yaml`, pero el contrato publicado ya la traía (líneas 234-243), así que no había ampliación que hacer y no se hizo; por eso no existe entrada de nivel 3 en la bitácora.
 
 ## 8. Criterio de terminado
 
@@ -113,3 +175,13 @@ Ninguna (resuelto por IA: la secuencia de `persona` se ajusta en la migración p
 - [x] `python scripts/validar-planes.py` sin errores; cada aviso, resuelto o justificado en el PR.
 - [x] Sin preguntas abiertas.
 - [x] El plan pasa a `cerrado` en el último PR del plan ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
+
+### Reapertura por revisión
+
+El agente revisor devolvió RECHAZADO y el plan volvió a `en curso` para corregir cuatro puntos; se
+volvió a `cerrado` con la evidencia en §6. Lo corregido: (1) el recuento de pruebas de §6, que decía
+64 e incluía un `RabbitTopologyTest` inexistente en identity; (2) la contradicción sobre
+`docs/contracts/**` entre §5 y §7 — el contrato **no** se modificó y ahora §5 lo dice con su
+comprobación; (3) el defecto del seeder, que sin la clave de demo violaba la FK de `persona_sede` e
+impedía arrancar, corregido y cubierto con pruebas; (4) la falta de la salida real de los comandos
+canónicos y del alcance de archivos, ahora pegados en §6.

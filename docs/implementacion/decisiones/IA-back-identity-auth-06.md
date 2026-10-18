@@ -40,4 +40,8 @@ aditiva.
 ## A quién afecta
 
 `services/identity-service/src/main/java/pe/hotel/identity/auth/AuthService.java#login` y su prueba
-`loginConClaveIncorrectaYConCorreoInexistenteDanElMismo401`. No se toca `identity.yaml`.
+`loginConClaveIncorrectaYConCorreoInexistenteDanElMismo401`.
+
+**Ningún contrato cambia**, y en particular `identity.yaml` no se tocó: se respected el conjunto de
+respuestas ya publicado para `POST /api/auth/login` (200, 401, 429) en lugar de ampliarlo con un 400.
+`git diff origin/main..HEAD -- docs/contracts/` sale vacío.

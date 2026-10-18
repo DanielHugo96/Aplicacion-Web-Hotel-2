@@ -22,6 +22,8 @@ Tres documentos describen los seeds de identity y no encajan entre sí:
 - Los seeds corren en Java (`DemoDataSeeder`, un `ApplicationRunner` activo solo en los perfiles
   `dev`/`demo`), porque el hash BCrypt no se puede calcular en SQL y porque la siembra depende de
   `DEMO_PASSWORD` del entorno. `spring.flyway.locations` se queda en `classpath:db/migration`.
+  Personas y sedes se siembran juntas bajo la misma guarda de `DEMO_PASSWORD`: `persona_sede` tiene
+  FK a `persona` y sembrar sedes sin personas rompe el arranque.
 - No se escribe ninguna fila de outbox en el seed. Lo primero que emite identity es la bienvenida
   del registro público, que sí es de este plan.
 
