@@ -1,5 +1,6 @@
 package pe.hotel.identity.platform;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -17,9 +18,10 @@ public class PlatformConfig {
   }
 
   @Bean
-  FilterRegistrationBean<IdempotencyFilter> idempotencyFilter(ApiIdempotencyRepository repository) {
+  FilterRegistrationBean<IdempotencyFilter> idempotencyFilter(
+      ApiIdempotencyRepository repository, ObjectProvider<IdempotencyCustomizer> customizer) {
     FilterRegistrationBean<IdempotencyFilter> registration =
-        new FilterRegistrationBean<>(new IdempotencyFilter(repository));
+        new FilterRegistrationBean<>(new IdempotencyFilter(repository, customizer.getIfAvailable()));
     // Después de la cadena de seguridad (que llena el SecurityContext) y antes del controlador.
     registration.setOrder(-50);
     registration.addUrlPatterns("/api/*");
