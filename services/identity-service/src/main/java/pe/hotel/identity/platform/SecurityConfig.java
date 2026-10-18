@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,6 +27,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import pe.hotel.identity.auth.SigningKeys;
 
 /**
  * Convención de seguridad común: resource server JWT RS256 con validación explícita de
@@ -124,11 +126,26 @@ public class SecurityConfig {
             JwtClaimNames.AUD, aud -> aud != null && aud.stream().anyMatch(audiences::contains)));
   }
 
+  /**
+   * Valida contra el JWKS explícito (nunca con descubrimiento OIDC) y exige {@code exp}, issuer y
+   * audiencia.
+   *
+   * <p>identity es el emisor de estos tokens: cuando tiene su propia clave de firma (en el propio
+   * servicio y en las pruebas) valida contra la clave pública local, sin un salto por la red. Sin
+   * clave local cae al {@code jwk-set-uri} declarado.
+   */
   @Bean
   JwtDecoder jwtDecoder(
       @Value("${spring.security.oauth2.resourceserver.jwt.jwk-set-uri}") String jwkSetUri,
+      ObjectProvider<SigningKeys> signingKeys,
       OAuth2TokenValidator<Jwt> hotelJwtValidator) {
-    NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
+    SigningKeys keys = signingKeys.getIfAvailable();
+    NimbusJwtDecoder decoder =
+        keys == null
+            ? NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build()
+            : NimbusJwtDecoder.withPublicKey(keys.publicKey())
+                .signatureAlgorithm(org.springframework.security.oauth2.jose.jws.SignatureAlgorithm.RS256)
+                .build();
     decoder.setJwtValidator(hotelJwtValidator);
     return decoder;
   }
