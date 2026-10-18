@@ -15,6 +15,9 @@ import org.springframework.boot.test.context.SpringBootTest;
           + "org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration"
           + ",org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration",
       "spring.datasource.hikari.initialization-fail-timeout=-1",
+      "eureka.client.enabled=false",
+      // Sin RabbitAutoConfiguration no existe el contribuyente `rabbit` del readiness.
+      "management.endpoint.health.group.readiness.include=readinessState,db",
       "hotel.messaging.enabled=false"
     })
 class NotificationServiceApplicationTests {

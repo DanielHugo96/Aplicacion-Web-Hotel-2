@@ -1,0 +1,10 @@
+# Perfil dev: seeds de plantillas y SMTP a Mailpit (configuracion.md § Flyway y seeds).
+spring:
+  flyway:
+    locations: classpath:db/migration,classpath:db/seed/dev
+
+hotel:
+  notification:
+    # En dev el correo de demostración sale contra Mailpit; en el resto de perfiles queda
+    # deshabilitado hasta configurar proveedor y autorización (base-de-datos.md § Seeds).
+    smtp-enabled: true

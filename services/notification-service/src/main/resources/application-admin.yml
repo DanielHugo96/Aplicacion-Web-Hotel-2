@@ -1,0 +1,12 @@
+# Perfil admin: CLI local del operador. Sin puerto, sin Gateway, sin consumo de colas y sin
+# despacho (docs/especificacion/microservicios/notification/api.md § Herramienta del operador).
+spring:
+  main:
+    web-application-type: none
+
+hotel:
+  notification:
+    admin: true
+  # El proceso del operador no consume, no publica y no compite por los jobs.
+  messaging:
+    enabled: false

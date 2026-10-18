@@ -35,8 +35,35 @@ spring:
     publisher-returns: true
     template:
       mandatory: true
+    listener:
+      simple:
+        # Acuse manual: el mensaje solo se confirma tras el commit del job y su inbox.
+        acknowledge-mode: manual
+        default-requeue-rejected: false
+        prefetch: 1
+  mail:
+    # Mailpit en dev (configuracion.md § notification).
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    properties:
+      # SMTP timeout 10 s (base-de-datos.md § Procedimientos).
+      mail.smtp.connectiontimeout: ${NOTIFICATION_SMTP_TIMEOUT_MS:10000}
+      mail.smtp.timeout: ${NOTIFICATION_SMTP_TIMEOUT_MS:10000}
+      mail.smtp.writetimeout: ${NOTIFICATION_SMTP_TIMEOUT_MS:10000}
 server:
   port: 8087
+
+eureka:
+  client:
+    enabled: true
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    username: ${EUREKA_USERNAME:}
+    password: ${EUREKA_PASSWORD:}
+  instance:
+    prefer-ip-address: true
 
 management:
   endpoints:
@@ -47,12 +74,14 @@ management:
     health:
       probes:
         enabled: true
+      # El operador ve el componente SMTP degradado aunque no bloquee el negocio.
+      show-components: always
       group:
         liveness:
           include: livenessState
-        # readiness solo con la base de datos del servicio arriba.
+        # Readiness solo con PostgreSQL y RabbitMQ arriba; SMTP degrada sin bloquear (spec § REST).
         readiness:
-          include: readinessState,db
+          include: readinessState,db,rabbit
 
 logging:
   structured:
@@ -75,6 +104,18 @@ hotel:
   messaging:
     enabled: ${MESSAGING_ENABLED:true}
     schemas-location: ${MESSAGING_SCHEMAS_LOCATION:schemas}
+  notification:
+    # Lease por job y reintentos SMTP (configuracion.md § notification).
+    lease-seconds: ${NOTIFICATION_LEASE_SECONDS:60}
+    max-attempts: ${NOTIFICATION_MAX_ATTEMPTS:3}
+    retention-sent-days: ${NOTIFICATION_RETENTION_SENT_DAYS:30}
+    audit-retention-days: ${NOTIFICATION_AUDIT_RETENTION_DAYS:90}
+    # El envío queda deshabilitado por defecto en producción hasta configurar proveedor;
+    # el perfil dev lo habilita contra Mailpit (base-de-datos.md § Seeds).
+    smtp-enabled: ${NOTIFICATION_SMTP_ENABLED:false}
+    dispatch-interval-ms: ${NOTIFICATION_DISPATCH_INTERVAL_MS:2000}
+    smtp-timeout-ms: ${NOTIFICATION_SMTP_TIMEOUT_MS:10000}
+    admin: false
 
 resilience4j:
   circuitbreaker:
