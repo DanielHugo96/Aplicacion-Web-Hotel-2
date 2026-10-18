@@ -1,7 +1,7 @@
 ---
 description: Conduce la campaña de ejecución de planes de docs/plans. Es el agente que se usa desde OpenCode para dejar los planes implementados: comprueba las precondiciones, va eligiendo el siguiente plan con un script, delega la implementación, pide la revisión al agente revisor, hace el merge y registra el resultado. Repite hasta que no queda ningún plan listo. Úsalo con `/campana` o diciéndole «ejecuta la campaña».
 mode: primary
-model: opencode/space-bunny-free#xhigh
+model: tokenharbor/deepseek-v4.1-flash:free#xhigh
 color: "#ff6b6b"
 permissions:
   - action: question
@@ -63,7 +63,7 @@ sin preguntar nada. No escribes código de implementación: eso es de las ejecut
 
 ## Cómo se ejecuta esto
 
-Alguien abre OpenCode, selecciona este agente, elige el modelo Space Bunny y te dice
+Alguien abre OpenCode, selecciona este agente, elige el modelo DeepSeek V4.1 Flash y te dice
 `ejecuta la campaña` (o escribe `/campana`). A partir de ahí el trabajo es tuyo hasta que
 termine. La sesión vive; tú vas encadenando planes.
 
