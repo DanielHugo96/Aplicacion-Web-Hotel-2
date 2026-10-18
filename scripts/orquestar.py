@@ -26,12 +26,16 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import os
 import subprocess
 import sys
 import time
 from pathlib import Path
 
 RAIZ = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(RAIZ / "scripts"))
+import preflight  # noqa: E402  (necesita RAIZ ya calculado)
+
 PROXIMO = RAIZ / "scripts" / "proximo-plan.py"
 PREFLIGHT = RAIZ / "scripts" / "preflight.py"
 
@@ -53,6 +57,39 @@ AGENTE = "orquestador"
 # se dejan escritos: son la declaración de intención y valen en cuanto la sesión
 # no imponga modelo.
 MODELO = "opencode/space-bunny-free#xhigh"
+
+
+def entorno_campana() -> dict[str, str]:
+    """Entorno para lanzar el agente, con el JDK que pide el proyecto.
+
+    Tener el JDK 25 instalado no basta: si el PATH de esta sesión apunta al 17,
+    `mvnw verify` falla igual. Aquí se busca el JDK correcto entre los instalados
+    y se antepone a JAVA_HOME y al PATH del hijo.
+
+    Por sí solo no alcanzaría: el shell que ejecutan las ejecutoras corre en el
+    servidor de OpenCode, que es un proceso aparte con su propio entorno. Por eso
+    el comando se lanza con `--standalone`, que arranca un servidor privado que sí
+    hereda este entorno. Así la campaña usa el JDK correcto sin que nadie tenga que
+    cambiar la configuración de su máquina.
+    """
+    env = os.environ.copy()
+    declarada = preflight.version_java_declarada()
+    if not declarada:
+        return env
+
+    major_pedido = declarada.split(".")[0]
+    real = preflight.version_java_real()
+    if real and real.split(".")[0] == major_pedido:
+        return env  # el PATH ya es correcto, no se toca nada
+
+    jdk = preflight.buscar_jdk(major_pedido)
+    if not jdk:
+        return env
+
+    log(f"PATH usa Java {real or 'nada'}; la campaña forzará el JDK {declarada} de {jdk}")
+    env["JAVA_HOME"] = jdk
+    env["PATH"] = os.pathsep.join([str(Path(jdk) / "bin"), env.get("PATH", "")])
+    return env
 
 
 def _py(script: Path) -> list[str]:
@@ -99,14 +136,18 @@ def ejecutar_plan(plan: str, timeout: int, seco: bool, modelo: str) -> bool:
     cmd = [
         "opencode", "run",
         "--auto",
+        # Servidor privado: es lo que hace que JAVA_HOME y el PATH corregidos
+        # lleguen al shell que usan las ejecutoras.
+        "--standalone",
         "--agent", AGENTE,
         "--model", modelo,
         "--title", f"orquestacion:{plan}",
         f"Ejecuta y cierra el plan {plan}.",
     ]
+    entorno = entorno_campana()
     inicio = time.monotonic()
     try:
-        res = subprocess.run(cmd, cwd=RAIZ, timeout=timeout)
+        res = subprocess.run(cmd, cwd=RAIZ, timeout=timeout, env=entorno)
         codigo = res.returncode
     except subprocess.TimeoutExpired:
         log(f"TIMEOUT: {plan} superó las {timeout // 3600} h. Se para aquí; se puede reanudar.")

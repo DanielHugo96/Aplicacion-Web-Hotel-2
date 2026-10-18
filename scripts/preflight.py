@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -31,11 +32,27 @@ RAIZ = Path(__file__).resolve().parent.parent
 
 
 class Resultado:
-    def __init__(self, nombre: str, ok: bool, detalle: str, bloqueante: bool = True):
+    """Una precondición.
+
+    Tres severidades, y solo una detiene la campaña:
+      - ok    : todo bien
+      - aviso : hay un problema que la campaña resuelve sola. Se avisa, no se para.
+      - falla : no hay quien lo resuelva automáticamente. La campaña no arranca.
+    """
+
+    def __init__(self, nombre: str, ok: bool, detalle: str,
+                 bloqueante: bool = True, aviso: bool = False):
         self.nombre = nombre
         self.ok = ok
         self.detalle = detalle
         self.bloqueante = bloqueante
+        self.aviso = aviso
+
+    @property
+    def severidad(self) -> str:
+        if self.ok:
+            return "OK"
+        return "AVISO" if self.aviso else "FALLA"
 
 
 def _cmd(args: list[str], timeout: int = 60) -> tuple[int, str]:
@@ -96,6 +113,94 @@ def version_java_real() -> str | None:
     return m.group(1) if m else None
 
 
+# Dónde se instalan los JDK en Windows, y también las carpeta habituales en
+# Linux y macOS por si el repo se clona en otro sitio.
+CARPETAS_JDK = (
+    "C:/Program Files/Eclipse Adoptium",
+    "C:/Program Files/Java",
+    "C:/Program Files/Microsoft",
+    "C:/Program Files/Zulu",
+    "C:/Program Files/BellSoft",
+    "/Library/Java/JavaVirtualMachines",
+    "/usr/lib/jvm",
+)
+
+
+def _version_de_java(ejecutable: Path) -> str | None:
+    """Versión que reporta un binario java concreto."""
+    try:
+        res = subprocess.run([str(ejecutable), "-version"], capture_output=True,
+                             text=True, timeout=30)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    salida = (res.stderr or "") + (res.stdout or "")
+    m = re.search(r'version\s+"([0-9._]+)"', salida)
+    return m.group(1) if m else None
+
+
+def buscar_jdk(major: str) -> str | None:
+    """Localiza un JDK instalado cuya versión principal sea `major`.
+
+    Orden de búsqueda: JAVA_HOME, el PATH, y luego las carpetas de instalación
+    habituales. Devuelve la raíz del JDK (`.../jdk-25.0.4`), no el binario.
+
+    Existe porque tener el JDK 25 instalado no basta: si el PATH de la sesión
+    apunta al 17, `mvnw verify` sigue fallando. La campaña puede arreglarlo sola
+    (ver `entorno_campana` en orquestar.py), pero saber dónde está hace el
+    diagnóstico mucho más claro.
+    """
+    candidatos: list[Path] = []
+
+    java_home = os.environ.get("JAVA_HOME")
+    if java_home:
+        candidatos.append(Path(java_home))
+
+    for carpeta in os.environ.get("PATH", "").split(os.pathsep):
+        if not carpeta:
+            continue
+        p = Path(carpeta)
+        if (p / "java.exe").exists() or (p / "java").exists():
+            candidatos.append(p.parent)
+
+    for base in CARPETAS_JDK:
+        raiz = Path(base)
+        if not raiz.is_dir():
+            continue
+        # /Library/Java/JavaVirtualMachines/*.jdk/Contents/Home
+        entradas = sorted(raiz.glob("jdk-*")) + sorted(raiz.glob("temurin-*.jdk"))
+        for d in entradas:
+            if d.is_dir():
+                candidatos.append(d)
+                if (d / "Contents" / "Home").is_dir():
+                    candidatos.append(d / "Contents" / "Home")
+        if (raiz / "latest").is_dir():
+            candidatos.append(raiz / "latest")
+
+    vistos: set[str] = set()
+    for cand in candidatos:
+        clave = str(cand).lower()
+        if clave in vistos:
+            continue
+        vistos.add(clave)
+        for nombre in ("java.exe", "java"):
+            exe = cand / "bin" / nombre
+            if exe.exists():
+                version = _version_de_java(exe)
+                if version and version.split(".")[0] == major:
+                    return str(cand)
+                break
+    return None
+
+
+def jdk_correcto_para_ambiente() -> tuple[str | None, str]:
+    """(ruta del JDK que el proyecto pide, explicación) para esta máquina."""
+    declarada = version_java_declarada()
+    if not declarada:
+        return None, "services/pom.xml no declara <java.version>"
+    major = declarada.split(".")[0]
+    return buscar_jdk(major), declarada
+
+
 def docker_listo() -> tuple[bool, str]:
     code, out = _cmd(["docker", "info", "--format", "{{.ServerVersion}}"], timeout=30)
     if code != 0:
@@ -128,23 +233,39 @@ def comprobar() -> list[Resultado]:
     res: list[Resultado] = []
 
     # 1. Java. Bloqueante: es el fallo silencioso que destruye las versiones fijadas.
+    #
+    # Aquí hay que distinguir tres casos que se confunden:
+    #   a) el PATH apunta al JDK correcto              -> todo bien
+    #   b) el PATH apunta a otro pero el correcto está  -> se puede arreglar solo
+    #      instalado en otra carpeta
+    #   c) el JDK correcto no existe                    -> hay que instalarlo
     declarada = version_java_declarada()
     real = version_java_real()
     if declarada is None:
         res.append(Resultado("java fijada", False, "no se pudo leer <java.version> de services/pom.xml"))
-    elif real is None:
-        res.append(Resultado("java fijada", False, "no hay java en el PATH"))
     else:
-        mayor_real = real.split(".")[0]
         mayor_pedido = declarada.split(".")[0]
+        mayor_real = real.split(".")[0] if real else None
+
         if mayor_real == mayor_pedido:
             res.append(Resultado("java fijada", True, f"Java {real} (fijada: {declarada})"))
         else:
-            res.append(Resultado(
-                "java fijada", False,
-                f"Java {real} instalada pero el proyecto fija {declarada}. "
-                f"Instala el JDK {declarada} y apunta JAVA_HOME a él. "
-                f"NUNCA cambies services/pom.xml para que el build pase."))
+            encontrado, _ = jdk_correcto_para_ambiente()
+            if encontrado:
+                # No bloqueante: orquestar.py fuerza este JDK en el entorno del
+                # agente y arranca un servidor privado para que llegue al shell.
+                res.append(Resultado(
+                    "java fijada", False,
+                    f"el PATH usa Java {real or 'nada'}, pero el {declarada} sí está instalado en "
+                    f"{encontrado}. La campaña lo resuelve sola (orquestar.py). Para dejarlo bien en "
+                    f"tu máquina, apunta JAVA_HOME ahí y reinicia OpenCode. "
+                    f"NUNCA cambies services/pom.xml para que el build pase.",
+                    bloqueante=False, aviso=True))
+            else:
+                res.append(Resultado(
+                    "java fijada", False,
+                    f"Java {real or 'nada'} en el PATH y no hay ningún JDK {declarada} instalado. "
+                    f"Instálalo a mano. NUNCA cambies services/pom.xml para que el build pase."))
 
     # 2. Node, contra engines de las apps.
     engines = engines_node_declarados()
@@ -217,18 +338,34 @@ def _node_cumple(version: str, rango: str) -> bool:
 def main() -> int:
     ap = argparse.ArgumentParser(description="Precondiciones de la campaña de planes.")
     ap.add_argument("--aviso", action="store_true", help="imprime el resultado pero no corta")
+    ap.add_argument("--jdk", action="store_true", help="solo dice dónde está el JDK que pide el proyecto")
     args = ap.parse_args()
+
+    if args.jdk:
+        declarado = version_java_declarada()
+        if not declarado:
+            print("services/pom.xml no declara <java.version>", file=sys.stderr)
+            return 1
+        encontrado, _ = jdk_correcto_para_ambiente()
+        if not encontrado:
+            print(f"No hay ningún JDK {declarado} instalado en esta máquina.", file=sys.stderr)
+            return 1
+        print(encontrado)
+        return 0
 
     res = comprobar()
 
     print("Precondiciones de la campaña:")
     for r in res:
-        marca = "OK  " if r.ok else "FALLA"
-        sufijo = "" if r.ok else "  <-- bloqueante"
-        print(f"  [{marca}] {r.nombre}: {r.detalle}{sufijo}")
+        sufijo = "" if r.ok else ("  <-- la campaña lo resuelve" if r.aviso else "  <-- bloqueante")
+        print(f"  [{r.severidad:<5}] {r.nombre}: {r.detalle}{sufijo}")
     print()
 
-    fallos = [r for r in res if not r.ok]
+    fallos = [r for r in res if not r.ok and not r.aviso]
+    avisos = [r for r in res if not r.ok and r.aviso]
+
+    if avisos:
+        print(f"{len(avisos)} aviso(s). La campaña sigue: se resuelven solos.")
     if not fallos:
         print("Todo en orden. La campaña puede arrancar.")
         return 0
