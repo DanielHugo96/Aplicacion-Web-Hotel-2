@@ -13,7 +13,7 @@ PR en borrador (ver [`README.md` §3](README.md#3-cómo-se-implementa-un-plan)).
 | F1 | [`back-plataforma-comunes`](../plans/back-plataforma-comunes.md) | T2 | `cerrado` | `back-plataforma-comunes` | [#46](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/46) |
 | F1 | [`infra-gateway-eureka`](../plans/infra-gateway-eureka.md) | T2 | `cerrado` | `infra-gateway-eureka` | [#48](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/48) |
 | F1 | [`back-plataforma-mensajeria`](../plans/back-plataforma-mensajeria.md) | T3 | `cerrado` | `back-plataforma-mensajeria` | [#52](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/52) |
-| F2 | [`back-identity-auth`](../plans/back-identity-auth.md) | T4 | `propuesto` | — | — |
+| F2 | [`back-identity-auth`](../plans/back-identity-auth.md) | T4 | `propuesto` | `back-identity-auth` | [#58](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/58) (cerrado sin mergear) |
 | F4 | [`back-notification-worker`](../plans/back-notification-worker.md) | T4 | `propuesto` | — | — |
 | F2 | [`back-hotel-catalogo`](../plans/back-hotel-catalogo.md) | T5 | `propuesto` | — | — |
 | F2 | [`front-admin-web-base`](../plans/front-admin-web-base.md) | T5 | `propuesto` | — | — |
@@ -35,3 +35,13 @@ PR en borrador (ver [`README.md` §3](README.md#3-cómo-se-implementa-un-plan)).
 | F5 | [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md) | T14 | `propuesto` | — | — |
 
 Valores de `Estado` (norma §8): `propuesto`, `en curso`, `cerrado`. Las tandas y colas están en [`orden.md`](orden.md).
+
+**Bloqueos de la campaña.** Un plan que la campaña no pudo cerrar conserva aquí su `Estado en main`
+real y, en las columnas de rama y PR, la tentativa: la rama queda en `origin` y el PR se cierra sin
+mergear por la regla 6.11.3 de [`../plans/README.md`](../plans/README.md). El motivo completo está en
+[`decisiones/`](decisiones/).
+
+- `back-identity-auth`: PR [#58](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/58)
+  cerrado sin mergear por reincidencia del revisor (recuentos y contradicciones documentales en el
+  propio plan; el código está verificado y en verde). Detalle y cómo desbloquearlo:
+  [`decisiones/IA-back-identity-auth-11.md`](decisiones/IA-back-identity-auth-11.md).
