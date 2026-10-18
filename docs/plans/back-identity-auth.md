@@ -7,7 +7,7 @@
 | Componente | `identity-service` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `back-plataforma-mensajeria` |
 | Spec | [`identity/api.md` §REST](../especificacion/microservicios/identity/api.md#rest), [§DTO de entrada](../especificacion/microservicios/identity/api.md#dto-de-entrada), [§Respuestas data](../especificacion/microservicios/identity/api.md#respuestas-data) y [§Kafka y RabbitMQ](../especificacion/microservicios/identity/api.md#kafka-y-rabbitmq); [`base-de-datos.md` §Tablas](../especificacion/microservicios/identity/base-de-datos.md#tablas), [§Seeds](../especificacion/microservicios/identity/base-de-datos.md#seeds) y [§Validación](../especificacion/microservicios/identity/base-de-datos.md#validación); [`03-contrato-comun.md` §Headers](../especificacion/03-contrato-comun.md#headers), [§Respuestas](../especificacion/03-contrato-comun.md#respuestas), [§Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [§Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio) y [§Persistencia transversal](../especificacion/03-contrato-comun.md#persistencia-transversal); [`05-mensajeria.md` §Envelope de comando RabbitMQ](../especificacion/05-mensajeria.md#envelope-de-comando-rabbitmq); [`configuracion.md` §Por servicio](../especificacion/infraestructura/configuracion.md#por-servicio); rutas `POST /api/auth/login`, `POST /api/auth/registro`, `GET /api/auth/me`, `PUT /api/auth/me`, `PUT /api/auth/password`, `POST /api/auth/social`, `GET /.well-known/jwks.json` y `POST /internal/auth/token` de [`identity.yaml`](../contracts/openapi/identity.yaml); [`errors.md` §Identity](../contracts/errors.md#identity) y [§Genéricos](../contracts/errors.md#genéricos) |
 | Casos | `SEC02` |
@@ -102,14 +102,14 @@ Corrida de aceptación del 2026-10-18 contra Compose (`docker compose -f infra/c
 
 ## 7. Preguntas abiertas
 
-Ninguna.
+Ninguna (resuelto por IA: la secuencia de `persona` se ajusta en la migración porque el usuario runtime no puede hacer `setval`; las semillas corren en Java porque BCrypt no se calcula en SQL y no se emite `identity.persona.v1`, que es de `back-identity-personas`; los secretos de los cinco clientes de servicio y la clave HMAC de idempotencia reciben nombre propio, la segunda con valor por defecto en el secreto propio del servicio; actor y hash de idempotencia se ajustan por ruta con un gancho en la convención; el login responde 401 genérico también sin cuerpo completo, porque su ruta no declara 400; el rate limit cuenta por par remoto real; el cambio de clave no incrementa `version`; y las pruebas de contexto usan el perfil `test`). Las nueve decisiones están en [`../implementacion/decisiones/`](../implementacion/decisiones/). No hubo ninguna decisión de contrato: `docs/contracts/**` no se modificó y `python scripts/validar-contratos.py --base origin/main` sigue en verde.
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación.
-- [ ] Caso `SEC02` con evidencia (respuesta 400 y DB sin fila) y pruebas del servicio en verde con los comandos canónicos.
-- [ ] El registro público emite `notificacion.bienvenida` por outbox, validada contra su JSON Schema, publicada tras el commit y sin duplicados por reintentos.
-- [ ] JWKS público sin clave privada; token máquina con allowlist, scopes y TTL correctos; sin claves ni tokens en Git, logs, respuestas ni payloads de idempotencia.
-- [ ] `python scripts/validar-planes.py` sin errores; cada aviso, resuelto o justificado en el PR.
-- [ ] Sin preguntas abiertas.
-- [ ] El plan pasa a `cerrado` en el último PR del plan ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
+- [x] Todos los pasos marcados con su verificación.
+- [x] Caso `SEC02` con evidencia (respuesta 400 y DB sin fila) y pruebas del servicio en verde con los comandos canónicos.
+- [x] El registro público emite `notificacion.bienvenida` por outbox, validada contra su JSON Schema, publicada tras el commit y sin duplicados por reintentos.
+- [x] JWKS público sin clave privada; token máquina con allowlist, scopes y TTL correctos; sin claves ni tokens en Git, logs, respuestas ni payloads de idempotencia.
+- [x] `python scripts/validar-planes.py` sin errores; cada aviso, resuelto o justificado en el PR.
+- [x] Sin preguntas abiertas.
+- [x] El plan pasa a `cerrado` en el último PR del plan ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
