@@ -7,6 +7,7 @@ Aquí no hay autoridad propia: todo lo que dice se deriva de la norma y de los p
 |---|---|
 | [`orden.md`](orden.md) | Calendario de los 25 planes, qué puede ir en paralelo y qué debe ir en serie. |
 | [`estado.md`](estado.md) | Registro de cada plan ejecutado: estado, rama y PR. Si hay duda, manda el plan en `main`. |
+| [`decisiones/`](decisiones/) | Bitácora de las decisiones que tuvo que tomar la IA al ejecutar un plan. |
 
 ## 1. Fuentes de verdad, en este orden
 
@@ -82,7 +83,8 @@ Tomadas el 14/10/2026. Cada una tiene un momento de revisión.
 |---|---|---|---|
 | 1 | Mocks en el front | Se aplica **§6.2 (estricto)**: ningún front arranca antes de tener cerradas sus dependencias, y no se usan mocks. §7 de la norma dice lo contrario; la contradicción se resolvería con un PR aprobado a `docs/plans/README.md`. | En T5. Si la cola de `admin-web` va atrasada, se propone ese PR con datos reales. |
 | 2 | Modo de ejecución | **Seguro:** una cola de `admin-web` (siete planes) y una de `qa` (dos planes). Calendario de 15 tandas. | Pasar a modo rápido solo si hay una fecha de entrega que aprieta o si la cola de front se atrasa respecto al calendario. |
-| 3 | `front-admin-web-catalogo` | El plan está en la rama `front-admin-web-catalogo` de OscarEdu2709 (commit `aedeea3`) y pasa el validador. Lo revisa y mergea alguien distinto de Oscar, antes de T5. | Pendiente. Hasta el merge no puede ejecutarse, y bloquea `qa-matriz-aceptacion`. |
+| 3 | `front-admin-web-catalogo` | **Resuelto el 15/10/2026.** El plan entró en `main` por el PR #40 (`aedeea3`) y su `Estado` es `propuesto`. Ya no está pendiente de merge ni bloquea a `qa-matriz-aceptacion` por esa razón. Lo que sí lo bloquea son sus dependencias: `front-admin-web-base`, `back-identity-personas` y `back-hotel-catalogo`, todas de T5 o T6. | Resuelta. |
+| 4 | Campaña automática por IA | Los 20 planes pendientes se ejecutan sin intervención humana, con un agente orquestador, ejecutoras por ámbito y un agente revisor. Rompe dos reglas de por sí: **nadie pregunta** (§6 de la norma) y **el orquestador mergea su propio PR** (`guia-git.md`). Se sustituye la pregunta por el protocolo de decisión de tres niveles y la revisión humana por la del agente revisor. Toda decisión queda escrita en [`decisiones/`](decisiones/). Andamiaje y procedimiento: [§9](#9-campaña-automática-por-ia). | Con cada tanda. Si un plan se repite en `BLOQUEADO`, o si la campaña amends un plan `cerrado`, se revisa aquí y se detiene. |
 
 ## 7. Índice de planes (agrupado sin mover archivos)
 
@@ -101,7 +103,8 @@ lee solo el nivel raíz, así que este índice es la vista agrupada.
   [`back-identity-personas`](../plans/back-identity-personas.md) ·
   [`front-public-web-landing`](../plans/front-public-web-landing.md) ·
   [`front-admin-web-base`](../plans/front-admin-web-base.md) ·
-  `front-admin-web-catalogo` (en revisión: rama de Oscar, pendiente de merge)
+  `front-admin-web-catalogo` (en T7: depende de `front-admin-web-base`, `back-identity-personas`
+  y `back-hotel-catalogo`)
 - **F3 · Operación (6):** [`back-reception-operacion`](../plans/back-reception-operacion.md) ·
   [`back-hotel-operaciones`](../plans/back-hotel-operaciones.md) ·
   [`back-inventory-stock`](../plans/back-inventory-stock.md) ·
@@ -135,3 +138,71 @@ Si entra un plan nuevo, su enlace se añade aquí en el mismo PR que lo planific
 
 Si se quiere una vista en vivo sin archivos extra: labels `fase-f0`…`fase-f5`, `ambito-*`, `modo-openspec`,
 `bloqueado`; un milestone por fase; un issue por plan; y un Project kanban `Pendiente / En curso / En revisión / Mergeado`.
+
+## 9. Campaña automática por IA
+
+Los 20 planes pendientes se ejecutan sin intervención humana. Los agentes viven en
+[`.opencode/agents/`](../../.opencode/agents) y el andamiaje que los conduce está en
+[`scripts/`](../../scripts).
+
+### Los tres agentes
+
+| Agente | Ámbito | Modelo | Qué hace |
+|---|---|---|---|
+| `orquestador` | uno por plan | `space-bunny-free#xhigh` | Conduce, delega, pide revisión y hace el merge. No elige plan, no escribe código y no puede preguntar. |
+| `plan-back` | `back`, `infra` | `space-bunny-free#max` | Implementa los pasos de un plan, verifica y deja evidencia. |
+| `plan-front` | `front` | `space-bunny-free#high` | Igual, sobre `apps/<app>/`. |
+| `plan-qa` | `qa` | `space-bunny-free#high` | Igual, sobre `tests/**` y `scripts/**`. |
+| `revisor` | uno por plan | `space-bunny-free#xhigh` | Audita el resultado antes del merge. Sin permiso de escritura. Veredicto binario: `APROBADO` o `RECHAZADO`. |
+
+El orquestador y el revisor corren con la herramienta de preguntar deshabilitada por
+configuración. "No preguntar" no es una instrucción del prompt: es una prohibición.
+
+### Cómo se conduce
+
+```bash
+python scripts/preflight.py        # comprueba la máquina. Si falla, no se arranca.
+python scripts/proximo-plan.py     # dice cuál es el siguiente plan. No lo elige un modelo.
+python scripts/orquestar.py        # ejecuta ese plan y para.
+python scripts/orquestar.py --todos --max 5   # encadena hasta cinco planes.
+```
+
+Un `opencode run` por plan, no una sesión para veinte. Si la campaña se corta por cuota o por un
+fallo, el siguiente `python scripts/orquestar.py` retoma exactamente donde se quedó, porque
+`proximo-plan.py` devuelve primero cualquier plan que quedó `en curso`.
+
+### Qué queda bloqueado a nivel de configuración
+
+[`opencode.jsonc`](../../opencode.jsonc) lleva las denegaciones duras, que sobreviven a un
+"Allow always" y no se pueden revocar desde un prompt:
+
+- `git push` solo a ramas `back-*`, `front-*`, `qa-*`, `infra-*` y `docs-estado-*`. Nunca a
+  `main`, nunca con `--force`, nunca borrando.
+- Nada de editar `docs/especificacion/**`, `docs/contracts/errors.md`, `docs/plans/README.md`,
+  `docs/plans/catalogo.md`, `_plantilla.md` ni `docs/guia-git.md`.
+- Ni leer ni escribir `.env`.
+
+Las versiones fijadas (`services/pom.xml`, `apps/*/package.json`) **no** están bloqueadas por
+configuración, porque un plan legítimo puede necesitar una dependencia nueva y bloquear eso
+haría fracasar la campaña por la vía equivocada. Lo están por otras dos vías: el preflight corta
+si el toolchain no cumple lo que el repo declara, y el agente revisor rechaza cualquier diff que
+las toque.
+
+### Por qué existe el preflight
+
+El proyecto fija Java 25 y tú tienes Java 17. Un build falla y una IA muy lista lo lee como "el
+proyecto está mal", baja `<release>25</release>` a 17 y todo queda en verde con el stack
+destruido. `preflight.py` comprueba la máquina contra lo que declara el propio repositorio y
+corta antes de que un agente toque nada. **Ninguna de sus precondiciones se arregla desde un
+agente.**
+
+### Lo que la campaña no puede hacer
+
+- No puede tocar `main` directamente, ni hacer `push --force`, ni editar los documentos de §6.4.
+- No puede elegir el orden de los planes.
+- No puede inventar un endpoint, un evento ni un código de error. Eso sigue prohibido en los
+  tres niveles del protocolo de decisión.
+- No puede corregir un plan ya `cerrado` en `main`.
+
+Cuando un plan no se puede cerrar, la campaña lo registra en [`decisiones/`](decisiones/), deja
+el PR sin mergear y pasa al siguiente. Se detiene sola, pero no se rompe sola.

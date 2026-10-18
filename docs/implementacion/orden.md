@@ -6,10 +6,11 @@ libre. La tanda es la referencia para saber qué puede ir a la vez, no una barre
 
 ## 1. Punto de partida
 
-- Los 25 planes están en `propuesto` en `main`. **Nada está implementado todavía.**
-- Se empieza por **T0** (`infra-monorepo`), que no tiene dependencias.
-- `front-admin-web-catalogo` no tiene archivo en `main`: está en la rama de Oscar, pendiente de revisión y
-  merge. Hasta entonces no puede ejecutarse, y bloquea `qa-matriz-aceptacion` (ver [`README.md` §6](README.md#6-decisiones-del-registro)).
+- Los planes se ejecutan en el orden de la tabla de la sección 2. Los primeros cinco
+  (`infra-monorepo`, `infra-compose`, `back-plataforma-comunes`, `infra-gateway-eureka` y
+  `back-plataforma-mensajeria`) están `cerrado` en `main`.
+- `front-admin-web-catalogo` **ya tiene archivo en `main`** (PR #40) y está `propuesto`. Lo que
+  lo bloquea son sus dependencias, no un merge pendiente: no puede ejecutarse hasta T7.
 
 ## 2. Calendario
 
@@ -22,7 +23,7 @@ libre. La tanda es la referencia para saber qué puede ir a la vez, no una barre
 | **T4** | `back-identity-auth` ‖ `back-notification-worker` | `back-plataforma-mensajeria` |
 | **T5** | `back-hotel-catalogo` ‖ `front-admin-web-base` | `back-identity-auth` (y mensajería para hotel) |
 | **T6** | `back-identity-personas` ‖ `back-inventory-stock` ‖ `front-public-web-landing` | identity-auth y hotel-catalogo, hotel-catalogo y mensajería, hotel-catalogo |
-| **T7** | `back-reception-operacion` ‖ `front-admin-web-catalogo` ⚠ pendiente de merge | personas, hotel-catalogo y mensajería; base, personas y hotel-catalogo |
+| **T7** | `back-reception-operacion` ‖ `front-admin-web-catalogo` | personas, hotel-catalogo y mensajería; base, personas y hotel-catalogo |
 | **T8** | `back-hotel-operaciones` ‖ `back-sales-ventas` | reception-operacion; reception-operacion, inventory-stock y mensajería |
 | **T9** | `back-reception-cierre` ‖ `front-admin-web-area-cliente` | reception-operacion y sales-ventas; base, reception-operacion y sales-ventas |
 | **T10** | `back-reporting-proyecciones` ‖ `front-admin-web-recepcion` | los siete back de su `Depende de` (incluye reception-cierre); base, reception-operacion y hotel-operaciones |

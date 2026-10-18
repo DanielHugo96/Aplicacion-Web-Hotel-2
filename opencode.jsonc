@@ -1,0 +1,89 @@
+{
+  // Configuración de OpenCode para este repositorio.
+  //
+  // Existe por la campaña de ejecución automática de planes (ver
+  // docs/implementacion/README.md §6, decisión 4, y §9). Los agentes viven en
+  // .opencode/agents/*.md; aquí solo va lo que un archivo de agente no puede
+  // declarar: las `policies`, que son denegaciones duras. Sobreviven a un
+  // "Allow always", no se pueden revocar desde un prompt y no las puede
+  // esquivar ni el agente más listo.
+  //
+  // Para trabajar a mano con credenciales, comenta la línea de `read:.env`.
+  "$schema": "https://opencode.ai/config.json",
+
+  "policies": [
+    // ---------------------------------------------------------------------
+    // Documentos que NADIE puede editar al ejecutar un plan (norma §6.4).
+    // Bloquean la herramienta de escritura...
+    // ---------------------------------------------------------------------
+    { "action": "tool.use", "resource": "edit:docs/especificacion/**", "effect": "deny" },
+    { "action": "tool.use", "resource": "edit:docs/contracts/errors.md", "effect": "deny" },
+    { "action": "tool.use", "resource": "edit:docs/plans/README.md", "effect": "deny" },
+    { "action": "tool.use", "resource": "edit:docs/plans/_plantilla.md", "effect": "deny" },
+    { "action": "tool.use", "resource": "edit:docs/plans/catalogo.md", "effect": "deny" },
+    { "action": "tool.use", "resource": "edit:docs/guia-git.md", "effect": "deny" },
+
+    // Sin estas reglas, `edit: deny` es solo papel: bastaría con
+    // `echo x > docs/plans/README.md` para saltárselo. Cada ruta lleva DOS
+    // patrones porque el escáner no los unifica: `>` y `>>` no casan con el
+    // mismo patrón. Verificado en opencode v2.0.32: `*>` no cubre `>>`.
+    { "action": "tool.use", "resource": "shell:* > docs/especificacion/*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* >> docs/especificacion/*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* > docs/contracts/errors.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* >> docs/contracts/errors.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* > docs/plans/README.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* >> docs/plans/README.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* > docs/plans/_plantilla.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* >> docs/plans/_plantilla.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* > docs/plans/catalogo.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* >> docs/plans/catalogo.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* > docs/guia-git.md*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* >> docs/guia-git.md*", "effect": "deny" },
+
+    // ---------------------------------------------------------------------
+    // Credenciales: ni se escriben ni se leen.
+    // ---------------------------------------------------------------------
+    { "action": "tool.use", "resource": "read:.env", "effect": "deny" },
+    { "action": "tool.use", "resource": "read:.env.*", "effect": "deny" },
+    { "action": "tool.use", "resource": "edit:.env", "effect": "deny" },
+    { "action": "tool.use", "resource": "edit:.env.*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* > .env", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:* >> .env", "effect": "deny" },
+    { "action": "tool.use", "resource": "read:~/.ssh/**", "effect": "deny" },
+
+    // ---------------------------------------------------------------------
+    // git push: lista blanca. Solo ramas de plan y de registro.
+    //
+    // Gana la ÚLTIMA regla que casa. Por eso las tres denegaciones del final
+    // van después de las excepciones: son las que de verdad protegen `main`,
+    // porque `git push -u origin back-x --force` casa con la excepción de la
+    // lista blanca y con la denegación final, y la final gana.
+    // ---------------------------------------------------------------------
+    { "action": "tool.use", "resource": "shell:git push *", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push -u origin back-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push -u origin front-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push -u origin qa-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push -u origin infra-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push -u origin docs-estado-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push origin back-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push origin front-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push origin qa-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push origin infra-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push origin docs-estado-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push *--force*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push * -f*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push *--delete*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push * main", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push * main:*", "effect": "deny" },
+
+    // ---------------------------------------------------------------------
+    // Historia destructiva.
+    // ---------------------------------------------------------------------
+    { "action": "tool.use", "resource": "shell:git reset --hard*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git reset --keep*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git clean -*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git checkout -- .", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git branch -D*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git rebase*", "effect": "deny" }
+  ]
+}

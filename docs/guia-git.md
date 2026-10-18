@@ -163,6 +163,21 @@ git push
 - ❌ Mergear tu propio PR sin revisión.
 - ❌ Borrar una rama que aún no fue mergeada.
 
+### Única excepción: la campaña automática de planes
+
+Los cuatro primeros puntos valen **también** para los agentes de IA. La quinta línea es la
+excepción, y está acotada:
+
+- Durante la campaña automática ([`implementacion/README.md`](implementacion/README.md) §6,
+  decisión 4), el **agente orquestador** puede mergear su propio PR, porque es el único agente
+  con permiso de `gh pr merge` y porque antes ha pasado la revisión del **agente revisor**, que
+  corre en otro contexto y no puede escribir.
+- El agente que **implementa** el plan nunca mergea. Nunca.
+- Fuera de la campaña, esta guía manda sin excepciones: una persona no mergea su propio PR.
+
+La excepción no se extiende a nada más: `main` nunca se toca directamente, `git push --force`
+nunca, y `opencode.jsonc` bloquea ambas cosas a nivel de configuración, no de prompt.
+
 ---
 
 ## ⚡ Resumen rápido para copiar y pegar
