@@ -2,6 +2,9 @@ package pe.hotel.identity.auth;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +37,18 @@ public class AuthController {
   public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
     AuthResponse auth = authService.login(request);
     return ResponseEntity.ok(ApiResponse.ok(auth, Meta.of(CorrelationId.current())));
+  }
+
+  /**
+   * Sesión propia: 200 con la Persona del {@code sub} del token, con {@code ETag} para el PUT
+   * siguiente. No acepta ninguna cabecera de identidad: el JWT validado es la única fuente.
+   */
+  @GetMapping("/me")
+  public ResponseEntity<ApiResponse<PersonaView>> me(@AuthenticationPrincipal Jwt jwt) {
+    PersonaView persona = authService.miPerfil(jwt.getSubject());
+    return ResponseEntity.ok()
+        .eTag(ETag.de(persona.version()))
+        .body(ApiResponse.ok(persona, Meta.of(CorrelationId.current())));
   }
 
   /**

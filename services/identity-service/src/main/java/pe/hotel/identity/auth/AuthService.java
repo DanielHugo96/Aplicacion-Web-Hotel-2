@@ -82,6 +82,21 @@ public class AuthService {
    * @throws ApiException {@code VALIDATION_ERROR} por formato o límite, {@code DUPLICATE_RESOURCE} si
    *     el correo normalizado o el par (tipoDocumento, documento) ya existen
    */
+  /**
+   * Sesión propia: la Persona del {@code sub} del token validado, nunca la de una cabecera. Solo
+   * devuelve lo suyo, así que no genera registro de auditoría (docs/especificacion/03-contrato-comun.md
+   * § Identidad y sedes).
+   *
+   * @throws ApiException {@code RESOURCE_NOT_FOUND} si el token es válido pero la persona no existe
+   */
+  public PersonaView miPerfil(String sub) {
+    if (sub == null || sub.isBlank() || !sub.chars().allMatch(Character::isDigit)) {
+      throw new ApiException(ErrorCode.UNAUTHENTICATED);
+    }
+    return personas.buscarPorId(Integer.parseInt(sub)).map(PersonaView::de).orElseThrow(
+        () -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND));
+  }
+
   @Transactional
   public PersonaView registrar(RegistroRequest request) {
     Map<String, String> errores = new LinkedHashMap<>();
