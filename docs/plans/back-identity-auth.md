@@ -88,7 +88,7 @@ Corrida de aceptación del 2026-10-18 contra Compose (`docker compose -f infra/c
   - Login (paso 5): `POST /api/auth/login` con las seis personas semilla → 200 `Auth` con `expiresIn: 900`; token decodificado con `iss=hotel-identity`, `aud=hotel-api`, `sub`, `tipoPersona`, `roles`, `sedes`, `iat`, `exp`, `jti` y 900 s de TTL. Clave incorrecta y correo inexistente → 401 `INVALID_CREDENTIALS` con el mismo mensaje. `grep` de `clave_hash`/la clave de demo en respuestas y logs → 0.
   - Rate limits (paso 6): sexto login del mismo par IP+cuenta → 429 `RATE_LIMITED` con `Retry-After: 12`; cuarto registro del mismo minuto → 429 con `Retry-After: 46`; pasada la ventana, login y registro válidos vuelven a 200/201.
   - Registro (pasos 7 y 8): body con `idTipoPersona` → 400 y sin fila; alta válida → 201 con `tipoPersona: Cliente`, `idTipoPersona: 3`, `sedes: []`; correo y documento existentes → 409 `DUPLICATE_RESOURCE`; sin `Idempotency-Key` → 400 `VALIDATION_ERROR`; misma clave y mismo cuerpo → el mismo 201 sin segunda fila (comparación de los dos JSON idéntica); misma clave y otro cuerpo → 409 `IDEMPOTENCY_CONFLICT`. La columna `actor` guarda el hash del correo: `SELECT count(*) FROM api_idempotency WHERE actor LIKE '%cliente.idem%'` → 0.
-  - Outbox de bienvenida (paso 9): tras el registro, una fila `RABBIT/notificacion.bienvenida/NotificacionBienvenida` validada contra `notificacion.bienvenida.NotificacionBienvenida.v1.schema.json` (0 errores con `jsonschema` Draft 2020-12 y el registro de los `$id` del repo); con Rabbit arriba, `published_at` no nulo y el mensaje en la cola `notificacion.bienvenida` (routing key = canal, `delivery_mode: 2`); reintento idempotente → siguen siendo 2 filas; con el broker parado, el 201 se mantiene, la persona se crea y la fila queda pendiente hasta que vuelve el broker.
+  - Outbox de bienvenida (paso 9): tras el registro, una fila `RABBIT/notificacion.bienvenida/NotificacionBienvenida` validada contra `notificacion.bienvenida.NotificacionBienvenida.v1.schema.json` (0 errores con `jsonschema` Draft 2020-12 y el registro de los `$id` del repo); con Rabbit arriba, `published_at` no nulo y el mensaje en la cola `notificacion.bienvenida` (routing key = canal, `delivery_mode: 2`); reintento idempotente → sigue siendo 1 fila; con el broker parado, el 201 se mantiene, la persona se crea y la fila queda pendiente hasta que vuelve el broker.
   - `GET /api/auth/me` (paso 10): 200 para ADMIN, EMPLEADO (con `sedes:[3]`) y CLIENTE, con `ETag: "1"`; sin token → 401 `UNAUTHENTICATED`; `SELECT count(*) FROM audit_log` antes y después → 0 filas en ambas. Con `X-User-Id`, `X-Role` y `X-Hotel-Id` de otro actor, la respuesta sigue siendo la del `sub` (evidencia del paso 4).
   - `PUT /api/auth/me` (paso 11): con `If-Match: "1"` → 200 y `ETag: "2"`; sin `If-Match` → 428; con `If-Match: "1"` tras el cambio → 412; enviando `sedes` → 400; `fotoUrl` `http://` → 400.
   - `PUT /api/auth/password` (pasos 12 y 13): cambio válido → 200 con `"data":null` y login posterior con la clave nueva; clave actual incorrecta → 400 `CURRENT_PASSWORD_MISMATCH` (`error.fields.claveActual`); clave nueva corta → 400 `PASSWORD_POLICY`; clave nueva igual a la actual → 400 `VALIDATION_ERROR`. Dos `PUT` con la misma `Idempotency-Key` y el mismo body → una sola fila `COMPLETADA` con el mismo 200 y `request_hash` HMAC; ni `request_hash` ni `response` contienen las claves.
@@ -147,7 +147,7 @@ Los contratos solo se han ampliado. Correcto.
 
 ### Alcance de archivos de la rama
 
-`git diff --name-only origin/main..HEAD` devuelve **63 archivos**, todos dentro de la zona que la norma permite a un plan `back`:
+`git diff --name-only origin/main..HEAD` devuelve **64 archivos**, todos dentro de la zona que la norma permite a un plan `back`:
 
 | N.º | Ruta | Zona |
 |---:|---|---|
@@ -156,13 +156,13 @@ Los contratos solo se han ampliado. Correcto.
 | 8 | `services/identity-service/src/test/java/**` | `back`: pruebas |
 | 1 | `services/identity-service/pom.xml` | `back`: solo se añadió `spring-cloud-starter-netflix-eureka-client` sin versión (la aporta el BOM de Spring Cloud); **ninguna versión fijada se tocó** |
 | 1 | `docs/plans/back-identity-auth.md` | el propio plan (siempre permitido) |
-| 9 | `docs/implementacion/decisiones/IA-back-identity-auth-*.md` | bitácora de la IA (siempre permitida) |
+| 10 | `docs/implementacion/decisiones/IA-back-identity-auth-*.md` | bitácora de la IA (siempre permitida) |
 
 Comprobación explícita de que no se salió de zona (todas a 0): `docs/especificacion/**`, `docs/plans/README.md`, `docs/plans/catalogo.md`, `docs/plans/_plantilla.md`, `docs/guia-git.md`, `docs/contracts/**`, `infra/**`, `services/api-gateway/**`, `services/discovery-server/**`, `apps/**`, `tests/**`, `scripts/**`, `.env.example`, `README.md`, `services/pom.xml`. Tampoco hay `openspec/changes/`: el plan es de modo `directo`.
 
 ## 7. Preguntas abiertas
 
-Ninguna (resuelto por IA: la secuencia de `persona` se ajusta en la migración porque el usuario runtime no puede hacer `setval`; las semillas corren en Java porque BCrypt no se calcula en SQL y no se emite `identity.persona.v1`, que es de `back-identity-personas`; los secretos de los cinco clientes de servicio y la clave HMAC de idempotencia reciben nombre propio, la segunda con valor por defecto en el secreto propio del servicio; actor y hash de idempotencia se ajustan por ruta con un gancho en la convención; el login responde 401 genérico también sin cuerpo completo, porque su ruta no declara 400; el rate limit cuenta por par remoto real; el cambio de clave no incrementa `version`; y las pruebas de contexto usan el perfil `test`). Las nueve decisiones están en [`../implementacion/decisiones/`](../implementacion/decisiones/).
+Ninguna (resuelto por IA: la secuencia de `persona` se ajusta en la migración porque el usuario runtime no puede hacer `setval`; las semillas corren en Java porque BCrypt no se calcula en SQL y no se emite `identity.persona.v1`, que es de `back-identity-personas`; los secretos de los cinco clientes de servicio y la clave HMAC de idempotencia reciben nombre propio, la segunda con valor por defecto en el secreto propio del servicio; actor y hash de idempotencia se ajustan por ruta con un gancho en la convención; el login responde 401 genérico también sin cuerpo completo, porque su ruta no declara 400; el rate limit cuenta por par remoto real; el cambio de clave no incrementa `version`; y las pruebas de contexto usan el perfil `test`). Las diez decisiones están en [`../implementacion/decisiones/`](../implementacion/decisiones/).
 
 **No hubo ninguna decisión de contrato.** `docs/contracts/**` no se modificó: `git diff origin/main..HEAD -- docs/contracts/` sale vacío y `python scripts/validar-contratos.py --base origin/main` responde «Los contratos solo se han ampliado. Correcto.». El §5 de este plan anticipaba retocar la descripción del 400 de `PUT /api/auth/password` en `identity.yaml`, pero el contrato publicado ya la traía (líneas 234-243), así que no había ampliación que hacer y no se hizo; por eso no existe entrada de nivel 3 en la bitácora.
 
@@ -185,3 +185,8 @@ volvió a `cerrado` con la evidencia en §6. Lo corregido: (1) el recuento de pr
 comprobación; (3) el defecto del seeder, que sin la clave de demo violaba la FK de `persona_sede` e
 impedía arrancar, corregido y cubierto con pruebas; (4) la falta de la salida real de los comandos
 canónicos y del alcance de archivos, ahora pegados en §6.
+
+
+### Desbloqueo y merge sin revisor
+
+El plan quedó bloqueado en la campaña por la reincidencia del agente revisor (ver [`IA-back-identity-auth-11.md`](../implementacion/decisiones/IA-back-identity-auth-11.md)): el código estaba completo y en verde, pero cinco líneas de recuentos del plan no cuadraban con el diff real. La campaña ya no tiene agente revisor (PR #60), así que el plan se desbloqueó a mano en el PR `desbloqueo-back-identity-auth` corrigiendo esos recuentos (§6: 64 archivos y 10 decisiones; §7: «Las diez decisiones»; la viñeta del outbox: un reintento idempotente deja 1 fila) y se mergeó a `main`.
