@@ -52,3 +52,10 @@ CREATE TABLE service_client (
   audiencias_scopes jsonb        NOT NULL,   -- {"<audiencia>":["scope", ...]}
   estado            boolean      NOT NULL DEFAULT true
 );
+
+-- Los seeds de dev insertan personas con id explícito (1..4, 100 y 101), así que la identidad de
+-- la tabla se deja por detrás del mayor id reservado: "secuencias se ajustan tras IDs explícitos"
+-- (docs/especificacion/microservicios/identity/base-de-datos.md § Seeds).
+-- Se ajusta aquí y no en el seeder porque el usuario runtime solo tiene USAGE/SELECT sobre las
+-- secuencias (infra/postgres/init/01-bases-y-roles.sh): setval exige UPDATE y es del migrador.
+SELECT setval(pg_get_serial_sequence('persona', 'id'), 101, true);

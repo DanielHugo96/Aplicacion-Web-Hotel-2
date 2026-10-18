@@ -10,11 +10,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * Humo de la convención de seguridad y del envelope: 401 con envelope ante token ausente o firma
  * ajena, y {@code X-Correlation-Id} aceptado, generado y devuelto.
+ *
+ * <p>El perfil es {@code test} y no el {@code dev} que trae {@code application.yml}: en dev corren
+ * los seeds de demo, que sí necesitan base de datos.
  */
 @SpringBootTest(
     properties = {
@@ -26,6 +30,7 @@ import org.springframework.test.web.servlet.MockMvc;
       "spring.datasource.hikari.initialization-fail-timeout=-1",
       "hotel.messaging.enabled=false"
     })
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
 class SecurityConventionTests {
 

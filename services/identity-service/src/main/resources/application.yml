@@ -72,6 +72,29 @@ logging:
     root: ${LOG_LEVEL:INFO}
 
 hotel:
+  identity:
+    # Clave privada RS256 fuera de Git: aquí va la ruta, nunca la clave.
+    # Vacía solo se admite en dev/demo (clave efímera); en el resto de perfiles el arranque falla.
+    signing-key-file: ${IDENTITY_SIGNING_KEY_FILE:}
+    jwk-kid: ${IDENTITY_JWK_KID:v1}
+    token-ttl-minutes: ${TOKEN_TTL_MINUTES:15}
+    machine-token-ttl-minutes: ${MACHINE_TOKEN_TTL_MINUTES:5}
+    login-rate-limit-per-minute: ${LOGIN_RATE_LIMIT_PER_MINUTE:5}
+    registro-rate-limit-per-minute: ${REGISTRO_RATE_LIMIT_PER_MINUTE:3}
+    anonimizar-inactivos-anios: ${ANONIMIZAR_INACTIVOS_ANIOS:5}
+    # HMAC del request_hash de los requests con credenciales (registro y cambio de clave).
+    # Por defecto usa el secreto propio del servicio, que ya es obligatorio y vive fuera de Git.
+    idempotency-hmac-key: ${IDENTITY_IDEMPOTENCY_HMAC_KEY:${SERVICE_CLIENT_SECRET:}}
+  demo:
+    # Solo perfiles dev/demo. Sin DEMO_PASSWORD no se siembran credenciales de personas.
+    password: ${DEMO_PASSWORD:}
+    # Secretos de los clientes de servicio que siembra identity, distintos por servicio.
+    service-client-secrets:
+      identity: ${SERVICE_CLIENT_SECRET:}
+      reception: ${SERVICE_CLIENT_RECEPTION_SECRET:}
+      hotel: ${SERVICE_CLIENT_HOTEL_SECRET:}
+      inventory: ${SERVICE_CLIENT_INVENTORY_SECRET:}
+      sales: ${SERVICE_CLIENT_SALES_SECRET:}
   security:
     machine:
       # Token máquina: identity llama a hotel por /internal/**. Secreto fuera de Git.
