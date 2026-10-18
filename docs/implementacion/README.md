@@ -171,22 +171,39 @@ Un `opencode run` por plan, no una sesión para veinte. Si la campaña se corta 
 fallo, el siguiente `python scripts/orquestar.py` retoma exactamente donde se quedó, porque
 `proximo-plan.py` devuelve primero cualquier plan que quedó `en curso`.
 
-### Qué queda bloqueado a nivel de configuración
+### Qué queda bloqueado, y a quién
 
-[`opencode.jsonc`](../../opencode.jsonc) lleva las denegaciones duras, que sobreviven a un
-"Allow always" y no se pueden revocar desde un prompt:
+La división es deliberada: **una regla global que estorba a las personas es una regla mala**, y por
+eso las reglas de la campaña no son globales.
 
-- `git push` solo a ramas `back-*`, `front-*`, `qa-*`, `infra-*` y `docs-estado-*`. Nunca a
-  `main`, nunca con `--force`, nunca borrando.
-- Nada de editar `docs/especificacion/**`, `docs/contracts/errors.md`, `docs/plans/README.md`,
-  `docs/plans/catalogo.md`, `_plantilla.md` ni `docs/guia-git.md`.
-- Ni leer ni escribir `.env`.
+| Dónde | Qué bloquea | A quién |
+|---|---|---|
+| [`opencode.jsonc`](../../opencode.jsonc) (`policies`) | Empujar a `main`, empujar con `--force`, borrar ramas | A todo el mundo, agentes incluidos |
+| [`agents/*.md`](../../.opencode/agents) (`permissions`) | Editar `docs/**` salvo el propio plan, el registro y los contratos; leer o escribir `.env`; `git rebase`, `reset --hard`, `clean`, `branch -D` | Solo a los agentes de la campaña |
+
+Las de `policies` son literalmente la lista de prohibitions de [`guia-git.md`](../guia-git.md), y
+aplican a personas y a agentes por igual. Las de la campaña viven en el frontmatter de cada agente,
+así que **tú puedes seguir enmendando la norma desde tu sesión sin tocar nada**.
+
+Qué puede escribir un agente de la campaña dentro de `docs/`:
+
+- `docs/plans/<plan>.md`, el suyo.
+- `docs/implementacion/**`: el estado, el calendario y la bitácora de decisiones.
+- `docs/contracts/**`: solo de forma aditiva; quitar algo ya publicado es un fallo de
+  `scripts/validar-contratos.py`.
+
+Lo que no puede es `docs/especificacion/**`, `docs/plans/README.md`, `docs/plans/catalogo.md`,
+`_plantilla.md` ni `docs/guia-git.md`. Eso no está en `opencode.jsonc`, sino en cada agente: una
+persona puede enmendar la norma, un agente de la campaña no.
+
+Comprobado con un agente real: escribir su propio plan, la bitácora y un contrato, permitido;
+escribir `docs/plans/catalogo.md` y leer `.env`, bloqueados.
 
 Las versiones fijadas (`services/pom.xml`, `apps/*/package.json`) **no** están bloqueadas por
-configuración, porque un plan legítimo puede necesitar una dependencia nueva y bloquear eso
-haría fracasar la campaña por la vía equivocada. Lo están por otras dos vías: el preflight corta
-si el toolchain no cumple lo que el repo declara, y el agente revisor rechaza cualquier diff que
-las toque.
+configuración, porque un plan legítimo puede necesitar una dependencia nueva y bloquear eso haría
+fracasar la campaña por la vía equivocada. Lo están por otras dos vías: el preflight corta si el
+toolchain no cumple lo que el repo declara, y el agente revisor rechaza cualquier diff que las
+toque.
 
 ### Por qué existe el preflight
 

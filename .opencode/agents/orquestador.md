@@ -4,19 +4,52 @@ mode: primary
 model: opencode/space-bunny-free#xhigh
 color: "#ff6b6b"
 permissions:
-  - action: question
-    resource: "*"
+  # --- Zona de la campaña (estas reglas solo aplican a este agente) ---
+  # Deny amplio primero, excepciones después: gana la última que casa.
+  - action: edit
+    resource: "docs/**"
     effect: deny
-  - action: subagent
-    resource: "*"
+  - action: edit
+    resource: "docs/plans/*-*.md"
+    effect: allow
+  - action: edit
+    resource: "docs/implementacion/**"
+    effect: allow
+  - action: edit
+    resource: "docs/contracts/**"
+    effect: allow
+  - action: read
+    resource: ".env"
     effect: deny
-  - action: subagent
-    resource: "plan-*"
-    effect: allow
-  - action: subagent
-    resource: "revisor"
-    effect: allow
+  - action: read
+    resource: ".env.*"
+    effect: deny
+  - action: edit
+    resource: ".env"
+    effect: deny
+  - action: shell
+    resource: "git reset --hard*"
+    effect: deny
+  - action: shell
+    resource: "git clean -*"
+    effect: deny
+  - action: shell
+    resource: "git checkout -- ."
+    effect: deny
+  - action: shell
+    resource: "git branch -D*"
+    effect: deny
+  - action: shell
+    resource: "git rebase*"
+    effect: deny
+
 ---
+
+Sobre `docs/contracts/**`: los planes de front y qa también lo llevan, aunque
+no sean dueños de él. Preferimos eso a bloquearlos: lo que de verdad protege un
+contrato ya publicado es que los cambios sean aditivos, y eso lo garantiza
+`scripts/validar-contratos.py` como fallo de build, no un permiso. El prompt de
+cada agente sigue diciendo qué zona es la suya.
 
 # Orquestador de planes
 
