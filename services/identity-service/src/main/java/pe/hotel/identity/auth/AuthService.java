@@ -13,6 +13,7 @@ import pe.hotel.identity.persona.DatosPersona;
 import pe.hotel.identity.persona.Persona;
 import pe.hotel.identity.persona.PersonaRepository;
 import pe.hotel.identity.platform.ApiException;
+import pe.hotel.identity.platform.CorrelationId;
 import pe.hotel.identity.platform.ErrorCode;
 
 /**
@@ -31,12 +32,17 @@ public class AuthService {
   private final PersonaRepository personas;
   private final PasswordEncoder passwordEncoder;
   private final TokenIssuer tokens;
+  private final BienvenidaNotifier bienvenida;
 
   public AuthService(
-      PersonaRepository personas, PasswordEncoder passwordEncoder, TokenIssuer tokens) {
+      PersonaRepository personas,
+      PasswordEncoder passwordEncoder,
+      TokenIssuer tokens,
+      BienvenidaNotifier bienvenida) {
     this.personas = personas;
     this.passwordEncoder = passwordEncoder;
     this.tokens = tokens;
+    this.bienvenida = bienvenida;
   }
 
   /**
@@ -109,6 +115,8 @@ public class AuthService {
     }
 
     Persona persona = crearCliente(tipoDocumento, documento, nombre, apellido, correo, clave);
+    // Misma transacción: si la persona se crea, la bienvenida queda encolada.
+    bienvenida.encolar(persona, CorrelationId.current());
     log.info("registro_ok id_persona={} rol=CLIENTE", persona.id());
     return PersonaView.de(persona);
   }
