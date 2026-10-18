@@ -95,13 +95,17 @@ public class DemoDataSeeder implements ApplicationRunner {
   @Override
   @Transactional
   public void run(ApplicationArguments args) {
+    // El catálogo fijo de roles no depende de credenciales, así que va siempre.
     sembrarRoles();
     if (demo.getPassword() == null || demo.getPassword().isBlank()) {
       log.info("seed_demo personas_omitidas motivo=demo_password_ausente");
     } else {
+      // Personas y sedes van juntas: `persona_sede.id_persona` tiene FK a `persona`, así que sembrar
+      // sedes sin personas rompe el arranque por FK y la transacción de `run()` no llega a confirmar.
       sembrarPersonas();
+      sembrarSedes();
     }
-    sembrarSedes();
+    // Los clientes de servicio no dependen de personas y sí tienen su propio secreto por entorno.
     sembrarClientesDeServicio();
   }
 
