@@ -257,8 +257,8 @@ def comprobar() -> list[Resultado]:
                 res.append(Resultado(
                     "java fijada", False,
                     f"el PATH usa Java {real or 'nada'}, pero el {declarada} sí está instalado en "
-                    f"{encontrado}. La campaña lo resuelve sola (orquestar.py). Para dejarlo bien en "
-                    f"tu máquina, apunta JAVA_HOME ahí y reinicia OpenCode. "
+                    f"{encontrado}. Las ejecutoras lo resuelven solas con scripts/mvn.sh. "
+                    f"Para dejarlo bien en tu máquina, apunta JAVA_HOME ahí y reinicia OpenCode. "
                     f"NUNCA cambies services/pom.xml para que el build pase.",
                     bloqueante=False, aviso=True))
             else:
@@ -288,10 +288,22 @@ def comprobar() -> list[Resultado]:
     res.append(Resultado("docker", ok, detalle if ok else
                          f"{detalle}. Arranca Docker Desktop antes de la campaña."))
 
-    # 4. Git: no trabajar sobre main, ni con cambios sin commitear.
+    # 4. Git. La campaña **empieza** en main: el orquestador hace
+    #    `git switch main && git pull` y de ahí saca la rama de cada plan. Por
+    #    eso estar en main no es un problema. Lo que sí lo es es quedarse a
+    #    medias de un merge o tener cambios sin commitear.
     rama = rama_actual()
-    res.append(Resultado("rama", rama != "main",
-                         f"en {rama}" if rama != "main" else "está en main: nadie trabaja aquí"))
+    res.append(Resultado("rama", True,
+                         f"en {rama} (el orquestador empieza aquí y saca la rama de cada plan)"))
+
+    a_medias = []
+    if (RAIZ / ".git" / "MERGE_HEAD").exists():
+        a_medias.append("hay un merge a medias")
+    if (RAIZ / ".git" / "rebase-merge").is_dir() or (RAIZ / ".git" / "rebase-apply").is_dir():
+        a_medias.append("hay un rebase a medias")
+    res.append(Resultado("git limpio", not a_medias,
+                         "sin operaciones a medias" if not a_medias
+                         else f"{', '.join(a_medias)}: termina o aborta eso antes de empezar"))
 
     sucio = arbol_sucio()
     res.append(Resultado("árbol limpio", not sucio,

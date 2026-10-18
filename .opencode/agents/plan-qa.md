@@ -184,8 +184,10 @@ Están en la sección «Verificación» del `README.md` raíz. Usa esos y solo e
 además suele necesitar la infraestructura en pie:
 
 ```bash
+bash scripts/mvn.sh -f services/pom.xml verify
 docker compose -f infra/compose.yaml --env-file .env up -d --wait
 python scripts/validar-planes.py
+python scripts/validar-contratos.py --base origin/main
 ```
 
 Lee esa sección al empezar para tener los comandos exactos a mano.

@@ -30,9 +30,12 @@ Estos son los comandos canónicos: los demás documentos y planes los citan tal 
 **1. Build del backend** (los nueve módulos; usa el Maven Wrapper de la raíz):
 
 ```bash
-./mvnw -f services/pom.xml verify          # Linux/macOS
-mvnw.cmd -f services/pom.xml verify        # Windows
+bash scripts/mvn.sh -f services/pom.xml verify    # Linux, macOS y Windows
 ```
+
+`scripts/mvn.sh` es el Maven Wrapper con una diferencia: localiza el JDK que fija
+`services/pom.xml` y lo exporta. Si el PATH de tu sesión apunta a otro major, el `mvnw` a pelo
+falla por un motivo que no es del código. Funciona igual sin cambiar nada en tu máquina.
 
 Resultado esperado: `BUILD SUCCESS` de los nueve módulos (incluye las pruebas de contexto).
 

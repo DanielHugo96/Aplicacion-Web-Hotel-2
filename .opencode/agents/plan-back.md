@@ -186,7 +186,14 @@ detecta, no sigas.
 Están en la sección «Verificación» del `README.md` raíz. Usa esos y solo esos; no inventes
 comandos nuevos:
 
-- Backend (Windows): `mvnw.cmd -f services/pom.xml verify` · (Linux/macOS): `./mvnw -f services/pom.xml verify`
+- Backend: `bash scripts/mvn.sh -f services/pom.xml verify`
+
+  Usa **siempre** `scripts/mvn.sh`, nunca el `mvnw` a pelo. El proyecto fija Java 25 y el PATH de
+  esta sesión puede apuntar a otro major; el envoltorio localiza el correcto y lo exporta. Con el
+  `mvnw` a pelo el build falla por un motivo que no es del código, y lo mas tipico en un
+  agente es bajar `<release>25</release>` en `services/pom.xml` para que pase. Eso destruye el
+  stack fijado. Si `mvn.sh` dice que no hay ningún JDK 25 instalado, es un bloqueo de entorno:
+  dilo y sigue, no lo arregles en el código.
 - Compose: `docker compose -f infra/compose.yaml --env-file .env config` y `... up -d --wait`
 - Validador de planes: `python scripts/validar-planes.py`
 

@@ -158,18 +158,52 @@ Los 20 planes pendientes se ejecutan sin intervención humana. Los agentes viven
 El orquestador y el revisor corren con la herramienta de preguntar deshabilitada por
 configuración. "No preguntar" no es una instrucción del prompt: es una prohibición.
 
-### Cómo se conduce
+### Cómo se conduce: desde OpenCode
 
-```bash
-python scripts/preflight.py        # comprueba la máquina. Si falla, no se arranca.
-python scripts/proximo-plan.py     # dice cuál es el siguiente plan. No lo elige un modelo.
-python scripts/orquestar.py        # ejecuta ese plan y para.
-python scripts/orquestar.py --todos --max 5   # encadena hasta cinco planes.
+La campaña se maneja **desde una sesión de OpenCode**, no desde un script. El guion es este:
+
+1. Abre OpenCode en el repositorio.
+2. Selecciona el agente **`orquestador`** (con Tab, o escribiéndolo en el selector).
+3. Elige el modelo **Space Bunny**.
+4. Escribe `/campana`, o simplemente dile `ejecuta la campaña`.
+
+A partir de ahí el orquestador hace todo lo demás sin preguntar nada:
+
+```
+python scripts/preflight.py        # precondiciones; si falla, para y dice cuál
+git switch main && git pull        # se sitúa
+                                    # y repite:
+                                    #   proximo-plan.py  → qué toca
+                                    #   switch -c <plan> → reclamar
+                                    #   Task → plan-back | plan-front | plan-qa
+                                    #   Task → revisor
+                                    #   gh pr merge + PR docs: de estado
 ```
 
-Un `opencode run` por plan, no una sesión para veinte. Si la campaña se corta por cuota o por un
-fallo, el siguiente `python scripts/orquestar.py` retoma exactamente donde se quedó, porque
-`proximo-plan.py` devuelve primero cualquier plan que quedó `en curso`.
+**El orden de los planes no lo decide el orquestador**: lo calcula `scripts/proximo-plan.py`
+leyendo el `Estado` y el `Depende de`. El orquestador no elige, no salta y no improvisa.
+
+Puedes acortar la campaña cuando quieras: `/campana back-identity-auth` la limita a un plan,
+`/campana 3` a tres. Y si lo interrumpes, al volver a escribir `/campana` retoma por donde iba,
+porque el script devuelve primero cualquier plan que quedó `en curso`.
+
+### Ver lo que está pasando
+
+Todo lo que hacen las ejecutoras ocurre en **sesiones hijas**, que desde la TUI se siguen con
+<kbd>Leader</kbd>+<kbd>↓</kbd> (la primera) y <kbd>→</kbd>/<kbd>←</kbd> para ciclo. Ahí se ve el
+razonamiento paso a paso de cada una, que es lo que el padre no recibe.
+
+### El runner sin supervisión
+
+[`scripts/orquestar.py`](../../scripts/orquestar.py) hace lo mismo en un bucle por proceso, para
+dejar la campaña corriendo desatendida: arranca un servidor privado por plan, fija el modelo por
+flag y comprueba al final que el plan quedó cerrado. Es opcional; la vía normal es el agente.
+
+```bash
+python scripts/orquestar.py                  # un plan
+python scripts/orquestar.py --todos          # hasta que no quede ninguno
+python scripts/orquestar.py --todos --seguir # enseñando lo que piensa el orquestador
+```
 
 ### Qué queda bloqueado, y a quién
 
@@ -207,11 +241,20 @@ toque.
 
 ### Por qué existe el preflight
 
-El proyecto fija Java 25 y tú tienes Java 17. Un build falla y una IA muy lista lo lee como "el
-proyecto está mal", baja `<release>25</release>` a 17 y todo queda en verde con el stack
-destruido. `preflight.py` comprueba la máquina contra lo que declara el propio repositorio y
-corta antes de que un agente toque nada. **Ninguna de sus precondiciones se arregla desde un
-agente.**
+El proyecto fija Java 25. Si el PATH de la sesión apunta a otro major, `mvnw verify` falla por un
+motivo que no es del código, y lo más típico en un agente es leerlo como "el proyecto está mal" y
+bajar `<release>25</release>` para que pase. Eso destruye el stack fijado sin que nada avise.
+
+Hay dos defensas, y las dos hacen falta:
+
+- `scripts/preflight.py` comprueba la máquina contra lo que declara el propio repositorio y avisa
+  o corta antes de que un agente toque nada.
+- [`scripts/mvn.sh`](../../scripts/mvn.sh) localiza el JDK correcto entre los instalados y lo
+  exporta en cada invocación de Maven. **Las ejecutoras lo usan siempre en vez del `mvnw` a
+  pelo**, así que da igual desde dónde se lance la campaña. No toca la configuración de la
+  máquina.
+
+Ninguna de las dos repara el entorno: eso lo hace una persona.
 
 ### Lo que la campaña no puede hacer
 

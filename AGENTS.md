@@ -26,9 +26,15 @@ Instrucciones para agentes de IA que trabajan en este repositorio.
 
 ## Campaña automática por IA
 
-Los agentes de IA de este repositorio viven en [`.opencode/agents/`](.opencode/agents) y las reglas duras que no pueden negociación en [`opencode.jsonc`](opencode.jsonc). Si eres un agente trabajando en este repositorio:
+La campaña se maneja **desde una sesión de OpenCode**: se elige el agente `orquestador`, se elige
+el modelo Space Bunny y se escribe `/campana`. Los agentes viven en [`.opencode/agents/`](.opencode/agents),
+el comando en [`.opencode/commands/campana.md`](.opencode/commands/campana.md) y las reglas que no
+se pueden negociar en [`opencode.jsonc`](opencode.jsonc).
+
+Si eres un agente trabajando en este repositorio:
 
 - **No decidas el orden de los planes.** Léelo de `python scripts/proximo-plan.py`.
+- **Usa `bash scripts/mvn.sh` para Maven, nunca `mvnw` a pelo.** El proyecto fija Java 25 y el PATH puede apuntar a otro.
 - **No preguntes.** Tu configuración no te lo permite. Aplica el protocolo de decisión de tres niveles de [`docs/plans/README.md`](docs/plans/README.md) §6.11: decide y sigue (nivel 1), decide y registra en [`docs/implementacion/decisiones/`](docs/implementacion/decisiones/) (nivel 2), o marca bloqueado y pasa al plan siguiente (nivel 3).
 - **No inventes** endpoints, eventos, códigos de error, reglas ni valores. Eso está prohibido en los tres niveles.
 - **No toques** las versiones fijadas (`services/pom.xml`, `apps/*/package.json`, el `README.md` raíz). Si el build falla por el entorno, es un bloqueo, no un plan.
