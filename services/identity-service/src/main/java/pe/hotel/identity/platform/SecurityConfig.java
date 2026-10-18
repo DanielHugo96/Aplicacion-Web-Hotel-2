@@ -28,6 +28,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import pe.hotel.identity.auth.MachineTokenBasicAuthenticationFilter;
 import pe.hotel.identity.auth.SigningKeys;
 
 /**
@@ -47,7 +49,8 @@ public class SecurityConfig {
   SecurityFilterChain securityFilterChain(
       HttpSecurity http,
       RestAuthenticationEntryPoint authenticationEntryPoint,
-      RestAccessDeniedHandler accessDeniedHandler)
+      RestAccessDeniedHandler accessDeniedHandler,
+      MachineTokenBasicAuthenticationFilter machineTokenBasicFilter)
       throws Exception {
     http
         .csrf(AbstractHttpConfigurer::disable)
@@ -90,6 +93,9 @@ public class SecurityConfig {
                 oauth
                     .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter()))
                     .authenticationEntryPoint(authenticationEntryPoint))
+        // La emisión del token máquina se autentica con Basic de cliente de servicio, antes de que
+        // el filtro de token intente interpretar esa cabecera como un JWT.
+        .addFilterBefore(machineTokenBasicFilter, UsernamePasswordAuthenticationFilter.class)
         .exceptionHandling(
             handling ->
                 handling

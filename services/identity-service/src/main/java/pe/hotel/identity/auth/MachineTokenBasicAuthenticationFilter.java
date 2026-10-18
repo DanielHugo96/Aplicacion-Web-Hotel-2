@@ -21,7 +21,9 @@ import pe.hotel.identity.platform.ResponseWriter;
  * contra el {@code secret_hash} BCrypt de {@code service_client}.
  *
  * <p>Cualquier otra credencial es {@code 401 UNAUTHENTICATED}: ausente, Basic inválido, cliente
- * desconocido o inactivo, o un JWT de persona (que no sirve para /internal/**).
+ * desconocido o inactivo, o un JWT de persona (que no sirve para /internal/**). Va dentro de la
+ * cadena de seguridad, antes del filtro de token, para que la identidad que deja puesta la vea el
+ * resto de la petición.
  * Ver docs/especificacion/03-contrato-comun.md § Servicio a servicio.
  */
 public class MachineTokenBasicAuthenticationFilter extends OncePerRequestFilter {
@@ -58,11 +60,7 @@ public class MachineTokenBasicAuthenticationFilter extends OncePerRequestFilter 
       return;
     }
     SecurityContextHolder.getContext().setAuthentication(autenticado.get());
-    try {
-      filterChain.doFilter(request, response);
-    } finally {
-      SecurityContextHolder.clearContext();
-    }
+    filterChain.doFilter(request, response);
   }
 
   private Optional<ServiceClientAuthentication> autenticar(HttpServletRequest request) {
