@@ -174,8 +174,8 @@ class NotificationSchemaIT {
     assertThat(tomado.get("attempts")).isEqualTo(1);
     UUID token = (UUID) tomado.get("lease_token");
     assertThat(token).isNotNull();
-    assertThat((java.time.OffsetDateTime) tomado.get("lease_until"))
-        .isAfter(java.time.OffsetDateTime.now().plusSeconds(50));
+    assertThat(((java.sql.Timestamp) tomado.get("lease_until")).toInstant())
+        .isAfter(java.time.Instant.now().plusSeconds(50));
 
     // Primer fallo: vuelve a PENDIENTE con la primera espera.
     resultado(id, token, false);

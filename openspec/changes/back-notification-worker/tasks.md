@@ -5,7 +5,7 @@ Los 12 tasks corresponden, en el mismo orden, a los 12 pasos de `docs/plans/back
 ## 1. Servicio y persistencia
 
 - [x] 1.1 Dar de alta `services/notification-service/` con la estructura del monorepo y las versiones fijadas (Java 25, Spring Boot 4.1.1, Spring Cloud 2025.1.3, PostgreSQL 18.6, RabbitMQ 4.3.6): perfil dev, Flyway, registro en Eureka y convenciones mergeadas de `back-plataforma-comunes` y `back-plataforma-mensajeria`. Verificación: el build del monorepo compila el módulo; con PostgreSQL arriba el servicio arranca en dev, se registra en Eureka y `GET /actuator/health/liveness` responde 200.
-- [ ] 1.2 Migración V1 de `notification_db` con `notification_job` y `template` del DDL de referencia, con sus CHECK, el índice por estado y `next_attempt_at` y la unicidad de `message_id`, más `inbox` y `audit_log` del DDL común y los tres procedimientos con las firmas fijadas. Verificación: la migración aplica sobre una base vacía; pruebas SQL demuestran que ENVIANDO sin lease falla por CHECK, que ENVIADA sin destinatario pasa pero PENDIENTE sin destinatario falla, y que dos jobs con el mismo `message_id` fallan por unicidad.
+- [x] 1.2 Migración de `notification_db` con `notification_job` y `template` del DDL de referencia, con sus CHECK, el índice por estado y `next_attempt_at` y la unicidad de `message_id`, más `inbox` y `audit_log` del DDL común y los tres procedimientos con las firmas fijadas. Verificación: la migración aplica sobre una base vacía; pruebas SQL demuestran que ENVIANDO sin lease falla por CHECK, que ENVIADA sin destinatario pasa pero PENDIENTE sin destinatario falla, y que dos jobs con el mismo `message_id` fallan por unicidad.
 
 ## 2. Seguridad sin rutas de negocio
 
