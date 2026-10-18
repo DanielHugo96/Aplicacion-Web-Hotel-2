@@ -6,7 +6,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import pe.hotel.identity.platform.ApiResponse;
@@ -46,6 +48,21 @@ public class AuthController {
   @GetMapping("/me")
   public ResponseEntity<ApiResponse<PersonaView>> me(@AuthenticationPrincipal Jwt jwt) {
     PersonaView persona = authService.miPerfil(jwt.getSubject());
+    return ResponseEntity.ok()
+        .eTag(ETag.de(persona.version()))
+        .body(ApiResponse.ok(persona, Meta.of(CorrelationId.current())));
+  }
+
+  /**
+   * Edita el perfil propio: 200 con la {@code version} incrementada, 428 sin {@code If-Match} y 412
+   * con una versión que no es la vigente. Solo nombre, apellido y fotoUrl.
+   */
+  @PutMapping("/me")
+  public ResponseEntity<ApiResponse<PersonaView>> actualizarPerfil(
+      @AuthenticationPrincipal Jwt jwt,
+      @RequestHeader(name = "If-Match", required = false) String ifMatch,
+      @RequestBody PerfilRequest request) {
+    PersonaView persona = authService.actualizarPerfil(jwt.getSubject(), request, ifMatch);
     return ResponseEntity.ok()
         .eTag(ETag.de(persona.version()))
         .body(ApiResponse.ok(persona, Meta.of(CorrelationId.current())));

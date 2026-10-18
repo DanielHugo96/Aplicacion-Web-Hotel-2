@@ -90,11 +90,85 @@ public class AuthService {
    * @throws ApiException {@code RESOURCE_NOT_FOUND} si el token es válido pero la persona no existe
    */
   public PersonaView miPerfil(String sub) {
+    return personas.buscarPorId(idDe(sub)).map(PersonaView::de).orElseThrow(
+        () -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND));
+  }
+
+  /** {@code sub} del token: un id de persona. Un valor que no lo es deja de ser una sesión válida. */
+  private int idDe(String sub) {
     if (sub == null || sub.isBlank() || !sub.chars().allMatch(Character::isDigit)) {
       throw new ApiException(ErrorCode.UNAUTHENTICATED);
     }
-    return personas.buscarPorId(Integer.parseInt(sub)).map(PersonaView::de).orElseThrow(
-        () -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND));
+    return Integer.parseInt(sub);
+  }
+
+  /**
+   * Edita el perfil propio: nombre, apellido y fotoUrl. Exige {@code If-Match} y, con la versión
+   * vigente, incrementa {@code version}. Rol, sedes, documento y estado no se tocan: el JSON cerrado
+   * los rechaza antes de llegar aquí.
+   *
+   * @throws ApiException {@code PRECONDITION_REQUIRED} sin {@code If-Match}, {@code
+   *     PRECONDITION_FAILED} si la versión no es la vigente, {@code VALIDATION_ERROR} por formato
+   */
+  @Transactional
+  public PersonaView actualizarPerfil(String sub, PerfilRequest request, String ifMatch) {
+    if (ifMatch == null || ifMatch.isBlank()) {
+      throw new ApiException(ErrorCode.PRECONDITION_REQUIRED, Map.of("If-Match", "obligatorio"));
+    }
+    long versionEsperada = ETag.versionDe(ifMatch);
+    Map<String, String> errores = validarPerfil(request);
+    if (!errores.isEmpty()) {
+      throw new ApiException(ErrorCode.VALIDATION_ERROR, errores);
+    }
+    if (versionEsperada < 1) {
+      throw new ApiException(
+          ErrorCode.PRECONDITION_FAILED,
+          Map.of("If-Match", "la versión enviada no es la vigente"));
+    }
+    int id = idDe(sub);
+    int afectadas =
+        personas.actualizarPerfil(
+            id,
+            request.nombre().trim(),
+            request.apellido().trim(),
+            request.fotoUrl(),
+            versionEsperada);
+    if (afectadas == 0) {
+      throw new ApiException(
+          ErrorCode.PRECONDITION_FAILED,
+          Map.of("If-Match", "la versión enviada no es la vigente"));
+    }
+    Persona actualizada = personas.leerDespuesDeActualizar(id);
+    log.info("perfil_actualizado id_persona={} version={}", id, actualizada.version());
+    return PersonaView.de(actualizada);
+  }
+
+  private Map<String, String> validarPerfil(PerfilRequest request) {
+    Map<String, String> errores = new LinkedHashMap<>();
+    if (!DatosPersona.textoValido(request.nombre(), DatosPersona.MAX_NOMBRE)) {
+      errores.put("nombre", "obligatorio, hasta 100 caracteres");
+    }
+    if (!DatosPersona.textoValido(request.apellido(), DatosPersona.MAX_NOMBRE)) {
+      errores.put("apellido", "obligatorio, hasta 100 caracteres");
+    }
+    if (!fotoUrlValida(request.fotoUrl())) {
+      errores.put("fotoUrl", "null, o una URL https o de /assets/ de hasta 500 caracteres");
+    }
+    return errores;
+  }
+
+  /**
+   * La foto es una referencia, no una descarga: solo se admiten {@code https} o rutas {@code /assets/}
+   * (docs/especificacion/03-contrato-comun.md § Límites de campos comunes). El backend nunca
+   * descarga una URL arbitraria.
+   */
+  private boolean fotoUrlValida(String fotoUrl) {
+    if (fotoUrl == null) {
+      return true;
+    }
+    String valor = fotoUrl.trim();
+    return valor.length() <= 500
+        && (valor.startsWith("https://") || valor.startsWith("/assets/"));
   }
 
   @Transactional
