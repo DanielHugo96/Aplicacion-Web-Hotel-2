@@ -4,12 +4,45 @@ mode: subagent
 model: opencode/space-bunny-free#max
 color: "#4f9cf9"
 permissions:
-  - action: question
-    resource: "*"
+  # --- Zona de la campaña (estas reglas solo aplican a este agente) ---
+  # Deny amplio primero, excepciones después: gana la última que casa.
+  - action: edit
+    resource: "docs/**"
     effect: deny
-  - action: subagent
-    resource: "*"
+  - action: edit
+    resource: "docs/plans/*-*.md"
+    effect: allow
+  - action: edit
+    resource: "docs/implementacion/**"
+    effect: allow
+  - action: edit
+    resource: "docs/contracts/**"
+    effect: allow
+  - action: read
+    resource: ".env"
     effect: deny
+  - action: read
+    resource: ".env.*"
+    effect: deny
+  - action: edit
+    resource: ".env"
+    effect: deny
+  - action: shell
+    resource: "git reset --hard*"
+    effect: deny
+  - action: shell
+    resource: "git clean -*"
+    effect: deny
+  - action: shell
+    resource: "git checkout -- ."
+    effect: deny
+  - action: shell
+    resource: "git branch -D*"
+    effect: deny
+  - action: shell
+    resource: "git rebase*"
+    effect: deny
+
 ---
 
 # Ejecutora de planes `back` e `infra`

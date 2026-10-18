@@ -1,105 +1,47 @@
 {
   // Configuración de OpenCode para este repositorio.
   //
-  // Existe por la campaña de ejecución automática de planes (ver
-  // docs/implementacion/README.md §6, decisión 4, y §9). Los agentes viven en
-  // .opencode/agents/*.md; aquí solo va lo que un archivo de agente no puede
-  // declarar: las `policies`, que son denegaciones duras. Sobreviven a un
-  // "Allow always", no se pueden revocar desde un prompt y no las puede
-  // esquivar ni el agente más listo.
+  // Aquí hay muy poco a propósito. Antes esto tenía casi cuarenta reglas y
+  // bloqueaba el trabajo normal del equipo, porque `policies` son GLOBALES:
+  // las cumple todo el que abra el repositorio, no solo la campaña. Amendiar la
+  // norma o leer el `.env` desde una sesión normal quedaba bloqueado, y eso no
+  // lo arregla ninguna cantidad de reglas bien escritas.
   //
-  // Para trabajar a mano con credenciales, comenta la línea de `read:.env`.
+  // La división que se aplica ahora es:
+  //
+  //   - Aquí (`policies`): lo que daña el repositorio sea quien lo haga.
+  //     Solo git: no se empuja a `main`, no se reescribe historia, no se borran
+  //     ramas. Es literalmente la lista de `docs/guia-git.md`, y aplica a
+  //     personas y a agentes por igual.
+  //
+  //   - En `.opencode/agents/*.md` (`permissions`): lo que solo le importa a la
+  //     campaña, como no tocar la especificación ni los documentos de la norma.
+  //     Cada agente lleva sus propias reglas, así que una persona puede seguir
+  //     enmendando la norma desde su sesión sin commenting nada de aquí.
+  //
+  // Las políticas sobrevivían a un "Allow always"; los permisos de un agente
+  // seaskedit con "Allow always", pero solo por ese agente. Para la campaña eso
+  // da igual: nadie va a pulsarlo.
   "$schema": "https://opencode.ai/config.json",
 
   "policies": [
-    // ---------------------------------------------------------------------
-    // Documentos que NADIE puede editar al ejecutar un plan (norma §6.4).
-    //
-    // errors.md ya NO esta aqui. Durante la campana puede ampliarse, porque
-    // una decision de contrato necesita a veces un codigo que no existe; pero
-    // solo de forma aditiva. validar-contratos.py falla si desaparece cualquiera
-    // de los que ya estaban. Esa es la diferencia entre decidir y romper: anadir
-    // se permite, quitar no, y la garantia es un fallo de build, no una instruccion
-    // que el modelo pueda desobedecer.
-    //
-    // Bloquean la herramienta de escritura...
-    // ---------------------------------------------------------------------
-    { "action": "tool.use", "resource": "edit:docs/especificacion/**", "effect": "deny" },
-        { "action": "tool.use", "resource": "edit:docs/plans/README.md", "effect": "deny" },
-    { "action": "tool.use", "resource": "edit:docs/plans/_plantilla.md", "effect": "deny" },
-    { "action": "tool.use", "resource": "edit:docs/plans/catalogo.md", "effect": "deny" },
-    { "action": "tool.use", "resource": "edit:docs/guia-git.md", "effect": "deny" },
-
-    // Sin estas reglas, `edit: deny` es solo papel: bastaría con
-    // `echo x > docs/plans/README.md` para saltárselo. Cada ruta lleva DOS
-    // patrones porque el escáner no los unifica: `>` y `>>` no casan con el
-    // mismo patrón. Verificado en opencode v2.0.32: `*>` no cubre `>>`.
-    { "action": "tool.use", "resource": "shell:* > docs/especificacion/*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* >> docs/especificacion/*", "effect": "deny" },
-            { "action": "tool.use", "resource": "shell:* > docs/plans/README.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* >> docs/plans/README.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* > docs/plans/_plantilla.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* >> docs/plans/_plantilla.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* > docs/plans/catalogo.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* >> docs/plans/catalogo.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* > docs/guia-git.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* >> docs/guia-git.md*", "effect": "deny" },
-
-    // ---------------------------------------------------------------------
-    // Credenciales: ni se escriben ni se leen.
-    // ---------------------------------------------------------------------
-    { "action": "tool.use", "resource": "read:.env", "effect": "deny" },
-    { "action": "tool.use", "resource": "read:.env.*", "effect": "deny" },
-    { "action": "tool.use", "resource": "edit:.env", "effect": "deny" },
-    { "action": "tool.use", "resource": "edit:.env.*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* > .env", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* >> .env", "effect": "deny" },
-    { "action": "tool.use", "resource": "read:~/.ssh/**", "effect": "deny" },
-
-    // ---------------------------------------------------------------------
-    // git push: se puede a cualquier rama, nunca a `main` ni forzando.
-    //
-    // Gana la ÚLTIMA regla que casa, así que el allow va primero y las
-    // denegaciones al final. Con ese orden, `git push -u origin back-x
-    // --force` casa con el allow y con la denegación de --force, y manda la
-    // última.
-    //
-    // Antes esto era una lista blanca de prefijos (back-*, front-*, qa-*...),
-    // y era un error: bloqueaba el trabajo normal de las personas, porque sus
-    // ramas no se llaman así (`cierre-infra-monorepo`, `registro-ejecucion`...).
-    // Lo que hay que proteger no es el nombre de la rama, son tres cosas
-    // concretas: `main`, la reescritura de historia y el borrado de ramas.
-    //
-    // Que un agente pueda tocar una rama que no es la suya lo regulate el
-    // prompt, no la configuración: la campaña va en serie y cada agente solo
-    // trabaja la suya.
-    // ---------------------------------------------------------------------
+    // Se puede empujar a cualquier rama menos a main.
+    // Gana la ÚLTIMA regla que casa: el allow va primero y las denegaciones al
+    // final, para que `git push -u origin back-x --force` acabe denegado.
     { "action": "tool.use", "resource": "shell:git push *", "effect": "allow" },
+
+    // No reescribir historia, no borrar ramas. Mismo criterio que
+    // docs/guia-git.md, que dice que no se hace nunca.
     { "action": "tool.use", "resource": "shell:git push *--force*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:git push * -f*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:git push *--delete*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:git push * -d*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git push * main", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git push * main:*", "effect": "deny" },
-    // Las tres de arriba parecen equivalentes y no lo son. Comprobado en
-    // opencode v2.0.32: `git push * main` NO casa con `git push origin main`,
-    // así que esa regla era decorativa. Las tres variantes siguientes sí
-    // casan. Se dejan las tres a propósito: es defensa en profundidad, y
-    // perder esta protección por confiar en un patrón que no casa sería un
-    // desastre. Verificado con `git push origin main` y
-    // `git push origin main:main`.
-    { "action": "tool.use", "resource": "shell:git push * main*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git push origin main", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git push *main", "effect": "deny" },
 
-    // ---------------------------------------------------------------------
-    // Historia destructiva.
-    // ---------------------------------------------------------------------
-    { "action": "tool.use", "resource": "shell:git reset --hard*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git reset --keep*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git clean -*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git checkout -- .", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git branch -D*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git rebase*", "effect": "deny" }
+    // Nunca a main. Dos variantes porque en opencode v2.0.32 el emparejamiento
+    // de comodines es más fino de lo que parece: `git push * main` NO casa con
+    // `git push origin main`, y se comprobó. Con estas dos, los dos casos
+    // quedan bloqueados (verificado con servidor privado).
+    { "action": "tool.use", "resource": "shell:git push * main*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push * main:*", "effect": "deny" }
   ]
 }
