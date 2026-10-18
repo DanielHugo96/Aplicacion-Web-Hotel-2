@@ -40,14 +40,18 @@ public class PersonaRepository {
 
   /** Persona por correo normalizado, con sus sedes; vacía si no existe o está inactiva. */
   public Optional<Persona> buscarPorCorreo(String correo) {
-    return Optional.ofNullable(jdbcTemplate.queryForObject(
-        SELECT_BASE + " WHERE p.correo = ?", mapper(), correo));
+    return primero(SELECT_BASE + " WHERE p.correo = ?", correo);
   }
 
   /** Persona por id, con sus sedes. */
   public Optional<Persona> buscarPorId(int id) {
-    return Optional.ofNullable(
-        jdbcTemplate.queryForObject(SELECT_BASE + " WHERE p.id = ?", mapper(), id));
+    return primero(SELECT_BASE + " WHERE p.id = ?", id);
+  }
+
+  private Optional<Persona> primero(String sql, Object... argumentos) {
+    // queryForObject lanza EmptyResultDataAccessException si no hay fila: aquí "no existe" es un
+    // valor normal, no un fallo.
+    return jdbcTemplate.query(sql, mapper(), argumentos).stream().findFirst();
   }
 
   public boolean existeCorreo(String correo) {
