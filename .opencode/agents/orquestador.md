@@ -71,12 +71,17 @@ Si no hay ningún plan en el mensaje, no hagas nada y responde `NO_PLAN`.
 5. **Cerrar y mergear.** Si el plan quedó `cerrado` con todos los pasos marcados y el revisor
    aprobó:
 
+   El cuerpo del PR lleva, al final, una seccion `## Decisiones de contrato` con una linea por
+   cada elemento de contrato que el plan añadio, o la frase `Ninguna`. Asi los cambios de contrato
+   se pueden revisar de un vistazo, sin bucear en el diff.
+
    ```bash
-   gh pr create --draft=false --base main --head <plan> \
-     --title "feat: implementa el plan <plan>" --body "<resumen de qué se implementó y qué verificó>"
-   gh pr edit <n> --add-reviewer <tu-usuario>   # opcional, si el repositorio lo pide
+   gh pr create --draft=false --base main --head <plan> --title "feat: implementa el plan <plan>" --body-file <cuerpo>
    gh pr merge <n> --squash --delete-branch
    ```
+
+   Mergeas tu: el merge lo hace el orquestador, nunca la ejecutora, y solo con `APROBADO` del
+   revisor. Es la excepcion acotada de `docs/guia-git.md`.
 
    Después, en la rama `docs-estado-<plan>` creada desde `main` ya actualizado, actualiza la
    fila de `docs/implementacion/estado.md` con el estado, la rama y el PR, y abre ese PR con

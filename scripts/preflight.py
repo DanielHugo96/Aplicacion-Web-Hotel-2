@@ -306,6 +306,15 @@ def comprobar() -> list[Resultado]:
     res.append(Resultado("gh auth", code == 0,
                          "autenticado" if code == 0 else f"sin sesión de gh: {_primera_linea(out)}"))
 
+    # 6. Contratos: si el árbol actual rompe un contrato ya publicado, la
+    #    campaña no puede ni arrancar. Es la misma comprobación que corre en CI,
+    #    puesta aquí para no descubrirlo tres planes después.
+    validador = RAIZ / "scripts" / "validar-contratos.py"
+    if validador.exists():
+        code, out = _cmd([sys.executable, str(validador), "--base", "origin/main"], timeout=120)
+        detalle = "los contratos solo se amplian" if code == 0 else _primera_linea(out)
+        res.append(Resultado("contratos aditivos", code == 0, detalle))
+
     return res
 
 

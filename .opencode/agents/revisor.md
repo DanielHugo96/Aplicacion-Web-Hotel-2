@@ -84,6 +84,9 @@ permissions:
   - action: shell
     resource: "python scripts/proximo-plan.py*"
     effect: allow
+  - action: shell
+    resource: "python scripts/validar-contratos.py*"
+    effect: allow
 ---
 
 # Revisor de un plan antes de su merge
@@ -153,6 +156,28 @@ porque no está en el código: cuenta como falta.
 13. ¿El diff rompe algún contrato ya cerrado en `docs/contracts/`? Rutas, códigos de error,
     headers o eventos que otro plan cerrado ya fijó.
 14. ¿El plan se ciñó a su *Alcance* de la sección 2, o hizo de más y de menos?
+
+### F. Decisiones de contrato
+
+Si el diff toca `docs/contracts/openapi/`, `docs/contracts/events/` o el catalogo de errores, no
+basta con que el validador pase. Comprueba ademas:
+
+15. **¿Todo lo que hay en el diff es una adicion?** Ninguna ruta, metodo, codigo de respuesta,
+    `operationId`, schema, propiedad ni codigo de error existente puede desaparecer o cambiar de
+    nombre. Corre el validador de contratos y confirma que sale en verde; si tu arbol esta contra
+    un base distinto del de `origin/main`, dilo en el veredicto.
+
+16. **¿Cada elemento nuevo tiene un hermano del que copia la forma?** Abre el fichero de OpenAPI y
+    busca el elemento equivalente mas cercano. Un endpoint, un schema de evento o un codigo de error
+    nuevo que no se parece a ninguno de los que ya estan en ese mismo fichero es motivo de rechazo:
+    delata que nadie miro las convenciones antes de escribir.
+
+17. **¿Esta justificado en la bitacora?** Cada elemento de contrato nuevo tiene su archivo en
+    `docs/implementacion/decisiones/` diciendo que faltaba, que se añadio y **que elemento
+    existente se uso como modelo**. Sin ese archivo, rechazo.
+
+18. **¿Contradice la spec?** El elemento nuevo no puede contradecir `docs/especificacion/**`. Si la
+    spec calla, es una decision de nivel 3 legitima. Si la spec dice otra cosa, rechazo directo.
 
 ## Salida
 

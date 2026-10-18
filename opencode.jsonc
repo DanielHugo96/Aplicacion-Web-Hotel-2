@@ -14,11 +14,18 @@
   "policies": [
     // ---------------------------------------------------------------------
     // Documentos que NADIE puede editar al ejecutar un plan (norma §6.4).
+    //
+    // errors.md ya NO esta aqui. Durante la campana puede ampliarse, porque
+    // una decision de contrato necesita a veces un codigo que no existe; pero
+    // solo de forma aditiva. validar-contratos.py falla si desaparece cualquiera
+    // de los que ya estaban. Esa es la diferencia entre decidir y romper: anadir
+    // se permite, quitar no, y la garantia es un fallo de build, no una instruccion
+    // que el modelo pueda desobedecer.
+    //
     // Bloquean la herramienta de escritura...
     // ---------------------------------------------------------------------
     { "action": "tool.use", "resource": "edit:docs/especificacion/**", "effect": "deny" },
-    { "action": "tool.use", "resource": "edit:docs/contracts/errors.md", "effect": "deny" },
-    { "action": "tool.use", "resource": "edit:docs/plans/README.md", "effect": "deny" },
+        { "action": "tool.use", "resource": "edit:docs/plans/README.md", "effect": "deny" },
     { "action": "tool.use", "resource": "edit:docs/plans/_plantilla.md", "effect": "deny" },
     { "action": "tool.use", "resource": "edit:docs/plans/catalogo.md", "effect": "deny" },
     { "action": "tool.use", "resource": "edit:docs/guia-git.md", "effect": "deny" },
@@ -29,9 +36,7 @@
     // mismo patrón. Verificado en opencode v2.0.32: `*>` no cubre `>>`.
     { "action": "tool.use", "resource": "shell:* > docs/especificacion/*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:* >> docs/especificacion/*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* > docs/contracts/errors.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* >> docs/contracts/errors.md*", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:* > docs/plans/README.md*", "effect": "deny" },
+            { "action": "tool.use", "resource": "shell:* > docs/plans/README.md*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:* >> docs/plans/README.md*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:* > docs/plans/_plantilla.md*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:* >> docs/plans/_plantilla.md*", "effect": "deny" },

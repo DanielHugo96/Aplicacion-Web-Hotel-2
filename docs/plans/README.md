@@ -120,7 +120,8 @@ Quien ejecuta (humano o IA) sigue estas reglas. El validador no las comprueba: l
    - `qa`: `tests/**` y `scripts/**`.
    - `back-plataforma-*`: `services/*-service/**`, solo para aplicar la convención.
    - Siempre: su propio `docs/plans/<plan>.md` y, en la ejecución por IA, `docs/implementacion/decisiones/`.
-   - Nunca: `docs/especificacion/**`, `docs/contracts/errors.md`, `docs/plans/README.md` ni `docs/plans/catalogo.md`. Si el plan exige cambiar uno de ellos, se registra como pregunta abierta.
+   - Nunca: `docs/especificacion/**`, `docs/plans/README.md` ni `docs/plans/catalogo.md`. Si el plan exige cambiar uno de ellos, se registra como pregunta abierta.
+   - En la ejecución por IA, el catálogo de errores **sí** puede ampliarse, pero solo de forma aditiva: quitar un código es un fallo de `scripts/validar-contratos.py` ([§6.11](#611-ejecución-por-ia-campaña-automática)).
 5. **Progreso en el propio plan.** Marca `- [x]` en el mismo commit que completa el paso. No reordena pasos. Si un paso no se puede cumplir, lo deja sin marcar, escribe el motivo en *Preguntas abiertas* y se detiene. La ejecución por IA se aparta de esta regla en [§6.11](#611-ejecución-por-ia-campaña-automática).
 6. **Ante ambigüedad, parar.** No inventa endpoints, eventos, códigos de error, reglas ni valores. Si la spec no decide, es una pregunta abierta. La ejecución por IA sustituye la parada por el protocolo de decisión de [§6.11](#611-ejecución-por-ia-campaña-automática).
 7. **Verifica con los comandos canónicos.** La sección «Verificación» del `README.md` raíz, creada en `infra-monorepo`, lista el build, las pruebas, Compose y el validador. Los planes citan esos comandos; no definen otros.
@@ -156,14 +157,41 @@ humana: quien ejecuta un plan a mano sigue las reglas 5, 6 y 9 tal cual.
   cerrado ni ningún contrato existente**, y escribe la decisión en
   [`../implementacion/decisiones/`](../implementacion/decisiones/) con el formato de ese
   directorio. En *Preguntas abiertas* escribe `Ninguna (resuelto por IA: <resumen>)`.
-- **Nivel 3 — marca bloqueado y sigue.** El paso exigiría inventar un endpoint, un evento, un
-  código de error, una regla o un valor que la spec no fija, o tocaría la zona de otro plan.
-  **No inventa y no marca el paso.** Escribe el motivo en `docs/implementacion/decisiones/`,
-  deja el plan en `en curso` y devuelve `BLOQUEADO:`. La campaña pasa al plan siguiente.
+- **Nivel 3 — decide, aplica y marca.** La spec no fija un endpoint, un evento, un código de error,
+  una regla de negocio o un valor. **Aquí también se decide, se aplica y se marca el paso.** La
+  campaña no se atasca y ningún plan queda a medias.
 
-La prohibición de §6 de inventar **sigue vigente en los tres niveles**. Lo que cambia es qué se
-hace cuando la spec no decide: en vez de preguntar, se registra y se sigue (nivel 2), o se
-declara el bloqueo (nivel 3). Inventar sigue siendo inventar.
+  Una decisión de contrato no es una decisión local, porque la consume otro módulo. Por eso lleva
+  reglas propias:
+
+  1. **Ampliar sí, cambiar no.** No se elimina ni se renombra una ruta, un método, un código de
+     respuesta, un `operationId`, un schema, una propiedad ni un código de error que ya estuviera.
+     Si hace falta cambiar algo existente, se **añade** y el antiguo se queda donde está.
+  2. **Copiar a un hermano, no al criterio propio.** Un elemento de contrato nuevo copia la forma
+     del elemento equivalente que ya existe en el mismo fichero: mismo envoltorio, mismos headers,
+     mismos nombres de campo, mismo estilo de código de error.
+  3. **La decisión vive en el contrato.** Un elemento nuevo se escribe en
+     `docs/contracts/openapi/<servicio>.yaml`, en `docs/contracts/events/` con un schema nuevo, o en
+     el catálogo de errores. Ese fichero **es** la decisión; la bitácora solo la justifica.
+  4. **Comprobado por script, no por confianza.** `scripts/validar-contratos.py` falla si desaparece
+     algo ya publicado. Corre en CI y en `scripts/preflight.py`. No es una sugerencia: es un fallo
+     de build, y vale igual que la prohibición de §6 para inventar.
+  5. **Queda escrito.** Cada decisión de nivel 3 tiene su archivo en
+     [`../implementacion/decisiones/`](../implementacion/decisiones/) diciendo qué faltaba, qué se
+     añadió y qué elemento existente se usó como modelo. El cuerpo del PR la resume en una sección
+     `## Decisiones de contrato`.
+
+  **Lo único que sigue sin poder decidirse:** el comportamiento de negocio que la spec no dice. No
+  hay contrato que ampare la decisión y el acierto es una lotería. Si dos reservas solapan y la
+  spec no dice qué pasa, la IA no puede saberlo. Solo en ese caso el paso se deja sin marcar, el
+  motivo va a la bitácora y la respuesta es `BLOQUEADO:`. Cualquier otro bloqueo se resuelve
+  decidiendo.
+
+Lo que cambia con la campaña es **qué se hace cuando la spec no decide**, no qué está prohibido.
+Inventar comportamiento de negocio sigue prohibido en los tres niveles. Lo que el nivel 3 autoriza
+es otra cosa, más estrecha: **ampliar el contrato siguiendo las convenciones que ya están escritas
+en él**, de forma aditiva y comprobada por script. No es inventar en abierto: es seguir la
+convención que el propio repositorio ya escribió, y dejar constancia de qué se añadió y por qué.
 
 **Regla 6.11.2 — El orden no lo decide un modelo.** El siguiente plan se calcula con
 `scripts/proximo-plan.py` a partir del `Estado` y el `Depende de` de los planes, siguiendo el

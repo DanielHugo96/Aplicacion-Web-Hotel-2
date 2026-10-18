@@ -61,3 +61,5 @@ jobs:
           python-version: "3.12"
       - name: Validar planes
         run: python scripts/validar-planes.py
+      - name: Validar contratos (solo aditivos)
+        run: python scripts/validar-contratos.py --base origin/main

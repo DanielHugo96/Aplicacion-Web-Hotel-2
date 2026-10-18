@@ -89,20 +89,54 @@ Hay contradicción entre documentos, o la spec no decide un detalle menor. Enton
 4. En *Preguntas abiertas* del plan escribe: `Ninguna (resuelto por IA: <resumen de la decisión>)`.
 5. Sigue con el paso.
 
-### Nivel 3 — marca bloqueado y sigue con el plan siguiente
+### Nivel 3 — decide, aplica y marca
 
-El paso exige inventar un endpoint, un evento, un código de error, una regla de negocio o un
-valor **que la spec no fija** y que afectaría a otro módulo. O el paso no se puede cumplir por
-algo fuera de tu zona. O la verificación falla por un problema que no es tuyo (por ejemplo, el
-toolchain local no cumple las versiones fijadas).
+El paso necesita algo que la spec no fija: un endpoint, un evento, un código de error, una regla de
+negocio o un valor. **También aquí decides, aplicas y marcas el paso.** La campaña no se atasca.
 
-En ese caso:
+Pero una decisión de contrato no es una decisión local, porque la consume otro módulo. Por eso se
+aplica en tres pasos:
 
-1. **No** inventes. **No** marques el paso.
-2. Escribe `docs/implementacion/decisiones/IA-<plan>-NN.md` con el motivo, qué se necesitaba y qué
-   bloquea.
-3. Deja el plan en `Estado: en curso` y sal de tu trabajo con una respuesta que empiece por
-   `BLOQUEADO:` seguida del motivo en una frase.
+1. **No toques lo que ya existe.** Ampliar sí, cambiar no. No quites ni renombres una ruta, un
+   método, un código de respuesta, un `operationId`, un schema, una propiedad ni un código de error
+   que ya estuviera. Si crees que hay que cambiar algo existente, **amplíalo** y deja el antiguo en
+   su sitio.
+
+2. **Copia a un hermano, no a tu criterio.** Un elemento de contrato nuevo se parece a uno que ya
+   existe en el mismo fichero. Antes de escribirlo, abre `docs/contracts/openapi/<servicio>.yaml` y
+   copia la forma de su equivalente: mismo envoltorio, mismos headers, mismos nombres de campo,
+   mismo estilo de código de error. Si algo no tiene equivalente, usa el patrón más cercano del
+   mismo fichero, no el que te venga bien.
+
+3. **Déjalo escrito donde otro lo va a leer.** Un elemento de contrato nuevo se escribe en
+   `docs/contracts/openapi/<servicio>.yaml` (o en `docs/contracts/events/`, con un schema nuevo), y
+   en `docs/contracts/errors.md` si necesita un código nuevo. Ese fichero **es** la decisión; no es
+   un comentario al lado. Quien implemente el módulo que lo consume lo va a leer de ahí, no de tu
+   bitácora.
+
+Después, sin excepción:
+
+4. Corre `python scripts/validar-contratos.py --base origin/main`. Si falla, es que has roto algo
+   que ya estaba publicado: deshaz ese cambio y vuelve a decidir de otro modo. Ese script es un
+   fallo de build, no una sugerencia, y no lo vas a esquivar.
+
+5. Escribe `docs/implementacion/decisiones/IA-<plan>-NN.md` con la plantilla del directorio:
+   qué faltaba, qué has añadido, **qué elemento existente has usado como modelo**, y por qué has
+   descartado las otras opciones.
+
+6. En *Preguntas abiertas* escribe: `Ninguna (decidido por IA: <resumen>)`, y **marca el paso**.
+
+### Lo único que sigue sin poder hacerse
+
+Inventar el comportamiento **de negocio** cuando la spec no lo dice. Ahí no hay contrato que
+ampara la decisión y el acierto es una lotería: si el hotel no dice qué pasa cuando dos reservas
+solapan, la IA no puede saberlo. En ese caso concreto, y solo en ese, deja el paso sin marcar,
+escribe el motivo en la bitácora y responde `BLOQUEADO:`. Cualquier otro bloqueo se resuelve
+decidiendo.
+
+Si la verificación falla por un problema que no es tuyo (el toolchain, la red, Docker), eso es un
+bloqueo de infraestructura, no una ambigüedad: no lo arregles en el código, y si el preflight lo
+detecta, no sigas.
 
 ## Prohibiciones que no se negocian
 
