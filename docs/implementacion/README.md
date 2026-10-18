@@ -84,7 +84,7 @@ Tomadas el 14/10/2026. Cada una tiene un momento de revisión.
 | 1 | Mocks en el front | Se aplica **§6.2 (estricto)**: ningún front arranca antes de tener cerradas sus dependencias, y no se usan mocks. §7 de la norma dice lo contrario; la contradicción se resolvería con un PR aprobado a `docs/plans/README.md`. | En T5. Si la cola de `admin-web` va atrasada, se propone ese PR con datos reales. |
 | 2 | Modo de ejecución | **Seguro:** una cola de `admin-web` (siete planes) y una de `qa` (dos planes). Calendario de 15 tandas. | Pasar a modo rápido solo si hay una fecha de entrega que aprieta o si la cola de front se atrasa respecto al calendario. |
 | 3 | `front-admin-web-catalogo` | **Resuelto el 15/10/2026.** El plan entró en `main` por el PR #40 (`aedeea3`) y su `Estado` es `propuesto`. Ya no está pendiente de merge ni bloquea a `qa-matriz-aceptacion` por esa razón. Lo que sí lo bloquea son sus dependencias: `front-admin-web-base`, `back-identity-personas` y `back-hotel-catalogo`, todas de T5 o T6. | Resuelta. |
-| 4 | Campaña automática por IA | Los 20 planes pendientes se ejecutan sin intervención humana, con un agente orquestador, ejecutoras por ámbito y un agente revisor. Rompe dos reglas de por sí: **nadie pregunta** (§6 de la norma) y **el orquestador mergea su propio PR** (`guia-git.md`). Se sustituye la pregunta por el protocolo de decisión de tres niveles y la revisión humana por la del agente revisor. Toda decisión queda escrita en [`decisiones/`](decisiones/). Andamiaje y procedimiento: [§9](#9-campaña-automática-por-ia). | Con cada tanda. Si un plan se repite en `BLOQUEADO`, o si la campaña amends un plan `cerrado`, se revisa aquí y se detiene. |
+| 4 | Campaña automática por IA | Los planes pendientes se ejecutan sin intervención humana, con un agente orquestador y ejecutoras por ámbito. Rompe dos reglas de por sí: **nadie pregunta** (§6 de la norma) y **el orquestador mergea su propio PR** (`guia-git.md`). Se sustituye la pregunta por el protocolo de decisión de tres niveles y la revisión humana por la validación de la propia ejecutora. Toda decisión queda escrita en [`decisiones/`](decisiones/). Andamiaje y procedimiento: [§9](#9-campaña-automática-por-ia). | Con cada tanda. Si un plan se repite en `BLOQUEADO`, o si la campaña amends un plan `cerrado`, se revisa aquí y se detiene. |
 
 ## 7. Índice de planes (agrupado sin mover archivos)
 
@@ -149,14 +149,19 @@ Los 20 planes pendientes se ejecutan sin intervención humana. Los agentes viven
 
 | Agente | Ámbito | Modelo | Qué hace |
 |---|---|---|---|
-| `orquestador` | uno por plan | `space-bunny-free#xhigh` | Conduce, delega, pide revisión y hace el merge. No elige plan, no escribe código y no puede preguntar. |
-| `plan-back` | `back`, `infra` | `space-bunny-free#max` | Implementa los pasos de un plan, verifica y deja evidencia. |
-| `plan-front` | `front` | `space-bunny-free#high` | Igual, sobre `apps/<app>/`. |
-| `plan-qa` | `qa` | `space-bunny-free#high` | Igual, sobre `tests/**` y `scripts/**`. |
-| `revisor` | uno por plan | `space-bunny-free#xhigh` | Audita el resultado antes del merge. Sin permiso de escritura. Veredicto binario: `APROBADO` o `RECHAZADO`. |
+| `orquestador` | uno por plan | `opencode-go/longcat-2.5-preview-free` | Conduce, delega, da por validado y hace el merge. No elige plan, no escribe código y no puede preguntar. |
+| `plan-back` | `back`, `infra` | `opencode-go/longcat-2.5-preview-free` | Implementa los pasos de un plan, verifica y deja evidencia. |
+| `plan-front` | `front` | `opencode-go/longcat-2.5-preview-free` | Igual, sobre `apps/<app>/`. |
+| `plan-qa` | `qa` | `opencode-go/longcat-2.5-preview-free` | Igual, sobre `tests/**` y `scripts/**`. |
 
-El orquestador y el revisor corren con la herramienta de preguntar deshabilitada por
+El orquestador corre con la herramienta de preguntar deshabilitada por
 configuración. "No preguntar" no es una instrucción del prompt: es una prohibición.
+
+**Ya no hay agente revisor.** El orquestador mergea en cuanto la ejecutora termina sin dejar el
+plan `BLOQUEADO`: la ejecutora es quien valida su propio trabajo, y no hay una segunda lectura
+que lo apruebe. Es la excepción acotada de [`guia-git.md`](../guia-git.md) y de la regla
+6.11.3 de la norma. La separación que la regla 9 protegía se asume aquí como riesgo
+explícito, no se sustituye por otra revisión.
 
 ### Cómo se conduce: desde OpenCode
 
@@ -164,7 +169,7 @@ La campaña se maneja **desde una sesión de OpenCode**, no desde un script. El 
 
 1. Abre OpenCode en el repositorio.
 2. Selecciona el agente **`orquestador`** (con Tab, o escribiéndolo en el selector).
-3. Elige el modelo **Space Bunny**.
+3. Elige el modelo **LongCat 2.5 Preview Free** (`opencode-go/longcat-2.5-preview-free`).
 4. Escribe `/campana`, o simplemente dile `ejecuta la campaña`.
 
 A partir de ahí el orquestador hace todo lo demás sin preguntar nada:
@@ -176,8 +181,8 @@ git switch main && git pull        # se sitúa
                                     #   proximo-plan.py  → qué toca
                                     #   switch -c <plan> → reclamar
                                     #   Task → plan-back | plan-front | plan-qa
-                                    #   Task → revisor
-                                    #   gh pr merge + PR docs: de estado
+                                    #   gh pr create + gh pr merge
+                                    #   PR docs: de estado
 ```
 
 **El orden de los planes no lo decide el orquestador**: lo calcula `scripts/proximo-plan.py`
@@ -235,9 +240,10 @@ escribir `docs/plans/catalogo.md` y leer `.env`, bloqueados.
 
 Las versiones fijadas (`services/pom.xml`, `apps/*/package.json`) **no** están bloqueadas por
 configuración, porque un plan legítimo puede necesitar una dependencia nueva y bloquear eso haría
-fracasar la campaña por la vía equivocada. Lo están por otras dos vías: el preflight corta si el
-toolchain no cumple lo que el repo declara, y el agente revisor rechaza cualquier diff que las
-toque.
+fracasar la campaña por la vía equivocada. Lo están por el preflight, que corta si el toolchain no
+cumple lo que el repo declara. Antes sumaba una segunda defensa —el agente revisor rechazaba
+cualquier diff que las tocase—; con el revisor eliminado, el preflight es la única, así que quien
+revise los PRs tiene que mirar esto a mano.
 
 ### Por qué existe el preflight
 

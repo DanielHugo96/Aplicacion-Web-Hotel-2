@@ -1,11 +1,18 @@
 {
   // Configuración de OpenCode para este repositorio.
   //
-  // Aquí hay muy poco a propósito. Antes esto tenía casi cuarenta reglas y
-  // bloqueaba el trabajo normal del equipo, porque `policies` son GLOBALES:
-  // las cumple todo el que abra el repositorio, no solo la campaña. Amendiar la
-  // norma o leer el `.env` desde una sesión normal quedaba bloqueado, y eso no
-  // lo arregla ninguna cantidad de reglas bien escritas.
+  // PROPÓSITO: este archivo solo pone vallas en Git. No fija modelo, no define
+  // agentes, no declara permisos de herramientas ni toca ninguna otra cosa, y
+  // así no puede estorbar al orquestador de la campaña (§9 de
+  // docs/implementacion/README.md): él elige su modelo por el frontmatter del
+  // agente o por el flag `--model` de scripts/orquestar.py, y sus reglas viven
+  // en .opencode/agents/*.md.
+  //
+  // Antes esto tenía casi cuarenta reglas y bloqueaba el trabajo normal del
+  // equipo, porque `policies` son GLOBALES: las cumple todo el que abra el
+  // repositorio, no solo la campaña. Amendiar la norma o leer el `.env` desde
+  // una sesión normal quedaba bloqueado, y eso no lo arregla ninguna cantidad
+  // de reglas bien escritas.
   //
   // La división que se aplica ahora es:
   //
@@ -17,11 +24,16 @@
   //   - En `.opencode/agents/*.md` (`permissions`): lo que solo le importa a la
   //     campaña, como no tocar la especificación ni los documentos de la norma.
   //     Cada agente lleva sus propias reglas, así que una persona puede seguir
-  //     enmendando la norma desde su sesión sin commenting nada de aquí.
+  //     enmendiando la norma desde su sesión sin tocar nada de aquí.
   //
-  // Las políticas sobrevivían a un "Allow always"; los permisos de un agente
-  // seaskedit con "Allow always", pero solo por ese agente. Para la campaña eso
+  // Las políticas sobreviven a un "Allow always"; los permisos de un agente se
+  // aceptan con "Allow always", pero solo por ese agente. Para la campaña eso
   // da igual: nadie va a pulsarlo.
+  //
+  // REGLA DE MANTENIMIENTO: si hay que añadir algo, que sea de Git y que no
+  // bloquee `gh`, los scripts de la campaña ni el `git` que no sea `push`. El
+  // orquestador necesita `gh pr create`, `gh pr merge` y `gh pr close` sin
+  // fricción, y ninguna regla de este archivo los toca.
   "$schema": "https://opencode.ai/config.json",
 
   "policies": [

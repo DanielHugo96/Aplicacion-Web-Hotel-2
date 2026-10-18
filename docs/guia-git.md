@@ -169,9 +169,9 @@ Los cuatro primeros puntos valen **también** para los agentes de IA. La quinta 
 excepción, y está acotada:
 
 - Durante la campaña automática ([`implementacion/README.md`](implementacion/README.md) §6,
-  decisión 4), el **agente orquestador** puede mergear su propio PR, porque es el único agente
-  con permiso de `gh pr merge` y porque antes ha pasado la revisión del **agente revisor**, que
-  corre en otro contexto y no puede escribir.
+  decisión 4), el **agente orquestador** puede mergear su propio PR en cuanto la ejecutora
+  termina sin dejar el plan bloqueado. No hay agente revisor que lo apruebe: la ejecutora valida
+  su propio trabajo.
 - El agente que **implementa** el plan nunca mergea. Nunca.
 - Fuera de la campaña, esta guía manda sin excepciones: una persona no mergea su propio PR.
 
