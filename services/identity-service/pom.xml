@@ -32,10 +32,15 @@
       <artifactId>spring-boot-starter-amqp</artifactId>
     </dependency>
     <!-- Convención común de plataforma (back-plataforma-comunes): seguridad, envelope, idempotencia,
-         salud y logs estructurados. --> 
+         salud y logs estructurados. -->
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    <!-- Registro en Eureka: el Gateway enruta a `lb://identity-service` por nombre. -->
+    <dependency>
+      <groupId>org.springframework.cloud</groupId>
+      <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
     </dependency>
     <dependency>
       <groupId>org.springframework.boot</groupId>
