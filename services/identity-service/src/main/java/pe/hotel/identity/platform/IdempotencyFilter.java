@@ -6,9 +6,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.HexFormat;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -31,17 +28,28 @@ public class IdempotencyFilter extends OncePerRequestFilter {
 
   private static final Set<String> MUTATING = Set.of("POST", "PUT", "DELETE");
 
-  private static final Set<String> EXEMPT =
-      Set.of("/api/auth/login", "/api/auth/registro", "/api/auth/social", "/api/auth/token");
+  /**
+   * Rutas sin idempotencia: no ejecutan una mutación de negocio. El registro público sí la ejecuta,
+   * así que no está aquí: exige {@code Idempotency-Key} como fija docs/contracts/openapi/identity.yaml
+   * § Registro.
+   */
+  private static final Set<String> EXEMPT = Set.of("/api/auth/login", "/api/auth/social");
 
   private static final Pattern ID_SEGMENT =
       Pattern.compile(
           "\\d+|^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
 
   private final ApiIdempotencyRepository repository;
+  private final IdempotencyCustomizer customizer;
 
   public IdempotencyFilter(ApiIdempotencyRepository repository) {
+    this(repository, null);
+  }
+
+  public IdempotencyFilter(
+      ApiIdempotencyRepository repository, IdempotencyCustomizer customizer) {
     this.repository = repository;
+    this.customizer = customizer;
   }
 
   @Override
@@ -72,10 +80,10 @@ public class IdempotencyFilter extends OncePerRequestFilter {
       return;
     }
 
-    String actor = currentActor();
+    String actor = actorOf(cached);
     String method = cached.getMethod();
     String route = routeTemplate(cached.getRequestURI());
-    String hash = requestHash(cached);
+    String hash = hashOf(cached);
 
     Optional<ApiIdempotencyRepository.IdempotencyRow> existing =
         repository.find(actor, method, route, key);
@@ -139,6 +147,7 @@ public class IdempotencyFilter extends OncePerRequestFilter {
     return location == null ? null : location;
   }
 
+  /** Actor por defecto: el {@code sub} del JWT validado; {@code anonymous} en rutas públicas. */
   private String currentActor() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     if (authentication != null && authentication.isAuthenticated()) {
@@ -151,6 +160,20 @@ public class IdempotencyFilter extends OncePerRequestFilter {
       return authentication.getName();
     }
     return "anonymous";
+  }
+
+  /** Actor que el servicio declara para esta ruta, o el de por defecto. */
+  private String actorOf(CachedBodyHttpServletRequest request) {
+    String declarado = customizer == null ? null : customizer.actorFor(request);
+    return declarado == null || declarado.isBlank() ? currentActor() : declarado;
+  }
+
+  /** Hash que el servicio declara para esta ruta, o el SHA-256 del canónico. */
+  private String hashOf(CachedBodyHttpServletRequest request) {
+    String declarado = customizer == null ? null : customizer.hashFor(request);
+    return declarado == null || declarado.isBlank()
+        ? IdempotencyHashes.sha256Hex(canonical(request))
+        : declarado;
   }
 
   /** Sustituye segmentos que son ids (numéricos o UUID) por {@code {id}}: plantilla de ruta estable. */
@@ -166,24 +189,18 @@ public class IdempotencyFilter extends OncePerRequestFilter {
     return out.toString();
   }
 
-  private String requestHash(CachedBodyHttpServletRequest request) {
+  /** Canónico del request que se hashea para detectar la misma clave con otros datos. */
+  public static String canonical(CachedBodyHttpServletRequest request) {
     String query = request.getQueryString();
     String ifMatch = request.getHeader("If-Match");
-    String canonical =
-        request.getMethod()
-            + "\n"
-            + request.getRequestURI()
-            + "\n"
-            + (query == null ? "" : query)
-            + "\n"
-            + new String(request.body(), StandardCharsets.UTF_8)
-            + "\n"
-            + (ifMatch == null ? "" : ifMatch);
-    try {
-      MessageDigest digest = MessageDigest.getInstance("SHA-256");
-      return HexFormat.of().formatHex(digest.digest(canonical.getBytes(StandardCharsets.UTF_8)));
-    } catch (NoSuchAlgorithmException unreachable) {
-      throw new IllegalStateException("SHA-256 no disponible", unreachable);
-    }
+    return request.getMethod()
+        + "\n"
+        + request.getRequestURI()
+        + "\n"
+        + (query == null ? "" : query)
+        + "\n"
+        + new String(request.body(), StandardCharsets.UTF_8)
+        + "\n"
+        + (ifMatch == null ? "" : ifMatch);
   }
 }
