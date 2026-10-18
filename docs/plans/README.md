@@ -119,14 +119,100 @@ Quien ejecuta (humano o IA) sigue estas reglas. El validador no las comprueba: l
    - `infra`: `infra/**`, `services/api-gateway/**`, `services/discovery-server/**`, `.env.example` y la sección «Verificación» del `README.md` raíz.
    - `qa`: `tests/**` y `scripts/**`.
    - `back-plataforma-*`: `services/*-service/**`, solo para aplicar la convención.
-   - Siempre: su propio `docs/plans/<plan>.md`.
-   - Nunca: `docs/especificacion/**`, `docs/contracts/errors.md`, `docs/plans/README.md` ni `docs/plans/catalogo.md`. Si el plan exige cambiar uno de ellos, se registra como pregunta abierta.
-5. **Progreso en el propio plan.** Marca `- [x]` en el mismo commit que completa el paso. No reordena pasos. Si un paso no se puede cumplir, lo deja sin marcar, escribe el motivo en *Preguntas abiertas* y se detiene.
-6. **Ante ambigüedad, parar.** No inventa endpoints, eventos, códigos de error, reglas ni valores. Si la spec no decide, es una pregunta abierta.
+   - Siempre: su propio `docs/plans/<plan>.md` y, en la ejecución por IA, `docs/implementacion/decisiones/`.
+   - Nunca: `docs/especificacion/**`, `docs/plans/README.md` ni `docs/plans/catalogo.md`. Si el plan exige cambiar uno de ellos, se registra como pregunta abierta.
+   - En la ejecución por IA, el catálogo de errores **sí** puede ampliarse, pero solo de forma aditiva: quitar un código es un fallo de `scripts/validar-contratos.py` ([§6.11](#611-ejecución-por-ia-campaña-automática)).
+5. **Progreso en el propio plan.** Marca `- [x]` en el mismo commit que completa el paso. No reordena pasos. Si un paso no se puede cumplir, lo deja sin marcar, escribe el motivo en *Preguntas abiertas* y se detiene. La ejecución por IA se aparta de esta regla en [§6.11](#611-ejecución-por-ia-campaña-automática).
+6. **Ante ambigüedad, parar.** No inventa endpoints, eventos, códigos de error, reglas ni valores. Si la spec no decide, es una pregunta abierta. La ejecución por IA sustituye la parada por el protocolo de decisión de [§6.11](#611-ejecución-por-ia-campaña-automática).
 7. **Verifica con los comandos canónicos.** La sección «Verificación» del `README.md` raíz, creada en `infra-monorepo`, lista el build, las pruebas, Compose y el validador. Los planes citan esos comandos; no definen otros.
 8. **Evidencia por caso.** En *Pruebas*, cada caso de [06](../especificacion/06-migracion-y-pruebas.md) anota el comando o endpoint, el resultado y dónde está la salida. Sin evidencia, el caso no se marca.
-9. **Cierre.** Cambia el estado a `cerrado` en el último PR del plan. Una persona revisa y hace el merge; la ejecutora no mergea su propio PR.
+9. **Cierre.** Cambia el estado a `cerrado` en el último PR del plan. Una persona revisa y hace el merge; la ejecutora no mergea su propio PR. La ejecución por IA sustituye esa revisión por un agente revisor independiente; ver [§6.11](#611-ejecución-por-ia-campaña-automática).
 10. **Sin secretos.** Nunca escribe credenciales reales; solo nombres de variables, como `DEMO_PASSWORD`.
+
+### 6.11 Ejecución por IA (campaña automática)
+
+Las reglas 5, 6 y 9 están escritas para una ejecutora humana que puede parar a preguntarle a
+alguien. La campaña automática cambia eso: sus agentes **no tienen herramienta de preguntar**,
+así que "parar y preguntar" no es una opción, es un bloqueo. Esta subsección define qué se hace
+en su lugar.
+
+Esta es una **excepción autorizada**, no una decisión del autor del PR. No se aplica a ejecución
+humana: quien ejecuta un plan a mano sigue las reglas 5, 6 y 9 tal cual.
+
+**Quién es quién**
+
+| Agente | Papel |
+|---|---|
+| Orquestador | Conduce **un** plan. No elige el orden: lo recibe ya calculado. Delega, pide revisión, hace el merge. |
+| Ejecutora | Implementa los pasos de **un** plan. No sabe qué plan va después, ni mergea, ni pregunta. |
+| Revisor | Audita el resultado contra los criterios de cierre del plan y la norma. Solo lee. Veredicto binario. |
+
+**Regla 6.11.1 — Protocolo de decisión.** Ante cualquier bloqueo, la ejecutora aplica:
+
+- **Nivel 1 — decide y sigue.** Resoluble leyendo la especificación, los contratos o el código.
+  Nombres, estructura interna, datos de prueba. No se registra nada.
+- **Nivel 2 — decide, registra y sigue.** Contradicción entre documentos, o la spec no fija un
+  detalle menor. Aplica la jerarquía de fuentes de [`../implementacion/README.md`](../implementacion/README.md) §1
+  (norma > plan > catálogo > registro), elige **la opción menos invasiva que no rompe ningún plan
+  cerrado ni ningún contrato existente**, y escribe la decisión en
+  [`../implementacion/decisiones/`](../implementacion/decisiones/) con el formato de ese
+  directorio. En *Preguntas abiertas* escribe `Ninguna (resuelto por IA: <resumen>)`.
+- **Nivel 3 — decide, aplica y marca.** La spec no fija un endpoint, un evento, un código de error,
+  una regla de negocio o un valor. **Aquí también se decide, se aplica y se marca el paso.** La
+  campaña no se atasca y ningún plan queda a medias.
+
+  Una decisión de contrato no es una decisión local, porque la consume otro módulo. Por eso lleva
+  reglas propias:
+
+  1. **Ampliar sí, cambiar no.** No se elimina ni se renombra una ruta, un método, un código de
+     respuesta, un `operationId`, un schema, una propiedad ni un código de error que ya estuviera.
+     Si hace falta cambiar algo existente, se **añade** y el antiguo se queda donde está.
+  2. **Copiar a un hermano, no al criterio propio.** Un elemento de contrato nuevo copia la forma
+     del elemento equivalente que ya existe en el mismo fichero: mismo envoltorio, mismos headers,
+     mismos nombres de campo, mismo estilo de código de error.
+  3. **La decisión vive en el contrato.** Un elemento nuevo se escribe en
+     `docs/contracts/openapi/<servicio>.yaml`, en `docs/contracts/events/` con un schema nuevo, o en
+     el catálogo de errores. Ese fichero **es** la decisión; la bitácora solo la justifica.
+  4. **Comprobado por script, no por confianza.** `scripts/validar-contratos.py` falla si desaparece
+     algo ya publicado. Corre en CI y en `scripts/preflight.py`. No es una sugerencia: es un fallo
+     de build, y vale igual que la prohibición de §6 para inventar.
+  5. **Queda escrito.** Cada decisión de nivel 3 tiene su archivo en
+     [`../implementacion/decisiones/`](../implementacion/decisiones/) diciendo qué faltaba, qué se
+     añadió y qué elemento existente se usó como modelo. El cuerpo del PR la resume en una sección
+     `## Decisiones de contrato`.
+
+  **Lo único que sigue sin poder decidirse:** el comportamiento de negocio que la spec no dice. No
+  hay contrato que ampare la decisión y el acierto es una lotería. Si dos reservas solapan y la
+  spec no dice qué pasa, la IA no puede saberlo. Solo en ese caso el paso se deja sin marcar, el
+  motivo va a la bitácora y la respuesta es `BLOQUEADO:`. Cualquier otro bloqueo se resuelve
+  decidiendo.
+
+Lo que cambia con la campaña es **qué se hace cuando la spec no decide**, no qué está prohibido.
+Inventar comportamiento de negocio sigue prohibido en los tres niveles. Lo que el nivel 3 autoriza
+es otra cosa, más estrecha: **ampliar el contrato siguiendo las convenciones que ya están escritas
+en él**, de forma aditiva y comprobada por script. No es inventar en abierto: es seguir la
+convención que el propio repositorio ya escribió, y dejar constancia de qué se añadió y por qué.
+
+**Regla 6.11.2 — El orden no lo decide un modelo.** El siguiente plan se calcula con
+`scripts/proximo-plan.py` a partir del `Estado` y el `Depende de` de los planes, siguiendo el
+calendario de [`../implementacion/orden.md`](../implementacion/orden.md) §2. Si un plan queda
+`en curso`, se reanuda ese. El orquestador no elige, no salta y no improvisa el orden.
+
+**Regla 6.11.3 — El merge.** El orquestador hace el merge de su propio PR, **solo** si el
+agente revisor devuelve `APROBADO`. Hay un intento de corrección si el revisor devuelve
+`RECHAZADO`; si reincide, el PR se cierra sin mergear, se registra el bloqueo en
+`docs/implementacion/decisiones/` y la campaña sigue con el siguiente plan. La ejecutora **nunca**
+hace merge. La separación que la regla 9 protege —que quien implementa no sea quien aprueba— se
+mantiene con dos agentes distintos, con contextos separados, y con el revisor sin permiso de
+escritura.
+
+Esta excepción **no** se extiende a nada más. Siguen siendo inviolables: `main` nunca se toca
+directamente, `git push --force` nunca, los documentos de la lista de §6.4 nunca, y las
+versiones fijadas del `README.md` raíz nunca.
+
+**Regla 6.11.4 — Trazabilidad.** Toda decisión de nivel 2 o 3 queda escrita. Un plan cerrado por
+IA sin bitácora de sus decisiones de nivel 2 está incompleto, igual que uno sin evidencia en
+*Pruebas*.
 
 ## 7. Reglas
 

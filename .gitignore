@@ -19,3 +19,7 @@ dist/
 *.iws
 .DS_Store
 Thumbs.db
+
+# Python (scripts del repositorio)
+__pycache__/
+*.pyc
