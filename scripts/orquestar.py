@@ -27,6 +27,7 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -92,6 +93,48 @@ def entorno_campana() -> dict[str, str]:
     return env
 
 
+def ruta_opencode() -> str | None:
+    """Ruta absoluta del ejecutable de opencode, o None si no se encuentra.
+
+    En Windows lo que hay en el PATH es un shim de npm: `opencode` y
+    `opencode.cmd`, que son scripts. CreateProcess no los ejecuta, así que
+    `subprocess.run(["opencode", ...])` falla con FileNotFoundError aunque el
+    comando funcione bien desde una terminal. Detrás del shim sí hay un
+    `opencode.exe` de verdad, en el paquete de npm. Este resolves es el que lo
+    encuentra.
+    """
+    directo = shutil.which("opencode.exe")
+    if directo:
+        return directo
+
+    candidatos = []
+    appdata = os.environ.get("APPDATA")
+    if appdata:
+        candidatos.append(Path(appdata) / "npm" / "node_modules" / "@opencode" / "cli"
+                          / "bin" / "opencode.exe")
+    home = Path.home()
+    candidatos.append(home / ".opencode" / "bin" / "opencode.exe")
+    candidatos.append(home / ".bun" / "bin" / "opencode.exe")
+
+    for c in candidatos:
+        if c.exists():
+            return str(c)
+
+    # Último recurso: si lo que hay en el PATH es un binario de verdad (Linux,
+    # macOS o una instalación con .exe en el PATH), usarlo tal cual.
+    en_path = shutil.which("opencode")
+    if en_path and not en_path.lower().endswith((".cmd", ".bat", ".ps1")):
+        return en_path
+    return None
+
+
+def _comando_opencode(args: list[str]) -> list[str]:
+    exe = ruta_opencode()
+    if not exe:
+        return ["opencode", *args]
+    return [exe, *args]
+
+
 def _py(script: Path) -> list[str]:
     return [sys.executable, str(script)]
 
@@ -101,7 +144,7 @@ def log(mensaje: str) -> None:
     print(f"[{hora}] {mensaje}", flush=True)
 
 
-def preflight(saltar: bool) -> bool:
+def comprobar_precondiciones(saltar: bool) -> bool:
     if saltar:
         log("preflight saltado por --sin-preflight (solo depuración)")
         return True
@@ -133,8 +176,8 @@ def ejecutar_plan(plan: str, timeout: int, seco: bool, modelo: str) -> bool:
         return True
 
     log(f"Lanzando {AGENTE} para {plan} (modelo {modelo}, máximo {timeout // 3600} h)...")
-    cmd = [
-        "opencode", "run",
+    cmd = _comando_opencode([
+        "run",
         "--auto",
         # Servidor privado: es lo que hace que JAVA_HOME y el PATH corregidos
         # lleguen al shell que usan las ejecutoras.
@@ -143,7 +186,7 @@ def ejecutar_plan(plan: str, timeout: int, seco: bool, modelo: str) -> bool:
         "--model", modelo,
         "--title", f"orquestacion:{plan}",
         f"Ejecuta y cierra el plan {plan}.",
-    ]
+    ])
     entorno = entorno_campana()
     inicio = time.monotonic()
     try:
@@ -189,7 +232,7 @@ def main() -> int:
     ap.add_argument("--sin-remoto", action="store_true", help="no consulta las ramas de origin")
     args = ap.parse_args()
 
-    if not preflight(args.sin_preflight):
+    if not comprobar_precondiciones(args.sin_preflight):
         return 1
 
     ejecutados = 0
