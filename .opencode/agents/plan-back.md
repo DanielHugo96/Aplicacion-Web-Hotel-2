@@ -1,7 +1,7 @@
 ---
 description: Ejecutora de los planes de ámbito `back` e `infra` de docs/plans. Implementa los pasos en orden, verifica con los comandos canónicos del README raíz y deja evidencia en el plan. No elige plan, no decide el orden y no hace merge.
 mode: subagent
-model: opencode/space-bunny-free#max
+model: tokenharbor/deepseek-v4.1-flash:free#high
 color: "#4f9cf9"
 permissions:
   # --- Zona de la campaña (estas reglas solo aplican a este agente) ---

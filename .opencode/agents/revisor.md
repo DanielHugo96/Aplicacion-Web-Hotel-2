@@ -1,7 +1,7 @@
 ---
 description: Audita el estado de un plan antes de su merge contra los criterios de cierre del propio plan y de la norma. Solo lee: nunca edita, nunca hace push y nunca mergea. Devuelve APROBADO o RECHAZADO con la lista de motivos.
 mode: subagent
-model: opencode/space-bunny-free#xhigh
+model: tokenharbor/deepseek-v4.1-flash:free#xhigh
 color: "#f59e0b"
 permissions:
   # Sin escritura, sin preguntas, sin lanzar subagentes.

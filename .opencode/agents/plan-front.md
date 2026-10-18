@@ -1,7 +1,7 @@
 ---
 description: Ejecutora de los planes de ámbito `front` de docs/plans. Implementa los pasos en orden sobre apps/<app>/, verifica con los comandos canónicos del README raíz y deja evidencia. No elige plan, no decide el orden y no hace merge.
 mode: subagent
-model: opencode/space-bunny-free#high
+model: tokenharbor/deepseek-v4.1-flash:free#high
 color: "#c084fc"
 permissions:
   # --- Zona de la campaña (estas reglas solo aplican a este agente) ---
