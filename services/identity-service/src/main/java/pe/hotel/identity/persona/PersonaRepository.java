@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Optional;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -82,32 +80,26 @@ public class PersonaRepository {
       String correo,
       String claveHash,
       int idTipoPersona) {
-    KeyHolder claves = new GeneratedKeyHolder();
-    jdbcTemplate.update(
-        connection -> {
-          var statement =
-              connection.prepareStatement(
-                  """
-                  INSERT INTO persona (tipo_documento, documento, nombre, apellido, correo, clave_hash,
-                                       foto_url, id_tipo_persona, estado, version, created_at, updated_at)
-                  VALUES (?, ?, ?, ?, ?, ?, NULL, ?, true, 1, now(), now())
-                  RETURNING id
-                  """);
-          statement.setString(1, tipoDocumento);
-          statement.setString(2, documento);
-          statement.setString(3, nombre);
-          statement.setString(4, apellido);
-          statement.setString(5, correo);
-          statement.setString(6, claveHash);
-          statement.setInt(7, idTipoPersona);
-          return statement;
-        },
-        claves);
-    Number id = claves.getKey();
+    Integer id =
+        jdbcTemplate.queryForObject(
+            """
+            INSERT INTO persona (tipo_documento, documento, nombre, apellido, correo, clave_hash,
+                                 foto_url, id_tipo_persona, estado, version, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, NULL, ?, true, 1, now(), now())
+            RETURNING id
+            """,
+            (rs, fila) -> rs.getInt("id"),
+            tipoDocumento,
+            documento,
+            nombre,
+            apellido,
+            correo,
+            claveHash,
+            idTipoPersona);
     if (id == null) {
       throw new IllegalStateException("la base no devolvio el id de la persona creada");
     }
-    return id.intValue();
+    return id;
   }
 
   /**

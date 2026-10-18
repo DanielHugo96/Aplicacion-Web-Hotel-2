@@ -1,5 +1,6 @@
 package pe.hotel.identity.auth;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,5 +34,17 @@ public class AuthController {
   public ResponseEntity<ApiResponse<AuthResponse>> login(@RequestBody LoginRequest request) {
     AuthResponse auth = authService.login(request);
     return ResponseEntity.ok(ApiResponse.ok(auth, Meta.of(CorrelationId.current())));
+  }
+
+  /**
+   * Registro público: 201 con la Persona creada y rol CLIENTE forzado. Exige {@code
+   * Idempotency-Key} y un cuerpo JSON cerrado; un {@code idTipoPersona} en el body es 400 {@code
+   * VALIDATION_ERROR} y no crea la fila.
+   */
+  @PostMapping("/registro")
+  public ResponseEntity<ApiResponse<PersonaView>> registro(@RequestBody RegistroRequest request) {
+    PersonaView persona = authService.registrar(request);
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(ApiResponse.ok(persona, Meta.of(CorrelationId.current())));
   }
 }
