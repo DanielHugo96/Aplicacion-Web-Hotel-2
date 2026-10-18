@@ -171,6 +171,40 @@ public class AuthService {
         && (valor.startsWith("https://") || valor.startsWith("/assets/"));
   }
 
+  /**
+   * Cambio de clave propio. Exige {@code Idempotency-Key} (el body lleva credenciales) y verifica
+   * la clave vigente con BCrypt en Java.
+   *
+   * <p>Orden de las comprobaciones: primero la clave actual, después la política de la nueva y por
+   * último que la nueva sea distinta de la vigente. Un reintento con la misma clave de idempotencia
+   * devuelve el resultado terminal guardado sin volver a aplicar nada.
+   *
+   * @throws ApiException {@code CURRENT_PASSWORD_MISMATCH}, {@code PASSWORD_POLICY} o {@code
+   *     VALIDATION_ERROR}, siempre con el campo afectado en {@code error.fields}
+   */
+  @Transactional
+  public void cambiarClave(String sub, PasswordChangeRequest request) {
+    int id = idDe(sub);
+    Persona persona =
+        personas.buscarPorId(id).orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND));
+    if (!Claves.coincide(passwordEncoder, request.claveActual(), persona.claveHash())) {
+      log.info("cambio_clave_rechazado id_persona={} motivo=clave_actual_incorrecta", id);
+      throw new ApiException(
+          ErrorCode.CURRENT_PASSWORD_MISMATCH, Map.of("claveActual", "no coincide con la vigente"));
+    }
+    String nueva = request.claveNueva();
+    if (nueva == null || !Claves.cumplePolitica(nueva)) {
+      throw new ApiException(
+          ErrorCode.PASSWORD_POLICY, Map.of("claveNueva", "12-72 bytes UTF-8"));
+    }
+    if (Claves.coincide(passwordEncoder, nueva, persona.claveHash())) {
+      throw new ApiException(
+          ErrorCode.VALIDATION_ERROR, Map.of("claveNueva", "debe ser distinta de la actual"));
+    }
+    personas.actualizarClave(id, passwordEncoder.encode(nueva));
+    log.info("clave_actualizada id_persona={}", id);
+  }
+
   @Transactional
   public PersonaView registrar(RegistroRequest request) {
     Map<String, String> errores = new LinkedHashMap<>();

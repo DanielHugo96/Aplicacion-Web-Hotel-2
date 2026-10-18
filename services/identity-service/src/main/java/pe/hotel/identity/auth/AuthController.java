@@ -69,6 +69,17 @@ public class AuthController {
   }
 
   /**
+   * Cambio de clave propio: 200 con {@code data:null}. Exige {@code Idempotency-Key}; con la misma
+   * clave y el mismo body devuelve el mismo 200 sin volver a aplicarlo. La clave nunca se responde.
+   */
+  @PutMapping("/password")
+  public ResponseEntity<ApiResponse<Void>> cambiarPassword(
+      @AuthenticationPrincipal Jwt jwt, @RequestBody PasswordChangeRequest request) {
+    authService.cambiarClave(jwt.getSubject(), request);
+    return ResponseEntity.ok(ApiResponse.ok(null, Meta.of(CorrelationId.current())));
+  }
+
+  /**
    * Registro público: 201 con la Persona creada y rol CLIENTE forzado. Exige {@code
    * Idempotency-Key} y un cuerpo JSON cerrado; un {@code idTipoPersona} en el body es 400 {@code
    * VALIDATION_ERROR} y no crea la fila.
