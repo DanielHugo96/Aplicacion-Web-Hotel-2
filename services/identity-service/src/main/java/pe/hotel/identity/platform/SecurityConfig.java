@@ -8,6 +8,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -57,6 +58,17 @@ public class SecurityConfig {
                     // Salud: liveness y readiness no requieren token.
                     .requestMatchers("/actuator/health", "/actuator/health/**")
                     .permitAll()
+                    // Rutas públicas del contrato (docs/contracts/openapi/identity.yaml):
+                    // login, registro y social no llevan token; el JWKS es público.
+                    .requestMatchers(HttpMethod.POST, "/api/auth/login", "/api/auth/registro",
+                            "/api/auth/social")
+                    .permitAll()
+                    .requestMatchers(HttpMethod.GET, "/.well-known/jwks.json")
+                    .permitAll()
+                    // Token máquina: lo autentica su propio filtro Basic, que corre antes de esta
+                    // cadena y responde 401 si la credencial de servicio no vale.
+                    .requestMatchers(HttpMethod.POST, "/internal/auth/token")
+                    .permitAll()
                     // Rutas internas: solo un token máquina (con scope). Un token humano sin scope da 403.
                     .requestMatchers("/internal/**")
                     .access(
@@ -69,7 +81,8 @@ public class SecurityConfig {
                                       .anyMatch(authority -> authority.startsWith("SCOPE_"));
                           return new AuthorizationDecision(machine);
                         })
-                    // Denegación por defecto: todo lo demás exige autenticación.
+                    // Denegación por defecto: todo lo demás exige autenticación. GET/PUT
+                    // /api/auth/me y PUT /api/auth/password caen aquí y solo aceptan JWT humano.
                     .anyRequest()
                     .authenticated())
         .oauth2ResourceServer(
