@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
+import json
 import os
 import shutil
 import subprocess
@@ -168,7 +169,75 @@ def siguiente_plan(sin_remoto: bool) -> str | None:
     return plan or None
 
 
-def ejecutar_plan(plan: str, timeout: int, seco: bool, modelo: str) -> bool:
+def _formatear_evento(evento: dict) -> list:
+    """Convierte un evento de `opencode run --format json` en lineas legibles."""
+    tipo = evento.get("type")
+    parte = evento.get("part") or {}
+
+    if tipo == "reasoning" and parte.get("text"):
+        txt = " ".join(str(parte["text"]).split())
+        return [f"PIENSA  {txt[:240]}{'...' if len(txt) > 240 else ''}"]
+
+    if tipo == "text" and parte.get("text"):
+        txt = " ".join(str(parte["text"]).split())
+        return [f"DICE    {txt[:400]}{'...' if len(txt) > 400 else ''}"]
+
+    if tipo == "tool_use":
+        nombre = parte.get("tool")
+        estado = (parte.get("state") or {}).get("status")
+        entrada = (parte.get("state") or {}).get("input") or {}
+        if nombre == "subagent":
+            agente = entrada.get("agent", "?")
+            tarea = " ".join(str(entrada.get("description", "")).split())
+            return [f"DELEGA a {agente}: {tarea}"]
+        detalle = entrada.get("command") or entrada.get("filePath") or entrada.get("pattern") or ""
+        return [f"CMD     {nombre} {str(detalle)[:150]}  [{estado}]"]
+
+    return []
+
+
+def _seguir(cmd, timeout: int, entorno: dict) -> int:
+    """Ejecuta opencode en modo json y va imprimiendo los eventos en claro.
+
+    Sin esto la terminal muestra lo que dice el orquestador pero no lo que
+    piensa. Y de las ejecutoras solo se ve la respuesta final: cada una corre en
+    su propia sesion hija y su razonamiento no llega al flujo del padre.
+
+    `opencode run` en modo texto no da mas de eso. Con `--format json` llega
+    una linea por evento, y esas si se pueden filtrar.
+    """
+    proceso = subprocess.Popen(cmd, cwd=RAIZ, env=entorno,
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                               text=True, encoding="utf-8", errors="replace",
+                               bufsize=1)
+    inicio = time.monotonic()
+    try:
+        for linea in proceso.stdout:
+            linea = linea.strip()
+            if not linea:
+                continue
+            transcurrido = int(time.monotonic() - inicio)
+            reloj = f"[{transcurrido // 60:>3}m {transcurrido % 60:>2}s]"
+            if not linea.startswith("{"):
+                print(f"{reloj} {linea}", flush=True)
+                continue
+            try:
+                evento = json.loads(linea)
+            except json.JSONDecodeError:
+                continue
+            for trozo in _formatear_evento(evento):
+                print(f"{reloj} {trozo}", flush=True)
+        proceso.wait()
+        return proceso.returncode
+    except KeyboardInterrupt:
+        print()
+        log("Interrumpido con Ctrl+C. El plan queda en curso y se puede retomar.")
+        proceso.kill()
+        return 130
+
+
+def ejecutar_plan(plan: str, timeout: int, seco: bool, modelo: str,
+                   seguir: bool = False) -> bool:
     """Devuelve True si el plan quedó CERRADO."""
     if seco:
         log(f"[--seco] opencode run --agent {AGENTE} --model {modelo} "
@@ -189,6 +258,17 @@ def ejecutar_plan(plan: str, timeout: int, seco: bool, modelo: str) -> bool:
     ])
     entorno = entorno_campana()
     inicio = time.monotonic()
+    if seguir:
+        codigo = _seguir(cmd, timeout, entorno)
+        transcurrido = int(time.monotonic() - inicio)
+        log(f"{plan} terminó en {transcurrido // 60} min {transcurrido % 60} s (código {codigo}).")
+        if codigo == 0 and "Estado:    cerrado" in subprocess.run(
+                _py(PROXIMO) + ["--explain", plan], cwd=RAIZ,
+                capture_output=True, text=True).stdout:
+            log(f"{plan}: CERRADO.")
+            return True
+        log(f"{plan}: NO quedó cerrado. Revisa docs/implementacion/decisiones/ antes de relanzar.")
+        return False
     try:
         res = subprocess.run(cmd, cwd=RAIZ, timeout=timeout, env=entorno)
         codigo = res.returncode
@@ -228,6 +308,8 @@ def main() -> int:
     ap.add_argument("--timeout", type=int, default=TIMEOUT_POR_PLAN, metavar="SEG", help="segundos por plan")
     ap.add_argument("--modelo", default=MODELO, help="modelo de la campaña (proveedor/modelo#variante)")
     ap.add_argument("--seco", action="store_true", help="no lanza nada, solo enseña qué haría")
+    ap.add_argument("--seguir", action="store_true",
+                    help="muestra en vivo lo que piensa el orquestador y a quién delega")
     ap.add_argument("--sin-preflight", action="store_true", help="salta las precondiciones (depuración)")
     ap.add_argument("--sin-remoto", action="store_true", help="no consulta las ramas de origin")
     args = ap.parse_args()
@@ -245,7 +327,7 @@ def main() -> int:
 
         log(f"Plan de este turno: {plan}")
 
-        if not ejecutar_plan(plan, args.timeout, args.seco, args.modelo):
+        if not ejecutar_plan(plan, args.timeout, args.seco, args.modelo, args.seguir):
             return 2
 
         ejecutados += 1
