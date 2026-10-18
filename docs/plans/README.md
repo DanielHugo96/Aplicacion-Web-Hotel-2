@@ -126,7 +126,7 @@ Quien ejecuta (humano o IA) sigue estas reglas. El validador no las comprueba: l
 6. **Ante ambigüedad, parar.** No inventa endpoints, eventos, códigos de error, reglas ni valores. Si la spec no decide, es una pregunta abierta. La ejecución por IA sustituye la parada por el protocolo de decisión de [§6.11](#611-ejecución-por-ia-campaña-automática).
 7. **Verifica con los comandos canónicos.** La sección «Verificación» del `README.md` raíz, creada en `infra-monorepo`, lista el build, las pruebas, Compose y el validador. Los planes citan esos comandos; no definen otros.
 8. **Evidencia por caso.** En *Pruebas*, cada caso de [06](../especificacion/06-migracion-y-pruebas.md) anota el comando o endpoint, el resultado y dónde está la salida. Sin evidencia, el caso no se marca.
-9. **Cierre.** Cambia el estado a `cerrado` en el último PR del plan. Una persona revisa y hace el merge; la ejecutora no mergea su propio PR. La ejecución por IA sustituye esa revisión por un agente revisor independiente; ver [§6.11](#611-ejecución-por-ia-campaña-automática).
+9. **Cierre.** Cambia el estado a `cerrado` en el último PR del plan. Una persona revisa y hace el merge; la ejecutora no mergea su propio PR. La ejecución por IA sustituye esa revisión por la validación de la propia ejecutora; ver [§6.11](#611-ejecución-por-ia-campaña-automática).
 10. **Sin secretos.** Nunca escribe credenciales reales; solo nombres de variables, como `DEMO_PASSWORD`.
 
 ### 6.11 Ejecución por IA (campaña automática)
@@ -143,9 +143,8 @@ humana: quien ejecuta un plan a mano sigue las reglas 5, 6 y 9 tal cual.
 
 | Agente | Papel |
 |---|---|
-| Orquestador | Conduce **un** plan. No elige el orden: lo recibe ya calculado. Delega, pide revisión, hace el merge. |
-| Ejecutora | Implementa los pasos de **un** plan. No sabe qué plan va después, ni mergea, ni pregunta. |
-| Revisor | Audita el resultado contra los criterios de cierre del plan y la norma. Solo lee. Veredicto binario. |
+| Orquestador | Conduce **un** plan. No elige el orden: lo recibe ya calculado. Delega, da por validado y hace el merge. |
+| Ejecutora | Implementa los pasos de **un** plan, se valida a sí misma y lo deja `cerrado`. No sabe qué plan va después, ni mergea, ni pregunta. |
 
 **Regla 6.11.1 — Protocolo de decisión.** Ante cualquier bloqueo, la ejecutora aplica:
 
@@ -198,13 +197,11 @@ convención que el propio repositorio ya escribió, y dejar constancia de qué s
 calendario de [`../implementacion/orden.md`](../implementacion/orden.md) §2. Si un plan queda
 `en curso`, se reanuda ese. El orquestador no elige, no salta y no improvisa el orden.
 
-**Regla 6.11.3 — El merge.** El orquestador hace el merge de su propio PR, **solo** si el
-agente revisor devuelve `APROBADO`. Hay un intento de corrección si el revisor devuelve
-`RECHAZADO`; si reincide, el PR se cierra sin mergear, se registra el bloqueo en
-`docs/implementacion/decisiones/` y la campaña sigue con el siguiente plan. La ejecutora **nunca**
-hace merge. La separación que la regla 9 protege —que quien implementa no sea quien aprueba— se
-mantiene con dos agentes distintos, con contextos separados, y con el revisor sin permiso de
-escritura.
+**Regla 6.11.3 — El merge.** El orquestador hace el merge de su propio PR en cuanto la
+ejecutora termina sin dejar el plan `BLOQUEADO`. No hay agente revisor: la ejecutora valida su
+propio trabajo y no hay una segunda lectura que lo apruebe. La ejecutora **nunca** hace merge. La
+separación que la regla 9 protegía —que quien implementa no sea quien aprueba— se asume aquí como
+riesgo explícito: quien revise los PRs a mano es quien tiene que mirarlo.
 
 Esta excepción **no** se extiende a nada más. Siguen siendo inviolables: `main` nunca se toca
 directamente, `git push --force` nunca, los documentos de la lista de §6.4 nunca, y las

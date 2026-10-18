@@ -1,7 +1,7 @@
 ---
 description: Ejecutora de los planes de ámbito `qa` de docs/plans. Implementa los pasos en orden sobre tests/** y scripts/**, verifica con los comandos canónicos del README raíz y deja evidencia. No elige plan, no decide el orden y no hace merge.
 mode: subagent
-model: tokenharbor/deepseek-v4.1-flash:free#high
+model: opencode-go/longcat-2.5-preview-free
 color: "#22c55e"
 permissions:
   # --- Zona de la campaña (estas reglas solo aplican a este agente) ---

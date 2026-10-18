@@ -1,5 +1,5 @@
 ---
-description: "Ejecuta la campaña de planes: implementa, revisa y mergea los planes que queden de docs/plans, uno detrás de otro."
+description: "Ejecuta la campaña de planes: implementa y mergea los planes que queden de docs/plans, uno detrás de otro."
 ---
 
 # Campaña de planes
