@@ -9,7 +9,7 @@ Los 12 tasks corresponden, en el mismo orden, a los 12 pasos de `docs/plans/back
 
 ## 2. Seguridad sin rutas de negocio
 
-- [ ] 2.1 Configurar el servicio sin rutas de negocio, sin login propio y sin endpoint de envío, con el Gateway sin enrutarle nada, deny-by-default y sin confiar en headers de identidad, y sin Feign ni Kafka. Verificación: el Gateway no expone ninguna ruta hacia notification; `GET /actuator/health/liveness` responde sin token; una búsqueda de `X-User-Id`, `X-Role` y `X-Hotel-Id` en el código devuelve 0 usos; no existe cliente Feign ni consumidor Kafka en el módulo.
+- [x] 2.1 Configurar el servicio sin rutas de negocio, sin login propio y sin endpoint de envío, con el Gateway sin enrutarle nada, deny-by-default y sin confiar en headers de identidad, y sin Feign ni Kafka. Verificación: el Gateway no expone ninguna ruta hacia notification; `GET /actuator/health/liveness` responde sin token; una búsqueda de `X-User-Id`, `X-Role` y `X-Hotel-Id` en el código devuelve 0 usos; no existe cliente Feign ni consumidor Kafka en el módulo.
 
 ## 3. Consumo idempotente
 
