@@ -52,29 +52,40 @@
     { "action": "tool.use", "resource": "read:~/.ssh/**", "effect": "deny" },
 
     // ---------------------------------------------------------------------
-    // git push: lista blanca. Solo ramas de plan y de registro.
+    // git push: se puede a cualquier rama, nunca a `main` ni forzando.
     //
-    // Gana la ÚLTIMA regla que casa. Por eso las tres denegaciones del final
-    // van después de las excepciones: son las que de verdad protegen `main`,
-    // porque `git push -u origin back-x --force` casa con la excepción de la
-    // lista blanca y con la denegación final, y la final gana.
+    // Gana la ÚLTIMA regla que casa, así que el allow va primero y las
+    // denegaciones al final. Con ese orden, `git push -u origin back-x
+    // --force` casa con el allow y con la denegación de --force, y manda la
+    // última.
+    //
+    // Antes esto era una lista blanca de prefijos (back-*, front-*, qa-*...),
+    // y era un error: bloqueaba el trabajo normal de las personas, porque sus
+    // ramas no se llaman así (`cierre-infra-monorepo`, `registro-ejecucion`...).
+    // Lo que hay que proteger no es el nombre de la rama, son tres cosas
+    // concretas: `main`, la reescritura de historia y el borrado de ramas.
+    //
+    // Que un agente pueda tocar una rama que no es la suya lo regulate el
+    // prompt, no la configuración: la campaña va en serie y cada agente solo
+    // trabaja la suya.
     // ---------------------------------------------------------------------
-    { "action": "tool.use", "resource": "shell:git push *", "effect": "deny" },
-    { "action": "tool.use", "resource": "shell:git push -u origin back-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push -u origin front-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push -u origin qa-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push -u origin infra-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push -u origin docs-estado-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push origin back-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push origin front-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push origin qa-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push origin infra-*", "effect": "allow" },
-    { "action": "tool.use", "resource": "shell:git push origin docs-estado-*", "effect": "allow" },
+    { "action": "tool.use", "resource": "shell:git push *", "effect": "allow" },
     { "action": "tool.use", "resource": "shell:git push *--force*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:git push * -f*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:git push *--delete*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push * -d*", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:git push * main", "effect": "deny" },
     { "action": "tool.use", "resource": "shell:git push * main:*", "effect": "deny" },
+    // Las tres de arriba parecen equivalentes y no lo son. Comprobado en
+    // opencode v2.0.32: `git push * main` NO casa con `git push origin main`,
+    // así que esa regla era decorativa. Las tres variantes siguientes sí
+    // casan. Se dejan las tres a propósito: es defensa en profundidad, y
+    // perder esta protección por confiar en un patrón que no casa sería un
+    // desastre. Verificado con `git push origin main` y
+    // `git push origin main:main`.
+    { "action": "tool.use", "resource": "shell:git push * main*", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push origin main", "effect": "deny" },
+    { "action": "tool.use", "resource": "shell:git push *main", "effect": "deny" },
 
     // ---------------------------------------------------------------------
     // Historia destructiva.
