@@ -70,7 +70,7 @@ En el perfil dev, `identity-service` queda operativo como emisor de autenticaci�
 - [x] 16. Implementar `POST /internal/auth/token`: Basic clientId:secret contra `secret_hash` (BCrypt), allowlist de audiencia por cliente desde `audiencias_scopes`, TTL 300, `sub`=nombre del servicio, `aud`=destino y scope como string separado por espacios; respuesta sin envelope. Verificación: el cliente de reception obtiene 200 con un token decodificado que lleva `aud=identity` y scope `clientes:read`; Basic inválido da 401 `UNAUTHENTICATED`; audiencia fuera de la allowlist del cliente da 400 `VALIDATION_ERROR`; sin Basic válido (o con un JWT humano) no se emite token.
 - [x] 17. Cubrir con pruebas automatizadas del servicio login, registro, me (GET y PUT), password, social, JWKS y token máquina, incluyendo 401/409/410/412/428/429, las segundas pasadas de idempotencia y la validación del JSON Schema de la bienvenida. Verificación: los comandos canónicos de pruebas del `README.md` raíz terminan en 0 y el reporte queda adjunto al PR.
 - [x] 18. Corrida de aceptación: ejecutar el caso `SEC02` de punta a punta contra el Gateway y comprobar el envelope de negocio con `meta.correlationId` en las respuestas de los pasos anteriores. Verificación: SEC02 cumple el resultado exigido con su evidencia (respuesta + consulta a `identity_db.persona`).
-- [ ] 19. Correr `python scripts/validar-planes.py` desde la raíz. Verificación: 0 errores; cada aviso queda resuelto o justificado en el PR.
+- [x] 19. Correr `python scripts/validar-planes.py` desde la raíz. Verificación: 0 errores; cada aviso queda resuelto o justificado en el PR.
 
 ## 5. Contratos afectados
 
