@@ -91,7 +91,7 @@ Decisiones de este plan (implementación, sin cambiar la spec): la validación F
   - Resultado: `{"success":false,"error":{"code":"UNAUTHENTICATED","fields":{}}}` — sin datos ni enumeración. ✓
 - Lectura de personas con token ADMIN válido contra BD real:
   - `GET /api/persona/listar` con `Authorization: Bearer <token>` → `HTTP: 200`, 7 personas (incluye id 1, 2, 3, 4, 100, 101, 109), meta con totalElements=7. ✓
-  - `GET /api/persona/buscar/100` con token ADMIN → `HTTP: 200`, datos de cliente.uno sin clave ni hash. ✓
+  - `GET /api/persona/buscar/{id}` con token ADMIN (id 100) → `HTTP: 200`, datos de cliente.uno sin clave ni hash. ✓
 - Caso SEC07 de [06-migracion-y-pruebas.md §5]: mutex del último ADMIN contra PostgreSQL real.
   - Con dos ADMIN activos (id 1 y 110), PUT `actualizar/110 {estado:false}` y DELETE `eliminar/1` concurrentes → exactamente un `200` y un `409 LAST_ADMIN_PROTECTED`.
   - El `409 LAST_ADMIN_PROTECTED` se devolvió al intentar desactivar el último ADMIN restante (ver stack trace real en log: `auditoria_fallida action=PERSONA_SEARCH... column "id" is of type uuid` → corregido con `UUID` objetos).
