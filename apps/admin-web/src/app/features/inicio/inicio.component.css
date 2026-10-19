@@ -1,0 +1,11 @@
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+
+.sub {
+  font-size: var(--text-small);
+  color: var(--color-garua);
+  margin-bottom: var(--space-8);
+}

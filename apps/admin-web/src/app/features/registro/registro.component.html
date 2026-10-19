@@ -1,0 +1,135 @@
+<div class="registro-page">
+  <div class="registro-card">
+    <h1>Registro de cuenta</h1>
+    <p class="sub">Crea tu cuenta como cliente. Los campos con asterisco son obligatorios.</p>
+
+    @if (error) {
+      <div class="banner banner-error" role="alert">
+        <span>{{ error.message }}</span>
+        <span class="correlation">{{ error.correlationId }}</span>
+      </div>
+    }
+
+    <form (ngSubmit)="onSubmit($event)" novalidate>
+      <div class="field">
+        <label for="tipoDocumento" class="required">Tipo de documento</label>
+        <select
+          id="tipoDocumento"
+          [(ngModel)]="tipoDocumento"
+          name="tipoDocumento"
+          [class.error]="campoInvalido('tipoDocumento')"
+          required
+        >
+          @for (tipo of tiposDocumento; track tipo) {
+            <option [value]="tipo">{{ tipo }}</option>
+          }
+        </select>
+        @if (campoInvalido('tipoDocumento')) {
+          <span class="field-msg">{{ mensajeCampo('tipoDocumento') }}</span>
+        } @else {
+          <span class="field-help">DNI, pasaporte o carné de extranjería.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="documento" class="required">Número de documento</label>
+        <input
+          id="documento"
+          [(ngModel)]="documento"
+          name="documento"
+          [class.error]="campoInvalido('documento')"
+          required
+          maxlength="20"
+        />
+        @if (campoInvalido('documento')) {
+          <span class="field-msg">{{ mensajeCampo('documento') }}</span>
+        } @else {
+          <span class="field-help">
+            @if (tipoDocumento === 'DNI') { DNI: 8 dígitos. } @else { 6 a 20 caracteres alfanuméricos. }
+          </span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="nombre" class="required">Nombres</label>
+        <input
+          id="nombre"
+          [(ngModel)]="nombre"
+          name="nombre"
+          [class.error]="campoInvalido('nombre')"
+          required
+          maxlength="100"
+        />
+        @if (campoInvalido('nombre')) {
+          <span class="field-msg">{{ mensajeCampo('nombre') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="apellido" class="required">Apellidos</label>
+        <input
+          id="apellido"
+          [(ngModel)]="apellido"
+          name="apellido"
+          [class.error]="campoInvalido('apellido')"
+          required
+          maxlength="100"
+        />
+        @if (campoInvalido('apellido')) {
+          <span class="field-msg">{{ mensajeCampo('apellido') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="correo" class="required">Correo</label>
+        <input
+          id="correo"
+          type="email"
+          [(ngModel)]="correo"
+          name="correo"
+          [class.error]="campoInvalido('correo')"
+          required
+          maxlength="254"
+        />
+        @if (campoInvalido('correo')) {
+          <span class="field-msg">{{ mensajeCampo('correo') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="clave" class="required">Contraseña</label>
+        <input
+          id="clave"
+          type="password"
+          [(ngModel)]="clave"
+          name="clave"
+          [class.error]="campoInvalido('clave') || !claveValida()"
+          required
+        />
+        <span class="field-help">
+          {{ claveBytes() }} / 72 bytes UTF-8 — entre 12 y 72 bytes.
+        </span>
+        @if (campoInvalido('clave')) {
+          <span class="field-msg">{{ mensajeCampo('clave') }}</span>
+        } @else if (!claveValida() && clave.length > 0) {
+          <span class="field-msg">
+            La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8).
+          </span>
+        }
+      </div>
+
+      <p class="note">
+        Tu cuenta queda con rol <strong>cliente</strong>. No se aceptan campos de rol,
+        sedes ni estado en este registro.
+      </p>
+
+      <button class="btn btn-primary" type="submit" [disabled]="loading || !formularioValido()">
+        @if (loading) { <span class="spinner" aria-hidden="true"></span> } Registrar cuenta
+      </button>
+
+      <p class="foot">
+        ¿Ya tienes cuenta? <a routerLink="/login">Inicia sesión</a>
+      </p>
+    </form>
+  </div>
+</div>

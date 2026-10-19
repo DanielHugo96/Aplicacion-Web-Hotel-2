@@ -1,0 +1,54 @@
+<div class="shell" [class.collapsed]="collapsed()">
+  <aside class="sidebar" aria-label="Navegación principal">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span class="brand-name" *ngIf="!collapsed()">Hotel Demo</span>
+    </div>
+    <nav class="menu">
+      <a
+        *ngFor="let item of menu"
+        [routerLink]="item.path"
+        routerLinkActive="active"
+        [attr.aria-current]="esActivo(item.path) ? 'page' : null"
+        [class.visible]="estaVisible(item)"
+        [class.hidden]="!estaVisible(item)"
+      >
+        <span class="item-label">{{ item.label }}</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <button class="btn btn-link toggle" (click)="toggle()" [attr.aria-label]="collapsed() ? 'Expandir menú' : 'Colapsar menú'">
+        <span class="toggle-text" *ngIf="!collapsed()">{{ collapsed() ? 'Mostrar' : 'Ocultar' }} menú</span>
+        <span class="monospace">{{ collapsed() ? '≡' : '⟨' }}</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="shell-main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <label class="sede-label">Sede</label>
+        <select class="sede-select" disabled aria-label="Selector de sede (filtro de trabajo)">
+          <option>Todas las sedes</option>
+        </select>
+        <span class="demo">Demo</span>
+      </div>
+      <div class="topbar-right">
+        <div class="persona" *ngIf="persona()">
+          <span class="nombre">{{ persona()?.nombre }} {{ persona()?.apellido }}</span>
+          <span class="rol-chip">{{ rol() }}</span>
+        </div>
+        <div class="account-menu">
+          <button class="btn btn-link" (click)="irPerfil()">
+            {{ rol() === 'CLIENTE' ? 'Mi perfil' : 'Mi perfil' }}
+          </button>
+          <button class="btn btn-link" (click)="logout()">Cerrar sesión</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

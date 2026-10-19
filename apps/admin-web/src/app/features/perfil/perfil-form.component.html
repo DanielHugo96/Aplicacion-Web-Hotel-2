@@ -1,0 +1,76 @@
+<div class="pf-card">
+  <h2>{{ titulo }}</h2>
+
+  @if (error) {
+    <div class="banner banner-error" role="alert">
+      @if (error.code === 'PRECONDITION_FAILED') {
+        <span>Otra persona modificó este registro. Recarga para ver los cambios.</span>
+      } @else {
+        <span>{{ error.fields?.['nombre'] || error.fields?.['apellido'] || error.fields?.['fotoUrl'] || error.message }}</span>
+      }
+      <button class="btn btn-link" (click)="recargar()"><strong>Recargar</strong></button>
+      <span class="correlation">{{ error.correlationId }}</span>
+    </div>
+  }
+
+  @if (ok) {
+    <div class="banner banner-ok" role="status">
+      Cambios guardados.
+    </div>
+  }
+
+  <form (ngSubmit)="onSubmit($event)" novalidate>
+    <div class="field">
+      <label for="pfNombre" class="required">Nombres</label>
+      <input
+        id="pfNombre"
+        [(ngModel)]="nombre"
+        name="nombre"
+        [class.error]="campoInvalido('nombre')"
+        required
+        maxlength="100"
+      />
+      @if (campoInvalido('nombre')) {
+        <span class="field-msg">{{ mensajeCampo('nombre') }}</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="pfApellido" class="required">Apellidos</label>
+      <input
+        id="pfApellido"
+        [(ngModel)]="apellido"
+        name="apellido"
+        [class.error]="campoInvalido('apellido')"
+        required
+        maxlength="100"
+      />
+      @if (campoInvalido('apellido')) {
+        <span class="field-msg">{{ mensajeCampo('apellido') }}</span>
+      }
+    </div>
+
+    <div class="field">
+      <label for="pfFotoUrl">URL de foto</label>
+      <input
+        id="pfFotoUrl"
+        [(ngModel)]="fotoUrl"
+        name="fotoUrl"
+        [class.error]="campoInvalido('fotoUrl') || !fotoValida()"
+      />
+      <span class="field-help">
+        URL permitida: https:// o /assets/ (máximo 500 caracteres).
+      </span>
+      @if (!fotoValida() && fotoUrl.length > 0) {
+        <span class="field-msg">URL no permitida.</span>
+      }
+    </div>
+
+    <button class="btn btn-primary" type="submit" [disabled]="loading || !formularioValido()">
+      @if (loading) { <span class="spinner" aria-hidden="true"></span> } Guardar cambios
+    </button>
+  </form>
+
+  <div class="divider"></div>
+  <app-password-change></app-password-change>
+</div>
