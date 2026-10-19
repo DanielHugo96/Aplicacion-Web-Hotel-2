@@ -25,13 +25,12 @@ import pe.hotel.hotel.messaging.OutboxStore;
 public class OutboxService {
 
   private static final DateTimeFormatter TS = DateTimeFormatter.ISO_INSTANT;
+  private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Autowired(required = false)
   private OutboxStore outboxStore;
   @Autowired(required = false)
   private HabitacionRepository habitacionRepository;
-  @Autowired(required = false)
-  private ObjectMapper mapper;
 
   @Transactional
   public void emitirSedeSnapshot(Hotel hotel) {
@@ -52,9 +51,9 @@ public class OutboxService {
           String.valueOf(hotel.getId()),
           hotel.getVersion(),
           "SedeSnapshot",
-          mapper.writeValueAsString(envelope));
+          MAPPER.writeValueAsString(envelope));
     } catch (Exception ex) {
-      throw new IllegalStateException("no se pudo serializar SedeSnapshot", ex);
+      throw new IllegalStateException("no se pudo serializar SedeSnapshot: " + ex.getMessage(), ex);
     }
   }
 
@@ -86,9 +85,9 @@ public class OutboxService {
           String.valueOf(h.getId()),
           h.getVersion(),
           "HabitacionCreada",
-          mapper.writeValueAsString(envelope));
+          MAPPER.writeValueAsString(envelope));
     } catch (Exception ex) {
-      throw new IllegalStateException("no se pudo serializar HabitacionCreada", ex);
+      throw new IllegalStateException("no se pudo serializar HabitacionCreada: " + ex.getMessage(), ex);
     }
   }
 
@@ -120,9 +119,9 @@ public class OutboxService {
           String.valueOf(h.getId()),
           h.getVersion(),
           "HabitacionSnapshot",
-          mapper.writeValueAsString(envelope));
+          MAPPER.writeValueAsString(envelope));
     } catch (Exception ex) {
-      throw new IllegalStateException("no se pudo serializar HabitacionSnapshot", ex);
+      throw new IllegalStateException("no se pudo serializar HabitacionSnapshot: " + ex.getMessage(), ex);
     }
   }
 
