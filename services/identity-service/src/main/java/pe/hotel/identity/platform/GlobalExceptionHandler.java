@@ -67,7 +67,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception exception) {
     // Nunca se devuelve stacktrace ni SQL al cliente; el correlationId permite ubicarlo en los logs.
-    log.error("unhandled error: {}", exception.getMessage());
+    log.error("unhandled error: {}", exception.getMessage(), exception);
     return build(ErrorCode.INTERNAL_ERROR, Map.of());
   }
 

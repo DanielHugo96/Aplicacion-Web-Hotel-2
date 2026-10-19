@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.beans.factory.ObjectProvider;
@@ -40,6 +42,7 @@ public class PersonaService {
 
   private static final String CANAL_PERSONA = "identity.persona.v1";
   private static final String TIPO_EVENTO = "PersonaSnapshot";
+  private static final Logger log = LoggerFactory.getLogger(PersonaService.class);
 
   private final PersonaRepository personas;
   private final HotelClient hotel;
@@ -317,6 +320,14 @@ public class PersonaService {
 
     personas.actualizar(id, nomFinal, apeFinal, correoFinal, fotoFinal, rolFinal, estadoFinal, antes.version());
 
+    // Después del cambio, verificar que quede al menos un ADMIN activo con clave.
+    // Si esta operación desactiva al último ADMIN, revertir con 409 (rollback transaccional).
+    boolean quitaAdmin = "ADMIN".equals(codigoDe(antes.idTipoPersona()))
+        || Boolean.FALSE.equals(estadoFinal);
+    if (quitaAdmin && personas.contarAdminActivosConClave() == 0) {
+      throw new ApiException(ErrorCode.LAST_ADMIN_PROTECTED);
+    }
+
     Persona despues = personas.buscarPorId(id).orElseThrow();
     emitirSnapshot(despues, correlationId);
 
@@ -376,6 +387,12 @@ public class PersonaService {
     }
 
     personas.desactivar(id, antes.version());
+
+    // Después de la baja, verificar que quede al menos un ADMIN activo con clave.
+    if (personas.contarAdminActivosConClave() == 0) {
+      throw new ApiException(ErrorCode.LAST_ADMIN_PROTECTED);
+    }
+
     Persona despues = personas.buscarPorId(id).orElseThrow();
     emitirSnapshot(despues, correlationId);
 
@@ -602,19 +619,31 @@ public class PersonaService {
       String actor, Integer idHotel) {
     try {
       String changesJson = mapper.writeValueAsString(changes);
+      UUID idUuid = UUID.randomUUID();
+      UUID correlationUuid;
+      try {
+        correlationUuid =
+            correlationId == null || correlationId.isBlank()
+                ? UUID.randomUUID()
+                : UUID.fromString(correlationId);
+      } catch (IllegalArgumentException noEsUuid) {
+        correlationUuid = UUID.randomUUID();
+      }
       jdbc.update(
           """
           INSERT INTO audit_log (id, actor, action, resource_id, id_hotel, correlation_id, occurred_at, changes)
-          VALUES (?, ?, ?, ?, ?, now(), CAST(? AS jsonb))
+          VALUES (?, ?, ?, ?, ?, ?, now(), CAST(? AS jsonb))
           """,
-          UUID.randomUUID().toString(),
+          idUuid,
           actor == null || actor.isBlank() ? "system" : actor,
           action,
           resourceId,
           idHotel,
-          correlationId == null || correlationId.isBlank() ? UUID.randomUUID().toString() : correlationId,
+          correlationUuid,
           changesJson);
     } catch (Exception e) {
+      log.error("auditoria_fallida action={} resource_id={} error={}", action, resourceId,
+          e.getMessage(), e);
       throw new ApiException(ErrorCode.INTERNAL_ERROR);
     }
   }
