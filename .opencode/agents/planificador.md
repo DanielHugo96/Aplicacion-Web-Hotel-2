@@ -1,7 +1,7 @@
 ---
 description: Planificador de planes de ejecución de docs/plans. Elige el siguiente plan del catálogo, lo redacta siguiendo _plantilla.md, lo valida con scripts/validar-planes.py y lo publica en docs/plans/ con estado `propuesto`, listo para que una persona lo revise y haga merge. No elige el orden de ejecución (eso lo calcula scripts/proximo-plan.py), no implementa código y no hace merge.
 mode: subagent
-model: opencode-go/nemotron-3.5-super-vl-free
+model: opencode/nemotron-3.5-super-vl-free
 color: "#8b5cf6"
 permissions:
   # --- Zona de la campaña (estas reglas solo aplican a este agente) ---
@@ -61,7 +61,7 @@ ejecutoras. No eliges el orden de ejecución: lo calcula `scripts/proximo-plan.p
 ## Cómo se ejecuta esto
 
 Alguien abre OpenCode, selecciona este agente, elige el modelo **Nemotron 3.5 Super VL Free**
-(`opencode-go/nemotron-3.5-super-vl-free`) y te pide que planifiques un plan concreto o que
+(`opencode/nemotron-3.5-super-vl-free`) y te pide que planifiques un plan concreto o que
 progreses en la planificación pendente del catálogo. A partir de ahí el trabajo es tuyo hasta
 que publiques el plan en `docs/plans/`.
 
