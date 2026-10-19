@@ -2,10 +2,14 @@ package pe.hotel.identity.persona;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
@@ -14,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import pe.hotel.identity.config.DemoProperties;
+import pe.hotel.identity.messaging.Destination;
+import pe.hotel.identity.messaging.OutboxStore;
 
 /**
  * Seeds del perfil dev: catálogo fijo de roles, personas demo con sus sedes y clientes de servicio.
@@ -84,12 +90,17 @@ public class DemoDataSeeder implements ApplicationRunner {
   private final PasswordEncoder passwordEncoder;
   private final DemoProperties demo;
   private final ObjectMapper mapper = new ObjectMapper();
+  private final ObjectProvider<OutboxStore> outboxProvider;
 
   public DemoDataSeeder(
-      JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder, DemoProperties demo) {
+      JdbcTemplate jdbcTemplate,
+      PasswordEncoder passwordEncoder,
+      DemoProperties demo,
+      ObjectProvider<OutboxStore> outboxProvider) {
     this.jdbcTemplate = jdbcTemplate;
     this.passwordEncoder = passwordEncoder;
     this.demo = demo;
+    this.outboxProvider = outboxProvider;
   }
 
   @Override
@@ -104,6 +115,8 @@ public class DemoDataSeeder implements ApplicationRunner {
       // sedes sin personas rompe el arranque por FK y la transacción de `run()` no llega a confirmar.
       sembrarPersonas();
       sembrarSedes();
+      // Snapshot de bootstrap en outbox por persona (hecho global, idHotel nulo).
+      encolarSnapshotsBootstrap();
     }
     // Los clientes de servicio no dependen de personas y sí tienen su propio secreto por entorno.
     sembrarClientesDeServicio();
@@ -186,6 +199,55 @@ public class DemoDataSeeder implements ApplicationRunner {
               json(cliente.audienciasScopes()));
     }
     log.info("seed_demo clientes_servicio declarados={} nuevos={}", CLIENTES.size(), nuevos);
+  }
+
+  /**
+   * Encola un {@code PersonaSnapshot} de bootstrap por cada persona demo (solo las que se
+   * insertaron realmente, no las que ya existían por {@code ON CONFLICT DO NOTHING}).
+   */
+  private void encolarSnapshotsBootstrap() {
+    if (outboxProvider == null) {
+      return;
+    }
+    OutboxStore outbox = outboxProvider.getIfAvailable();
+    if (outbox == null) {
+      return;
+    }
+    for (PersonaSeed persona : PERSONAS) {
+      String json;
+      try {
+        java.util.Map<String, Object> evento = new java.util.LinkedHashMap<>();
+        evento.put("eventId", UUID.randomUUID().toString());
+        evento.put("type", "PersonaSnapshot");
+        evento.put("schemaVersion", 1);
+        evento.put("aggregateType", "persona");
+        evento.put("aggregateId", String.valueOf(persona.id()));
+        evento.put("aggregateVersion", 1);
+        evento.put("idHotel", null);
+        evento.put("occurredAt", Instant.now().toString());
+        evento.put("correlationId", UUID.randomUUID().toString());
+        java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("idPersona", persona.id());
+        payload.put("nombre", persona.nombre());
+        payload.put("apellido", persona.apellido());
+        payload.put("idTipoPersona", persona.idTipoPersona());
+        payload.put("estado", true);
+        payload.put("version", 1);
+        evento.put("payload", payload);
+        json = mapper.writeValueAsString(evento);
+      } catch (JsonProcessingException e) {
+        throw new IllegalStateException("no se pudo serializar el snapshot de bootstrap", e);
+      }
+      outbox.enqueue(
+          Destination.KAFKA,
+          "identity.persona.v1",
+          String.valueOf(persona.id()),
+          String.valueOf(persona.id()),
+          1,
+          "PersonaSnapshot",
+          json);
+    }
+    log.info("seed_demo snapshots_bootstrap personas={}", PERSONAS.size());
   }
 
   private String json(Map<String, List<String>> audienciasScopes) {

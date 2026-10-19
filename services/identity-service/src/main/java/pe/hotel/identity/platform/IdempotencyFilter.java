@@ -127,6 +127,10 @@ public class IdempotencyFilter extends OncePerRequestFilter {
 
   private boolean applies(HttpServletRequest request) {
     String uri = request.getRequestURI();
+    // Rutas retiradas del catálogo fijo: responden 409 sin ejecutar efectos, sin Idempotency-Key.
+    if (uri.equals("/api/tipopersona/registrar") || uri.startsWith("/api/tipopersona/eliminar/")) {
+      return false;
+    }
     return MUTATING.contains(request.getMethod())
         && uri.startsWith("/api/")
         && !EXEMPT.contains(uri);
