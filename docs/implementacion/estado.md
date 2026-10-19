@@ -17,7 +17,7 @@ PR en borrador (ver [`README.md` §3](README.md#3-cómo-se-implementa-un-plan)).
 | F4 | [`back-notification-worker`](../plans/back-notification-worker.md) | T4 | `cerrado` | `back-notification-worker` | [#63](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/63) |
 | F2 | [`back-hotel-catalogo`](../plans/back-hotel-catalogo.md) | T5 | `cerrado` | `back-hotel-catalogo` | [#66](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/66) |
 | F2 | [`front-admin-web-base`](../plans/front-admin-web-base.md) | T5 | `cerrado` | `front-admin-web-base` | [#68](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/68) |
-| F2 | [`back-identity-personas`](../plans/back-identity-personas.md) | T6 | `propuesto` | — | — |
+| F2 | [`back-identity-personas`](../plans/back-identity-personas.md) | T6 | `cerrado` | `back-identity-personas` | [#70](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/70) |
 | F3 | [`back-inventory-stock`](../plans/back-inventory-stock.md) | T6 | `propuesto` | — | — |
 | F2 | [`front-public-web-landing`](../plans/front-public-web-landing.md) | T6 | `propuesto` | — | — |
 | F3 | [`back-reception-operacion`](../plans/back-reception-operacion.md) | T7 | `propuesto` | — | — |
