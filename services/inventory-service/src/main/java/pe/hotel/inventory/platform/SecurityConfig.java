@@ -26,12 +26,16 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
+import org.springframework.http.HttpMethod;
 
 /**
- * Convención de seguridad común: resource server JWT RS256 con validación explícita de
+ * Seguridad de inventory-service: resource server JWT RS256 con validación explícita de
  * {@code iss}, {@code aud} y {@code exp}, denegación por defecto y autorización desde el JWT
- * validado. La identidad nunca se lee de cabeceras falsificables: solo del JWT.
- * Ver docs/especificacion/03-contrato-comun.md § Identidad y sedes y § Servicio a servicio.
+ * validado.
+ *
+ * <p>Rutas internas (/internal/**): solo token máquina (SCOPE_*). Las de lectura
+ * ({@code stock:read}) y el débito ({@code stock:debit}) exigen el scope exacto; un token humano
+ * nunca basta (caso {@code SEC05}).
  */
 @Configuration
 @EnableWebSecurity
@@ -52,22 +56,31 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 auth
-                    // Salud: liveness y readiness no requieren token.
+                    // Salud: sin token.
                     .requestMatchers("/actuator/health", "/actuator/health/**")
                     .permitAll()
-                    // Rutas internas: solo un token máquina (con scope). Un token humano sin scope da 403.
+                    // Catálogo interno de sales: scope stock:read.
+                    .requestMatchers(
+                            HttpMethod.GET,
+                            "/internal/productos",
+                            "/internal/productos/{id}",
+                            "/internal/stock/movimientos/{idVenta}")
+                    .access(
+                        (authentication, context) ->
+                            new AuthorizationDecision(
+                                esMaquinaConScope(authentication.get(), "stock:read")))
+                    // Débito de stock: scope stock:debit.
+                    .requestMatchers(HttpMethod.POST, "/internal/stock/descontar")
+                    .access(
+                        (authentication, context) ->
+                            new AuthorizationDecision(
+                                esMaquinaConScope(authentication.get(), "stock:debit")))
+                    // Resto de /internal/** sin el scope exacto: 403.
                     .requestMatchers("/internal/**")
                     .access(
-                        (authentication, context) -> {
-                          Authentication current = authentication.get();
-                          boolean machine =
-                              current != null
-                                  && current.getAuthorities().stream()
-                                      .map(GrantedAuthority::getAuthority)
-                                      .anyMatch(authority -> authority.startsWith("SCOPE_"));
-                          return new AuthorizationDecision(machine);
-                        })
-                    // Denegación por defecto: todo lo demás exige autenticación.
+                        (authentication, context) ->
+                            new AuthorizationDecision(esMaquina(authentication.get())))
+                    // Denegación por defecto: todo lo demás exige autenticación humana.
                     .anyRequest()
                     .authenticated())
         .oauth2ResourceServer(
@@ -81,6 +94,23 @@ public class SecurityConfig {
                     .authenticationEntryPoint(authenticationEntryPoint)
                     .accessDeniedHandler(accessDeniedHandler));
     return http.build();
+  }
+
+  private boolean esMaquina(Authentication current) {
+    return current != null
+        && current.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(a -> a.startsWith("SCOPE_"));
+  }
+
+  private boolean esMaquinaConScope(Authentication current, String scope) {
+    if (!esMaquina(current)) {
+      return false;
+    }
+    String buscado = "SCOPE_" + scope;
+    return current.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .anyMatch(buscado::equals);
   }
 
   @Bean
@@ -111,7 +141,7 @@ public class SecurityConfig {
   /**
    * Valida {@code exp}/{@code nbf} y el {@code issuer} fijo (sin descubrimiento OIDC) y la
    * {@code audience}: un token humano ({@code hotel-api}) o un token máquina dirigido a este
-   * servicio. Un token con aud incorrecta se rechaza con 401 (caso `SEC06`).
+   * servicio. Un token con aud incorrecta se rechaza con 401 (caso {@code SEC06}).
    */
   @Bean
   OAuth2TokenValidator<Jwt> hotelJwtValidator(
@@ -121,7 +151,8 @@ public class SecurityConfig {
     return new DelegatingOAuth2TokenValidator<>(
         JwtValidators.createDefaultWithIssuer(issuer),
         new JwtClaimValidator<List<String>>(
-            JwtClaimNames.AUD, aud -> aud != null && aud.stream().anyMatch(audiences::contains)));
+            JwtClaimNames.AUD,
+            aud -> aud != null && aud.stream().anyMatch(audiences::contains)));
   }
 
   @Bean

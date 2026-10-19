@@ -45,6 +45,14 @@ spring:
     publisher-returns: true
     template:
       mandatory: true
+
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 2000
+            read-timeout: 5000
 server:
   port: 8084
 
@@ -80,6 +88,10 @@ hotel:
   feign:
     connect-timeout-ms: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${FEIGN_READ_TIMEOUT_MS:5000}
+    url:
+      hotel: ${FEIGN_URL_HOTEL:http://localhost:8082}
+  identity:
+    token-url: ${IDENTITY_TOKEN_URL:http://localhost:8081/internal/auth/token}
   outbox:
     poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
     batch-size: ${OUTBOX_BATCH_SIZE:50}
