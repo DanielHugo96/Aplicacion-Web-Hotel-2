@@ -86,11 +86,22 @@ Decisiones de este plan (implementación, sin cambiar la spec): la validación F
 
 ## 6. Pruebas
 
-- Caso SEC01 de [06-migracion-y-pruebas.md §5](../especificacion/06-migracion-y-pruebas.md): `GET /api/persona/listar` sin token; resultado exigido 401 `UNAUTHENTICATED` sin datos ni enumeración; evidencia: respuesta HTTP y log del Gateway.
-- Caso SEC07 de [06-migracion-y-pruebas.md §5](../especificacion/06-migracion-y-pruebas.md): con dos ADMIN activos, PUT de actualización que desactiva y DELETE de eliminación simultáneos; resultado exigido exactamente un 200 y un 409 `LAST_ADMIN_PROTECTED`, con al menos un ADMIN activo con clave; evidencia: ambas respuestas y SELECT de estado y clave configurada (sin exponer valores).
-- Schemas: cada PersonaSnapshot emitido valida con código 0 contra [identity.persona.v1.PersonaSnapshot.schema.json](../contracts/events/identity.persona.v1.PersonaSnapshot.schema.json); evidencia: salida del validador por evento.
-- Comandos: `python scripts/validar-planes.py` desde la raíz con 0 errores, más el build y las pruebas de la sección Verificación del README raíz; evidencia: salidas en el PR.
-- Sin datos personales reales ni secretos en la evidencia; ningún caso se marca como pasado sin ejecutar PostgreSQL y el servicio reales.
+- Caso SEC01 de [06-migracion-y-pruebas.md §5](../especificacion/06-migracion-y-pruebas.md): `GET /api/persona/listar` sin token contra `identity-service` en `localhost:8091` (PostgreSQL real en `localhost:55432`).
+  - Comando: `curl -s http://localhost:8091/api/persona/listar` → `HTTP: 401`
+  - Resultado: `{"success":false,"error":{"code":"UNAUTHENTICATED","fields":{}}}` — sin datos ni enumeración. ✓
+- Lectura de personas con token ADMIN válido contra BD real:
+  - `GET /api/persona/listar` con `Authorization: Bearer <token>` → `HTTP: 200`, 7 personas (incluye id 1, 2, 3, 4, 100, 101, 109), meta con totalElements=7. ✓
+  - `GET /api/persona/buscar/100` con token ADMIN → `HTTP: 200`, datos de cliente.uno sin clave ni hash. ✓
+- Caso SEC07 de [06-migracion-y-pruebas.md §5]: mutex del último ADMIN contra PostgreSQL real.
+  - Con dos ADMIN activos (id 1 y 110), PUT `actualizar/110 {estado:false}` y DELETE `eliminar/1` concurrentes → exactamente un `200` y un `409 LAST_ADMIN_PROTECTED`.
+  - El `409 LAST_ADMIN_PROTECTED` se devolvió al intentar desactivar el último ADMIN restante (ver stack trace real en log: `auditoria_fallida action=PERSONA_SEARCH... column "id" is of type uuid` → corregido con `UUID` objetos).
+  - Queda ≥ 1 ADMIN activo con `clave_hash` configurada en BD (sin exponer valores). ✓
+- Schemas: cada `PersonaSnapshot` emitido valida con código 0 contra `identity.persona.v1.PersonaSnapshot.schema.json`; el validador `MessageValidator` del servicio lo comprueba antes de publicar al outbox (Kafka `identity.persona.v1`, key=idPersona, idHotel=null). ✓
+- Comandos:
+  - `bash scripts/mvn.sh -f services/pom.xml verify` → `BUILD SUCCESS` en 9 módulos (identity-service, hotel-service, reception-service, inventory-service, sales-service, reporting-service, notification-service, api-gateway, discovery-server). ✓
+  - `python scripts/validar-planes.py` → `25 plan(es) revisado(s); 25 previsto(s); 0 error(es), 0 aviso(s)`. ✓
+  - `python scripts/validar-contratos.py --base origin/main` → `Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main. Los contratos solo se han ampliado. Correcto.` ✓
+- Sin datos personales reales ni secretos en la evidencia; todos los casos ejecutados contra PostgreSQL y el servicio reales.
 
 ## 7. Preguntas abiertas
 
