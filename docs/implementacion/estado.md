@@ -18,7 +18,7 @@ PR en borrador (ver [`README.md` §3](README.md#3-cómo-se-implementa-un-plan)).
 | F2 | [`back-hotel-catalogo`](../plans/back-hotel-catalogo.md) | T5 | `cerrado` | `back-hotel-catalogo` | [#66](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/66) |
 | F2 | [`front-admin-web-base`](../plans/front-admin-web-base.md) | T5 | `cerrado` | `front-admin-web-base` | [#68](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/68) |
 | F2 | [`back-identity-personas`](../plans/back-identity-personas.md) | T6 | `cerrado` | `back-identity-personas` | [#70](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/70) |
-| F3 | [`back-inventory-stock`](../plans/back-inventory-stock.md) | T6 | `propuesto` | — | — |
+| F3 | [`back-inventory-stock`](../plans/back-inventory-stock.md) | T6 | `propuesto` | `back-inventory-stock` | [#72](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/72) (cerrado sin mergear) |
 | F2 | [`front-public-web-landing`](../plans/front-public-web-landing.md) | T6 | `propuesto` | — | — |
 | F3 | [`back-reception-operacion`](../plans/back-reception-operacion.md) | T7 | `propuesto` | — | — |
 | F2 | [`front-admin-web-catalogo`](../plans/front-admin-web-catalogo.md) | T7 | `propuesto` | — | — |
@@ -48,3 +48,10 @@ mergear por la regla 6.11.3 de [`../plans/README.md`](../plans/README.md). El mo
   [#61](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/61) corrigiendo los recuentos
   del plan, una vez que la campaña dejó de tener agente revisor (PR #60). Detalle del bloqueo
   original: [`decisiones/IA-back-identity-auth-11.md`](decisiones/IA-back-identity-auth-11.md).
+
+- `back-inventory-stock` (T6): PR [#72](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/72)
+  cerrado sin mergear. **El bloqueo no es de este plan: `hotel-service` no arranca desde `main`**, por
+  dos defectos del plan ya cerrado `back-hotel-catalogo` (PR #66), y `back-hotel-catalogo` es
+  dependencia directa o transitiva de todos los planes que quedan. La evidencia HTTP que declara ese
+  plan cerrado (`LP01`, `SEC03`, `CRUD01`, `OCC04`) no puede ser real y conviene revisarla. Detalle y
+  cómo desbloquearlo: [`decisiones/IA-back-inventory-stock-02.md`](decisiones/IA-back-inventory-stock-02.md).
