@@ -66,6 +66,10 @@ en ella. No la crees tú.
 **Siempre** puedes escribir en tu propio `docs/plans/<plan>.md` y en
 `docs/implementacion/decisiones/`.
 
+Si el plan es un **plan de arreglo** (`<ámbito>-arreglo-*`), manda su sección 2: puedes tocar la
+zona del plan que repara (campo `Repara`) y **solo esa**. No es una excusa para tocar el resto del
+servicio ni otros planes.
+
 **Nunca** escribas en: `docs/especificacion/**`, `docs/contracts/errors.md`,
 `docs/plans/README.md`, `docs/plans/catalogo.md`, `docs/plans/_plantilla.md` ni `docs/guia-git.md`.
 Está bloqueado por configuración. Si el plan parece exigirlo, aplica el nivel 3 de decisiones.

@@ -1,10 +1,13 @@
 # Estado de implementación
 
-Registro de los 25 planes. **No es fuente de verdad:** manda el campo `Estado` del plan en `origin/main`.
+Registro de los planes. **No es fuente de verdad:** manda el campo `Estado` del plan en `origin/main`.
 
 Cada plan ejecutado se registra aquí en un PR `docs:` aparte, después de que su PR de implementación se mergea.
 Así varias PRs de implementación no chocan en esta tabla. El reclamo de un plan en curso vive en su rama y en su
 PR en borrador (ver [`README.md` §3](README.md#3-cómo-se-implementa-un-plan)).
+
+Los **planes de arreglo** (`<ámbito>-arreglo-<tema>`, norma §6.11.5) también se registran aquí cuando se
+cierran, con la fase del plan reparado y tanda `—`.
 
 | Fase | Plan | Tanda | Estado en `main` | Rama | PR |
 |---|---|---|---|---|---|

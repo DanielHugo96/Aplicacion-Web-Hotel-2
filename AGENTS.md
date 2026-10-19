@@ -27,9 +27,13 @@ Instrucciones para agentes de IA que trabajan en este repositorio.
 ## Campaña automática por IA
 
 La campaña se maneja **desde una sesión de OpenCode**: se elige el agente `orquestador`, se elige
-el modelo LongCat 2.5 Preview Free (`opencode-go/longcat-2.5-preview-free`) y se escribe `/campana`. Los agentes viven en [`.opencode/agents/`](.opencode/agents),
+el modelo DeepSeek V4.1 Flash (`opencode-go/deepseek-v4.1-flash`) y se escribe `/campana`. Los agentes viven en [`.opencode/agents/`](.opencode/agents),
 el comando en [`.opencode/commands/campana.md`](.opencode/commands/campana.md) y las reglas que no
 se pueden negociar en [`opencode.jsonc`](opencode.jsonc).
+
+Si un plan ya `cerrado` rompe `main` o hace falta refactorizar antes de seguir, el orquestador llama
+al agente `planificador-arreglos` (también DeepSeek V4.1 Flash) para que genere un plan de arreglo
+con evidencia. Ese plan se ejecuta antes de retomar los planes normales.
 
 Si eres un agente trabajando en este repositorio:
 

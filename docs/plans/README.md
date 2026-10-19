@@ -143,7 +143,8 @@ humana: quien ejecuta un plan a mano sigue las reglas 5, 6 y 9 tal cual.
 
 | Agente | Papel |
 |---|---|
-| Orquestador | Conduce **un** plan. No elige el orden: lo recibe ya calculado. Delega, da por validado y hace el merge. |
+| Orquestador | Conduce **un** plan. No elige el orden: lo recibe ya calculado. Delega, da por validado y hace el merge. Si `main` está roto, encarga un plan de arreglo. |
+| Planificador de arreglos | Cuando `main` está roto por un plan ya `cerrado`, o hace falta refactorizar antes de seguir, reproduce el fallo y redacta un plan `<ámbito>-arreglo-<tema>` con evidencia. No implementa, no elige el orden y no mergea. |
 | Ejecutora | Implementa los pasos de **un** plan, se valida a sí misma y lo deja `cerrado`. No sabe qué plan va después, ni mergea, ni pregunta. |
 
 **Regla 6.11.1 — Protocolo de decisión.** Ante cualquier bloqueo, la ejecutora aplica:
@@ -210,6 +211,29 @@ versiones fijadas del `README.md` raíz nunca.
 **Regla 6.11.4 — Trazabilidad.** Toda decisión de nivel 2 o 3 queda escrita. Un plan cerrado por
 IA sin bitácora de sus decisiones de nivel 2 está incompleto, igual que uno sin evidencia en
 *Pruebas*.
+
+**Regla 6.11.5 — Planes de arreglo.** Cuando la campaña detecta que `main` está roto por un plan
+ya `cerrado` (no arranca, no compila o no cumple la verificación que su plan declara) o que hace
+falta una refactorización antes de seguir, el orquestador **no corrige el código**: encarga un plan
+de arreglo al agente `planificador-arreglos`.
+
+- **Nombre y sitio.** `<ámbito>-arreglo-<tema>`, en `docs/plans/`, como cualquier plan. No se crea
+  una carpeta nueva ni se salta el ciclo de vida de §8.
+- **Catálogo.** El mismo PR añade **una fila** a `catalogo.md` §1. Solo se añade: no se borra,
+  renombra ni reordena ninguna fila existente. Es la única escritura permitida en ese archivo a un
+  agente de la campaña, y solo para esto.
+- **Cabecera.** La de §5 más un campo `Repara` con el plan `cerrado` que corrige. `Depende de` cita
+  ese plan si ya está `cerrado`; si no, `—`, para que el arreglo pueda ejecutarse.
+- **Zona.** Un plan de arreglo puede tocar la zona del plan que repara, y **solo esa**. Si el
+  arreglo cruza ámbitos o servicios, se escriben tantos planes como haga falta, uno por ámbito.
+- **Evidencia.** El plan reproduce el fallo con un comando y su salida literal en §3, y §6 exige
+  que ese mismo comando pase al terminar. Sin reproducción no hay plan.
+- **Prioridad.** `scripts/proximo-plan.py` devuelve los planes de arreglo antes que los normales.
+  Cuando el arreglo se cierra, la campaña retoma el plan que estaba esperando.
+- **Merge.** El planificador no mergea. El PR `docs:` del plan lo mergea el orquestador, como
+  cualquier plan; después lo ejecuta la ejecutora de su ámbito.
+- **Límite.** Dos planes de arreglo para el mismo fallo son el máximo. Si el segundo no lo
+  resuelve, la campaña lo registra como bloqueo y sigue; no entra en un bucle.
 
 ## 7. Reglas
 
