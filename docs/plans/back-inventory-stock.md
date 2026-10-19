@@ -47,21 +47,21 @@ Al cerrar el plan, `inventory-service` es el único dueño del stock: expone pro
 
 ## 4. Pasos
 
-- [ ] 1. Dar de alta `services/inventory-service/` según la estructura del monorepo y las versiones fijadas (Java 25, Spring Boot 4.1.1, Spring Cloud 2025.1.3, PostgreSQL 18.6), con perfil dev, Flyway, registro en Eureka y las convenciones ya mergeadas de `back-plataforma-comunes` y `back-plataforma-mensajeria`. Verificación: el build del monorepo compila el módulo; con PostgreSQL arriba, el servicio arranca en dev, se registra en Eureka y `GET /actuator/health/liveness` y `GET /actuator/health/readiness` responden 200.
-- [ ] 2. Configurar la seguridad de usuario (resource server JWT con algoritmo, issuer y audiencia validados; A global y E solo sedes asignadas; deny-by-default) y de máquina (token de `POST /internal/auth/token` con scopes `stock:read` y `stock:debit` para las rutas internas de `GET /internal/productos` y `POST /internal/stock/descontar`; un token humano no basta). Verificación: sin token 401 `UNAUTHENTICATED`; token humano en `POST /internal/stock/descontar` 403 `FORBIDDEN` con stock intacto (caso `SEC05`); token máquina con scope correcto 200 y sin scope 403.
-- [ ] 3. Migración V1 de `inventory_db` con `producto`, `producto_sede`, `movimiento_venta`, `movimiento_detalle` y `ajuste_stock` según el [DDL de referencia](../especificacion/microservicios/inventory/base-de-datos.md#ddl-de-referencia), con checks de precio, cantidad, umbral, delta y subtotales, unicidades de sku, venta y par venta-producto, e índices por sede y fecha. Verificación: la migración aplica sobre una base vacía; pruebas SQL demuestran que sku duplicado, precio no positivo, cantidad negativa y delta 0 fallan, y que las tablas técnicas (`api_idempotency`, `outbox`, `inbox`) existen.
-- [ ] 4. Sembrar los productos 1 `AGUA-500`, 2 `SNACK-01` y 3 `ASEO-01` activos en las sedes 1 a 3 con precios 3.50, 8.00 y 5.00, cantidades 20, 10 y 5, `umbral_bajo` 5 y versión 1 ([§Seeds](../especificacion/microservicios/inventory/base-de-datos.md#seeds)), con bootstrap idempotente de 9 `ProductoStockSnapshot`. Verificación: consultas a `inventory_db` coinciden con la tabla de la spec; reejecutar los seeds no duplica filas ni repone ventas realizadas.
-- [ ] 5. Implementar el patrón de idempotencia y de versión del contrato común ([`03` §Respuestas](../especificacion/03-contrato-comun.md#respuestas)): `Idempotency-Key` en POST/PUT/DELETE de negocio (misma clave y cuerpo devuelven el mismo resultado; request distinto 409 `IDEMPOTENCY_CONFLICT`) y `If-Match` en PUT/DELETE con versión de `producto_sede` (sin header 428 `PRECONDITION_REQUIRED`; versión distinta 412 `PRECONDITION_FAILED`), con ETag en lecturas y mutaciones. Verificación: repetir un POST con la misma clave no crea otra fila; PUT sin `If-Match` 428; PUT con la versión anterior 412.
-- [ ] 6. CRUD REST de productos: `GET /api/producto/listar` y `GET /api/producto/buscar/{id}` (A/E con sede), `POST /api/producto/registrar` (A, con asignación inicial y validación de sede por Feign), `PUT /api/producto/actualizar/{id}` (A, V; nunca cantidad; `productoVersion` y V validados juntos en la transacción), `DELETE /api/producto/eliminar/{id}` (A, V; baja solo en la sede, conserva cantidad y movimientos) y `POST /api/producto/{id}/sedes` (A; alta en sede nueva). Verificación: 201/200 con fila persistida y versión incrementada; sku repetido 409 `DUPLICATE_RESOURCE`; DELETE deja `estado=false` y la sede inactiva admite restitución pero rechaza débito con `PRODUCT_INACTIVE`.
-- [ ] 7. Ajustes y movimientos por producto: `POST /api/producto/{id}/ajustes` (A, V; delta distinto de 0, motivo 1..300, lock de stock, saldo nunca negativo, registro en `ajuste_stock`) y `GET /api/producto/{id}/movimientos` (A/E; unión `VENTA` con estado actual o `AJUSTE`; filtros de sede, paginación e intervalo opcional sobre `createdAt`). Verificación: 201 con `ajusteId`, cantidad resultante y versión; un ajuste que dejaría saldo negativo no mueve unidades; el listado muestra el movimiento `DESCONTADO` con su estado actual y ordena por `createdAt`.
-- [ ] 8. Feign entrante y saliente: `GET /internal/productos` y `GET /internal/productos/{id}` (scope `stock:read`, siempre con `idHotel`), `POST /internal/stock/descontar` (scope `stock:debit`) y `GET /internal/stock/movimientos/{idVenta}` (scope `stock:read`; 404 sin registro), más `GET /internal/hoteles/{id}` con scope `hoteles:read` al crear asignaciones o activar sedes. Verificación: token máquina con scope correcto 200 con el payload exacto; token humano 403; consulta de venta inexistente 404.
-- [ ] 9. Descuento atómico con `fn_stock_descontar`: lock del movimiento por `idVenta`, comparación de hash (mismo hash devuelve el resultado guardado aunque cambie el catálogo; otro hash 409), locks de stock en orden de `idProducto`, verificación de activo y cantidad, todo o nada con precios autoritativos y resultado inmutable, e ítems duplicados rechazados con 400 antes de SQL. Verificación: débito válido 200 `DESCONTADO` con total e ítems; venta multítem con una línea insuficiente 409 `STOCK_INSUFFICIENT` con stocks intactos (caso `STK02`); reintento mismo hash mismo resultado.
-- [ ] 10. Restitución idempotente con `sp_stock_restituir`: devuelve las cantidades originales una sola vez, crea lápida `RESTITUIDO` sin detalles ni hash si no hubo descuento, conserva el resultado del `DESCONTADO` para auditoría y rechaza el débito tardío con 409 `DEBIT_CANCELLED`; mismatch de `idHotel` con el movimiento existente va a DLQ con alerta sin mover stock ajeno. Verificación: restituir dos veces no duplica stock; restituir antes de descontar bloquea el débito tardío con 409 (caso `STK04` en su parte de inventory).
-- [ ] 11. Emisión por outbox de `inventory.stock.v1` (`ProductoStockSnapshot`; key `idHotel:idProducto`; versión de `producto_sede`; estado efectivo) e `inventory.movimiento.v1` (`MovimientoStockResuelto`; key `idVenta`; versión del movimiento), en la misma transacción de cada mutación y decisión, sin adelantar versiones pendientes del mismo agregado. Verificación: cada mutación deja exactamente una fila en outbox por evento; los payloads validan contra sus JSON Schemas; un cambio de precio deja snapshots con versión incrementada por sede.
-- [ ] 12. Consumo de `stock.restituir` (payload `idVenta`, `idRecepcion`, `motivo` e `idHotel` del envelope; sin cantidades del emisor) con inbox, efecto sobre el stock y evento de resolución en la misma transacción antes del ack, con reintentos con TTL y DLQ final en `stock.restituir.dlq`. Verificación: comando duplicado aplicado una sola vez; payload inválido permanente termina en la DLQ y el stock no se da por restituido.
-- [ ] 13. Concurrencia y serialización: sin `SELECT` de cantidad seguido de `UPDATE` sin lock; baja y cambio de precio concurrentes se serializan con el débito y la respuesta conserva el precio usado ([§Verificación](../especificacion/microservicios/inventory/base-de-datos.md#verificación)). Verificación: 20 unidades y dos débitos simultáneos de 15 con claves distintas — solo uno descuenta y el stock final es 5 con un único movimiento `DESCONTADO` (caso `STK01`); una baja concurrente no vende desde la sede dada de baja.
-- [ ] 14. Casos de aceptación con PostgreSQL y brokers reales sobre DB efímera: `SEC05` (token humano A directo al puerto interno → 403 o 404 sin ruta por Gateway, stock intacto), `CRUD01` en su parte de producto (alta, edición con versión incrementada, DELETE con `estado=false`, PUT sin `If-Match` 428), `STK01`, `STK02` y `STK04` en su parte de inventory (la anulación la emite sales; aquí se verifica lápida, 409 tardío y stock). Verificación: respuestas, `producto_sede.cantidad` y `movimiento_venta` (estado, resultado y versión) guardados como evidencia por caso.
-- [ ] 15. Cierre: correr los comandos canónicos de la sección «Verificación» del `README.md` raíz (build, pruebas y Compose con PostgreSQL y brokers) y adjuntar al PR la evidencia de los casos; `python scripts/validar-planes.py` desde la raíz. Verificación: build y pruebas en verde; las respuestas y counts de los pasos 6 a 14 quedan adjuntos como evidencia de `SEC05`, `CRUD01`, `STK01–STK02` y `STK04`; 0 errores del validador.
+- [x] 1. Dar de alta `services/inventory-service/` según la estructura del monorepo y las versiones fijadas (Java 25, Spring Boot 4.1.1, Spring Cloud 2025.1.3, PostgreSQL 18.6), con perfil dev, Flyway, registro en Eureka y las convenciones ya mergeadas de `back-plataforma-comunes` y `back-plataforma-mensajeria`. Verificación: el build del monorepo compila el módulo; con PostgreSQL arriba, el servicio arranca en dev, se registra en Eureka y `GET /actuator/health/liveness` y `GET /actuator/health/readiness` responden 200.
+- [x] 2. Configurar la seguridad de usuario (resource server JWT con algoritmo, issuer y audiencia validados; A global y E solo sedes asignadas; deny-by-default) y de máquina (token de `POST /internal/auth/token` con scopes `stock:read` y `stock:debit` para las rutas internas de `GET /internal/productos` y `POST /internal/stock/descontar`; un token humano no basta). Verificación: sin token 401 `UNAUTHENTICATED`; token humano en `POST /internal/stock/descontar` 403 `FORBIDDEN` con stock intacto (caso `SEC05`); token máquina con scope correcto 200 y sin scope 403.
+- [x] 3. Migración V1 de `inventory_db` con `producto`, `producto_sede`, `movimiento_venta`, `movimiento_detalle` y `ajuste_stock` según el [DDL de referencia](../especificacion/microservicios/inventory/base-de-datos.md#ddl-de-referencia), con checks de precio, cantidad, umbral, delta y subtotales, unicidades de sku, venta y par venta-producto, e índices por sede y fecha. Verificación: la migración aplica sobre una base vacía; pruebas SQL demuestran que sku duplicado, precio no positivo, cantidad negativa y delta 0 fallan, y que las tablas técnicas (`api_idempotency`, `outbox`, `inbox`) existen.
+- [x] 4. Sembrar los productos 1 `AGUA-500`, 2 `SNACK-01` y 3 `ASEO-01` activos en las sedes 1 a 3 con precios 3.50, 8.00 y 5.00, cantidades 20, 10 y 5, `umbral_bajo` 5 y versión 1 ([§Seeds](../especificacion/microservicios/inventory/base-de-datos.md#seeds)), con bootstrap idempotente de 9 `ProductoStockSnapshot`. Verificación: consultas a `inventory_db` coinciden con la tabla de la spec; reejecutar los seeds no duplica filas ni repone ventas realizadas.
+- [x] 5. Implementar el patrón de idempotencia y de versión del contrato común ([`03` §Respuestas](../especificacion/03-contrato-comun.md#respuestas)): `Idempotency-Key` en POST/PUT/DELETE de negocio (misma clave y cuerpo devuelven el mismo resultado; request distinto 409 `IDEMPOTENCY_CONFLICT`) y `If-Match` en PUT/DELETE con versión de `producto_sede` (sin header 428 `PRECONDITION_REQUIRED`; versión distinta 412 `PRECONDITION_FAILED`), con ETag en lecturas y mutaciones. Verificación: repetir un POST con la misma clave no crea otra fila; PUT sin `If-Match` 428; PUT con la versión anterior 412.
+- [ ] 6. CRUD REST de productos: `GET /api/producto/listar` y `GET /api/producto/buscar/{id}` (A/E con sede), `POST /api/producto/registrar` (A, con asignación inicial y validación de sede por Feign), `PUT /api/producto/actualizar/{id}` (A, V; nunca cantidad; `productoVersion` y V validados juntos en la transacción), `DELETE /api/producto/eliminar/{id}` (A, V; baja solo en la sede, conserva cantidad y movimientos) y `POST /api/producto/{id}/sedes` (A; alta en sede nueva). Verificación: 201/200 con fila persistida y versión incrementada; sku repetido 409 `DUPLICATE_RESOURCE`; DELETE deja `estado=false` y la sede inactiva admite restitución pero rechaza débito con `PRODUCT_INACTIVE`. **(Sin marcar: el alta (`POST /api/producto/registrar`) y `POST /api/producto/{id}/sedes` no se pudieron ejecutar porque `hotel-service` no arranca desde `main`; ver [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md). El resto de la verificación sí se ejecutó.)**
+- [x] 7. Ajustes y movimientos por producto: `POST /api/producto/{id}/ajustes` (A, V; delta distinto de 0, motivo 1..300, lock de stock, saldo nunca negativo, registro en `ajuste_stock`) y `GET /api/producto/{id}/movimientos` (A/E; unión `VENTA` con estado actual o `AJUSTE`; filtros de sede, paginación e intervalo opcional sobre `createdAt`). Verificación: 201 con `ajusteId`, cantidad resultante y versión; un ajuste que dejaría saldo negativo no mueve unidades; el listado muestra el movimiento `DESCONTADO` con su estado actual y ordena por `createdAt`.
+- [x] 8. Feign entrante y saliente: `GET /internal/productos` y `GET /internal/productos/{id}` (scope `stock:read`, siempre con `idHotel`), `POST /internal/stock/descontar` (scope `stock:debit`) y `GET /internal/stock/movimientos/{idVenta}` (scope `stock:read`; 404 sin registro), más `GET /internal/hoteles/{id}` con scope `hoteles:read` al crear asignaciones o activar sedes. Verificación: token máquina con scope correcto 200 con el payload exacto; token humano 403; consulta de venta inexistente 404.
+- [x] 9. Descuento atómico con `fn_stock_descontar`: lock del movimiento por `idVenta`, comparación de hash (mismo hash devuelve el resultado guardado aunque cambie el catálogo; otro hash 409), locks de stock en orden de `idProducto`, verificación de activo y cantidad, todo o nada con precios autoritativos y resultado inmutable, e ítems duplicados rechazados con 400 antes de SQL. Verificación: débito válido 200 `DESCONTADO` con total e ítems; venta multítem con una línea insuficiente 409 `STOCK_INSUFFICIENT` con stocks intactos (caso `STK02`); reintento mismo hash mismo resultado.
+- [x] 10. Restitución idempotente con `sp_stock_restituir`: devuelve las cantidades originales una sola vez, crea lápida `RESTITUIDO` sin detalles ni hash si no hubo descuento, conserva el resultado del `DESCONTADO` para auditoría y rechaza el débito tardío con 409 `DEBIT_CANCELLED`; mismatch de `idHotel` con el movimiento existente va a DLQ con alerta sin mover stock ajeno. Verificación: restituir dos veces no duplica stock; restituir antes de descontar bloquea el débito tardío con 409 (caso `STK04` en su parte de inventory).
+- [x] 11. Emisión por outbox de `inventory.stock.v1` (`ProductoStockSnapshot`; key `idHotel:idProducto`; versión de `producto_sede`; estado efectivo) e `inventory.movimiento.v1` (`MovimientoStockResuelto`; key `idVenta`; versión del movimiento), en la misma transacción de cada mutación y decisión, sin adelantar versiones pendientes del mismo agregado. Verificación: cada mutación deja exactamente una fila en outbox por evento; los payloads validan contra sus JSON Schemas; un cambio de precio deja snapshots con versión incrementada por sede.
+- [x] 12. Consumo de `stock.restituir` (payload `idVenta`, `idRecepcion`, `motivo` e `idHotel` del envelope; sin cantidades del emisor) con inbox, efecto sobre el stock y evento de resolución en la misma transacción antes del ack, con reintentos con TTL y DLQ final en `stock.restituir.dlq`. Verificación: comando duplicado aplicado una sola vez; payload inválido permanente termina en la DLQ y el stock no se da por restituido.
+- [x] 13. Concurrencia y serialización: sin `SELECT` de cantidad seguido de `UPDATE` sin lock; baja y cambio de precio concurrentes se serializan con el débito y la respuesta conserva el precio usado ([§Verificación](../especificacion/microservicios/inventory/base-de-datos.md#verificación)). Verificación: 20 unidades y dos débitos simultáneos de 15 con claves distintas — solo uno descuenta y el stock final es 5 con un único movimiento `DESCONTADO` (caso `STK01`); una baja concurrente no vende desde la sede dada de baja.
+- [ ] 14. Casos de aceptación con PostgreSQL y brokers reales sobre DB efímera: `SEC05` (token humano A directo al puerto interno → 403 o 404 sin ruta por Gateway, stock intacto), `CRUD01` en su parte de producto (alta, edición con versión incrementada, DELETE con `estado=false`, PUT sin `If-Match` 428), `STK01`, `STK02` y `STK04` en su parte de inventory (la anulación la emite sales; aquí se verifica lápida, 409 tardío y stock). Verificación: respuestas, `producto_sede.cantidad` y `movimiento_venta` (estado, resultado y versión) guardados como evidencia por caso. **(Sin marcar: el alta de `CRUD01` comparte el mismo bloqueo de `hotel-service`; `SEC05`, `STK01`, `STK02` y `STK04` sí están evidenciados.)**
+- [x] 15. Cierre: correr los comandos canónicos de la sección «Verificación» del `README.md` raíz (build, pruebas y Compose con PostgreSQL y brokers) y adjuntar al PR la evidencia de los casos; `python scripts/validar-planes.py` desde la raíz. Verificación: build y pruebas en verde; las respuestas y counts de los pasos 6 a 14 quedan adjuntos como evidencia de `SEC05`, `CRUD01`, `STK01–STK02` y `STK04`; 0 errores del validador.
 
 ## 5. Contratos afectados
 
@@ -72,23 +72,134 @@ Al cerrar el plan, `inventory-service` es el único dueño del stock: expone pro
 
 ## 6. Pruebas
 
-- Caso `SEC05`: con token humano A, `GET` y `POST /internal/stock/descontar` directo al puerto interno → 403 `FORBIDDEN` (o 404 sin ruta por Gateway); `producto_sede.cantidad` intacta; evidencia: respuestas y consulta.
-- Caso `CRUD01` (parte de este plan): alta y edición de producto con token A; `version` incrementa en cada edición; DELETE deja `estado=false` en la sede; `PUT /api/producto/actualizar/{id}` sin `If-Match` → 428; evidencia: GET posteriores y consultas a `inventory_db`. Sede, piso, categoría y habitación son de `back-hotel-catalogo` y `back-hotel-operaciones`.
-- Caso `STK01`: stock de producto 1 en 20; dos débitos de 15 simultáneos con claves distintas → uno 201/200 y el otro 409 `STOCK_INSUFFICIENT`; stock final 5 y un solo movimiento `DESCONTADO`; evidencia: respuestas, `producto_sede` y `movimiento_venta`.
-- Caso `STK02`: venta multítem de producto 1 ×2 y producto 3 ×10 con stocks 20 y 5 → 409 `STOCK_INSUFFICIENT` y ambas cantidades intactas; evidencia: respuesta y cantidades.
-- Caso `STK04` (parte de este plan): restitución en vuelo y débito tardío posterior → lápida `RESTITUIDO`, débito tardío 409 `DEBIT_CANCELLED` y stock intacto; evidencia: respuestas y `movimiento_venta`. La anulación que emite la restitución es de `back-sales-ventas`; el caso completo lo ejecuta `qa-matriz-aceptacion`.
-- Comandos: los de la sección «Verificación» del `README.md` raíz (build, pruebas y Compose) y `python scripts/validar-planes.py`; evidencia: salidas adjuntas al PR de ejecución.
+Cada caso anota el comando o endpoint exacto, el resultado literal y dónde vive la salida. La sesión de ejecución levantó `inventory-service` en dev contra el PostgreSQL de Compose, con `identity-service` emitiendo los tokens reales (humano de `admin@hotel.test` y máquina del cliente `sales-service` con `aud=inventory`).
+
+- Caso `SEC05` — rutas internas solo con token máquina. Endpoints y resultados literales, directo a `http://localhost:8084`:
+
+  ```text
+  POST /internal/stock/descontar (sin Authorization)
+  HTTP 401 {"success":false,...,"error":{"code":"UNAUTHENTICATED"...}}
+
+  POST /internal/stock/descontar (token humano ADMIN)
+  HTTP 403 {"success":false,...,"error":{"code":"FORBIDDEN"...}}
+
+  GET /internal/productos?idHotel=1 (token humano ADMIN)
+  HTTP 403 {"success":false,...,"error":{"code":"FORBIDDEN"...}}
+
+  consulta: producto_sede(1,1) cantidad=20 ; movimientos=0
+
+  POST /internal/stock/descontar (token máquina sales: stock:read stock:debit)
+  HTTP 200 {"estado":"DESCONTADO","total":7.0,...,"version":1}
+  consulta: cantidad=18 ; movimiento 90001 DESCONTADO v1
+  ```
+
+  Además, `SecurityConventionTests` (9 pruebas en `mvn verify`) cubre token máquina **sin** `stock:debit` → 403, que no se puede pedir a identity con los clientes sembrados. Salida: `services/inventory-service/target/surefire-reports/pe.hotel.inventory.platform.SecurityConventionTests.txt` y la sesión de ejecución (mismos `correlationId` que el log del servicio en `/tmp/inventory.log`).
+
+- Caso `CRUD01` (parte de este plan) — evidenciado en edición, versión, baja e idempotencia:
+
+  ```text
+  GET /api/producto/listar?idHotel=1                  -> 200, 3 productos de la sede
+  GET /api/producto/buscar/1?idHotel=1                -> 200, ETag: "2"
+  PUT /api/producto/actualizar/1 (sin If-Match)       -> 428 PRECONDITION_REQUIRED
+  PUT ... (If-Match: "99")                            -> 412 PRECONDITION_FAILED
+  PUT ... (If-Match: "2")                             -> 200, version 2 -> 3
+  PUT ... (misma Idempotency-Key y cuerpo)            -> 200, mismo cuerpo y correlationId
+  PUT ... (misma clave, cuerpo distinto)              -> 409 IDEMPOTENCY_CONFLICT
+  consulta: producto_sede(1,1) precio=3.90 umbral=6 version=3 cantidad=18
+  api_idempotency: actor=1 method=PUT route=/api/producto/actualizar/{id} status=COMPLETADA http=200
+  DELETE /api/producto/eliminar/3?idHotel=1 (If-Match: "1") -> 200, data.estado=false
+  consulta: producto_sede(3,1) estado=false cantidad=5 version=2 ; producto.estado global=true
+  POST /api/producto/registrar (sku AGUA-500)        -> 409 DUPLICATE_RESOURCE
+  POST /api/producto/1/ajustes (If-Match: "2")       -> 201 {ajusteId, cantidad:7, version:3}
+  POST /api/producto/2/ajustes (delta -999)          -> 400 VALIDATION_ERROR "el ajuste dejaría saldo negativo"; cantidad intacta 15
+  consulta: ajuste_stock delta=5 actor=1 saldo=15
+  GET /api/producto/1/movimientos?idHotel=1          -> 200 VENTA 90001 DESCONTADO
+  GET /api/producto/2/movimientos?idHotel=1          -> 200 AJUSTE delta=5 motivo=...
+  ```
+
+  **No ejecutado:** `POST /api/producto/registrar` con un producto nuevo y `POST /api/producto/{id}/sedes` responden 503 `DEPENDENCY_UNAVAILABLE` porque `hotel-service` no arranca desde `main` (dos defectos en el plan cerrado `back-hotel-catalogo`; detalle y reproducción en [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md)). No se fabricó el entorno ni se sustituyó el Feign por un stub.
+
+- Caso `STK01` — concurrencia sobre 20 unidades:
+
+  ```text
+  dos POST /internal/stock/descontar simultáneos, 15 unidades, idVenta 91001 y 91002
+  A (91001) HTTP 200 {"estado":"DESCONTADO","total":58.5,...,"version":1}
+  B (91002) HTTP 409 {"error":{"code":"STOCK_INSUFFICIENT"...}}
+  consulta: producto_sede(1,1) cantidad=5 ; DESCONTADO=1 ; movimientos=3 (dos rechazos + el ganador)
+  ```
+
+  Salida: sesión de ejecución y `StockDbIT.stk01DosDebitosDe15ConcurrenteSobreStock20UnoGanaStockFinal5` (la prueba equivalente contra `inventory_db`).
+
+- Caso `STK02` — venta multítem con una línea insuficiente:
+
+  ```text
+  POST /internal/stock/descontar {"idVenta":92001,"items":[{1x2},{3x10}]}
+  HTTP 409 {"error":{"code":"STOCK_INSUFFICIENT"...}}
+  consulta: producto_sede(1,1)=20 ; producto_sede(3,1)=5 ; movimiento RECHAZADO detalle_filas=0
+  ```
+
+- Caso `STK04` (parte de este plan) — restitución en vuelo y débito tardío, con el comando real en RabbitMQ:
+
+  ```text
+  publish hotel.commands.v1 / stock.restituir commandId 3a3a3a3a-... idVenta 93001 -> {"routed":true}
+  consulta: movimiento 93001 estado=RESTITUIDO hash=NULL detalle_filas=0
+            resultado={"estado":"RESTITUIDO","motivo":"Anulacion en vuelo de la venta","version":1,"restituidoAt":...}
+            inbox filas=1
+  POST /internal/stock/descontar idVenta 93001 -> 409 {"error":{"code":"DEBIT_CANCELLED"...}}
+  consulta: producto_sede(1,1) cantidad=5 ; movimiento sigue RESTITUIDO
+  ```
+
+  Extra del mismo caso: comando repetido con el mismo `commandId` → una sola fila en `inbox` y el stock no se devuelve dos veces; payload inválido → `stock.restituir.dlq messages = 1`; sede inactiva → la restitución devuelve 4→5 con `estado=false` y un mismatch de `idHotel` va a la DLQ sin mover stock.
+
+- Comandos canónicos (paso 15), ejecutados desde la raíz:
+
+  ```text
+  bash scripts/mvn.sh -f services/pom.xml verify
+    inventory-service .................................. SUCCESS [ 56.620 s]
+    BUILD SUCCESS
+  (inventory-service: Tests run: 24, Failures: 0, Errors: 0, Skipped: 0)
+
+  StockDbIT contra inventory_db real (15 pruebas):
+    Tests run: 15, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 3.911 s
+    BUILD SUCCESS
+
+  python scripts/validar-planes.py
+    25 plan(es) revisado(s); 25 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+  python scripts/validar-contratos.py --base origin/main
+    Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+    Los contratos solo se han ampliado. Correcto.
+
+  openspec validate back-inventory-stock --strict
+    Change 'back-inventory-stock' is valid
+  ```
+
+  Salidas: `services/inventory-service/target/surefire-reports/` (por clase) y consola de la sesión de ejecución.
 
 ## 7. Preguntas abiertas
 
-Ninguna.
+- **Bloqueo de dependencia (no es una duda de la spec).** `back-hotel-catalogo` está `cerrado`, pero
+  `hotel-service` no arranca desde `main`: su migración `V3__hotel_tablas.sql` referencia
+  `hab.publica`/`h2.publica` sobre una columna declarada `publicada` (Flyway aborta con
+  `column hab.publica does not exist`) y, aun con el esquema creado, Hibernate falla con
+  `No column with logical name 'id_hotel' in table 'piso'` al mapear `Habitacion` contra `Piso`
+  (falla también con `ddl-auto=none`, así que es el mapeo, no la validación). Sin hotel no se puede
+  ejercitar la validación de sede por Feign, y por eso quedan sin marcar el paso 6 (alta y
+  `POST /api/producto/{id}/sedes`) y el paso 14 en la parte de alta de `CRUD01`. No se toca
+  `hotel-service` (zona ajena) ni se fabrica el entorno. Detalle y reproducción en
+  [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md).
+- **Resuelto por IA (nivel 1, sin bitácora).** Migraciones numeradas V3/V4 porque V1 (`api_idempotency`)
+  y V2 (`outbox`/`inbox`) son de los planes de plataforma (el propio §3 lo prevé); audiencia máquina
+  `inventory` (la allowlist sembrada por `back-identity-personas` publica `{"inventory": [...]}` para el
+  cliente `sales-service`); `-parameters` en el compilador de `inventory-service` igual que en
+  `hotel-service`; `aggregateId` del snapshot `idHotel:idProducto` como exige su JSON Schema.
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación.
-- [ ] Productos y existencias por sede operativos con ajustes, movimientos, versión/ETag e idempotencia (`CRUD01` en su parte de producto) y rutas internas solo con token máquina (`SEC05`).
-- [ ] Descuento todo o nada y restitución idempotente con lápida verificados bajo concurrencia (`STK01–STK02` y `STK04` en su parte de inventory): sin descuento parcial ni doble devolución.
-- [ ] `inventory.stock.v1` e `inventory.movimiento.v1` emitidos por outbox contra los JSON Schemas, con bootstrap idempotente, y `stock.restituir` consumido con inbox y DLQ.
-- [ ] Evidencia de la sección 6 adjunta al PR de ejecución y `python scripts/validar-planes.py` sin errores.
+- [ ] Todos los pasos marcados con su verificación. _(Pendiente: pasos 6 y 14, ver §7.)_
+- [ ] Productos y existencias por sede operativos con ajustes, movimientos, versión/ETag e idempotencia (`CRUD01` en su parte de producto) y rutas internas solo con token máquina (`SEC05`). _(Edición, versión, ETag, baja lógica e idempotencia evidenciados; el alta queda pendiente por el bloqueo de `hotel-service`.)_
+- [x] Descuento todo o nada y restitución idempotente con lápida verificados bajo concurrencia (`STK01–STK02` y `STK04` en su parte de inventory): sin descuento parcial ni doble devolución.
+- [x] `inventory.stock.v1` e `inventory.movimiento.v1` emitidos por outbox contra los JSON Schemas, con bootstrap idempotente, y `stock.restituir` consumido con inbox y DLQ.
+- [x] Evidencia de la sección 6 adjunta al PR de ejecución y `python scripts/validar-planes.py` sin errores.
 - [ ] El plan pasa a `cerrado` en el último PR del plan ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
 - [ ] Sin preguntas abiertas.
