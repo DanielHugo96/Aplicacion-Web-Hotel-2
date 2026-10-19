@@ -20,6 +20,8 @@ import pe.hotel.hotel.domain.repository.EstadoHabitacionRepository;
 import pe.hotel.hotel.domain.repository.HabitacionRepository;
 import pe.hotel.hotel.domain.repository.ImagenHabitacionRepository;
 import pe.hotel.hotel.domain.security.CurrentUser;
+import pe.hotel.hotel.platform.ApiException;
+import pe.hotel.hotel.platform.ErrorCode;
 import static org.springframework.http.HttpStatus.*;
 
 /** Casos de uso de habitaciones: alta LISTA, edicion de catalogo y lecturas con aislamiento por sede. */
@@ -74,7 +76,7 @@ public class HabitacionService {
       throw new ResponseStatusException(BAD_REQUEST, "numero invalido");
     }
     if (repository.existsActiveByIdHotelAndNumero(input.idHotel(), input.numero())) {
-      throw new ResponseStatusException(CONFLICT, "numero ya existe activo en la sede");
+      throw new ApiException(ErrorCode.DUPLICATE_RESOURCE);
     }
     validarPrecio(input.precio());
     List<ImagenInput> imagenes = input.urlsImagenes() == null ? List.of() : input.urlsImagenes();

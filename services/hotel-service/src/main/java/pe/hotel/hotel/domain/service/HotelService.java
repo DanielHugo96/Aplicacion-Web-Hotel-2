@@ -13,6 +13,8 @@ import pe.hotel.hotel.domain.model.Hotel;
 import pe.hotel.hotel.domain.repository.HabitacionRepository;
 import pe.hotel.hotel.domain.repository.HotelRepository;
 import pe.hotel.hotel.domain.security.CurrentUser;
+import pe.hotel.hotel.platform.ApiException;
+import pe.hotel.hotel.platform.ErrorCode;
 import static org.springframework.http.HttpStatus.*;
 
 /** Casos de uso de sedes: CRUD con aislamiento por sede, version/ETag e idempotencia. */
@@ -56,7 +58,7 @@ public class HotelService {
   @Transactional
   public HotelView registrar(HotelInput input) {
     if (repository.existsBySlug(input.slug())) {
-      throw new ResponseStatusException(CONFLICT, "slug ya registrado");
+      throw new ApiException(ErrorCode.DUPLICATE_RESOURCE);
     }
     Hotel hotel =
         new Hotel(
@@ -119,7 +121,7 @@ public class HotelService {
     }
     long habitacionesActivas = habitacionRepository.countByIdHotelAndEstadoTrue(id);
     if (habitacionesActivas > 0) {
-      throw new ResponseStatusException(CONFLICT, "aún tiene habitaciones activas");
+      throw new ApiException(ErrorCode.ACTIVE_DEPENDENCIES);
     }
     hotel.setEstado(false);
     try {
