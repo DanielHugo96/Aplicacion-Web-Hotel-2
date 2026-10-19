@@ -55,6 +55,9 @@ public class SecurityConfig {
                     // Salud: liveness y readiness no requieren token.
                     .requestMatchers("/actuator/health", "/actuator/health/**")
                     .permitAll()
+                    // Catálogo público: solo lectura sin token.
+                    .requestMatchers("/api/public/**")
+                    .permitAll()
                     // Rutas internas: solo un token máquina (con scope). Un token humano sin scope da 403.
                     .requestMatchers("/internal/**")
                     .access(
