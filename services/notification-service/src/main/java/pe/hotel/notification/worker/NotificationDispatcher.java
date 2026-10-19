@@ -1,5 +1,6 @@
 package pe.hotel.notification.worker;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Instant;
@@ -19,7 +20,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 public class NotificationDispatcher {
 
   private static final Logger log = LoggerFactory.getLogger(NotificationDispatcher.class);
-  private static final ObjectMapper MAPPER = new ObjectMapper();
+  private static final ObjectMapper MAPPER =
+      // Los totales viajan como `numeric(12,2)` en JSONB: sin BigDecimal exacto se pierde la
+      // escala (`70.00` se leería como `70`) y el correo mostraría el importe mal formateado.
+      new ObjectMapper()
+          .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+          .setNodeFactory(com.fasterxml.jackson.databind.node.JsonNodeFactory.withExactBigDecimals(true));
   private static final int JOBS_POR_CICLO = 5;
 
   private final NotificationJobStore jobs;
@@ -99,15 +105,17 @@ public class NotificationDispatcher {
 
   /** Variables del job a mapa escalar; un valor no escalar es error permanente. */
   static Map<String, Object> variables(NotificationJob job) {
-    Map<String, Object> valores = new LinkedHashMap<>();
+    JsonNode nodo;
     try {
-      JsonNode nodo = MAPPER.readTree(job.variables() == null ? "{}" : job.variables());
-      nodo.fields()
-          .forEachRemaining(
-              entrada -> valores.put(entrada.getKey(), escalar(entrada.getValue())));
+      nodo = MAPPER.readTree(job.variables() == null ? "{}" : job.variables());
     } catch (Exception ex) {
       throw new NotificationPermanentException("variables no son JSON válido");
     }
+    Map<String, Object> valores = new LinkedHashMap<>();
+    // El mapeo va fuera del `try`: el error permanente por valor no escalar conserva su mensaje.
+    nodo.fields()
+        .forEachRemaining(
+            entrada -> valores.put(entrada.getKey(), escalar(entrada.getValue())));
     return valores;
   }
 

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,10 +44,34 @@ public class NotificationJobStore {
   /**
    * Inbox + job en una sola transacción local. Idempotente por {@code commandId}: repetir el mismo
    * comando no crea otro job; el mismo id con distinto {@code payload_hash} es error permanente.
+   * Los SQLSTATE propios de la spec se traducen a error permanente (van directo a la DLQ); el resto
+   * de fallos de base son transitorios y usan los reintentos TTL de Rabbit.
    */
   @Transactional
   public void encolar(UUID commandId, String tipo, String cuerpoJson) {
-    jdbcTemplate.update("CALL sp_notificacion_encolar(?, ?, ?::jsonb)", commandId, tipo, cuerpoJson);
+    try {
+      jdbcTemplate.update("CALL sp_notificacion_encolar(?, ?, ?::jsonb)", commandId, tipo, cuerpoJson);
+    } catch (DataAccessException ex) {
+      throw traducir(ex);
+    }
+  }
+
+  /** Traduce el SQLSTATE de los procedimientos: permanente o transitorio, nunca ambiguo. */
+  static RuntimeException traducir(DataAccessException ex) {
+    Throwable causa = ex.getCause();
+    while (causa != null) {
+      if (causa instanceof SQLException sql) {
+        String estado = sql.getSQLState();
+        if (SQLSTATE_PLANTILLA.equals(estado)
+            || SQLSTATE_HASH.equals(estado)
+            || SQLSTATE_PAYLOAD.equals(estado)) {
+          return new NotificationPermanentException(sql.getMessage());
+        }
+        break;
+      }
+      causa = causa.getCause();
+    }
+    return ex;
   }
 
   /**

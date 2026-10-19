@@ -7,4 +7,5 @@ hotel:
   notification:
     # En dev el correo de demostración sale contra Mailpit; en el resto de perfiles queda
     # deshabilitado hasta configurar proveedor y autorización (base-de-datos.md § Seeds).
-    smtp-enabled: true
+    # El entorno puede apagarlo en dev para observar los jobs sin despacho.
+    smtp-enabled: ${NOTIFICATION_SMTP_ENABLED:true}

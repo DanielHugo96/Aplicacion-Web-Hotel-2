@@ -32,7 +32,9 @@ class TemplateRendererTest {
 
     String texto = TemplateRenderer.render("Hola {{nombre}}.", "BIENVENIDA", valores);
 
-    assertThat(texto).isEqualTo("Hola Eva Bcc: otro@hotel.test (hotel).");
+    // Cada llave se sustituye por un paréntesis: `{{hotel}}` queda `((hotel))` y ya no es un
+    // marcador que el render pudiera volver a sustituir.
+    assertThat(texto).isEqualTo("Hola Eva Bcc: otro@hotel.test ((hotel)).");
   }
 
   @Test
