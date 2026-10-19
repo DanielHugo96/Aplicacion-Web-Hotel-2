@@ -1,5 +1,6 @@
 package pe.hotel.inventory.domain.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,15 +21,25 @@ public class Producto {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Integer id;
 
+  @Column(length = 40, nullable = false, unique = true)
   private String sku;
+
+  @Column(length = 120, nullable = false)
   private String nombre;
+
+  @Column(length = 500)
   private String detalle;
+
+  @Column(name = "imagen_url", length = 500)
   private String imagenUrl;
+
+  @Column(nullable = false)
   private boolean estado = true;
 
   @Version
   private Long version;
 
+  @Column(name = "created_at", nullable = false)
   private Instant createdAt;
 
   protected Producto() {}

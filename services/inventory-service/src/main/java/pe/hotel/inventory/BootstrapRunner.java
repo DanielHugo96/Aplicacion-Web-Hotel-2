@@ -1,11 +1,9 @@
 package pe.hotel.inventory;
 
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -28,29 +26,29 @@ public class BootstrapRunner implements ApplicationRunner {
 
   private static final DateTimeFormatter TS = DateTimeFormatter.ISO_INSTANT;
 
+  /** Serializador propio: el servicio no publica un bean {@code ObjectMapper} en el contenedor. */
+  private final ObjectMapper mapper = new ObjectMapper();
+
   @Autowired(required = false) private JdbcTemplate jdbc;
   @Autowired(required = false) private OutboxStore outboxStore;
-  @Autowired(required = false) private ObjectMapper mapper;
 
   @Override
   public void run(ApplicationArguments args) {
-    if (jdbc == null || outboxStore == null || mapper == null) {
+    if (jdbc == null || outboxStore == null) {
       return;
     }
     String now = TS.format(Instant.now());
     List<Map<String, Object>> sedes =
         jdbc.queryForList(
-            "SELECT id_producto, id_hotel, sku, precio, cantidad, umbral_bajo, estado, version "
-                + "FROM producto_sede ORDER BY id_producto, id_hotel");
+            "SELECT ps.id_producto, ps.id_hotel, p.sku, p.nombre, ps.precio, ps.cantidad, "
+                + "ps.umbral_bajo, (p.estado AND ps.estado) AS estado, ps.version "
+                + "FROM producto_sede ps JOIN producto p ON p.id = ps.id_producto "
+                + "ORDER BY ps.id_producto, ps.id_hotel");
     for (Map<String, Object> s : sedes) {
       Integer idProducto = ((Number) s.get("id_producto")).intValue();
       Integer idHotel = ((Number) s.get("id_hotel")).intValue();
       String aggregateId = idHotel + ":" + idProducto;
-      String eventId =
-          UUID.nameUUIDFromBytes(
-                  ("bootstrap:producto-sede:" + aggregateId)
-                      .getBytes(java.nio.charset.StandardCharsets.UTF_8))
-              .toString();
+      String eventId = OutboxService.eventIdBootstrap("producto-sede", aggregateId);
       Boolean yaExiste =
           jdbc.queryForObject(
               "SELECT count(*) > 0 FROM outbox WHERE channel = ? AND destination = ? AND aggregate_id = ? AND type = ?",
@@ -66,7 +64,7 @@ public class BootstrapRunner implements ApplicationRunner {
       payload.put("idProducto", idProducto);
       payload.put("idHotel", idHotel);
       payload.put("sku", s.get("sku"));
-      payload.put("nombreProducto", s.get("sku"));
+      payload.put("nombreProducto", s.get("nombre"));
       payload.put("precio", new java.math.BigDecimal(s.get("precio").toString()).doubleValue());
       payload.put("cantidad", ((Number) s.get("cantidad")).intValue());
       payload.put("umbralBajo", ((Number) s.get("umbral_bajo")).intValue());

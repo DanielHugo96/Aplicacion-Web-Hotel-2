@@ -23,14 +23,24 @@ public class OutboxService {
 
   private static final DateTimeFormatter TS = DateTimeFormatter.ISO_INSTANT;
 
+  /** Serializador propio: este servicio no publica un bean {@code ObjectMapper} en el contenedor. */
+  private final ObjectMapper mapper = new ObjectMapper();
+
   @Autowired(required = false) private OutboxStore outboxStore;
-  @Autowired(required = false) private ObjectMapper mapper;
+
+  /** Constructor sin contenedor: pruebas de integración con la base real y emisión habilitada. */
+  public OutboxService(OutboxStore outboxStore, ObjectMapper mapperIgnore) {
+    this.outboxStore = outboxStore;
+  }
+
+  /** Constructor por defecto para el contenedor (el outbox entra por campo). */
+  public OutboxService() {}
 
   @Transactional
   public void emitirProductoStockSnapshot(
       Integer idHotel, Integer idProducto, String sku, String nombreProducto,
       Double precio, Integer cantidad, Integer umbralBajo, boolean estado, long version) {
-    if (outboxStore == null || mapper == null) {
+    if (outboxStore == null) {
       return;
     }
     try {
@@ -46,7 +56,7 @@ public class OutboxService {
       payload.put("version", version);
 
       Map<String, Object> envelope = sobre(
-          "ProductoStockSnapshot", "producto-sede", idHotel, idProducto + ":" + idHotel, version, payload);
+          "ProductoStockSnapshot", "producto-sede", idHotel, idHotel + ":" + idProducto, version, payload);
       outboxStore.enqueue(
           Destination.KAFKA,
           "inventory.stock.v1",
@@ -63,7 +73,7 @@ public class OutboxService {
   @Transactional
   public void emitirMovimientoStockResuelto(
       Integer idHotel, Integer idVenta, String estado, long version) {
-    if (outboxStore == null || mapper == null) {
+    if (outboxStore == null) {
       return;
     }
     try {
@@ -107,7 +117,11 @@ public class OutboxService {
     return envelope;
   }
 
-  public static String eventIdBootstrap(String aggregateType, Integer aggregateId) {
+  /**
+   * {@code eventId} determinista del bootstrap: mismo producto/sede produce siempre el mismo UUID,
+   * para que el inbox de reporting deduplique los reenvíos del arranque en dev.
+   */
+  public static String eventIdBootstrap(String aggregateType, String aggregateId) {
     return UUID.nameUUIDFromBytes(
             ("bootstrap:" + aggregateType + ":" + aggregateId)
                 .getBytes(java.nio.charset.StandardCharsets.UTF_8))

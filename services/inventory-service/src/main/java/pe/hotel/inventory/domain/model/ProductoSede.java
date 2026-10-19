@@ -7,7 +7,6 @@ import jakarta.persistence.IdClass;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.math.BigDecimal;
-
 /**
  * Existencia, precio y estado de un producto en una sede (clave compuesta idProducto + idHotel).
  * La baja lógica conserva cantidad y movimientos; solo cambia {@code estado}.
@@ -18,19 +17,23 @@ import java.math.BigDecimal;
 public class ProductoSede {
 
   @Id
+  @Column(name = "id_producto")
   private Integer idProducto;
 
   @Id
+  @Column(name = "id_hotel")
   private Integer idHotel;
 
-  @Column(name = "precio", precision = 12, scale = 2)
+  @Column(name = "precio", precision = 12, scale = 2, nullable = false)
   private BigDecimal precio;
 
+  @Column(nullable = false)
   private Integer cantidad;
 
-  @Column(name = "umbral_bajo")
+  @Column(name = "umbral_bajo", nullable = false)
   private Integer umbralBajo;
 
+  @Column(nullable = false)
   private boolean estado = true;
 
   @Version

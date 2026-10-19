@@ -15,7 +15,7 @@ import org.springframework.security.oauth2.jwt.Jwt;
 class JwtValidatorTests {
 
   private final OAuth2TokenValidator<Jwt> validator =
-      new SecurityConfig().hotelJwtValidator("hotel-identity", "inventory-service");
+      new SecurityConfig().hotelJwtValidator("hotel-identity");
 
   private static Jwt token(String issuer, List<String> audiences) {
     return Jwt.withTokenValue("token")
@@ -35,7 +35,10 @@ class JwtValidatorTests {
 
   @Test
   void aceptaAudienciaMaquinaDelServicio() {
-    assertThat(validator.validate(token("hotel-identity", List.of("inventory-service"))).hasErrors())
+    assertThat(
+            validator
+                .validate(token("hotel-identity", List.of(SecurityConfig.MACHINE_AUDIENCE)))
+                .hasErrors())
         .isFalse();
   }
 

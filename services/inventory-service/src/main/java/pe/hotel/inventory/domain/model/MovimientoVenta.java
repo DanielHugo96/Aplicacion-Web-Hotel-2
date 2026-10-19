@@ -4,7 +4,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import jakarta.persistence.Column;
 import java.time.Instant;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 /**
  * Registro terminal de stock de una venta (id_venta PK externo de sales_db).
@@ -15,19 +18,26 @@ import java.time.Instant;
 public class MovimientoVenta {
 
   @Id
+  @Column(name = "id_venta")
   private Integer idVenta;
 
+  @Column(name = "id_hotel")
   private Integer idHotel;
 
+  @Column(name = "request_hash", length = 64)
+  @JdbcTypeCode(SqlTypes.CHAR)
   private String requestHash;
 
+  @Column(length = 16)
   private String estado; // DESCONTADO | RECHAZADO | RESTITUIDO
 
   @Version
   private Long version;
 
+  @Column(name = "created_at")
   private Instant createdAt;
 
+  @Column(name = "updated_at")
   private Instant updatedAt;
 
   protected MovimientoVenta() {}

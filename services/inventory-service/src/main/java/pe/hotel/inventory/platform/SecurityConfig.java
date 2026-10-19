@@ -41,8 +41,14 @@ import org.springframework.http.HttpMethod;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  /** Audiencia de los tokens humanos; los tokens máquina usan el nombre del servicio destino. */
+  /** Audiencia de los tokens humanos; los tokens máquina usan el nombre destino de la allowlist. */
   public static final String HUMAN_AUDIENCE = "hotel-api";
+
+  /**
+   * Nombre destino de este servicio en la allowlist de clientes de servicio
+   * (docs/especificacion/03-contrato-comun.md § Servicio a servicio: sales → inventory).
+   */
+  public static final String MACHINE_AUDIENCE = "inventory";
 
   @Bean
   SecurityFilterChain securityFilterChain(
@@ -145,9 +151,8 @@ public class SecurityConfig {
    */
   @Bean
   OAuth2TokenValidator<Jwt> hotelJwtValidator(
-      @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer,
-      @Value("${spring.application.name}") String serviceName) {
-    Set<String> audiences = Set.of(HUMAN_AUDIENCE, serviceName);
+      @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) {
+    Set<String> audiences = Set.of(HUMAN_AUDIENCE, MACHINE_AUDIENCE);
     return new DelegatingOAuth2TokenValidator<>(
         JwtValidators.createDefaultWithIssuer(issuer),
         new JwtClaimValidator<List<String>>(

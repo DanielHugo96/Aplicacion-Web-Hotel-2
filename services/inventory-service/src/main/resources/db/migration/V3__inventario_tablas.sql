@@ -61,10 +61,12 @@ CREATE TABLE ajuste_stock (
 -- -----------------------------------------------------------------------
 -- fn_stock_descontar: descuento atómico todo o nada de una venta.
 -- Bloquea primero el movimiento por id_venta y luego las filas de stock
--- en orden ascendente de id_producto. Deduce con UPDATE condicional
--- cantidad >= solicitada y verifica filas afectadas; una línea
--- insuficiente revierte todo y registra RECHAZADO. Ítems duplicados se
--- rechazan antes de SQL (400 VALIDATION_ERROR desde el servicio).
+-- en orden ascendente de id_producto. La validación completa (existencia,
+-- actividad y cantidad suficiente) va en la fase 1 bajo lock y la deducción
+-- en la fase 2, de modo que una línea insuficiente no deja descuentos
+-- parciales: el rechazo se registra en movimiento_venta sin mover stock.
+-- Ítems duplicados se rechazan 400 antes de SQL desde el servicio; aquí
+-- queda la defensa equivalente.
 -- Devuelve JSON con {estado, total, items[{idProducto,nombreProducto,cantidad,precioUnitario,subTotal}], version}.
 -- -----------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION fn_stock_descontar(
@@ -91,8 +93,8 @@ DECLARE
   v_nombre varchar(120);
   v_subtotal numeric(12,2);
   v_rows int;
+  v_items int;
 BEGIN
-  RAISE NOTICE 'DEBUG fn_stock_descontar: p_venta=%, p_hotel=%, p_hash=%', p_venta, p_hotel, p_hash;
   SELECT estado, request_hash, resultado, version INTO v_estado, v_hash_existente, v_resultado, v_version
   FROM movimiento_venta WHERE id_venta = p_venta FOR UPDATE;
 
@@ -106,25 +108,35 @@ BEGIN
     RETURN v_resultado;
   END IF;
 
+  -- Registro provisional del movimiento: se confirma como DESCONTADO o RECHAZADO.
   INSERT INTO movimiento_venta (id_venta, id_hotel, request_hash, estado, resultado, version, created_at, updated_at)
   VALUES (p_venta, p_hotel, p_hash, 'RECHAZADO', NULL, 1, now(), now());
-  RAISE NOTICE 'DEBUG after insert movimiento_venta';
 
-  SELECT count(*) INTO v_rows FROM jsonb_array_elements(p_items);
-  IF v_rows THEN
+  SELECT count(*) INTO v_items FROM jsonb_array_elements(p_items);
+  IF v_items = 0 THEN
+    UPDATE movimiento_venta SET estado = 'RECHAZADO', resultado = jsonb_build_object('estado','RECHAZADO','motivo','sin ítems','version',1), updated_at = now() WHERE id_venta = p_venta;
+    RETURN jsonb_build_object('estado','RECHAZADO','motivo','sin ítems','version',1);
+  END IF;
+
+  SELECT count(*) - count(DISTINCT (value->>'idProducto')) INTO v_rows FROM jsonb_array_elements(p_items);
+  IF v_rows > 0 THEN
     UPDATE movimiento_venta SET estado = 'RECHAZADO', resultado = jsonb_build_object('estado','RECHAZADO','motivo','ítems de producto duplicados','version',1), updated_at = now() WHERE id_venta = p_venta;
     RETURN jsonb_build_object('estado','RECHAZADO','motivo','ítems de producto duplicados','version',1);
   END IF;
-  RAISE NOTICE 'DEBUG after duplicate check';
 
+  -- Fase 1: bloquear y validar todos los ítems en orden de idProducto, sin tocar cantidades.
   FOR v_item IN SELECT value FROM jsonb_array_elements(p_items) ORDER BY (value->>'idProducto')::int
   LOOP
-    RAISE NOTICE 'DEBUG loop: v_item.value=%', v_item.value;
     v_id_producto := (v_item.value->>'idProducto')::int;
     v_cantidad := (v_item.value->>'cantidad')::int;
 
-    SELECT ps.cantidad, ps.estado, p.estado, ps.precio, p.nombre
-    INTO v_stock_actual, v_estado_sede, v_estado_producto, v_precio, v_nombre
+    IF v_cantidad IS NULL OR v_cantidad < 1 THEN
+      UPDATE movimiento_venta SET estado = 'RECHAZADO', resultado = jsonb_build_object('estado','RECHAZADO','motivo','cantidad inválida','version',1), updated_at = now() WHERE id_venta = p_venta;
+      RETURN jsonb_build_object('estado','RECHAZADO','motivo','cantidad inválida','version',1);
+    END IF;
+
+    SELECT ps.cantidad, ps.estado, p.estado
+    INTO v_stock_actual, v_estado_sede, v_estado_producto
     FROM producto_sede ps
     JOIN producto p ON p.id = ps.id_producto
     WHERE ps.id_producto = v_id_producto AND ps.id_hotel = p_hotel
@@ -144,9 +156,21 @@ BEGIN
       UPDATE movimiento_venta SET estado = 'RECHAZADO', resultado = jsonb_build_object('estado','RECHAZADO','motivo','stock insuficiente','version',1), updated_at = now() WHERE id_venta = p_venta;
       RETURN jsonb_build_object('estado','RECHAZADO','motivo','stock insuficiente','version',1);
     END IF;
+  END LOOP;
+
+  -- Fase 2: con todas las filas ya bloqueadas, descontar y registrar el detalle.
+  FOR v_item IN SELECT value FROM jsonb_array_elements(p_items) ORDER BY (value->>'idProducto')::int
+  LOOP
+    v_id_producto := (v_item.value->>'idProducto')::int;
+    v_cantidad := (v_item.value->>'cantidad')::int;
+
+    SELECT ps.precio, p.nombre INTO v_precio, v_nombre
+    FROM producto_sede ps
+    JOIN producto p ON p.id = ps.id_producto
+    WHERE ps.id_producto = v_id_producto AND ps.id_hotel = p_hotel;
 
     UPDATE producto_sede
-    SET cantidad = cantidad - v_cantidad, version = version + 1, updated_at = now()
+    SET cantidad = cantidad - v_cantidad, version = version + 1
     WHERE id_producto = v_id_producto AND id_hotel = p_hotel AND cantidad >= v_cantidad;
 
     GET DIAGNOSTICS v_rows = ROW_COUNT;
@@ -155,7 +179,7 @@ BEGIN
       RETURN jsonb_build_object('estado','RECHAZADO','motivo','stock insuficiente (carrera)','version',1);
     END IF;
 
-    v_subtotal := v_precio * v_cantidad;
+    v_subtotal := round(v_precio * v_cantidad, 2);
     v_total := v_total + v_subtotal;
 
     INSERT INTO movimiento_detalle (id_venta, id_producto, cantidad, precio_unitario, subtotal, nombre_snapshot)
@@ -230,7 +254,7 @@ BEGIN
       SELECT md.id_producto, md.cantidad FROM movimiento_detalle md WHERE md.id_venta = p_venta
     LOOP
       UPDATE producto_sede
-      SET cantidad = cantidad + v_cantidad_devuelta, version = version + 1, updated_at = now()
+      SET cantidad = cantidad + v_cantidad_devuelta, version = version + 1
       WHERE id_producto = v_id_producto AND id_hotel = p_hotel;
 
       GET DIAGNOSTICS v_rows = ROW_COUNT;
@@ -280,7 +304,7 @@ BEGIN
   END IF;
 
   UPDATE producto_sede
-  SET cantidad = v_saldo + p_delta, version = v_version + 1, updated_at = now()
+  SET cantidad = v_saldo + p_delta, version = v_version + 1
   WHERE id_producto = p_producto AND id_hotel = p_hotel AND version = v_version;
 
   INSERT INTO ajuste_stock (id, id_producto, id_hotel, delta, motivo, actor_id, saldo_resultante, created_at)
@@ -292,6 +316,8 @@ $$;
 
 -- -----------------------------------------------------------------------
 -- sp_producto_sede_crear: alta única de producto_sede con stock inicial.
+-- El alta duplicada viola la PK y la superficie la traduce a
+-- DUPLICATE_RESOURCE (409); la fila no se toca si ya existía.
 -- -----------------------------------------------------------------------
 CREATE OR REPLACE PROCEDURE sp_producto_sede_crear(
   p_producto int,
@@ -304,8 +330,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
   INSERT INTO producto_sede (id_producto, id_hotel, precio, cantidad, umbral_bajo, estado, version)
-  VALUES (p_producto, p_hotel, p_precio, p_inicial, p_umbral, true, 1)
-  ON CONFLICT (id_producto, id_hotel) DO NOTHING;
+  VALUES (p_producto, p_hotel, p_precio, p_inicial, p_umbral, true, 1);
 END;
 $$;
 

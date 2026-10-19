@@ -3,6 +3,7 @@ package pe.hotel.inventory.web;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import pe.hotel.inventory.domain.dto.Debito;
 import pe.hotel.inventory.domain.dto.DebitoResultado;
 import pe.hotel.inventory.domain.dto.MovimientoResumen;
@@ -28,7 +29,8 @@ public class StockInternoController {
   @Autowired(required = false) private StockService stockService;
 
   @PostMapping("/descontar")
-  public ResponseEntity<ApiResponse<DebitoResultado>> descontar(@RequestBody Debito debito) {
+  public ResponseEntity<ApiResponse<DebitoResultado>> descontar(
+      @Valid @RequestBody Debito debito) {
     DescontarResultado resultado = stockService.descontar(debito);
     switch (resultado.estado()) {
       case DESCONTADO -> {

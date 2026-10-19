@@ -4,6 +4,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 import pe.hotel.inventory.domain.dto.AjusteRequest;
 import pe.hotel.inventory.domain.dto.AjusteResultado;
 import pe.hotel.inventory.domain.dto.ProductoAlta;
@@ -48,9 +49,9 @@ public class ProductoController {
   }
 
   @PostMapping("/registrar")
-  public ResponseEntity<ApiResponse<ProductoView>> registrar(@RequestBody ProductoAlta alta) {
+  public ResponseEntity<ApiResponse<ProductoView>> registrar(@Valid @RequestBody ProductoAlta alta) {
     soloAdmin();
-    ProductoView v = service.registrar(alta, currentUser.actor() != null ? parseActor(currentUser.actor()) : null);
+    ProductoView v = service.registrar(alta, actorActual());
     return ResponseEntity.status(CREATED)
         .body(ApiResponse.ok("Producto registrado", v, Meta.of(CorrelationId.current())));
   }
@@ -61,11 +62,11 @@ public class ProductoController {
       @RequestParam Integer idHotel,
       @RequestHeader(name = "If-Match", required = false) String ifMatch,
       @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey,
-      @RequestBody ProductoUpdate update) {
+      @Valid @RequestBody ProductoUpdate update) {
     soloAdmin();
     ProductoView v =
         service.actualizar(
-            id, idHotel, update, ifMatch, parseProductoVersion(update.productoVersion()));
+            id, idHotel, update, ifMatch, update.productoVersion());
     return ResponseEntity.ok()
         .eTag(String.valueOf(v.version()))
         .body(ApiResponse.ok(v, Meta.of(CorrelationId.current())));
@@ -80,6 +81,7 @@ public class ProductoController {
     soloAdmin();
     ProductoView v = service.eliminar(id, idHotel, ifMatch);
     return ResponseEntity.ok()
+        .eTag(String.valueOf(v.version()))
         .body(ApiResponse.ok(v, Meta.of(CorrelationId.current())));
   }
 
@@ -87,7 +89,7 @@ public class ProductoController {
   public ResponseEntity<ApiResponse<ProductoView>> asignarSede(
       @PathVariable Integer id, @RequestBody SedeAsignacion asignacion) {
     soloAdmin();
-    ProductoView v = service.asignarSede(id, asignacion, null);
+    ProductoView v = service.asignarSede(id, asignacion, actorActual());
     return ResponseEntity.status(CREATED)
         .body(ApiResponse.ok("Producto asignado a sede", v, Meta.of(CorrelationId.current())));
   }
@@ -98,9 +100,9 @@ public class ProductoController {
       @RequestParam Integer idHotel,
       @RequestHeader(name = "If-Match", required = false) String ifMatch,
       @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey,
-      @RequestBody AjusteRequest request) {
+      @Valid @RequestBody AjusteRequest request) {
     soloAdmin();
-    AjusteResultado r = service.ajustar(id, idHotel, ifMatch, request, null);
+    AjusteResultado r = service.ajustar(id, idHotel, ifMatch, request, actorActual());
     return ResponseEntity.status(CREATED)
         .body(ApiResponse.ok("Ajuste registrado", r, Meta.of(CorrelationId.current())));
   }
@@ -117,7 +119,7 @@ public class ProductoController {
     verificarSede(idHotel);
     List<pe.hotel.inventory.domain.dto.MovimientoView> data =
         service.movimientos(id, idHotel, page, size, inicio, fin);
-    long total = data.size();
+    long total = service.contarMovimientos(id, idHotel, inicio, fin);
     return ResponseEntity.ok()
         .body(
             ApiResponse.ok(
@@ -151,7 +153,10 @@ public class ProductoController {
     }
   }
 
-  private Integer parseProductoVersion(Integer v) {
-    return v;
+  /** {@code actor_id} de auditoría: id de la persona del JWT validado (nunca una cabecera). */
+  private Integer actorActual() {
+    return currentUser == null || currentUser.actor() == null
+        ? null
+        : parseActor(currentUser.actor());
   }
 }

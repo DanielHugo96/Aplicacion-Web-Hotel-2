@@ -7,6 +7,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import pe.hotel.inventory.platform.ApiResponse;
 
 /**
  * Cliente Feign hacia hotel-service para validar que una sede existe y está activa antes de crear
@@ -22,11 +23,15 @@ import org.springframework.web.bind.annotation.PathVariable;
     configuration = HotelClient.FeignConfig.class)
 public interface HotelClient {
 
-  /** Datos de una sede para validar que existe y está activa. 404 si no existe. */
+  /**
+   * Datos de una sede para validar que existe y está activa. 404 si no existe. La ruta interna
+   * responde dentro del envelope común (docs/contracts/openapi/hotel.yaml § /internal/hoteles/{id}),
+   * así que el payload va en {@code data}.
+   */
   @GetMapping("/internal/hoteles/{id}")
-  HotelSede datos(@PathVariable("id") Integer idHotel);
+  ApiResponse<HotelSede> datos(@PathVariable("id") Integer idHotel);
 
-  record HotelSede(Integer idHotel, String nombre, boolean estado, Integer version) {}
+  record HotelSede(Integer idHotel, String nombre, Boolean estado, Long version) {}
 
   class FeignConfig {
 
