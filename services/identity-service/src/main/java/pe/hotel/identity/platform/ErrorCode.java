@@ -24,6 +24,11 @@ public enum ErrorCode {
   INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un error inesperado."),
   // Código propio de identity (docs/contracts/errors.md § Identity).
   DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "Ese valor ya está registrado."),
+  FIXED_ROLE_CATALOG(HttpStatus.CONFLICT, "Los roles del sistema no se crean ni eliminan."),
+  STAFF_CREDENTIAL_REQUIRED(
+      HttpStatus.CONFLICT, "Para crear personal, la persona necesita credenciales de acceso."),
+  LAST_ADMIN_PROTECTED(
+      HttpStatus.CONFLICT, "Debe quedar al menos un administrador activo."),
   INVALID_CREDENTIALS(HttpStatus.UNAUTHORIZED, "Correo o contraseña incorrectos."),
   PASSWORD_POLICY(HttpStatus.BAD_REQUEST, "La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8)."),
   CURRENT_PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, "La contraseña actual no es correcta."),

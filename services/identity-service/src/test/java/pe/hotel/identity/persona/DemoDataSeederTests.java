@@ -13,6 +13,7 @@ import static org.mockito.Mockito.verify;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.DefaultApplicationArguments;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -34,7 +35,7 @@ class DemoDataSeederTests {
   private final PasswordEncoder encoder = new BCryptPasswordEncoder();
 
   private DemoDataSeeder seeder(DemoProperties demo) {
-    return new DemoDataSeeder(jdbcTemplate, encoder, demo);
+    return new DemoDataSeeder(jdbcTemplate, encoder, demo, null);
   }
 
   private DemoProperties demo(String clave, String secretoCliente) {
