@@ -1,0 +1,43 @@
+.registro-page {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-8);
+}
+
+.registro-card {
+  width: 100%;
+  max-width: 520px;
+  padding: var(--space-8);
+}
+
+.sub {
+  font-size: var(--text-small);
+  color: var(--color-garua);
+  margin-bottom: var(--space-8);
+}
+
+.note {
+  font-size: var(--text-small);
+  color: var(--color-garua);
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-sillar-piedra);
+  border-radius: var(--radius-control);
+}
+
+.foot {
+  margin-top: var(--space-6);
+  font-size: var(--text-small);
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .registro-page {
+    padding: var(--space-4);
+  }
+  .registro-card {
+    padding: var(--space-6);
+  }
+}

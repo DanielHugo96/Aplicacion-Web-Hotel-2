@@ -1,0 +1,12 @@
+.pf-card {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-junta);
+  margin: var(--space-8) 0;
+}

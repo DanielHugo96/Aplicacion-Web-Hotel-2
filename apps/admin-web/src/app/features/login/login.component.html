@@ -1,0 +1,67 @@
+<div class="login-page">
+  <div class="login-card">
+    <h1>Iniciar sesión</h1>
+    <p class="sub">Acceso al panel de gestión hotelera.</p>
+
+    @if (error) {
+      <div class="banner banner-error" role="alert">
+        <span>{{ error.message }}</span>
+        @if (error.code === 'INVALID_CREDENTIALS') {
+          <span class="correlation">{{ error.correlationId }}</span>
+        } @else if (error.code === 'RATE_LIMITED') {
+          <span>Espera el tiempo indicado y vuelve a intentarlo.</span>
+          <span class="correlation">{{ error.correlationId }}</span>
+        }
+      </div>
+    }
+
+    <form (ngSubmit)="onSubmit($event)" novalidate>
+      <div class="field">
+        <label for="correo" class="required">Correo</label>
+        <input
+          id="correo"
+          type="email"
+          [(ngModel)]="correo"
+          name="correo"
+          placeholder="nombre@dominio.com"
+          [class.error]="claveInvalida()"
+          required
+          maxlength="254"
+        />
+        @if (claveInvalida()) {
+          <span class="field-msg">Correo o contraseña incorrectos.</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="clave" class="required">Contraseña</label>
+        <input
+          id="clave"
+          type="password"
+          [(ngModel)]="clave"
+          name="clave"
+          [class.error]="claveInvalida()"
+          required
+        />
+        @if (claveInvalida()) {
+          <span class="field-msg">Correo o contraseña incorrectos.</span>
+        }
+      </div>
+
+      <button class="btn btn-primary" type="submit" [disabled]="loading">
+        @if (loading) { <span class="spinner" aria-hidden="true"></span> } Iniciar sesión
+      </button>
+
+      <p class="foot">
+        ¿No tienes cuenta? <a routerLink="/registro">Regístrate como cliente</a>
+      </p>
+    </form>
+
+    @if (rateLimitado()) {
+      <div class="banner banner-error" role="alert">
+        Demasiados intentos. Espera un momento.
+        <span class="correlation">{{ error?.correlationId }}</span>
+      </div>
+    }
+  </div>
+</div>
