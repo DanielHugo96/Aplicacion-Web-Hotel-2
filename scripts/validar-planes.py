@@ -22,6 +22,9 @@ PREF = "SEC|LP|CRUD|OCC|CLN|STK|PAY|OUT|MSG|REP|NOT"
 RE_CASO = re.compile(rf"\b({PREF})(\d{{2}})(?:[\u2013-](?:({PREF}))?(\d{{2}}))?\b")
 RE_CASO_SUELTO = re.compile(rf"\b(?:{PREF})\d{{2}}\b")
 RE_NOMBRE_PLAN = re.compile(r"(back|front|infra|qa)-[a-z0-9-]+")
+# Los planes de arreglo (norma §6.11.5) no entran en los rangos de fase: son
+# correcciones puntuales, no dependencias de los planes del calendario.
+RE_ARREGLO = re.compile(r"(?:back|front|infra|qa)-arreglo-[a-z0-9-]+")
 RE_PLAN_EN_TEXTO = re.compile(r"`((?:back|front|infra|qa)-[a-z0-9*-]+)`")
 RE_FILA_PLAN = re.compile(
     r"^\|\s*(F[0-5])\s*\|\s*`([a-z0-9-]+)`\s*\|\s*(back|front|infra|qa)\s*\|"
@@ -145,7 +148,8 @@ def leer_planes(texto, donde):
         if p["rango"]:
             a, b = p["rango"]
             p["deps"] |= {n for n, q in planes.items()
-                          if a <= int(q["fase"][1]) <= b and n != nombre}
+                          if a <= int(q["fase"][1]) <= b and n != nombre
+                          and not RE_ARREGLO.fullmatch(n)}
         del p["rango"]
     return planes
 

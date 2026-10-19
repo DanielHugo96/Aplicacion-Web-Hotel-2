@@ -17,13 +17,17 @@ Un plan está listo (docs/implementacion/README.md §2) cuando:
     se reanuda),
   - y la zona que toca está libre.
 
+Los planes de arreglo (`<ámbito>-arreglo-<tema>`, norma §6.11.5) no están en el
+calendario. Se devuelven **antes** que los normales: si `main` está roto, el
+arreglo va primero. Cuando se cierran, la campaña retoma el plan que esperaba.
+
 La campaña es secuencial, así que la zona se comprueba solo: si un plan quedó
 `en curso` se devuelve primero, y si no, se devuelve el primero listo del
 calendario. Nunca habrá dos planes abiertos a la vez.
 
 Uso:
     python scripts/proximo-plan.py               # imprime el plan listo, o nada
-    python scripts/proximo-plan.py --listar      # tabla de estado de los 25
+    python scripts/proximo-plan.py --listar      # tabla de estado de los planes
     python scripts/proximo-plan.py --explain <plan>
     python scripts/proximo-plan.py --comprobar   # ¿el calendario sigue cuadrando?
     python scripts/proximo-plan.py --sin-remoto  # no consulta origin (offline)
@@ -91,6 +95,8 @@ CALENDARIO = [
 RE_CAMPO = re.compile(r"^\|\s*(?P<clave>[^|]+?)\s*\|\s*(?P<valor>.*?)\s*\|\s*$")
 RE_BACKTICK = re.compile(r"`([^`]+)`")
 RE_ESTADO = re.compile(r"`(propuesto|en curso|cerrado)`")
+# Un plan de arreglo no está en el calendario y tiene prioridad sobre los normales.
+RE_ARREGLO = re.compile(r"^(?:back|front|infra|qa)-arreglo-[a-z0-9-]+$")
 # El punto tras el número es opcional: hay planes con "## 4 Pasos" y planes con
 # "## 4. Pasos". Los dos formatos tienen que contar igual.
 RE_SECCION = re.compile(r"^##\s+(?:\d+\.?\s*)?(?P<titulo>[^#]+?)\s*$")
@@ -171,6 +177,11 @@ def leer_plan(archivo: Path) -> Plan:
     return plan
 
 
+def es_arreglo(nombre: str) -> bool:
+    """True si el nombre corresponde a un plan de arreglo (norma §6.11.5)."""
+    return bool(RE_ARREGLO.fullmatch(nombre))
+
+
 def cargar_planes() -> dict[str, Plan]:
     planes: dict[str, Plan] = {}
     for archivo in sorted(PLANES.glob("*.md")):
@@ -211,9 +222,12 @@ def comprobar_calendario(planes: dict[str, Plan]) -> list[str]:
     problemas = []
     en_disco = set(planes)
     en_calendario = set(CALENDARIO)
+    # Los planes de arreglo viven en docs/plans/ pero no ocupan tanda: su orden
+    # lo fija su prioridad y sus dependencias, no el calendario.
+    arreglos = {n for n in en_disco if es_arreglo(n)}
     for sobra in sorted(en_calendario - en_disco):
         problemas.append(f"{sobra}: está en el CALENDARIO de este script pero no en docs/plans/")
-    for falta in sorted(en_disco - en_calendario):
+    for falta in sorted(en_disco - en_calendario - arreglos):
         problemas.append(f"{falta}: está en docs/plans/ pero no en el CALENDARIO de este script")
     return problemas
 
@@ -221,8 +235,31 @@ def comprobar_calendario(planes: dict[str, Plan]) -> list[str]:
 def elegir(planes: dict[str, Plan], consultar_remoto: bool) -> tuple[str | None, list[str]]:
     """Devuelve (plan_elegido, notas). ``None`` si no hay nada listo."""
     notas: list[str] = []
+    arreglos = sorted(n for n in planes if es_arreglo(n))
 
-    # 1. Reanudar cualquier cosa que quedara a medias. Es lo que hace la
+    def listo(nombre: str, estado: str) -> str | None:
+        plan = planes.get(nombre)
+        if plan is None or plan.estado != estado:
+            return None
+        ok, faltan = dependencias_satisfechas(plan, planes)
+        if not ok:
+            notas.append(f"{nombre}: bloqueado por {', '.join(faltan)}")
+            return None
+        if consultar_remoto and rama_remota(nombre):
+            notas.append(f"{nombre}: ya existe su rama en {ORIGEN}, alguien lo tomó antes")
+            return None
+        return nombre
+
+    # 1. Planes de arreglo primero, siempre. Si `main` está roto, el arreglo va
+    #    antes que cualquier plan normal. Primero el que quedó a medias.
+    for estado in ("en curso", "propuesto"):
+        for nombre in arreglos:
+            elegido = listo(nombre, estado)
+            if elegido:
+                notas.append(f"{nombre}: plan de arreglo, va antes que los normales")
+                return elegido, notas
+
+    # 2. Reanudar cualquier plan normal que quedara a medias. Es lo que hace la
     #    campaña reanudable: si se corta a mitad, el plan se devuelve primero.
     for nombre in CALENDARIO:
         plan = planes.get(nombre)
@@ -230,19 +267,11 @@ def elegir(planes: dict[str, Plan], consultar_remoto: bool) -> tuple[str | None,
             notas.append(f"{nombre}: ESTADO 'en curso', se reanuda este primero")
             return nombre, notas
 
-    # 2. Primer plan propuesto cuyas dependencias estén cerradas y libre de rival.
+    # 3. Primer plan propuesto cuyas dependencias estén cerradas y libre de rival.
     for nombre in CALENDARIO:
-        plan = planes.get(nombre)
-        if plan is None or plan.estado != "propuesto":
-            continue
-        ok, faltan = dependencias_satisfechas(plan, planes)
-        if not ok:
-            notas.append(f"{nombre}: bloqueado por {', '.join(faltan)}")
-            continue
-        if consultar_remoto and rama_remota(nombre):
-            notas.append(f"{nombre}: ya existe su rama en {ORIGEN}, alguien lo tomó antes")
-            continue
-        return nombre, notas
+        elegido = listo(nombre, "propuesto")
+        if elegido:
+            return elegido, notas
 
     return None, notas
 
@@ -261,7 +290,10 @@ def main() -> int:
     if args.comprobar:
         problemas = comprobar_calendario(planes)
         if not problemas:
-            print(f"OK: el CALENDARIO cuadra con los {len(planes)} planes de docs/plans/")
+            arreglos = [n for n in planes if es_arreglo(n)]
+            extra = f" y {len(arreglos)} plan(es) de arreglo" if arreglos else ""
+            print(f"OK: el CALENDARIO cuadra con los {len(planes) - len(arreglos)} planes "
+                  f"de docs/plans/{extra}")
             return 0
         print("DESAJUSTE entre el CALENDARIO de proximo-plan.py y docs/plans/:", file=sys.stderr)
         for p in problemas:
@@ -271,9 +303,10 @@ def main() -> int:
         return 1
 
     if args.listar:
-        ancho = max(len(p) for p in planes)
+        orden = CALENDARIO + sorted(n for n in planes if es_arreglo(n))
+        ancho = max(len(p) for p in orden)
         print(f"{'plan'.ljust(ancho)}  {'ambito':<7}  {'estado':<9}  {'pasos':<8} {'criterio':<9} depende de")
-        for nombre in CALENDARIO:
+        for nombre in orden:
             plan = planes.get(nombre)
             if plan is None:
                 print(f"{nombre.ljust(ancho)}  <falta el archivo>")

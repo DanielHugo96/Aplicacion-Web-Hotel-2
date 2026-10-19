@@ -34,6 +34,9 @@ libre. La tanda es la referencia para saber qué puede ir a la vez, no una barre
 
 Notas de lectura:
 
+- Los **planes de arreglo** (`<ámbito>-arreglo-<tema>`) no ocupan tanda: no están en este
+  calendario. `scripts/proximo-plan.py` los devuelve antes que los normales y, cuando se cierran,
+  la campaña retoma el plan que estaba esperando (norma §6.11.5).
 - Las dependencias de cada fila están en el encabezado `Depende de` del plan. Si una tabla y un plan
   no coinciden, manda el plan.
 - `back-notification-worker` solo depende de mensajería, así que puede hacerse en **T4**, no en T11.
