@@ -15,7 +15,7 @@ public interface HabitacionRepository extends JpaRepository<Habitacion, Integer>
   List<Habitacion> findByIdHotelAndEstadoTrueOrderByIdAsc(@Param("idHotel") Integer idHotel);
 
   @Query(
-      "SELECT h FROM Habitacion h WHERE h.idHotel = :idHotel AND h.idCategoria = :idCategoria "
+      "SELECT h FROM Habitacion h WHERE h.idHotel = :idHotel AND h.categoria.id = :idCategoria "
           + "AND h.estado = true ORDER BY h.id ASC")
   List<Habitacion> findByIdHotelAndIdCategoriaAndEstadoTrueOrderByIdAsc(
       @Param("idHotel") Integer idHotel, @Param("idCategoria") Integer idCategoria);
@@ -30,7 +30,7 @@ public interface HabitacionRepository extends JpaRepository<Habitacion, Integer>
       @Param("idHotel") Integer idHotel, @Param("numero") String numero);
 
   @Query(
-      "SELECT COUNT(h) > 0 FROM Habitacion h WHERE h.idCategoria = :idCategoria AND h.estado = true")
+      "SELECT COUNT(h) > 0 FROM Habitacion h WHERE h.categoria.id = :idCategoria AND h.estado = true")
   boolean countByIdCategoriaEstadoTrue(@Param("idCategoria") Integer idCategoria);
 
   @Query(
@@ -46,7 +46,7 @@ public interface HabitacionRepository extends JpaRepository<Habitacion, Integer>
       @Param("idPiso") Integer idPiso, @Param("idHotel") Integer idHotel);
 
   @Query(
-      "SELECT h FROM Habitacion h WHERE h.idCategoria = :idCategoria AND h.estado = true ORDER BY h.id ASC")
+      "SELECT h FROM Habitacion h WHERE h.categoria.id = :idCategoria AND h.estado = true ORDER BY h.id ASC")
   List<Habitacion> findByIdCategoriaAndEstadoTrueOrderByIdAsc(@Param("idCategoria") Integer idCategoria);
 
   @Query(
