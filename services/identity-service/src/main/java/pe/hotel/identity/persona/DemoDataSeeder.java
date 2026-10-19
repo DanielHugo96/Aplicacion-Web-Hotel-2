@@ -216,26 +216,25 @@ public class DemoDataSeeder implements ApplicationRunner {
     for (PersonaSeed persona : PERSONAS) {
       String json;
       try {
-        json =
-            mapper.writeValueAsString(
-                Map.of(
-                    "eventId", UUID.randomUUID().toString(),
-                    "type", "PersonaSnapshot",
-                    "schemaVersion", 1,
-                    "aggregateType", "persona",
-                    "aggregateId", String.valueOf(persona.id()),
-                    "aggregateVersion", 1,
-                    "idHotel", null,
-                    "occurredAt", Instant.now().toString(),
-                    "correlationId", UUID.randomUUID().toString(),
-                    "payload",
-                    Map.of(
-                        "idPersona", persona.id(),
-                        "nombre", persona.nombre(),
-                        "apellido", persona.apellido(),
-                        "idTipoPersona", persona.idTipoPersona(),
-                        "estado", true,
-                        "version", 1)));
+        java.util.Map<String, Object> evento = new java.util.LinkedHashMap<>();
+        evento.put("eventId", UUID.randomUUID().toString());
+        evento.put("type", "PersonaSnapshot");
+        evento.put("schemaVersion", 1);
+        evento.put("aggregateType", "persona");
+        evento.put("aggregateId", String.valueOf(persona.id()));
+        evento.put("aggregateVersion", 1);
+        evento.put("idHotel", null);
+        evento.put("occurredAt", Instant.now().toString());
+        evento.put("correlationId", UUID.randomUUID().toString());
+        java.util.Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("idPersona", persona.id());
+        payload.put("nombre", persona.nombre());
+        payload.put("apellido", persona.apellido());
+        payload.put("idTipoPersona", persona.idTipoPersona());
+        payload.put("estado", true);
+        payload.put("version", 1);
+        evento.put("payload", payload);
+        json = mapper.writeValueAsString(evento);
       } catch (JsonProcessingException e) {
         throw new IllegalStateException("no se pudo serializar el snapshot de bootstrap", e);
       }

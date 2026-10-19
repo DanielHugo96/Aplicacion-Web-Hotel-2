@@ -33,7 +33,7 @@ public class PersonaRepository {
 
   private static final String SELECT_TIPO_BASE =
       """
-      SELECT id, descripcion, codigo, estado, version, created_at, updated_at
+      SELECT id, descripcion, codigo, estado, version
         FROM tipo_persona
       """;
 
@@ -361,9 +361,7 @@ public class PersonaRepository {
             rs.getString("descripcion"),
             rs.getString("codigo"),
             rs.getBoolean("estado"),
-            rs.getLong("version"),
-            rs.getObject("created_at", OffsetDateTime.class),
-            rs.getObject("updated_at", OffsetDateTime.class));
+            rs.getLong("version"));
       }
     };
   }

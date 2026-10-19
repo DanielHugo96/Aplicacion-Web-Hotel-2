@@ -541,18 +541,22 @@ public class PersonaService {
     payload.put("estado", p.estado());
     payload.put("version", p.version());
     try {
-      String json = mapper.writeValueAsString(Map.of(
-          "eventId", UUID.randomUUID().toString(),
-          "type", TIPO_EVENTO,
-          "schemaVersion", 1,
-          "aggregateType", "persona",
-          "aggregateId", String.valueOf(p.id()),
-          "aggregateVersion", p.version(),
-          "idHotel", null,
-          "occurredAt", Instant.now().truncatedTo(ChronoUnit.SECONDS).toString(),
-          "correlationId", correlationId == null || correlationId.isBlank()
-              ? UUID.randomUUID().toString() : correlationId,
-          "payload", payload));
+      java.util.Map<String, Object> evento = new java.util.LinkedHashMap<>();
+      evento.put("eventId", UUID.randomUUID().toString());
+      evento.put("type", TIPO_EVENTO);
+      evento.put("schemaVersion", 1);
+      evento.put("aggregateType", "persona");
+      evento.put("aggregateId", String.valueOf(p.id()));
+      evento.put("aggregateVersion", p.version());
+      evento.put("idHotel", null);
+      evento.put("occurredAt", Instant.now().truncatedTo(ChronoUnit.SECONDS).toString());
+      evento.put(
+          "correlationId",
+          correlationId == null || correlationId.isBlank()
+              ? UUID.randomUUID().toString()
+              : correlationId);
+      evento.put("payload", payload);
+      String json = mapper.writeValueAsString(evento);
       OutboxStore outbox = outboxProvider.getIfAvailable();
       if (outbox != null) {
         outbox.enqueue(
@@ -571,20 +575,24 @@ public class PersonaService {
 
   /** Registra PERSONA_SEARCH (listar) con actor, recurso, id_hotel y correlación. */
   public void auditarSearch(String actor, Integer idHotel, String correlationId) {
-    auditar("PERSONA_SEARCH", "listar", null, null, correlationId,
-        Map.of("campos", List.of("consulta"),
-            "antes", null,
-            "despues", Map.of("documento", null)),
-        actor, idHotel);
+    java.util.Map<String, Object> changes = new java.util.LinkedHashMap<>();
+    changes.put("campos", List.of("consulta"));
+    changes.put("antes", null);
+    java.util.Map<String, Object> despues = new java.util.LinkedHashMap<>();
+    despues.put("documento", null);
+    changes.put("despues", despues);
+    auditar("PERSONA_SEARCH", "listar", null, null, correlationId, changes, actor, idHotel);
   }
 
   /** Registra PERSONA_READ (buscar) con actor, recurso, id_hotel y correlación. */
   public void auditarRead(String actor, int resourceId, Integer idHotel, String correlationId) {
-    auditar("PERSONA_READ", String.valueOf(resourceId), null, null, correlationId,
-        Map.of("campos", List.of("lectura"),
-            "antes", null,
-            "despues", Map.of("idPersona", resourceId)),
-        actor, idHotel);
+    java.util.Map<String, Object> changes = new java.util.LinkedHashMap<>();
+    changes.put("campos", List.of("lectura"));
+    changes.put("antes", null);
+    java.util.Map<String, Object> despues = new java.util.LinkedHashMap<>();
+    despues.put("idPersona", resourceId);
+    changes.put("despues", despues);
+    auditar("PERSONA_READ", String.valueOf(resourceId), null, null, correlationId, changes, actor, idHotel);
   }
 
   private void auditar(
