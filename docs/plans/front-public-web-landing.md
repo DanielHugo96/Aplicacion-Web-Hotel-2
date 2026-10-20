@@ -7,7 +7,7 @@
 | Componente | `public-web` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-hotel-catalogo` |
 | Spec | [02-landing-y-panel.md § Landing: sí puede](../especificacion/02-landing-y-panel.md) · [02-landing-y-panel.md § Landing: no puede](../especificacion/02-landing-y-panel.md) · [02-landing-y-panel.md § Formatos de UI](../especificacion/02-landing-y-panel.md) · [02-landing-y-panel.md § Textos y assets](../especificacion/02-landing-y-panel.md) · [02-landing-y-panel.md § UX y pruebas mínimas](../especificacion/02-landing-y-panel.md) · [03-contrato-comun.md § Transporte, notación y tipos](../especificacion/03-contrato-comun.md) · [03-contrato-comun.md § Headers](../especificacion/03-contrato-comun.md) · [03-contrato-comun.md § Respuestas](../especificacion/03-contrato-comun.md) · [errors.md § Genéricos](../contracts/errors.md) · [errors.md § Cómo lo usa el frontend](../contracts/errors.md) · [../DESIGN.md §10 Tokens](../DESIGN.md) · [../DESIGN.md §11 Checklist](../DESIGN.md) · [../DESIGN.md §5 Principios de layout](../DESIGN.md) · [../DESIGN.md §8 Contenido y voz](../DESIGN.md) · [contracts/README.md §1 Reglas transversales](../contracts/README.md) · [contracts/README.md §2 Landing public-web](../contracts/README.md) · [public-web.yaml — 4 rutas públicas](../contracts/openapi/public-web.yaml) · [hotel/api.md § Públicas nuevas](../especificacion/microservicios/hotel/api.md) · [06-migracion-y-pruebas.md §4 Cambios frontend](../especificacion/06-migracion-y-pruebas.md) · [06-migracion-y-pruebas.md §5 LP01–LP02](../especificacion/06-migracion-y-pruebas.md) |
 | Casos | `LP01, LP02` |
