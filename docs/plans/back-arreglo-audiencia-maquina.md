@@ -133,7 +133,7 @@ grep -R "Set.of(HUMAN_AUDIENCE, serviceName)" services/*/src/main/java
 # sin coincidencias
 ```
 - [x] 6. Actualizar las siete clases `JwtValidatorTests` para cubrir: `hotel-api` aceptado, destino corto aceptado, nombre largo aceptado (compatibilidad), `otro-servicio` rechazado e issuer distinto rechazado. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl identity-service,hotel-service,reception-service,inventory-service,sales-service,reporting-service,notification-service test` termina en `BUILD SUCCESS`.
-- [ ] 7. Ejecutar el build completo: `bash scripts/mvn.sh -f services/pom.xml verify`. Verificación: `BUILD SUCCESS` de los nueve módulos.
+- [x] 7. Ejecutar el build completo: `bash scripts/mvn.sh -f services/pom.xml verify`. Verificación: `BUILD SUCCESS` de los nueve módulos.
 - [ ] 8. Repetir la reproducción: token de `inventory-service` con `audience=hotel` → `GET /internal/hoteles/{id}` responde 200; token de `identity-service` con `audience=hotel` → 200; token de `reception-service` con `audience=identity` → `GET /internal/clientes/{id}` responde 200. Verificación: códigos HTTP y cuerpos guardados en la evidencia.
 - [ ] 9. Comprobar que no se relaja la seguridad: `audience=hotel-service` sigue devolviendo 400 en identity (la allowlist no cambia) y un token con `aud` ajena sigue devolviendo 401 en hotel e identity, incluido el caso `SEC06`. Verificación: respuestas 400/401 guardadas y `JwtValidatorTests` en verde.
 - [ ] 10. Ejecutar `python scripts/validar-planes.py` y `python scripts/validar-contratos.py --base origin/main`. Verificación: 0 errores y ningún contrato eliminado o renombrado.
@@ -206,6 +206,24 @@ inventory       Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 sales           Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 reporting       Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
 notification    Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+```
+
+### Build completo (paso 7)
+
+```text
+$ bash scripts/mvn.sh -f services/pom.xml verify
+[INFO] Reactor Summary for Hotel services (agregador) 0.0.1-SNAPSHOT:
+[INFO] Hotel services (agregador) ......................... SUCCESS [  0.002 s]
+[INFO] identity-service ................................... SUCCESS [ 30.754 s]
+[INFO] hotel-service ...................................... SUCCESS [  7.110 s]
+[INFO] reception-service .................................. SUCCESS [  5.731 s]
+[INFO] inventory-service .................................. SUCCESS [  6.600 s]
+[INFO] sales-service ...................................... SUCCESS [  6.137 s]
+[INFO] reporting-service .................................. SUCCESS [  5.992 s]
+[INFO] notification-service ............................... SUCCESS [ 12.112 s]
+[INFO] api-gateway ........................................ SUCCESS [ 41.189 s]
+[INFO] discovery-server ................................... SUCCESS [ 14.878 s]
+[INFO] BUILD SUCCESS
 ```
 
 - **Reproducción antes del arreglo:** los comandos de §3; resultado esperado `401 UNAUTHENTICATED` en hotel e identity y `400 VALIDATION_ERROR` al pedir `audience=hotel-service`. Evidencia: salidas literales en esta sección y en la bitácora.
