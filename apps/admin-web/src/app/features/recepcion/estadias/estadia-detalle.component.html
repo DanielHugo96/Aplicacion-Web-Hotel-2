@@ -1,3 +1,208 @@
 <div class="page">
-  <h1>Detalle de estadía</h1>
+  <div class="page-head">
+    <div>
+      <p class="text-small muted"><a routerLink="/app/recepcion">Recepción</a> / Estadía {{ idRecepcion() }}</p>
+      <h1>Detalle de estadía</h1>
+    </div>
+    @if (estadia()?.estadoEstadia === 'ACTIVA') {
+      <div class="toolbar-actions">
+        <button class="btn btn-primary" type="button" (click)="abrirEdicion()">Editar salida</button>
+      </div>
+    }
+  </div>
+
+  <app-error-banner [error]="error()" [actionLabel]="'Reintentar'" (action)="accionError()"></app-error-banner>
+
+  @if (loading()) {
+    <div class="skeleton-card" role="status" aria-label="Cargando estadía">
+      <div class="skeleton skeleton-line w40"></div>
+      <div class="skeleton skeleton-line w70"></div>
+      <div class="skeleton skeleton-line w55"></div>
+    </div>
+  } @else if (estadia(); as e) {
+    <article class="resumen-card" aria-labelledby="estadiaTitulo">
+      <header class="resumen-head">
+        <div>
+          <h2 id="estadiaTitulo">Habitación {{ e.numero }}</h2>
+          <p class="muted">{{ e.categoriaNombre }} · {{ e.pisoNombre }}</p>
+        </div>
+        <div class="pills">
+          <span [class]="'pill ' + claseEstado(e.estadoEstadia)">{{ etiquetaEstado(e.estadoEstadia) }}</span>
+          @if (esVencida(e)) {
+            <span class="pill pill-error">Estadía vencida sin cierre</span>
+          }
+        </div>
+      </header>
+
+      <div class="detalle-grid">
+        <section class="panel" aria-labelledby="huespedTitulo">
+          <h3 id="huespedTitulo">Huésped</h3>
+          <dl class="datos">
+            <div>
+              <dt>Nombre</dt>
+              <dd>{{ e.nombre }} {{ e.apellido }}</dd>
+            </div>
+            <div>
+              <dt>Documento</dt>
+              <dd class="monospace">{{ e.tipoDocumento }} {{ e.documento }}</dd>
+            </div>
+            <div>
+              <dt>Correo</dt>
+              <dd>{{ e.correo }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="panel" aria-labelledby="habitacionTitulo">
+          <h3 id="habitacionTitulo">Habitación</h3>
+          <dl class="datos">
+            <div>
+              <dt>Número</dt>
+              <dd class="monospace">{{ e.numero }}</dd>
+            </div>
+            <div>
+              <dt>Categoría</dt>
+              <dd>{{ e.categoriaNombre }}</dd>
+            </div>
+            <div>
+              <dt>Piso</dt>
+              <dd>{{ e.pisoNombre }}</dd>
+            </div>
+            <div>
+              <dt>Detalle</dt>
+              <dd>{{ e.detalleHabitacion }}</dd>
+            </div>
+            <div>
+              <dt>Tarifa congelada</dt>
+              <dd class="num">{{ e.precioHabitacion | money }}</dd>
+            </div>
+          </dl>
+        </section>
+      </div>
+
+      <section class="panel" aria-labelledby="importesTitulo">
+        <h3 id="importesTitulo">Fechas e importes</h3>
+        <dl class="datos datos-columnas">
+          <div>
+            <dt>Entrada</dt>
+            <dd class="table-nums">{{ e.fechaEntrada | peDate }}</dd>
+          </div>
+          <div>
+            <dt>Salida</dt>
+            <dd class="table-nums">{{ e.fechaSalida | peDate }}</dd>
+          </div>
+          <div>
+            <dt>Salida confirmada</dt>
+            <dd class="table-nums">{{ e.fechaSalidaConfirmacion ? (e.fechaSalidaConfirmacion | peTimestamp) : 'Aún no confirmada' }}</dd>
+          </div>
+          <div>
+            <dt>Alojamiento</dt>
+            <dd class="num">{{ e.precioInicial | money }}</dd>
+          </div>
+          <div>
+            <dt>Adelanto</dt>
+            <dd class="num">{{ e.adelanto | money }}</dd>
+          </div>
+          <div>
+            <dt>Medio de pago del adelanto</dt>
+            <dd>{{ medioPagoEtiqueta(e.medioPagoAdelanto) }}</dd>
+          </div>
+          <div>
+            <dt>Saldo de alojamiento</dt>
+            <dd class="num">{{ e.precioRestante | money }}</dd>
+          </div>
+          <div>
+            <dt>Total histórico del alojamiento</dt>
+            <dd class="num">{{ e.totalPagado | money }}</dd>
+          </div>
+          <div>
+            <dt>Penalidad</dt>
+            <dd class="num">{{ e.costoPenalidad | money }}</dd>
+          </div>
+        </dl>
+      </section>
+
+      @if (e.observacion) {
+        <section class="panel" aria-labelledby="observacionTitulo">
+          <h3 id="observacionTitulo">Observación</h3>
+          <p>{{ e.observacion }}</p>
+        </section>
+      }
+
+      @if (e.cierre) {
+        <section class="panel" aria-labelledby="cierreTitulo">
+          <h3 id="cierreTitulo">Cierre</h3>
+          <p class="text-small">
+            <span class="monospace">{{ e.cierre.closureId }}</span>
+            · {{ e.cierre.estado }}
+            @if (e.cierre.medioPago) {
+              · {{ medioPagoEtiqueta(e.cierre.medioPago) }}
+            }
+          </p>
+        </section>
+      }
+    </article>
+
+    @if (editando()) {
+      <section class="form-card" aria-labelledby="editarSalidaTitulo">
+        <h2 id="editarSalidaTitulo">Editar salida</h2>
+        <p class="text-small muted">
+          La estadía no se cierra desde aquí. Cambiar la fecha actualiza el alojamiento en el backend.
+        </p>
+
+        <app-error-banner
+          [error]="errorSalida()"
+          [actionLabel]="actionLabelSalida()"
+          (action)="accionErrorSalida()"
+        ></app-error-banner>
+
+        <form (ngSubmit)="guardar()" novalidate>
+          <div class="form-grid">
+            <div class="field">
+              <label for="fecha-salida" class="required">Fecha de salida</label>
+              <input
+                id="fecha-salida"
+                name="fechaSalida"
+                type="date"
+                required
+                [min]="e.fechaEntrada"
+                [ngModel]="fechaSalida()"
+                (ngModelChange)="fechaSalida.set($event)"
+                [class.error]="errores().fechaSalida"
+                [attr.aria-invalid]="errores().fechaSalida ? 'true' : null"
+                aria-describedby="fecha-salida-msg"
+              />
+              @if (errores().fechaSalida) {
+                <p id="fecha-salida-msg" class="field-msg" role="alert">{{ errores().fechaSalida }}</p>
+              }
+            </div>
+
+            <div class="field">
+              <label for="observacion">Observación</label>
+              <textarea
+                id="observacion"
+                name="observacion"
+                rows="3"
+                maxlength="500"
+                [ngModel]="observacion()"
+                (ngModelChange)="observacion.set($event)"
+                aria-describedby="observacion-contador"
+              ></textarea>
+              <p id="observacion-contador" class="field-help">{{ contadorObservacion() }} caracteres</p>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button class="btn btn-secondary" type="button" [disabled]="guardando()" (click)="cancelarEdicion()">
+              Cancelar
+            </button>
+            <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+              @if (guardando()) { <span class="spinner" aria-hidden="true"></span> }
+              {{ guardando() ? 'Guardando…' : 'Guardar salida' }}
+            </button>
+          </div>
+        </form>
+      </section>
+    }
+  }
 </div>

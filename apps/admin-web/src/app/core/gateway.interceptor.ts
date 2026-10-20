@@ -158,11 +158,18 @@ export const gatewayInterceptor: HttpInterceptorFn = (req, next) => {
         !esOperacionHabitacionManual(req)
       ) {
         const location = event.headers.get('Location');
+        // La operación durable ya se aceptó: un reenvío desde cero es una
+        // intención nueva. El sondeo usa otra ruta y no lleva la clave.
+        if (isMutating && !isLogin) intentionKeys.delete(requestKey(req));
         if (!location) return of(event);
         const delayMs = parseRetryAfter(event.headers.get('Retry-After'));
         return poll202(http, location, nextReq, delayMs);
       }
-      if (isMutating && !isLogin && !isPoll) {
+      // Solo una respuesta terminal cierra la intención. `HttpClient` emite
+      // además `HttpSentEvent`/`HttpHeaderResponse`; borrar en esos eventos
+      // perdía la clave antes de que llegara la respuesta y rompía el reintento
+      // con la misma clave ante 503 (decisión IA-front-admin-web-recepcion-02).
+      if (event instanceof HttpResponse && isMutating && !isLogin && !isPoll) {
         // Intención terminada: la próxima mutación a la misma URL es una intención nueva.
         intentionKeys.delete(requestKey(req));
       }

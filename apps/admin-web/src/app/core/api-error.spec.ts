@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { CATALOGO_ERRORS, ERROR_CATALOG, parseApiError } from './api-error';
 
 describe('catálogo de errores', () => {
-  it('cubre los veintiún códigos del alcance del panel y del área de cliente', () => {
-    expect(CATALOGO_ERRORS).toHaveLength(21);
-    expect(new Set(CATALOGO_ERRORS).size).toBe(21);
+  it('cubre los veintiocho códigos del alcance del panel, recepción y área de cliente', () => {
+    expect(CATALOGO_ERRORS).toHaveLength(28);
+    expect(new Set(CATALOGO_ERRORS).size).toBe(28);
   });
 
   it('usa el mensaje para UI y la acción esperada de errors.md', () => {
@@ -35,6 +35,28 @@ describe('catálogo de errores', () => {
     );
     expect(ERROR_CATALOG['CURRENT_PASSWORD_MISMATCH'].message).toBe(
       'La contraseña actual no es correcta.'
+    );
+  });
+
+  it('los códigos de recepción y operaciones copian el catálogo de errors.md', () => {
+    expect(ERROR_CATALOG['ROOM_OCCUPIED'].message).toBe('La habitación ya está ocupada.');
+    expect(ERROR_CATALOG['ROOM_NOT_READY'].message).toBe(
+      'La habitación no admite ingreso todavía (limpieza o mantenimiento).'
+    );
+    expect(ERROR_CATALOG['ROOM_NOT_SYNCED'].message).toBe(
+      'La habitación aún no está sincronizada con recepción.'
+    );
+    expect(ERROR_CATALOG['GATE_NOT_AVAILABLE'].message).toBe(
+      'No se puede bloquear la habitación: está ocupada o en limpieza.'
+    );
+    expect(ERROR_CATALOG['ROOM_OPERATION_IN_PROGRESS'].message).toBe(
+      'La habitación tiene una operación en curso.'
+    );
+    expect(ERROR_CATALOG['OPERATIONS_IN_PROGRESS'].message).toBe(
+      'Hay consumos en proceso. Espera a que terminen.'
+    );
+    expect(ERROR_CATALOG['ADVANCE_EXCEEDS_NEW_TOTAL'].message).toBe(
+      'La nueva fecha deja el alojamiento por debajo del adelanto registrado.'
     );
   });
 
