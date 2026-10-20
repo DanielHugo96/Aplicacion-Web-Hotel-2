@@ -1,3 +1,86 @@
 <div class="page">
-  <h1>Limpieza</h1>
+  <div class="page-head">
+    <div>
+      <h1>Limpieza</h1>
+      <p class="sub">Tareas de {{ sedeNombre() ?? 'la sede seleccionada' }} y su estado.</p>
+    </div>
+  </div>
+
+  <app-error-banner [error]="error()" [actionLabel]="actionLabel()" (action)="accionError()"></app-error-banner>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="filtro-limpieza">Estado</label>
+      <select
+        id="filtro-limpieza"
+        name="estadoLimpieza"
+        [ngModel]="estado()"
+        (ngModelChange)="estado.set($event); aplicarFiltro()"
+      >
+        <option value="PENDIENTE">Pendientes</option>
+        <option value="COMPLETADA">Completadas</option>
+        <option [ngValue]="null">Todas</option>
+      </select>
+    </div>
+  </div>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else if (loading()) {
+    <div class="tarjetas" role="status" aria-label="Cargando tareas de limpieza">
+      @for (fila of [1, 2, 3]; track fila) {
+        <div class="tarjeta skeleton-card">
+          <div class="skeleton skeleton-line w40"></div>
+          <div class="skeleton skeleton-line w70"></div>
+          <div class="skeleton skeleton-line w30"></div>
+        </div>
+      }
+    </div>
+  } @else if (tareas().length === 0 && !error()) {
+    <div class="empty" role="status">
+      <p>No hay tareas pendientes</p>
+    </div>
+  } @else if (tareas().length > 0) {
+    <div class="tarjetas">
+      @for (tarea of tareas(); track tarea.cleaningCycleId) {
+        <article class="tarjeta" [attr.aria-labelledby]="'tarea-' + tarea.cleaningCycleId">
+          <header class="tarjeta-head">
+            <div>
+              <h2 [id]="'tarea-' + tarea.cleaningCycleId">Habitación {{ tarea.idHabitacion }}</h2>
+              <p class="text-small muted">Estadía {{ tarea.idRecepcion }}</p>
+            </div>
+            <span [class]="'pill ' + claseEstado(tarea.estado)">{{ etiquetaEstado(tarea.estado) }}</span>
+          </header>
+
+          <dl class="datos">
+            <div>
+              <dt>Ciclo</dt>
+              <dd class="monospace text-micro">{{ tarea.cleaningCycleId }}</dd>
+            </div>
+            <div>
+              <dt>Versión de la tarea</dt>
+              <dd class="table-nums">{{ tarea.version }}</dd>
+            </div>
+          </dl>
+
+          @if (tarea.estado === 'PENDIENTE') {
+            <div class="tarjeta-actions">
+              <button
+                class="btn btn-primary"
+                type="button"
+                [disabled]="completando() === tarea.cleaningCycleId"
+                (click)="completar(tarea)"
+              >
+                @if (completando() === tarea.cleaningCycleId) {
+                  <span class="spinner" aria-hidden="true"></span>
+                }
+                {{ completando() === tarea.cleaningCycleId ? 'Completando…' : 'Completar limpieza' }}
+              </button>
+            </div>
+          }
+        </article>
+      }
+    </div>
+    <app-pagination [page]="page()" [size]="size()" [total]="total()" (pageChange)="cargar($event)"></app-pagination>
+  }
 </div>
