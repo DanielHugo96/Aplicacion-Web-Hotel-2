@@ -109,7 +109,7 @@ def preflight() -> int:
 def evidence_index() -> int:
     base = c.EVIDENCE
     rows = []
-    for folder in sorted(p for p in base.iterdir() if p.is_dir() and not p.name.startswith("_")):
+    for folder in sorted(p for p in base.iterdir() if p.is_dir() and not p.name.startswith("_") and p.name != "backups"):
         files = sorted(p.name for p in folder.iterdir() if p.is_file())
         rows.append((folder.name, len(files), files))
     lines = [
@@ -132,11 +132,15 @@ def evidence_index() -> int:
         "alertas": "python scripts/qa/runbook.py alerts --clean / readiness",
         "backup": "python scripts/qa/runbook.py backup",
         "restauracion": "python scripts/qa/runbook.py restore",
+        "ventas-recuperacion": "python scripts/qa/runbook.py ventas",
+        "preflight": "python scripts/qa/runbook.py preflight",
+        "reset": "python scripts/qa/runbook.py reset",
     }
     for name, count, files in rows:
         result = "OK" if (Path(base) / name).exists() else "sin evidencia"
         lines.append(f"| `{name}` | {count} | `{command.get(name, '—')}` | {result} |")
-    lines += ["", "## Archivos por simulacro", ""]
+    lines += ["", "## Casos de la matriz", "", "Este plan no reclama ningún caso de `06` §5; los ejecuta `qa-matriz-aceptacion`. Los fixtures compartidos se usan solo como precondición.", ""]
+    lines += ["## Archivos por simulacro", ""]
     for name, _, files in rows:
         lines.append(f"### {name}")
         for filename in files:
@@ -145,7 +149,7 @@ def evidence_index() -> int:
     text = "\n".join(lines) + "\n"
     (base / "README.md").write_text(text, encoding="utf-8")
     status = c.run(["git", "status", "--porcelain"], check=True).stdout
-    c.write_evidence("index", "git-status.txt", status)
+    (base / "git-status.txt").write_text(status, encoding="utf-8")
     if any("backups/" in line for line in status.splitlines()):
         raise c.RunbookError("git status muestra dumps de backups/")
     print(f"índice escrito en {base / 'README.md'}")
