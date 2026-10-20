@@ -218,10 +218,7 @@ export class CatalogoService {
   }
 
   async actualizarEstadoFisico(id: number, descripcion: string): Promise<ETagged<EstadoFisico>> {
-    // El contrato publica el cambio como requestBody; el servicio desplegado exige además
-    // `descripcion` como query. Se envían ambos para cumplir el contrato y hablar con el real.
-    const path = `${API_PATHS.estadoHabitacionActualizar(id)}?descripcion=${encodeURIComponent(descripcion)}`;
-    return this.put<EstadoFisico>(path, { descripcion });
+    return this.put<EstadoFisico>(API_PATHS.estadoHabitacionActualizar(id), { descripcion });
   }
 
   // ---------- Helpers ----------

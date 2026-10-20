@@ -68,3 +68,27 @@ Las adaptaciones viven en `apps/admin-web/**`, que es la zona del plan.
 - El arreglo de fondo de identity/hotel queda fuera de esta rama. La evidencia del bloqueo está en
   `docs/plans/front-admin-web-catalogo.md` y en
   `apps/admin-web/evidencias/front-admin-web-catalogo/http-evidence.md`.
+
+## Resolución (2026-10-20)
+
+`main` recibió dos planes de arreglo que resolvieron la mayor parte de las divergencias:
+
+- `back-arreglo-identity-personas-catalogo` (PR #94): `PUT /api/tipopersona/actualizar/{id}`
+  responde 200 con `version` incrementada y `ETag`, el claim `sedes` se normaliza y persona
+  `PUT`/`DELETE` sin `If-Match` devuelve 428.
+- `back-arreglo-hotel-catalogo-admin` (PR #92): los cuatro listados devuelven
+  `meta.page/size/totalElements`, el alcance de `EMPLEADO` filtra por JWT, `buscar/{id}` devuelve
+  `urlsImagenes`, `PUT /api/estadohabitacion/actualizar/{id}` lee el body y `hotel-service` se
+  registra solo en Eureka.
+
+Con eso se retiró el workaround de enviar `descripcion` también como query param: el cliente vuelve
+a mandar solo el `requestBody` del contrato. Se mantienen la normalización de listas con `data`
+envuelto (`personas`/`tipos`) y el fallback de paginación, porque el contrato admite el array pero
+identity sigue publicando el objeto y un cliente tolerante no rompe a ninguno de los dos. También se
+mantiene el cierre de la intención de idempotencia, que es comportamiento correcto de la norma y no
+un parche de backend.
+
+Observación residual: con token `EMPLEADO`, `GET /api/persona/listar?documento=...` responde 200,
+pero `GET /api/persona/buscar/{id}` sigue respondiendo 404. La pantalla de personas del panel no usa
+`buscar/{id}` para el rol de solo lectura (lista por documento y no navega al detalle), así que no
+bloquea este plan; queda como observación para un futuro arreglo de identity.

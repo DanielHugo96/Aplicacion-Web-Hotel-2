@@ -7,7 +7,7 @@
 | Componente | `admin-web` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `front-admin-web-base`, `back-identity-personas`, `back-hotel-catalogo` |
 | Spec | [08-admin-web.md §1 Reglas transversales](../especificacion/08-admin-web.md) · [08-admin-web.md §2 Rutas Angular y guards](../especificacion/08-admin-web.md) · [08-admin-web.md §3 Formularios](../especificacion/08-admin-web.md) · [08-admin-web.md §4 Estados por pantalla](../especificacion/08-admin-web.md) · [08-admin-web.md §5 Menú por rol](../especificacion/08-admin-web.md) · [02-landing-y-panel.md § Panel: matriz de acceso](../especificacion/02-landing-y-panel.md) · [02-landing-y-panel.md § Formatos de UI](../especificacion/02-landing-y-panel.md) · [03-contrato-comun.md § Headers](../especificacion/03-contrato-comun.md) · [03-contrato-comun.md § Respuestas](../especificacion/03-contrato-comun.md) · [03-contrato-comun.md § Identidad y sedes](../especificacion/03-contrato-comun.md) · [errors.md § Genéricos](../contracts/errors.md) · [errors.md § Identity](../contracts/errors.md) · [errors.md § Hotel](../contracts/errors.md) · [errors.md § Cómo lo usa el frontend](../contracts/errors.md) · [../DESIGN.md §10 Tokens](../DESIGN.md) · [../DESIGN.md §11 Checklist](../DESIGN.md) · [../DESIGN.md §4 Componentes](../DESIGN.md) · [../DESIGN.md §6 Formatos](../DESIGN.md) · [../DESIGN.md §7 Estados y errores](../DESIGN.md) · [contracts/README.md §1 Reglas transversales](../contracts/README.md) · [contracts/README.md §3.1 Auth y personas](../contracts/README.md) · [contracts/README.md §3.2 Sedes, pisos, categorías, habitaciones](../contracts/README.md) · [admin-web.yaml — rutas de personas y catálogo](../contracts/openapi/admin-web.yaml) · [identity/api.md § REST](../especificacion/microservicios/identity/api.md) · [identity/api.md § DTO de entrada](../especificacion/microservicios/identity/api.md) · [hotel/api.md § Sedes, pisos y categorías](../especificacion/microservicios/hotel/api.md) · [hotel/api.md § Habitaciones y físico](../especificacion/microservicios/hotel/api.md) · [hotel/api.md § DTO](../especificacion/microservicios/hotel/api.md) · [06-migracion-y-pruebas.md §4 Cambios frontend](../especificacion/06-migracion-y-pruebas.md) |
 | Casos | `—` |
@@ -73,7 +73,7 @@ Decisiones de este plan (no son reglas nuevas): avanzar contra los mocks del Ope
 - [x] 4. Construir `/app/personas` con listado y búsqueda paginados, filtros por tipo y documento exacto, y estados de vacío, skeleton y error. Verificación: contra mocks un 200 pinta filas y píldoras, el vacío muestra su frase exacta y un 403 muestra su mensaje sin datos.
 - [x] 5. Construir el alta y la edición de persona con sus validaciones y mensajes por campo, documento bloqueado en edición, sedes según rol, clave obligatoria para personal nuevo, `Idempotency-Key` y `If-Match` desde `ETag`. Verificación: 201 en alta válida y 200 en edición válida; 400 resalta campos; versión vieja devuelve `PRECONDITION_FAILED` con recarga.
 - [x] 6. Construir la baja de persona (solo ADMIN) con diálogo de "Dar de baja" y protección del último ADMIN. Verificación: 200 deja `estado` en falso y el último ADMIN devuelve `LAST_ADMIN_PROTECTED` con su mensaje.
-- [ ] 7. Construir `/app/tipos-persona` con lectura y edición de etiqueta (solo ADMIN), sin botones ni llamadas de crear o eliminar. Verificación: PUT válido devuelve 200 con versión incrementada y el código muestra que registrar y eliminar no se invocan.
+- [x] 7. Construir `/app/tipos-persona` con lectura y edición de etiqueta (solo ADMIN), sin botones ni llamadas de crear o eliminar. Verificación: PUT válido devuelve 200 con versión incrementada y el código muestra que registrar y eliminar no se invocan. **Evidencia:** `PUT /api/tipopersona/actualizar/{id}` → HTTP 200, `ETag "5"`, `version` 4→5; `GET /api/tipopersona/buscar/{id}` → HTTP 200 con `version: 5`; `grep` de `registrar|eliminar` sobre el cliente de tipos sin resultados; capturas `14-tipos-persona-listado.png` y `15-tipos-persona-editado.png`.
 - [x] 8. Construir sedes con CRUD completo y baja explicada ante habitaciones activas. Verificación: 201 en alta, 200 en edición y baja; dependencias activas devuelven `ACTIVE_DEPENDENCIES` con su mensaje y su acción.
 - [x] 9. Construir pisos por sede con selector de sede requerido, sin cambio de sede por PUT. Verificación: el alta exige sede, la edición solo cambia descripción y estado, y la baja devuelve 200 o `ACTIVE_DEPENDENCIES`.
 - [x] 10. Construir categorías globales con CRUD completo y unicidad de descripción. Verificación: duplicada devuelve `DUPLICATE_RESOURCE` con su mensaje y la baja con dependencias devuelve `ACTIVE_DEPENDENCIES`.
@@ -123,9 +123,14 @@ y las capturas en [`apps/admin-web/evidencias/front-admin-web-catalogo/`](../../
   `STAFF_CREDENTIAL_REQUIRED`. La validación por campo se comprobó en la UI (documento, nombre,
   apellido, correo y clave muestran su mensaje exacto) y el componente de errores está cubierto por
   prueba unitaria. Capturas: `01-personas-listado.png` y `13-persona-form-errores.png`.
-- **Roles**: la pantalla lista los tres códigos y no tiene botones de crear ni eliminar; el código
-  no expone métodos de alta/baja. El `PUT /api/tipopersona/actualizar/{id}` real responde **500**
-  `INTERNAL_ERROR` (ver §9): el paso 7 queda sin marcar.
+- **Roles (paso 7)**: `GET /api/tipopersona/listar` → 200 con los tres roles; `PUT
+  /api/tipopersona/actualizar/{id}` → **200** con `ETag "5"` y `version` de 4 a 5; `GET
+  /api/tipopersona/buscar/{id}` → 200 con `version: 5`. La pantalla no tiene botones de crear ni
+  eliminar y el código no invoca `registrar` ni `eliminar` sobre tipos. Capturas:
+  `14-tipos-persona-listado.png` y `15-tipos-persona-editado.png`.
+- **Personas con EMPLEADO**: `GET /api/persona/listar` sin `documento` → 400 `VALIDATION_ERROR`;
+  con `documento` exacto → 200 con `meta` paginado. Observación residual: `buscar/{id}` con
+  EMPLEADO sigue devolviendo 404; la pantalla de solo lectura no lo usa (no navega al detalle).
 - **Sedes, pisos y categorías**: 201 en altas, 200 en ediciones y bajas; `DELETE
   /api/hotel/eliminar/{id}` → 409 `ACTIVE_DEPENDENCIES`; capturas `02-sedes-listado.png`,
   `03-pisos-listado.png`, `04-categorias-listado.png`.
@@ -141,10 +146,11 @@ y las capturas en [`apps/admin-web/evidencias/front-admin-web-catalogo/`](../../
   no ofrece crear ni eliminar. Captura `06-estados-dialogo.png`.
 - **Errores**: `401` sin token, `403` con CLIENTE, `404` de recurso inexistente, `400`
   `VALIDATION_ERROR`, `409` `DUPLICATE_RESOURCE`, `409` `ACTIVE_DEPENDENCIES`, `409`
-  `LAST_ADMIN_PROTECTED`, `500` y `PRECONDITION_REQUIRED`/`PRECONDITION_FAILED` se observaron en
-  vivo. La prueba `error-banner.component.spec.ts` recorre los 16 códigos del catálogo y comprueba
-  que la franja muestra mensaje, acción, código y `correlationId`; `api-error.spec.ts` comprueba el
-  mapeo y el código desconocido sin traducir.
+  `LAST_ADMIN_PROTECTED`, `409` `STAFF_CREDENTIAL_REQUIRED`, `428` y `412`
+  `PRECONDITION_REQUIRED`/`PRECONDITION_FAILED` se observaron en vivo. La prueba
+  `error-banner.component.spec.ts` recorre los 16 códigos del catálogo y comprueba que la franja
+  muestra mensaje, acción, código y `correlationId`; `api-error.spec.ts` comprueba el mapeo y el
+  código desconocido sin traducir.
 - **Responsive y accesibilidad**: capturas `11-habitaciones-390.png` (viewport 390×844, sin
   overflow horizontal: `document.scrollWidth = 390`) y `12-habitaciones-1024.png` (1024×768, sin
   overflow). El sidebar queda fuera de pantalla en 390/1024 con botón “Menú”; foco visible, `label`
@@ -167,59 +173,49 @@ y las capturas en [`apps/admin-web/evidencias/front-admin-web-catalogo/`](../../
 
 ## 7. Preguntas abiertas
 
-Ninguna pregunta de especificación. El plan queda **en curso y bloqueado** por defectos de las
-dependencias de backend, reproducidos contra el Gateway real y detallados en §9.
+Ninguna (resuelto por IA: adaptaciones del cliente documentadas en
+[`IA-front-admin-web-catalogo-01.md`](../implementacion/decisiones/IA-front-admin-web-catalogo-01.md);
+los defectos de backend que bloqueaban el paso 7 se corrigieron en los planes de arreglo
+`back-arreglo-identity-personas-catalogo` y `back-arreglo-hotel-catalogo-admin`, ya en `main`).
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación observable.
-- [ ] Pruebas de la sección 6 con evidencia de respuestas, capturas y checklist.
-- [ ] Sin preguntas abiertas.
-- [ ] Sin mensajería, persistencia, alcance cerrado ni cabeceras falsificables; solo Angular 22.2.2 y Gateway `http://localhost:8080` con mocks previos del OpenAPI.
-- [ ] Cada pantalla usa tokens de [../DESIGN.md §10](../DESIGN.md) y pasa el checklist de [../DESIGN.md §11](../DESIGN.md), sin colores, tipografías, componentes ni movimientos inventados.
-- [ ] `python scripts/validar-planes.py` con 0 errores desde la raíz; avisos resueltos o justificados.
-- [ ] Archivo entregado en `docs/plans/front-admin-web-catalogo.md`; rama `front-admin-web-catalogo` desde `main` actualizado, commit `docs: agrega el plan front-admin-web-catalogo`, push y PR a `main` sin auto-merge (revisa una persona).
+- [x] Todos los pasos marcados con su verificación observable.
+- [x] Pruebas de la sección 6 con evidencia de respuestas, capturas y checklist.
+- [x] Sin preguntas abiertas.
+- [x] Sin mensajería, persistencia, alcance cerrado ni cabeceras falsificables; solo Angular 22.2.2 y Gateway `http://localhost:8080`, sin mocks.
+- [x] Cada pantalla usa tokens de [../DESIGN.md §10](../DESIGN.md) y pasa el checklist de [../DESIGN.md §11](../DESIGN.md), sin colores, tipografías, componentes ni movimientos inventados.
+- [x] `python scripts/validar-planes.py` con 0 errores desde la raíz; avisos resueltos o justificados.
+- [x] Archivo entregado en `docs/plans/front-admin-web-catalogo.md`; rama `front-admin-web-catalogo` desde `main` actualizado y commits de implementación. El push y el PR los hace el orquestador, según las reglas de la campaña.
 
-## 9. Bloqueo de dependencias (no es una pregunta de especificación)
+## 9. Resolución de las dependencias que bloquearon el paso 7
 
-La implementación de `apps/admin-web` está completa y compila, pero el cierre del plan exige
-respuestas reales por pantalla que hoy no puede dar el backend de `main`. Los defectos se
-reprodujeron contra el Gateway y quedan fuera de la zona de este plan (`apps/admin-web/**`), así
-que no se corrigen aquí.
+Los defectos reportados al cerrar la primera pasada se corrigieron en `main` con los planes de
+arreglo `back-arreglo-identity-personas-catalogo` (PR #94) y `back-arreglo-hotel-catalogo-admin`
+(PR #92). Verificación nueva contra el Gateway real:
 
-1. **`PUT /api/tipopersona/actualizar/{id}` → 500.** Con `If-Match: "1"` y `{"descripcion":"Cliente"}`
-   responde `500 INTERNAL_ERROR`. El log de `identity-service` muestra
-   `ERROR: column "updated_at" of relation "tipo_persona" does not exist` en
-   `PersonaRepository.actualizarTipoPersona` (la migración `V4__identity_personas.sql` no crea esa
-   columna). Impide marcar el paso 7 (exige 200 con versión incrementada).
-2. **Personas con rol EMPLEADO → 500.** `GET /api/persona/listar?page=0&size=20` y
-   `PUT /api/persona/actualizar/{id}` con el token de `recepcion.lima@hotel.test` responden
-   `500 INTERNAL_ERROR` con `ClassCastException: Long cannot be cast to Integer` en
-   `PersonaController`. El listado de clientes por documento y la lectura asignada al EMPLEADO no
-   son usables contra el servicio real, aunque la UI está implementada.
-3. **Sedes del EMPLEADO → lista vacía.** `GET /api/hotel/listar?page=0&size=100` con el token de
-   `recepcion.lima@hotel.test` (JWT con `sedes: [1]`) responde 200 con `data: []`. El topbar y los
-   listados por sede muestran “Sin sede asignada”; el backend no devuelve el alcance que el JWT
-   declara.
-4. **`hotel-service` no se registra en Eureka.** El módulo no declara
-   `spring-cloud-starter-netflix-eureka-client` ni bloque `eureka` en `application.yml`. Para poder
-   probar el Gateway se registró su instancia manualmente contra Eureka
-   (`POST /eureka/apps/HOTEL-SERVICE` y heartbeat del entorno); en un arranque limpio
-   `GET /api/hotel/listar` por el Gateway responde 503 `DEPENDENCY_UNAVAILABLE`.
-5. **`PUT /api/estadohabitacion/actualizar/{id}` ignora el body.** Sin query param responde 500
-   “Required request parameter 'descripcion' is not present”; con `?descripcion=...` y body
-   responde 200. El frontend envía ambos para cumplir el contrato y hablar con el servicio real
-   (ver `IA-front-admin-web-catalogo-01.md`).
-6. **Falta `If-Match` en persona → 500 en vez de 428.** `PUT /api/persona/actualizar/{id}` sin
-   `If-Match` responde 500 `INTERNAL_ERROR`; el contrato y el catálogo exigen 428
-   `PRECONDITION_REQUIRED`. La UI siempre obtiene el ETag con `buscar/{id}` antes de editar, por lo
-   que no lo provoca en el flujo normal, pero la respuesta genérica no es la del contrato.
-7. **Metadatos de paginación ausentes en hotel.** Los listados de hotel/piso/categoría/habitación
-   devuelven `meta` solo con `correlationId`; el frontend usa una página con el total recibido
-   (ver `IA-front-admin-web-catalogo-01.md`).
+1. **`PUT /api/tipopersona/actualizar/{id}` → 200.** Con `If-Match: "4"` responde 200,
+   `ETag: "5"` y `version: 5`; `GET /api/tipopersona/buscar/{id}` confirma `version: 5`. Ya no
+   aparece el error de `updated_at`. El paso 7 queda marcado.
+2. **Personas con EMPLEADO.** `GET /api/persona/listar?page=0&size=20` sin `documento` → 400
+   `VALIDATION_ERROR`; con `documento=90000100` → 200 con una persona y `meta` paginado.
+   Observación residual: `GET /api/persona/buscar/{id}` con EMPLEADO sigue devolviendo 404; la
+   pantalla de personas de solo lectura no usa ese endpoint (lista por documento y no navega al
+   detalle), así que no afecta a este plan y queda como nota para un futuro arreglo.
+3. **Sedes del EMPLEADO.** `GET /api/hotel/listar?page=0&size=100` con el token de
+   `recepcion.lima@hotel.test` → 200 con `Hotel Demo Lima Centro` y
+   `meta.page=0 size=100 totalElements=1`.
+4. **`hotel-service` en Eureka.** El servicio se registra por sí solo; el Gateway resuelve
+   `/api/hotel/listar` sin registro manual y los cuatro listados devuelven
+   `meta.page/size/totalElements`.
+5. **`PUT /api/estadohabitacion/actualizar/{id}`.** Solo con `requestBody` responde 200
+   `ETag: "3"`; ya no se envía el query param de trabajo.
+6. **`If-Match` en persona.** `PUT /api/persona/actualizar/{id}` sin `If-Match` → 428
+   `PRECONDITION_REQUIRED`.
+7. **Metadatos de paginación.** Los listados de hotel/piso/categoría/habitación ya traen
+   `meta.page/size/totalElements`. El cliente mantiene el fallback para no romper si un servicio
+   publica solo `correlationId`.
 
-Evidencia reproducible en
+La evidencia reproducible está en
 [`apps/admin-web/evidencias/front-admin-web-catalogo/http-evidence.md`](../../apps/admin-web/evidencias/front-admin-web-catalogo/http-evidence.md).
-El bloqueo real es el punto 1: sin un `PUT` de rol que responda 200 no se puede cerrar el paso 7 ni
-el criterio de terminado. Los puntos 2–7 deberían resolverse en un plan de arreglo de backend antes
-de dar por cerrada la lectura de EMPLEADO y la integración limpia por Eureka.
+
