@@ -136,7 +136,7 @@ grep -R "Set.of(HUMAN_AUDIENCE, serviceName)" services/*/src/main/java
 - [x] 7. Ejecutar el build completo: `bash scripts/mvn.sh -f services/pom.xml verify`. Verificación: `BUILD SUCCESS` de los nueve módulos.
 - [x] 8. Repetir la reproducción: token de `inventory-service` con `audience=hotel` → `GET /internal/hoteles/{id}` responde 200; token de `identity-service` con `audience=hotel` → 200; token de `reception-service` con `audience=identity` → `GET /internal/clientes/{id}` responde 200. Verificación: códigos HTTP y cuerpos guardados en la evidencia.
 - [x] 9. Comprobar que no se relaja la seguridad: `audience=hotel-service` sigue devolviendo 400 en identity (la allowlist no cambia) y un token con `aud` ajena sigue devolviendo 401 en hotel e identity, incluido el caso `SEC06`. Verificación: respuestas 400/401 guardadas y `JwtValidatorTests` en verde.
-- [ ] 10. Ejecutar `python scripts/validar-planes.py` y `python scripts/validar-contratos.py --base origin/main`. Verificación: 0 errores y ningún contrato eliminado o renombrado.
+- [x] 10. Ejecutar `python scripts/validar-planes.py` y `python scripts/validar-contratos.py --base origin/main`. Verificación: 0 errores y ningún contrato eliminado o renombrado.
 - [ ] 11. Registrar en *Pruebas* la salida de los comandos de los pasos 1, 8 y 9, marcar los pasos y cerrar el plan. Verificación: todos los pasos `- [x]`, evidencia enlazada y *Preguntas abiertas* con `Ninguna`.
 
 ## 5. Contratos afectados
@@ -285,6 +285,17 @@ HTTP 401
 Los siete `JwtValidatorTests` cubren además `otro-servicio` e issuer distinto (5 casos por módulo,
 en verde en la evidencia del paso 6). Salida de esta reproducción guardada en
 `/tmp/repro-after.txt` de la sesión de ejecución.
+
+### Validadores (paso 10)
+
+```text
+$ python scripts/validar-planes.py
+27 plan(es) revisado(s); 27 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+$ python scripts/validar-contratos.py --base origin/main
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
+```
 
 - **Reproducción antes del arreglo:** los comandos de §3; resultado esperado `401 UNAUTHENTICATED` en hotel e identity y `400 VALIDATION_ERROR` al pedir `audience=hotel-service`. Evidencia: salidas literales en esta sección y en la bitácora.
 - **Reproducción después del arreglo:** mismos comandos; resultado esperado `200` en `GET /internal/hoteles/{id}` con `aud=hotel`, `200` en `GET /internal/clientes/{id}` con `aud=identity`, y `400`/`401` en los controles negativos. Evidencia: códigos y cuerpos guardados por la ejecutora.
