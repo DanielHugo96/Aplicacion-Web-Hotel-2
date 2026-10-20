@@ -30,6 +30,19 @@ public class GlobalExceptionHandler {
     return build(exception.code(), exception.fields());
   }
 
+  @ExceptionHandler(ApiDataException.class)
+  public ResponseEntity<ApiResponse<Object>> handleApiData(ApiDataException exception) {
+    ErrorCode code = exception.code();
+    ApiResponse<Object> body =
+        new ApiResponse<>(
+            false,
+            code.uiMessage(),
+            exception.data(),
+            ApiError.of(code, exception.fields()),
+            Meta.of(CorrelationId.current()));
+    return ResponseEntity.status(code.status()).body(body);
+  }
+
   @ExceptionHandler(MethodArgumentNotValidException.class)
   public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException exception) {
     Map<String, String> fields = new LinkedHashMap<>();
