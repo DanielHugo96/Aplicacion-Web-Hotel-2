@@ -7,7 +7,7 @@
 | Componente | `hotel-service` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-hotel-catalogo` |
 | Repara | `back-hotel-catalogo` |
 | Spec | [`hotel/api.md` § Sedes, pisos y categorías](../especificacion/microservicios/hotel/api.md#sedes-pisos-y-categorías), [§ Habitaciones y físico](../especificacion/microservicios/hotel/api.md#habitaciones-y-físico), [§ DTO](../especificacion/microservicios/hotel/api.md#dto), [`hotel/base-de-datos.md` § Tablas](../especificacion/microservicios/hotel/base-de-datos.md#tablas), [`03-contrato-comun.md` § Respuestas](../especificacion/03-contrato-comun.md#respuestas), [§ Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [`configuracion.md` § Comunes a todos los servicios](../especificacion/infraestructura/configuracion.md#comunes-a-todos-los-servicios), [`hotel.yaml`](../contracts/openapi/hotel.yaml), [`admin-web.yaml`](../contracts/openapi/admin-web.yaml) y [`errors.md` § Genéricos](../contracts/errors.md) |
