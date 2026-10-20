@@ -7,7 +7,7 @@
 | Componente | `admin-web` |
 | Fase | `F3` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `front-admin-web-base`, `back-reception-operacion`, `back-hotel-operaciones` |
 | Spec | [`08-admin-web.md` §2](../especificacion/08-admin-web.md#2-rutas-angular-y-guards), [§3](../especificacion/08-admin-web.md#3-formularios-campos-validación-y-mensajes), [§4](../especificacion/08-admin-web.md#4-estados-por-pantalla) y [§5](../especificacion/08-admin-web.md#5-menú-por-rol); [`02-landing-y-panel.md` §Panel](../especificacion/02-landing-y-panel.md#panel-matriz-de-acceso) y [§Formatos de UI](../especificacion/02-landing-y-panel.md#formatos-de-ui-obligatorios); [`03-contrato-comun.md` §Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [§Headers](../especificacion/03-contrato-comun.md#headers) y [§Respuestas](../especificacion/03-contrato-comun.md#respuestas); [`06-migracion-y-pruebas.md` §4](../especificacion/06-migracion-y-pruebas.md#4-cambios-frontend-obligatorios); [`DESIGN.md` §10](../DESIGN.md#10-tokens-de-diseño-base-para-implementar) y [§11](../DESIGN.md#11-lenguaje-para-pedir-pantallas-nuevas-stitch--diseño); la sección de admin-web de [`contracts/README.md` §1](../contracts/README.md#1-reglas-transversales), [§3.2](../contracts/README.md#32-sedes-pisos-categorías-habitaciones-hotel) y [§3.3](../contracts/README.md#33-estadías-reception); las rutas que usa [`admin-web.yaml`](../contracts/openapi/admin-web.yaml) (recepciones, habitaciones/operaciones y personas); y [`errors.md`](../contracts/errors.md). |
 | Casos | `—` |
