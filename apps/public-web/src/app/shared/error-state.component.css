@@ -1,0 +1,47 @@
+.error {
+  padding: var(--space-4) var(--space-6);
+  border: 1px solid var(--color-error);
+  border-left-width: 3px;
+  border-radius: var(--radius-card);
+  background: var(--color-error-bg);
+  color: var(--color-tinta);
+}
+
+.error__message {
+  font-weight: 500;
+}
+
+.error__campos {
+  margin: var(--space-2) 0 0;
+  padding-inline-start: var(--space-6);
+  font-size: var(--text-small);
+}
+
+.error__correlacion {
+  margin-top: var(--space-3);
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.error__correlacion code {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  overflow-wrap: anywhere;
+}
+
+.error__copiar {
+  margin-inline-start: var(--space-2);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-control);
+  background: var(--color-sillar-blanco);
+  color: var(--color-tinta);
+  cursor: pointer;
+}
+
+.error__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}

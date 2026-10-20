@@ -1,6 +1,15 @@
 :host {
-  display: block;
+  display: flex;
+  flex-direction: column;
   min-height: 100dvh;
+}
+
+main {
+  flex: 1;
+}
+
+main:focus {
+  outline: none;
 }
 
 .skip-link {

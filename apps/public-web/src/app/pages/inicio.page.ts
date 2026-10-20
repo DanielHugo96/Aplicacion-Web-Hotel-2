@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-inicio-page',
-  template: `<h1>Hoteles de demostración en Lima y Arequipa</h1>`,
+  imports: [RouterLink],
+  templateUrl: './inicio.page.html',
+  styleUrl: './inicio.page.css',
 })
 export class InicioPage {}
