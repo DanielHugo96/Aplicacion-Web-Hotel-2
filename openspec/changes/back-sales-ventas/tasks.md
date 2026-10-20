@@ -2,8 +2,8 @@
 
 ## 1. Base del servicio y seguridad
 
-- [ ] 1.1 Dar de alta `services/sales-service/` con el stack fijado y las convenciones de plataforma y verificar que compila, se registra en Eureka y liveness y readiness responden 200 con la base arriba.
-- [ ] 1.2 Aplicar resource server JWT con deny-by-default y autorización por rol y sede más token máquina con scopes hacia reception e inventory y verificar 401 sin token, 403 con rol o sede insuficientes y 403 con token humano en rutas internas.
+- [x] 1.1 Dar de alta `services/sales-service/` con el stack fijado y las convenciones de plataforma y verificar que compila, se registra en Eureka y liveness y readiness responden 200 con la base arriba.
+- [x] 1.2 Aplicar resource server JWT con deny-by-default y autorización por rol y sede más token máquina con scopes hacia reception e inventory y verificar 401 sin token, 403 con rol o sede insuficientes y 403 con token humano en rutas internas.
 
 ## 2. Persistencia e idempotencia
 

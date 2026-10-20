@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -26,23 +26,20 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.intercept.RequestAuthorizationContext;
 
 /**
- * Convención de seguridad común: resource server JWT RS256 con validación explícita de
- * {@code iss}, {@code aud} y {@code exp}, denegación por defecto y autorización desde el JWT
- * validado. La identidad nunca se lee de cabeceras falsificables: solo del JWT.
- * Ver docs/especificacion/03-contrato-comun.md § Identidad y sedes y § Servicio a servicio.
+ * Seguridad de sales-service: resource server JWT RS256 con validación explícita de {@code iss},
+ * {@code aud} y {@code exp}, denegación por defecto y autorización desde el JWT validado.
+ *
+ * <p>Rutas {@code /api/**}: solo token humano con rol (ADMIN/EMPLEADO/CLIENTE); el alcance de sede
+ * y propiedad se valida en el servicio sobre la estadía o la venta. Rutas {@code /internal/**}:
+ * solo token máquina con el scope {@code cierres:write} que emite identity para reception.
  */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
-  /**
-   * Audiencia de los tokens humanos. Los tokens máquina usan el destino corto
-   * ({@code hotel}, {@code identity}…), que identity emite desde la allowlist; también se acepta
-   * el nombre largo del servicio por compatibilidad aditiva.
-   */
+  /** Audiencia de los tokens humanos. */
   public static final String HUMAN_AUDIENCE = "hotel-api";
 
   @Bean
@@ -57,24 +54,21 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth ->
                 auth
-                    // Salud: liveness y readiness no requieren token.
                     .requestMatchers("/actuator/health", "/actuator/health/**")
                     .permitAll()
-                    // Rutas internas: solo un token máquina (con scope). Un token humano sin scope da 403.
+                    // Feign entrante de reception: solo máquina y scope cierres:write.
                     .requestMatchers("/internal/**")
                     .access(
-                        (authentication, context) -> {
-                          Authentication current = authentication.get();
-                          boolean machine =
-                              current != null
-                                  && current.getAuthorities().stream()
-                                      .map(GrantedAuthority::getAuthority)
-                                      .anyMatch(authority -> authority.startsWith("SCOPE_"));
-                          return new AuthorizationDecision(machine);
-                        })
-                    // Denegación por defecto: todo lo demás exige autenticación.
+                        (authentication, context) ->
+                            new AuthorizationDecision(
+                                esMaquinaConScope(authentication.get(), "cierres:write")))
+                    // API de negocio: siempre token humano con rol; nunca un token máquina.
+                    .requestMatchers("/api/**")
+                    .access(
+                        (authentication, context) ->
+                            new AuthorizationDecision(esHumano(authentication.get())))
                     .anyRequest()
-                    .authenticated())
+                    .denyAll())
         .oauth2ResourceServer(
             oauth ->
                 oauth
@@ -86,6 +80,34 @@ public class SecurityConfig {
                     .authenticationEntryPoint(authenticationEntryPoint)
                     .accessDeniedHandler(accessDeniedHandler));
     return http.build();
+  }
+
+  private boolean esMaquina(Authentication current) {
+    return current != null
+        && current.getAuthorities().stream()
+            .map(GrantedAuthority::getAuthority)
+            .anyMatch(a -> a.startsWith("SCOPE_"));
+  }
+
+  private boolean esMaquinaConScope(Authentication current, String scope) {
+    if (!esMaquina(current)) {
+      return false;
+    }
+    String buscado = "SCOPE_" + scope;
+    return current.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .anyMatch(buscado::equals);
+  }
+
+  private boolean esHumano(Authentication current) {
+    if (current == null || esMaquina(current)) {
+      return false;
+    }
+    return current.getAuthorities().stream()
+        .map(GrantedAuthority::getAuthority)
+        .anyMatch(
+            a ->
+                a.equals("ROLE_ADMIN") || a.equals("ROLE_EMPLEADO") || a.equals("ROLE_CLIENTE"));
   }
 
   @Bean
@@ -115,9 +137,8 @@ public class SecurityConfig {
 
   /**
    * Valida {@code exp}/{@code nbf} y el {@code issuer} fijo (sin descubrimiento OIDC) y la
-   * {@code audience}: un token humano ({@code hotel-api}), el destino corto que emite identity
-   * ({@code hotel}, {@code identity}…) o el nombre del servicio ({@code hotel-service}, compatibilidad
-   * aditiva). Un token con aud incorrecta se rechaza con 401 (caso `SEC06`).
+   * {@code audience}: token humano ({@code hotel-api}), destino corto emitido por identity
+   * ({@code sales}) o nombre del servicio (compatibilidad aditiva).
    */
   @Bean
   OAuth2TokenValidator<Jwt> hotelJwtValidator(
@@ -134,7 +155,8 @@ public class SecurityConfig {
     return new DelegatingOAuth2TokenValidator<>(
         JwtValidators.createDefaultWithIssuer(issuer),
         new JwtClaimValidator<List<String>>(
-            JwtClaimNames.AUD, aud -> aud != null && aud.stream().anyMatch(audiences::contains)));
+            JwtClaimNames.AUD,
+            aud -> aud != null && aud.stream().anyMatch(audiences::contains)));
   }
 
   @Bean
