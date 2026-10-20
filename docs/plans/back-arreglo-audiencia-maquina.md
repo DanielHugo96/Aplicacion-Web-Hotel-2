@@ -7,7 +7,7 @@
 | Componente | `services/*-service` |
 | Fase | `F1` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `back-plataforma-comunes` |
 | Repara | `back-plataforma-comunes` |
 | Spec | [`03-contrato-comun.md` § Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio), [`identity/api.md` § REST](../especificacion/microservicios/identity/api.md#rest), [`hotel/api.md` § Feign interno](../especificacion/microservicios/hotel/api.md#feign-interno), [`configuracion.md` § Por servicio](../especificacion/infraestructura/configuracion.md#por-servicio) y [`06-migracion-y-pruebas.md` §5](../especificacion/06-migracion-y-pruebas.md#5-matriz-de-aceptación) |
@@ -137,7 +137,7 @@ grep -R "Set.of(HUMAN_AUDIENCE, serviceName)" services/*/src/main/java
 - [x] 8. Repetir la reproducción: token de `inventory-service` con `audience=hotel` → `GET /internal/hoteles/{id}` responde 200; token de `identity-service` con `audience=hotel` → 200; token de `reception-service` con `audience=identity` → `GET /internal/clientes/{id}` responde 200. Verificación: códigos HTTP y cuerpos guardados en la evidencia.
 - [x] 9. Comprobar que no se relaja la seguridad: `audience=hotel-service` sigue devolviendo 400 en identity (la allowlist no cambia) y un token con `aud` ajena sigue devolviendo 401 en hotel e identity, incluido el caso `SEC06`. Verificación: respuestas 400/401 guardadas y `JwtValidatorTests` en verde.
 - [x] 10. Ejecutar `python scripts/validar-planes.py` y `python scripts/validar-contratos.py --base origin/main`. Verificación: 0 errores y ningún contrato eliminado o renombrado.
-- [ ] 11. Registrar en *Pruebas* la salida de los comandos de los pasos 1, 8 y 9, marcar los pasos y cerrar el plan. Verificación: todos los pasos `- [x]`, evidencia enlazada y *Preguntas abiertas* con `Ninguna`.
+- [x] 11. Registrar en *Pruebas* la salida de los comandos de los pasos 1, 8 y 9, marcar los pasos y cerrar el plan. Verificación: todos los pasos `- [x]`, evidencia enlazada y *Preguntas abiertas* con `Ninguna`.
 
 ## 5. Contratos afectados
 
@@ -310,10 +310,10 @@ Ninguna (resuelto por IA: la spec fija destinos cortos; se corrigen los validado
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos de §4 marcados con su verificación.
-- [ ] Los siete validadores aceptan el destino corto y sus pruebas unitarias están en verde.
-- [ ] La reproducción original (`GET /internal/hoteles/{id}` con `aud=hotel`) responde 200.
-- [ ] `audience=hotel-service` sigue devolviendo 400 y una `aud` ajena sigue devolviendo 401.
-- [ ] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`.
-- [ ] `python scripts/validar-planes.py` termina con 0 errores.
-- [ ] Sin preguntas abiertas.
+- [x] Todos los pasos de §4 marcados con su verificación.
+- [x] Los siete validadores aceptan el destino corto y sus pruebas unitarias están en verde.
+- [x] La reproducción original (`GET /internal/hoteles/{id}` con `aud=hotel`) responde 200.
+- [x] `audience=hotel-service` sigue devolviendo 400 y una `aud` ajena sigue devolviendo 401.
+- [x] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`.
+- [x] `python scripts/validar-planes.py` termina con 0 errores.
+- [x] Sin preguntas abiertas.
