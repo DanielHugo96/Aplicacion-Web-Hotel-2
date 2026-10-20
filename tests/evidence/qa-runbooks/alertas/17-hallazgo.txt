@@ -1,0 +1,2 @@
+Alertas que siguen disparando tras la limpieza (se registran como hallazgo):
+- Reporting degradado: [{'topic': 'hotel.habitacion.v1', 'lastOffset': '20', 'lastEventAt': '2026-10-20 18:13:27.096851+00', 'updatedAt': '2026-10-20 18:13:27.092569+00'}]

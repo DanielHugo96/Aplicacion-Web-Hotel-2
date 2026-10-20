@@ -85,7 +85,11 @@ def collect() -> list[dict[str, Any]]:
     )
 
     # 2. Mensajes en DLQ Rabbit (Alta, RB1)
-    dlq_total, dlq_detail = c.rabbit_dlq_counts()
+    try:
+        dlq_total, dlq_detail = c.rabbit_dlq_counts()
+        rabbit_error = None
+    except Exception as exc:  # Rabbit caído: la propia alerta de readiness lo refleja
+        dlq_total, dlq_detail, rabbit_error = 0, {}, str(exc)
     alerts.append(
         {
             "alerta": "Mensajes en DLQ Rabbit",
@@ -95,7 +99,7 @@ def collect() -> list[dict[str, Any]]:
             "runbook": "RB1",
             "valor": dlq_total,
             "dispara": dlq_total > 0,
-            "detalle": dlq_detail,
+            "detalle": {"queues": dlq_detail, "errorManagement": rabbit_error},
         }
     )
 

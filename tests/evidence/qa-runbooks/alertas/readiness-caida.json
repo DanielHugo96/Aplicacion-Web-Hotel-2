@@ -1,0 +1,106 @@
+{
+  "antes": {
+    "status": 200,
+    "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+  },
+  "durante": {
+    "status": 503,
+    "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"DOWN\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"DOWN\"}"
+  },
+  "linea": [
+    {
+      "ts": "2026-10-20T18:58:58.061137Z",
+      "notification": {
+        "up": false,
+        "status": 503,
+        "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"DOWN\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"DOWN\"}",
+        "first_failure": "2026-10-20T18:58:41.825237Z",
+        "failure_seconds": 15
+      },
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:59:19.647297Z",
+      "notification": {
+        "up": false,
+        "status": 503,
+        "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"DOWN\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"DOWN\"}",
+        "first_failure": "2026-10-20T18:58:41.825237Z",
+        "failure_seconds": 37
+      },
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:59:41.026885Z",
+      "notification": {
+        "up": false,
+        "status": 503,
+        "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"DOWN\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"DOWN\"}",
+        "first_failure": "2026-10-20T18:58:41.825237Z",
+        "failure_seconds": 58
+      },
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T19:00:01.638858Z",
+      "notification": {
+        "up": false,
+        "status": 503,
+        "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"DOWN\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"DOWN\"}",
+        "first_failure": "2026-10-20T18:58:41.825237Z",
+        "failure_seconds": 79
+      },
+      "dispara": true
+    }
+  ],
+  "alerta": {
+    "alerta": "Readiness caída",
+    "umbral": "> 1min",
+    "deteccion": "GET /actuator/health/readiness por servicio",
+    "severidad": "Media",
+    "runbook": "Revisar dependencia",
+    "valor": [
+      "notification-service"
+    ],
+    "dispara": true,
+    "detalle": {
+      "identity-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "hotel-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "reception-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"components\":{\"db\":{\"details\":{\"database\":\"PostgreSQL\",\"validationQuery\":\"isValid()\"},\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+      },
+      "inventory-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "sales-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "reporting-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "notification-service": {
+        "up": false,
+        "status": 503,
+        "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"DOWN\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"DOWN\"}",
+        "first_failure": "2026-10-20T18:58:41.825237Z",
+        "failure_seconds": 79
+      }
+    }
+  }
+}
