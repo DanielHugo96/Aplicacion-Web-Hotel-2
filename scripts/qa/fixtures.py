@@ -76,6 +76,7 @@ def create_sale(
     medio_pago: str | None = None,
     key: str | None = None,
     token: str | None = None,
+    base: str | None = None,
 ) -> tuple[c.Resp, dict[str, Any]]:
     token = token or admin_token()
     key = key or str(uuid.uuid4())
@@ -88,6 +89,8 @@ def create_sale(
         token=token,
         body=body,
         headers={"Idempotency-Key": key},
+        base=base or c.GATEWAY,
+        timeout=30,
     )
     return resp, (resp.field("data") or {})
 

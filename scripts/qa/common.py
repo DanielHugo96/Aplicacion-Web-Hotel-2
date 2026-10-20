@@ -676,15 +676,19 @@ def stop_service(name: str) -> None:
             pass
         pid_file.unlink(missing_ok=True)
     kill_port(SERVICES[name]["port"])
+    for _ in range(30):
+        if not port_open(SERVICES[name]["port"]):
+            return
+        time.sleep(0.5)
 
 
-def start_service(name: str, *, wait: bool = True, timeout: int = 150) -> None:
+def start_service(name: str, *, wait: bool = True, timeout: int = 150, env_overrides: dict[str, str] | None = None, force: bool = False) -> None:
     info = SERVICES[name]
-    if wait and port_open(info["port"]):
+    if wait and not force and port_open(info["port"]):
         return
     RUNTIME.mkdir(parents=True, exist_ok=True)
     log = RUNTIME / f"{name}.log"
-    envs = {**os.environ, **service_env(name)}
+    envs = {**os.environ, **service_env(name), **(env_overrides or {})}
     with log.open("ab") as handle:
         handle.write(f"\n===== {iso()} arranque {name} =====\n".encode())
         handle.flush()

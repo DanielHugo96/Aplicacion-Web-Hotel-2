@@ -1,0 +1,236 @@
+{
+  "linea": [
+    {
+      "ts": "2026-10-20T18:26:53.403956Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:27:36.492194Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:28:19.795898Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:29:02.666334Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:29:45.738021Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:30:28.866377Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:31:11.661395Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:31:54.462506Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:32:37.312595Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:33:20.463589Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:34:03.203750Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:34:46.036915Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:35:29.193485Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:36:12.350546Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:36:55.297238Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:37:38.263488Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:38:21.616052Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:39:04.335682Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:39:47.312508Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:40:30.200252Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:41:13.120294Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:41:55.770788Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:42:38.486696Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:43:21.657092Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:44:04.500720Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:44:47.597639Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:45:30.335912Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:46:13.399941Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:46:56.062252Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:47:38.807352Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:48:22.336377Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:49:05.346678Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:49:48.582474Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:50:31.405959Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:51:14.999020Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:51:57.898794Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:52:40.900644Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:53:23.744959Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:54:06.911652Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:54:50.046053Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:55:32.895166Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:56:16.096940Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T18:56:58.878304Z",
+      "valor": 1,
+      "dispara": true
+    }
+  ],
+  "alerta": {
+    "alerta": "Ventas en recuperación",
+    "umbral": "CANCELACION_PENDIENTE > 30min",
+    "deteccion": "consulta a venta (updated_at)",
+    "severidad": "Media",
+    "runbook": "RB1/RB4",
+    "valor": 1,
+    "dispara": true,
+    "detalle": [
+      {
+        "idVenta": "11",
+        "idRecepcion": "22",
+        "total": "0.00",
+        "updatedAt": "2026-10-20 18:26:20.820967+00"
+      }
+    ]
+  }
+}

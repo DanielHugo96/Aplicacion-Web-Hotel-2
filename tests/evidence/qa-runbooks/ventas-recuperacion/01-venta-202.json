@@ -1,0 +1,45 @@
+{
+  "idRecepcion": 22,
+  "idVenta": 11,
+  "status": 202,
+  "duracionMs": 5691,
+  "headers": {
+    "x-correlation-id": "02ed0881-f622-4c5f-b8b6-fefd29910481",
+    "location": "/api/venta/buscar/11",
+    "retry-after": "2",
+    "x-content-type-options": "nosniff",
+    "x-xss-protection": "0",
+    "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    "pragma": "no-cache",
+    "expires": "0",
+    "x-frame-options": "DENY",
+    "content-type": "application/json",
+    "content-length": "394",
+    "date": "Tue, 20 Oct 2026 18:26:20 GMT",
+    "connection": "close"
+  },
+  "body": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "idVenta": 11,
+      "idRecepcion": 22,
+      "idCliente": 100,
+      "idHotel": 1,
+      "total": 0.0,
+      "estado": "PENDIENTE",
+      "estadoOperacion": "CANCELACION_PENDIENTE",
+      "operationId": "77270da8-d482-4eb8-9e4a-7459301da32f",
+      "medioPago": null,
+      "version": 2,
+      "fechaCreacion": "2026-10-20T18:26:15.603372Z",
+      "paidAt": null,
+      "detalles": []
+    },
+    "meta": {
+      "correlationId": "02ed0881-f622-4c5f-b8b6-fefd29910481"
+    }
+  },
+  "estadoOperacion": "CANCELACION_PENDIENTE",
+  "proxy": "127.0.0.1:18084 acepta y no responde"
+}
