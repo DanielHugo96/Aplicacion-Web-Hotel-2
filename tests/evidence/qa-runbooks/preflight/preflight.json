@@ -44,7 +44,7 @@
     },
     "servicio:api-gateway": {
       "status": 401,
-      "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"6f670e39-8237-4114-b536-8a8657ba695b\"}}"
+      "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"46bc9ce3-8aa6-4c45-8605-ae8026ad58aa\"}}"
     },
     "seeds": {
       "hoteles": "3",
