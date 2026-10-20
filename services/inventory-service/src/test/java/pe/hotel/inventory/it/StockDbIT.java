@@ -561,6 +561,23 @@ class StockDbIT {
   }
 
   @Test
+  void laSecuenciaDeProductoContinuaTrasLosSeedsConIdExplicito() {
+    Integer id =
+        jdbc.queryForObject(
+            "INSERT INTO producto (sku, nombre) VALUES ('SEQ-01', 'Secuencia') RETURNING id",
+            Integer.class);
+    try {
+      assertThat(id).isGreaterThan(3);
+      assertThat(
+              jdbc.queryForObject(
+                  "SELECT count(*) FROM producto WHERE id = ?", Integer.class, id))
+          .isEqualTo(1);
+    } finally {
+      jdbc.update("DELETE FROM producto WHERE sku = 'SEQ-01'");
+    }
+  }
+
+  @Test
   void eventIdDeBootstrapEsEstableParaLaMismaSedeYProducto() {
     String primera = OutboxService.eventIdBootstrap("producto-sede", "1:1");
     String segunda = OutboxService.eventIdBootstrap("producto-sede", "1:1");

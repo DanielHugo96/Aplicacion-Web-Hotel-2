@@ -43,13 +43,19 @@ public class MachineTokenProvider {
   }
 
   /**
-   * Token máquina válido para {@code audiencia}, con los scopes que {@code clientId} tiene en su
-   * allowlist para esa audiencia.
+   * Token máquina válido para {@code audiencia}. Las credenciales del servicio son las configuradas
+   * en {@code hotel.security.machine.client-*} (client id completo, p. ej. {@code inventory-service});
+   * {@code clientId} solo identifica al llamador y admite tanto el destino corto
+   * ({@code inventory}) como el nombre completo, igual que la audiencia del token.
    *
    * @throws ApiException {@code DEPENDENCY_UNAVAILABLE} si faltan credenciales o identity no responde
    */
   public synchronized String tokenPara(String clientId, String audiencia) {
-    if (!this.clientId.equals(clientId)) {
+    String destino =
+        this.clientId.endsWith("-service")
+            ? this.clientId.substring(0, this.clientId.length() - "-service".length())
+            : this.clientId;
+    if (!this.clientId.equals(clientId) && !destino.equals(clientId)) {
       throw new ApiException(ErrorCode.DEPENDENCY_UNAVAILABLE);
     }
     if (token != null
@@ -59,10 +65,11 @@ public class MachineTokenProvider {
         && this.audiencia.equals(audiencia)) {
       return token;
     }
-    if (clientId.isBlank() || clientSecret.isBlank() || tokenUrl.isBlank()) {
+    if (this.clientId.isBlank() || clientSecret.isBlank() || tokenUrl.isBlank()) {
       throw new ApiException(ErrorCode.DEPENDENCY_UNAVAILABLE);
     }
-    String basic = Base64.getEncoder().encodeToString((clientId + ":" + clientSecret).getBytes());
+    String basic =
+        Base64.getEncoder().encodeToString((this.clientId + ":" + clientSecret).getBytes());
     TokenResponse resp =
         restClient
             .post()
