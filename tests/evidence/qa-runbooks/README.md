@@ -6,9 +6,9 @@ están excluidos por el `.gitignore` anidado y nunca se commitean.
 
 | Simulacro | Archivos | Comando | Resultado |
 |---|---|---|---|
-| `alertas` | 8 | `python scripts/qa/runbook.py alerts --clean / readiness` | OK |
+| `alertas` | 11 | `python scripts/qa/runbook.py alerts --clean / readiness` | OK |
 | `backup` | 2 | `python scripts/qa/runbook.py backup` | OK |
-| `cierre` | 4 | `—` | OK |
+| `cierre` | 4 | `comandos canónicos del README raíz` | OK |
 | `preflight` | 1 | `python scripts/qa/runbook.py preflight` | OK |
 | `rb1-kafka` | 7 | `python scripts/qa/runbook.py rb1-kafka` | OK |
 | `rb1-notificacion` | 14 | `python scripts/qa/runbook.py rb1-notification` | OK |
@@ -27,10 +27,13 @@ Este plan no reclama ningún caso de `06` §5; los ejecuta `qa-matriz-aceptacion
 ## Archivos por simulacro
 
 ### alertas
+- `alertas/00-alertas-en-limpio-inicial.json`
+- `alertas/00-alertas-en-limpio-inicial.txt`
 - `alertas/15-limpieza-dlt-dlq.json`
 - `alertas/16-alertas-en-limpio.json`
 - `alertas/16-alertas-en-limpio.txt`
 - `alertas/17-hallazgo.txt`
+- `alertas/README.md`
 - `alertas/alertas.json`
 - `alertas/alertas.txt`
 - `alertas/readiness-caida.json`

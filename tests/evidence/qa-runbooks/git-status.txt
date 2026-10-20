@@ -1,3 +1,4 @@
  M tests/evidence/qa-runbooks/README.md
- M tests/evidence/qa-runbooks/preflight/preflight.json
-?? tests/evidence/qa-runbooks/cierre/
+?? tests/evidence/qa-runbooks/alertas/00-alertas-en-limpio-inicial.json
+?? tests/evidence/qa-runbooks/alertas/00-alertas-en-limpio-inicial.txt
+?? tests/evidence/qa-runbooks/alertas/README.md
