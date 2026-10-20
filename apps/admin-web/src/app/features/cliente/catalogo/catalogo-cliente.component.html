@@ -1,0 +1,81 @@
+<section class="cliente-page" aria-labelledby="catalogoTitulo">
+  <header class="page-head">
+    <div>
+      <h1 id="catalogoTitulo">Catálogo</h1>
+      <p class="sub">Productos de la sede de tu estadía.</p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/mi-estadia/carrito">Abrir carrito</a>
+  </header>
+
+  @if (error()) {
+    <app-error-banner
+      [error]="error()"
+      [actionLabel]="error()?.retryable ? 'Reintentar' : null"
+      (action)="cargar(pagina())"
+    ></app-error-banner>
+  }
+
+  @if (sinEstadia) {
+    <div class="empty" role="status">
+      <p>No tienes una estadía activa; consulta en recepción</p>
+      <a class="btn btn-secondary" routerLink="/mi-estadia">Volver a mi estadía</a>
+    </div>
+  } @else if (cargando()) {
+    <div class="grid-productos" aria-label="Cargando catálogo">
+      @for (i of [1, 2, 3, 4, 5, 6]; track i) {
+        <div class="producto-card skeleton-card">
+          <div class="skeleton skeleton-line w60"></div>
+          <div class="skeleton skeleton-line w40"></div>
+          <div class="skeleton skeleton-line w30"></div>
+        </div>
+      }
+    </div>
+  } @else if (productos().length === 0) {
+    <div class="empty" role="status">
+      <p>El catálogo está vacío</p>
+    </div>
+  } @else {
+    <div class="grid-productos">
+      @for (p of productos(); track p.idProducto) {
+        <article class="producto-card">
+          @if (p.imagenUrl) {
+            <img
+              class="producto-imagen"
+              [src]="p.imagenUrl"
+              [alt]="'Producto ' + p.nombre"
+              loading="lazy"
+            />
+          } @else {
+            <div class="producto-imagen producto-sin-imagen" aria-hidden="true"></div>
+          }
+          <div class="producto-cuerpo">
+            <h2>{{ p.nombre }}</h2>
+            @if (p.detalle) {
+              <p class="muted">{{ p.detalle }}</p>
+            }
+            <p class="precio">{{ p.precio | money }}</p>
+            <p class="stock text-small">Existencias: {{ p.cantidad }}</p>
+            <button
+              class="btn btn-primary"
+              type="button"
+              [disabled]="p.cantidad <= 0 || agregando() !== null"
+              (click)="agregar(p)"
+            >
+              @if (agregando() === p.idProducto) {
+                <span class="spinner" aria-hidden="true"></span>
+              }
+              Agregar
+            </button>
+          </div>
+        </article>
+      }
+    </div>
+
+    <app-pagination
+      [page]="pagina()"
+      [size]="size"
+      [total]="total()"
+      (pageChange)="cambiarPagina($event)"
+    ></app-pagination>
+  }
+</section>

@@ -1,0 +1,161 @@
+<section class="cliente-page" aria-labelledby="carritoTitulo">
+  <header class="page-head">
+    <div>
+      <h1 id="carritoTitulo">Carrito</h1>
+      <p class="sub">Revisa tus consumos antes de confirmar la venta.</p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/mi-estadia/catalogo">Seguir comprando</a>
+  </header>
+
+  @if (error()) {
+    <app-error-banner
+      [error]="error()"
+      [actionLabel]="pendiente() ? 'Reintentar sondeo' : (error()?.retryable ? 'Reintentar' : null)"
+      (action)="pendiente() ? reanudar() : cargar()"
+    ></app-error-banner>
+  }
+
+  @if (pendiente(); as p) {
+    <div class="banner-pendiente" role="status" aria-live="polite">
+      <span class="spinner" aria-hidden="true"></span>
+      <div class="banner-body">
+        <strong>Operación en proceso. No repitas la acción.</strong>
+        <span class="text-small">Venta {{ p.idVenta }}</span>
+        <span class="text-small">Actualizado {{ p.actualizadoEn | peTimestamp }}</span>
+        @if (p.estado) {
+          <span class="text-small">Estado de la operación: {{ p.estado }}</span>
+        }
+      </div>
+    </div>
+  }
+
+  @if (resultado() === 'rechazada') {
+    <div class="banner-resultado" role="status" aria-live="polite">
+      <span class="pill pill-error">Rechazada</span>
+      <span class="text-small">La venta no se confirmó. Revisa tus ventas o vuelve a intentarlo.</span>
+      <a class="btn btn-secondary" routerLink="/mis-ventas">Ver mis ventas</a>
+    </div>
+  }
+
+  @if (sinEstadia) {
+    <div class="empty" role="status">
+      <p>No tienes una estadía activa; consulta en recepción</p>
+      <a class="btn btn-secondary" routerLink="/mi-estadia">Volver a mi estadía</a>
+    </div>
+  } @else if (cargando()) {
+    <div class="skeleton-table" aria-label="Cargando carrito">
+      @for (i of [1, 2, 3]; track i) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (items().length === 0) {
+    <div class="empty" role="status">
+      <p>Tu carrito está vacío</p>
+      <a class="btn btn-primary" routerLink="/mi-estadia/catalogo">Ver catálogo</a>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Producto</th>
+            <th scope="col" class="num">Precio unitario</th>
+            <th scope="col">Cantidad</th>
+            <th scope="col" class="acciones-col">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (i of items(); track i.idProducto) {
+            <tr [class.fila-error]="errorDe(i.idProducto)">
+              <td>{{ i.nombreProducto }}</td>
+              <td class="num">{{ i.precioUnitario | money }}</td>
+              <td>
+                <div class="stepper">
+                  <button
+                    class="btn btn-secondary stepper-btn"
+                    type="button"
+                    [attr.aria-label]="'Quitar una unidad de ' + i.nombreProducto"
+                    [disabled]="estaOcupada(i.idProducto) || confirmando() || pendiente() !== null || i.cantidad <= 1"
+                    (click)="cambiarCantidad(i, -1)"
+                  >
+                    −
+                  </button>
+                  <input
+                    class="cantidad-input"
+                    type="number"
+                    min="1"
+                    max="9999"
+                    inputmode="numeric"
+                    [value]="i.cantidad"
+                    [attr.aria-label]="'Cantidad de ' + i.nombreProducto"
+                    [attr.aria-invalid]="errorCantidad() ? 'true' : null"
+                    [class.error]="errorCantidad() !== null"
+                    [disabled]="estaOcupada(i.idProducto) || confirmando() || pendiente() !== null"
+                    (change)="onCantidadInput(i, $event)"
+                  />
+                  <button
+                    class="btn btn-secondary stepper-btn"
+                    type="button"
+                    [attr.aria-label]="'Añadir una unidad de ' + i.nombreProducto"
+                    [disabled]="estaOcupada(i.idProducto) || confirmando() || pendiente() !== null || i.cantidad >= 9999"
+                    (click)="cambiarCantidad(i, 1)"
+                  >
+                    +
+                  </button>
+                  @if (estaOcupada(i.idProducto)) {
+                    <span class="spinner" aria-hidden="true"></span>
+                  }
+                </div>
+              </td>
+              <td class="acciones-col">
+                <button
+                  class="btn btn-secondary"
+                  type="button"
+                  [disabled]="estaOcupada(i.idProducto) || confirmando() || pendiente() !== null"
+                  (click)="quitar(i)"
+                >
+                  Quitar
+                </button>
+              </td>
+            </tr>
+            @if (errorDe(i.idProducto); as le) {
+              <tr class="linea-error">
+                <td colspan="4">
+                  <strong>{{ le.message }}</strong>
+                  <span class="text-small"> {{ le.action }}</span>
+                  @if (le.correlationId) {
+                    <span class="correlation">correlationId: {{ le.correlationId }}</span>
+                    <button class="copy-btn" type="button" (click)="copiar(le.correlationId)">
+                      Copiar
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    @if (errorCantidad()) {
+      <p class="field-msg" role="alert">{{ errorCantidad() }}</p>
+    }
+
+    <div class="confirmar-barra">
+      <p class="text-small muted">
+        La venta queda pendiente de pago; el cobro lo registra recepción al cerrar tu estadía.
+      </p>
+      <button
+        class="btn btn-primary"
+        type="button"
+        [disabled]="items().length === 0 || confirmando() || pendiente() !== null || ocupada() !== null"
+        (click)="confirmar()"
+      >
+        @if (confirmando()) {
+          <span class="spinner" aria-hidden="true"></span>
+        }
+        Confirmar venta
+      </button>
+    </div>
+  }
+</section>

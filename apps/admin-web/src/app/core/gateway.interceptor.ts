@@ -31,6 +31,17 @@ function requestKey(req: HttpRequest<unknown>): string {
 }
 
 /**
+ * `POST /api/venta` en el área de cliente necesita ver el 202 para mostrar el
+ * banner y el polling con "Actualizado …" en cada reintento. El interceptor
+ * deja pasar ese 202; el resto de mutaciones conserva el modo pendiente
+ * automático del panel.
+ */
+function esVentaPendienteManual(req: HttpRequest<unknown>): boolean {
+  const url = (req.urlWithParams ?? req.url).split('?')[0];
+  return req.method === 'POST' && /\/api\/venta$/.test(url);
+}
+
+/**
  * Una clave de idempotencia por intención (método + URL + query).
  * Se conserva al reintentar; ante una intención nueva se genera otra clave.
  */
@@ -125,7 +136,12 @@ export const gatewayInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(nextReq).pipe(
     switchMap((event: HttpEvent<unknown>) => {
-      if (event instanceof HttpResponse && event.status === 202 && !isPoll) {
+      if (
+        event instanceof HttpResponse &&
+        event.status === 202 &&
+        !isPoll &&
+        !esVentaPendienteManual(req)
+      ) {
         const location = event.headers.get('Location');
         if (!location) return of(event);
         const delayMs = parseRetryAfter(event.headers.get('Retry-After'));

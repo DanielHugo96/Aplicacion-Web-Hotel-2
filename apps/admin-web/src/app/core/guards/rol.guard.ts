@@ -5,7 +5,7 @@ import { SessionService } from '../services/session.service';
 function homeByRole(): string {
   const session = inject(SessionService);
   const rol = session.getRol();
-  return rol === 'CLIENTE' ? '/mi-perfil' : '/app/inicio';
+  return rol === 'CLIENTE' ? '/mi-estadia' : '/app/inicio';
 }
 
 /**

@@ -1,0 +1,98 @@
+<section class="cliente-page" aria-labelledby="miEstadiaTitulo">
+  <header class="page-head">
+    <div>
+      <h1 id="miEstadiaTitulo">Mi estadía</h1>
+      <p class="sub">Tu habitación, tus fechas y el saldo de tu alojamiento.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <app-error-banner
+      [error]="error()"
+      [actionLabel]="error()?.retryable ? 'Reintentar' : null"
+      (action)="cargar()"
+    ></app-error-banner>
+  }
+
+  @if (cargando()) {
+    <div class="skeleton-card" aria-label="Cargando mi estadía">
+      <div class="skeleton skeleton-line w40"></div>
+      <div class="skeleton skeleton-line w70"></div>
+      <div class="skeleton skeleton-line w55"></div>
+    </div>
+  } @else if (estadia(); as e) {
+    <article class="resumen-card" aria-labelledby="habitacionTitulo">
+      <header class="resumen-head">
+        <div>
+          <h2 id="habitacionTitulo">Habitación {{ e.numero }}</h2>
+          <p class="muted">{{ e.categoriaNombre }} · {{ e.pisoNombre }}</p>
+        </div>
+        <div class="pills">
+          <span [class]="'pill ' + estadoClase(e.estadoEstadia)">
+            {{ estadoEtiqueta(e.estadoEstadia) }}
+          </span>
+          @if (e.vencida) {
+            <span class="pill pill-error">Estadía vencida sin cierre</span>
+          }
+        </div>
+      </header>
+
+      <dl class="datos">
+        <div>
+          <dt>Entrada</dt>
+          <dd class="table-nums">{{ e.fechaEntrada | peDate }}</dd>
+        </div>
+        <div>
+          <dt>Salida</dt>
+          <dd class="table-nums">{{ e.fechaSalida | peDate }}</dd>
+        </div>
+        <div>
+          <dt>Precio de la habitación</dt>
+          <dd class="num">{{ e.precioHabitacion | money }}</dd>
+        </div>
+        <div>
+          <dt>Adelanto registrado</dt>
+          <dd class="num">{{ e.adelanto | money }}</dd>
+        </div>
+        <div>
+          <dt>Medio de pago del adelanto</dt>
+          <dd>{{ medioPagoEtiqueta(e.medioPagoAdelanto) }}</dd>
+        </div>
+        <div>
+          <dt>Saldo de alojamiento</dt>
+          <dd class="num">{{ e.precioRestante | money }}</dd>
+        </div>
+        <div>
+          <dt>Total histórico del alojamiento</dt>
+          <dd class="num">{{ e.totalPagado | money }}</dd>
+        </div>
+      </dl>
+
+      @if (e.detalleHabitacion) {
+        <p class="detalle">{{ e.detalleHabitacion }}</p>
+      }
+    </article>
+
+    <div class="dos-columnas">
+      <section class="panel" aria-labelledby="huespedTitulo">
+        <h2 id="huespedTitulo">Datos del huésped</h2>
+        <p class="dato-fuerte">{{ e.nombre }} {{ e.apellido }}</p>
+        <p class="muted">{{ e.tipoDocumento }} {{ e.documento }}</p>
+        <p class="muted">{{ e.correo }}</p>
+      </section>
+
+      <section class="panel" aria-labelledby="accionesTitulo">
+        <h2 id="accionesTitulo">Consumos</h2>
+        <p class="muted">Consulta el catálogo de tu sede y revisa tu carrito antes de confirmar.</p>
+        <div class="acciones">
+          <a class="btn btn-primary" routerLink="/mi-estadia/catalogo">Ver catálogo</a>
+          <a class="btn btn-secondary" routerLink="/mi-estadia/carrito">Abrir carrito</a>
+        </div>
+      </section>
+    </div>
+  } @else if (!error()) {
+    <div class="empty" role="status">
+      <p>No tienes una estadía activa; consulta en recepción</p>
+    </div>
+  }
+</section>

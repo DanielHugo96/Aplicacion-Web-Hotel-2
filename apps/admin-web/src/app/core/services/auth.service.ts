@@ -2,6 +2,7 @@ import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL, API_PATHS } from '../api.config';
+import { Perfil, PasswordChange } from '../models/cliente.models';
 import { ETagCacheService } from './etag-cache.service';
 import { Persona } from './session.service';
 
@@ -17,17 +18,6 @@ export interface RegistroRequest {
   apellido: string;
   correo: string;
   clave: string;
-}
-
-export interface PerfilRequest {
-  nombre: string;
-  apellido: string;
-  fotoUrl: string | null;
-}
-
-export interface PasswordChange {
-  claveActual: string;
-  claveNueva: string;
 }
 
 type Envelope<T> = {
@@ -76,7 +66,7 @@ export class AuthService {
     return { persona: res.body!.data, etag };
   }
 
-  async updateMe(req: PerfilRequest): Promise<{ persona: Persona; etag: string | null }> {
+  async updateMe(req: Perfil): Promise<{ persona: Persona; etag: string | null }> {
     const etag = this.etags.get(API_PATHS.authMe);
     const headers: { [name: string]: string } = {
       Accept: 'application/json',

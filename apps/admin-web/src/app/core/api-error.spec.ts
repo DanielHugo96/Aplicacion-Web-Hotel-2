@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { CATALOGO_ERRORS, ERROR_CATALOG, parseApiError } from './api-error';
 
 describe('catálogo de errores', () => {
-  it('cubre los dieciséis códigos del alcance del plan', () => {
-    expect(CATALOGO_ERRORS).toHaveLength(16);
-    expect(new Set(CATALOGO_ERRORS).size).toBe(16);
+  it('cubre los veintiún códigos del alcance del panel y del área de cliente', () => {
+    expect(CATALOGO_ERRORS).toHaveLength(21);
+    expect(new Set(CATALOGO_ERRORS).size).toBe(21);
   });
 
   it('usa el mensaje para UI y la acción esperada de errors.md', () => {
@@ -18,6 +18,24 @@ describe('catálogo de errores', () => {
       expect(error.fields['campo']).toBe('motivo');
       expect(error.correlationId).toBe('cid-1');
     }
+  });
+
+  it('los códigos del área de cliente copian el catálogo de errors.md', () => {
+    expect(ERROR_CATALOG['STAY_NOT_ACTIVE'].message).toBe(
+      'La estadía no está activa para esa operación.'
+    );
+    expect(ERROR_CATALOG['PRODUCT_INACTIVE'].message).toBe(
+      'El producto ya no está disponible en esta sede.'
+    );
+    expect(ERROR_CATALOG['STOCK_INSUFFICIENT'].message).toBe(
+      'No hay stock suficiente de uno o más productos.'
+    );
+    expect(ERROR_CATALOG['PASSWORD_POLICY'].message).toBe(
+      'La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8).'
+    );
+    expect(ERROR_CATALOG['CURRENT_PASSWORD_MISMATCH'].message).toBe(
+      'La contraseña actual no es correcta.'
+    );
   });
 
   it('un código desconocido conserva message y correlationId sin traducir', () => {

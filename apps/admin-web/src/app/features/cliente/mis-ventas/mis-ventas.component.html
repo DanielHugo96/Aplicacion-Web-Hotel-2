@@ -1,0 +1,71 @@
+<section class="cliente-page" aria-labelledby="misVentasTitulo">
+  <header class="page-head">
+    <div>
+      <h1 id="misVentasTitulo">Mis ventas</h1>
+      <p class="sub">Tus consumos y el estado de cada operación.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <app-error-banner
+      [error]="error()"
+      actionLabel="Reintentar"
+      (action)="cargar()"
+    ></app-error-banner>
+  }
+
+  @if (cargando()) {
+    <div class="skeleton-table" aria-label="Cargando mis ventas">
+      @for (i of [1, 2, 3, 4]; track i) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (ventas().length === 0) {
+    <div class="empty" role="status">
+      <p>Aún no tienes consumos</p>
+      <a class="btn btn-primary" routerLink="/mi-estadia/catalogo">Ver catálogo</a>
+    </div>
+  } @else {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Venta</th>
+            <th scope="col">Fecha</th>
+            <th scope="col">Pago</th>
+            <th scope="col">Operación</th>
+            <th scope="col" class="num">Total</th>
+            <th scope="col" class="acciones-col">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (v of visibles(); track v.idVenta) {
+            <tr>
+              <td class="monospace">#{{ v.idVenta }}</td>
+              <td class="table-nums">{{ v.fechaCreacion | peTimestamp }}</td>
+              <td>
+                <span [class]="'pill ' + pagoClase(v.estado)">{{ pagoEtiqueta(v.estado) }}</span>
+              </td>
+              <td>
+                <span [class]="'pill ' + operacionClase(v.estadoOperacion)">
+                  {{ operacionEtiqueta(v.estadoOperacion) }}
+                </span>
+              </td>
+              <td class="num">{{ v.total | money }}</td>
+              <td class="acciones-col">
+                <a class="btn btn-link" [routerLink]="['/mis-ventas', v.idVenta]">Ver detalle</a>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <app-pagination
+      [page]="pagina()"
+      [size]="size"
+      [total]="total()"
+      (pageChange)="cambiarPagina($event)"
+    ></app-pagination>
+  }
+</section>

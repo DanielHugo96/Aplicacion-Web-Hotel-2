@@ -90,6 +90,27 @@ export const ERROR_CATALOG: Record<string, CatalogEntry> = {
     action: 'Reintentar con la misma clave.',
     retryable: true,
   },
+  // Área de cliente (C) — códigos de `contracts/errors.md`
+  STAY_NOT_ACTIVE: {
+    message: 'La estadía no está activa para esa operación.',
+    action: 'Recargar el estado; usar el flujo correcto.',
+  },
+  PRODUCT_INACTIVE: {
+    message: 'El producto ya no está disponible en esta sede.',
+    action: 'Quitarlo del carrito; recargar catálogo.',
+  },
+  STOCK_INSUFFICIENT: {
+    message: 'No hay stock suficiente de uno o más productos.',
+    action: 'Ajustar cantidades y crear una venta nueva.',
+  },
+  PASSWORD_POLICY: {
+    message: 'La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8).',
+    action: 'Corregir la clave.',
+  },
+  CURRENT_PASSWORD_MISMATCH: {
+    message: 'La contraseña actual no es correcta.',
+    action: 'Volver a escribir la clave actual.',
+  },
   INTERNAL_ERROR: {
     message: 'Ocurrió un error inesperado.',
     action: 'Contactar soporte con el correlationId.',

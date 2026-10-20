@@ -5,7 +5,7 @@ import { ShellComponent } from './features/shell/shell.component';
 import { HomeRedirectComponent } from './features/shell/home-redirect.component';
 import { InicioComponent } from './features/inicio/inicio.component';
 import { PerfilComponent } from './features/perfil/perfil.component';
-import { MiPerfilComponent } from './features/mi-perfil/mi-perfil.component';
+import { clienteRoutes } from './features/cliente/cliente.routes';
 import { PersonasListComponent } from './features/catalogo/personas/personas-list.component';
 import { PersonaFormComponent } from './features/catalogo/personas/persona-form.component';
 import { TiposPersonaComponent } from './features/catalogo/tipos-persona/tipos-persona.component';
@@ -57,6 +57,6 @@ export const routes: Routes = [
       { path: 'habitaciones/:id/editar', component: HabitacionFormComponent, canActivate: [panel] },
     ],
   },
-  { path: 'mi-perfil', component: MiPerfilComponent, canActivate: [rolGuard('CLIENTE')] },
+  ...clienteRoutes,
   { path: '', redirectTo: '/login', pathMatch: 'full' },
 ];

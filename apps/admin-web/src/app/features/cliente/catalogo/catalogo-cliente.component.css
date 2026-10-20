@@ -1,0 +1,104 @@
+.cliente-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.page-head h1 {
+  font-size: var(--text-h1);
+}
+
+.page-head .sub {
+  color: var(--color-garua);
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-small);
+}
+
+.grid-productos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: var(--space-4);
+}
+
+.producto-card {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  overflow: hidden;
+}
+
+.skeleton-card {
+  padding: var(--space-4);
+  gap: var(--space-3);
+}
+
+.skeleton-line {
+  height: 16px;
+}
+
+.w30 { width: 30%; }
+.w40 { width: 40%; }
+.w60 { width: 60%; }
+
+.producto-imagen {
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  object-fit: cover;
+  background: var(--color-sillar-piedra);
+  display: block;
+}
+
+.producto-sin-imagen {
+  background: var(--color-sillar-piedra);
+}
+
+.producto-cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  flex: 1;
+}
+
+.producto-cuerpo h2 {
+  font-size: var(--text-h3);
+}
+
+.muted {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+  margin: 0;
+}
+
+.precio {
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.stock {
+  margin: 0;
+  color: var(--color-garua);
+}
+
+.producto-cuerpo .btn {
+  margin-top: auto;
+  align-self: flex-start;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}

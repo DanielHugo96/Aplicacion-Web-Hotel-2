@@ -60,7 +60,7 @@ describe('rolGuard', () => {
     const spy = vi.spyOn(router, 'navigateByUrl');
     session.setSession({ ...authData, tipoPersona: 'Cliente' }, persona);
     expect(runGuard('ADMIN')).toBe(false);
-    expect(spy).toHaveBeenCalledWith('/mi-perfil', { replaceUrl: true });
+    expect(spy).toHaveBeenCalledWith('/mi-estadia', { replaceUrl: true });
 
     session.setSession({ ...authData, tipoPersona: 'Administrador' }, persona);
     spy.mockClear();
