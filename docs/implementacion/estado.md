@@ -38,6 +38,7 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F5 | [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md) | T14 | `propuesto` | — | — |
 | F2 | [`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) | — | `cerrado` | `back-arreglo-hotel-arranque` | [#76](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/76) |
 | F1 | [`back-arreglo-audiencia-maquina`](../plans/back-arreglo-audiencia-maquina.md) | — | `cerrado` | `back-arreglo-audiencia-maquina` | [#79](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/79) |
+| F2 | [`back-arreglo-hotel-catalogo-admin`](../plans/back-arreglo-hotel-catalogo-admin.md) | — | `cerrado` | `back-arreglo-hotel-catalogo-admin` | [#92](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/92) |
 | F2 | [`back-arreglo-ruta-interna-clientes`](../plans/back-arreglo-ruta-interna-clientes.md) | — | `cerrado` | `back-arreglo-ruta-interna-clientes` | [#86](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/86) |
 
 Valores de `Estado` (norma §8): `propuesto`, `en curso`, `cerrado`. Las tandas y colas están en [`orden.md`](orden.md).
