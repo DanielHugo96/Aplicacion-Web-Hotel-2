@@ -193,7 +193,7 @@ están publicados en el mismo OpenAPI. No hay regla nueva que decidir.
 
 ## 4. Pasos
 
-- [ ] 1. Reproducir los cinco fallos desde `main` con el Gateway y los tokens de §3. Verificación: se
+- [x] 1. Reproducir los cinco fallos desde `main` con el Gateway y los tokens de §3. Verificación: se
   observan los `data: []`, los `meta` incompletos, el 500 del estado, la ausencia de
   `urlsImagenes`, el `grep` sin `eureka` y la instancia manual con `hostName: localhost`.
 - [ ] 2. Corregir `CurrentUser.sedes()`: recorrer la lista del claim y convertir cada elemento
@@ -292,9 +292,51 @@ están publicados en el mismo OpenAPI. No hay regla nueva que decidir.
 
 ### Reproducción antes del arreglo (paso 1)
 
-Los comandos y salidas de §3, ejecutados el 2026-10-19 con `hotel-service` en `8082`, el Gateway en
-`8080`, Eureka en `8761` y los dos JWT humanos. Evidencia: cuerpos HTTP, `grep` y respuesta de
-Eureka transcritos en §3; se adjuntan al PR de ejecución.
+Ejecutado el 2026-10-20 sobre `main` (`e1b5b96`) con `hotel-service` en `8082`, el Gateway en
+`8080`, Eureka en `8761` y los JWT humanos de `admin@hotel.test` (ADMIN) y
+`recepcion.lima@hotel.test` (EMPLEADO, `sedes: [1]`). Salida literal (correlationIds incluidos):
+
+```text
+### GET /api/hotel/listar?page=0&size=100 (EMPLEADO)
+{"success":true,"message":"OK","data":[],"meta":{"correlationId":"ed8b5407-4182-4673-af08-eff3c354ca90"}}
+HTTP 200
+### GET /api/hotel/buscar/1 (EMPLEADO)
+{"success":false,"message":"No encontramos lo que buscas.","error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"c5927881-5176-437b-944b-e9a121359c31"}}
+HTTP 404
+### GET /api/piso/listar?idHotel=1&page=0&size=20 (EMPLEADO)
+{"success":false,"message":"No encontramos lo que buscas.","error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"442cf5a6-58a2-416a-8fac-a1f257c49344"}}
+HTTP 404
+### GET /api/habitacion/listar?idHotel=1&page=0&size=20 (EMPLEADO)
+{"success":false,"message":"No encontramos lo que buscas.","error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"c274fd88-c250-4718-b00a-8a7ec5f8fd07"}}
+HTTP 404
+```
+
+```text
+### Listados con ADMIN, page=0&size=2
+/api/hotel/listar           data_len=5 meta={'correlationId': 'fc9f758e-563f-48b0-bd0e-9072e9974643'}
+/api/piso/listar?idHotel=1  data_len=3 meta={'correlationId': '21852f03-f29c-47d5-b783-29133754c5f5'}
+/api/categoria/listar       data_len=6 meta={'correlationId': '2f85fba1-f7cf-4b2f-b6ac-a72b0ee7d25a'}
+/api/habitacion/listar      data_len=5 meta={'correlationId': '9132fe88-38dc-4131-9b10-cb0c2561f0d5'}
+```
+
+```text
+### PUT /api/estadohabitacion/actualizar/1 (ADMIN, solo cuerpo {"descripcion":"Lista"})
+{"success":false,"message":"Ocurrió un error inesperado.","error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"543c9eb3-845d-493b-b515-88075b556f8f"}}
+HTTP 500
+### GET /api/habitacion/buscar/101 (ADMIN)
+claves=['idHabitacion','idHotel','numero','idPiso','pisoNombre','idCategoria','categoriaNombre','detalle','precio','publicada','estado','idEstadoHabitacion','estadoFisico','ocupacion','blockId','endpoint','version']
+urlsImagenes presente: False
+### grep
+services/hotel-service/pom.xml = 0
+services/hotel-service/src/main/resources/application.yml = 0
+services/identity-service/pom.xml = 1
+services/identity-service/src/main/resources/application.yml = 3
+### Eureka
+[('localhost:hotel-service:8082', 'localhost', '127.0.0.1')]
+```
+
+Los cinco fallos de §3 quedan reproducidos. Evidencia: esta salida literal, transcrita en este
+plan y adjunta al PR de ejecución; sin tokens ni credenciales.
 
 ### Verificación después del arreglo (pasos 8 a 12)
 
