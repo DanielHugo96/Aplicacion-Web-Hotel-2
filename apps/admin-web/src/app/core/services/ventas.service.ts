@@ -118,7 +118,12 @@ export class VentasService {
     body: AjusteStockInput,
     ifMatch: string
   ): Promise<AjusteResultado> {
-    return this.post<AjusteResultado>(API_PATHS.productoAjustes(id), body, ifMatch);
+    // El controlador de inventory exige además `idHotel` como query (mismo
+    // valor que el cuerpo cerrado del contrato); se envía en ambos sitios para
+    // no cambiar el schema y que el ajuste real funcione. Ver
+    // IA-front-admin-web-ventas-01.
+    const params = new HttpParams().set('idHotel', body.idHotel);
+    return this.post<AjusteResultado>(API_PATHS.productoAjustes(id), body, ifMatch, params);
   }
 
   async listarMovimientos(
@@ -290,7 +295,12 @@ export class VentasService {
     };
   }
 
-  private async post<T>(path: string, body: unknown, ifMatch?: string): Promise<T> {
+  private async post<T>(
+    path: string,
+    body: unknown,
+    ifMatch?: string,
+    params?: HttpParams
+  ): Promise<T> {
     const res = await firstValueFrom(
       this.http.post<Envelope<T>>(`${API_BASE_URL}${path}`, body, {
         headers: {
@@ -298,6 +308,7 @@ export class VentasService {
           'Content-Type': 'application/json',
           ...(ifMatch ? { 'If-Match': ifMatch } : {}),
         },
+        ...(params ? { params } : {}),
         observe: 'response',
       })
     );

@@ -144,7 +144,11 @@ describe('VentasService', () => {
 
   it('ajusta stock con delta, motivo e If-Match', async () => {
     const promesa = service.ajustarStock(1, { idHotel: 1, delta: -3, motivo: 'Merma' }, '"3"');
-    const req = http.expectOne(`${API_BASE_URL}/api/producto/1/ajustes`);
+    const req = http.expectOne(
+      (r) =>
+        r.url === `${API_BASE_URL}/api/producto/1/ajustes` &&
+        r.params.get('idHotel') === '1'
+    );
     expect(req.request.method).toBe('POST');
     expect(req.request.headers.get('If-Match')).toBe('"3"');
     expect(req.request.body).toEqual({ idHotel: 1, delta: -3, motivo: 'Merma' });

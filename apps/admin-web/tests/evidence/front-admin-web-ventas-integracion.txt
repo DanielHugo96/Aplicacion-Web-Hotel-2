@@ -1,0 +1,136 @@
+Integración front-admin-web-ventas por el Gateway http://localhost:8080
+Token de administrador obtenido con /api/auth/login (sin imprimir la credencial).
+
+[producto/registrar] HTTP 201
+  {"success":true,"message":"Producto registrado","data":{"idProducto":8,"sku":"INT-8F11CD43","nombre":"Producto integración 8F11CD43","detalle":"Alta real del plan front-admin-web-ventas","imagenUrl":"/assets/demo/producto-agua.png","idHotel":1,"precio":9.99,"cantidad":5,"umbralBajo":2,"estado":true,"fechaCreacion":"2026-10-20T23:04:11.394432Z","version":1,"productoVersion":1},"meta":{"correlationId":"38a77d98-58c6-4688-a97f-667d5c43b754"}}
+
+[producto/buscar] HTTP 200
+  ETag="1"
+  {"success":true,"message":"OK","data":{"idProducto":8,"sku":"INT-8F11CD43","nombre":"Producto integración 8F11CD43","detalle":"Alta real del plan front-admin-web-ventas","imagenUrl":"/assets/demo/producto-agua.png","idHotel":1,"precio":9.99,"cantidad":5,"umbralBajo":2,"estado":true,"fechaCreacion":"2026-10-20T23:04:11.394432Z","version":1,"productoVersion":1},"meta":{"correlationId":"34eceb0b-661b-4b00-b732-c4594c10d488"}}
+
+[producto/actualizar (200)] HTTP 200
+  ETag="2"
+  {"success":true,"message":"OK","data":{"idProducto":8,"sku":"INT-8F11CD43","nombre":"Producto integración 8F11CD43 editado","detalle":"Edición real con If-Match","imagenUrl":"/assets/demo/producto-agua.png","idHotel":1,"precio":11.50,"cantidad":5,"umbralBajo":3,"estado":true,"fechaCreacion":"2026-10-20T23:04:11.394432Z","version":2,"productoVersion":1},"meta":{"correlationId":"4d726864-9004-4cb9-8481-5a0c64c370d5"}}
+
+[producto/{id}/sedes (201)] HTTP 201
+  {"success":true,"message":"Producto asignado a sede","data":{"idProducto":8,"sku":"INT-8F11CD43","nombre":"Producto integración 8F11CD43 editado","detalle":"Edición real con If-Match","imagenUrl":"/assets/demo/producto-agua.png","idHotel":2,"precio":12.00,"cantidad":4,"umbralBajo":2,"estado":true,"fechaCreacion":"2026-10-20T23:04:11.394432Z","version":1,"productoVersion":1},"meta":{"correlationId":"184e4a7b-d6a8-494d-9e68-81dae63aac99"}}
+
+[producto/{id}/ajustes (201)] HTTP 201
+  {"success":true,"message":"Ajuste registrado","data":{"ajusteId":"04ac0f2f-6810-4c32-b74d-cd21082c2dac","cantidad":7,"version":3},"meta":{"correlationId":"2f70c575-f1fc-48f7-9883-72751baa0277"}}
+
+[producto/{id}/movimientos] HTTP 200
+  {"success":true,"message":"OK","data":[{"tipo":"AJUSTE","idVenta":null,"idHotel":1,"estado":null,"cantidad":null,"precioUnitario":null,"ajusteId":"04ac0f2f-6810-4c32-b74d-cd21082c2dac","delta":2,"motivo":"Reposición de integración","createdAt":"2026-10-20T23:04:11.584953Z","updatedAt":"2026-10-20T23:04:11.584953Z"}],"meta":{"correlationId":"7b3f21fb-10d0-4997-9e13-3f1bcfde879d","page":0,"size":20,"totalElements":1}}
+
+[producto/eliminar (200)] HTTP 200
+  ETag="4"
+  {"success":true,"message":"OK","data":{"idProducto":8,"sku":"INT-8F11CD43","nombre":"Producto integración 8F11CD43 editado","detalle":"Edición real con If-Match","imagenUrl":"/assets/demo/producto-agua.png","idHotel":1,"precio":11.50,"cantidad":7,"umbralBajo":3,"estado":false,"fechaCreacion":"2026-10-20T23:04:11.394432Z","version":4,"productoVersion":1},"meta":{"correlationId":"dddc667e-e94e-49c4-abf0-0db1342669e4"}}
+
+[producto/listar todos tras la baja] HTTP 200 · fila: {"idProducto": 8, "sku": "INT-8F11CD43", "nombre": "Producto integración 8F11CD43 editado", "detalle": "Edición real con If-Match", "imagenUrl": "/assets/demo/producto-agua.png", "idHotel": 1, "precio": 11.5, "cantidad": 7, "umbralBajo": 3, "estado": false, "fechaCreacion": "2026-10-20T23:04:11.394432Z", "version": 4, "productoVersion": 1}
+
+[producto/actualizar reactivación (200)] HTTP 200
+  {"success":true,"message":"OK","data":{"idProducto":8,"sku":"INT-8F11CD43","nombre":"Producto integración 8F11CD43 editado","detalle":"Edición real con If-Match","imagenUrl":"/assets/demo/producto-agua.png","idHotel":1,"precio":11.50,"cantidad":7,"umbralBajo":3,"estado":true,"fechaCreacion":"2026-10-20T23:04:11.394432Z","version":5,"productoVersion":1},"meta":{"correlationId":"b7438119-1101-4569-8e82-276f8e724bc8"}}
+
+[venta/catalogo] HTTP 200
+  {"success":true,"message":"OK","data":[{"idProducto":1,"sku":"AGUA-500","nombre":"Agua 500ml","detalle":"Botella de agua de 500 ml","imagenUrl":"/assets/demo/producto-agua.png","idHotel":1,"precio":3.50,"cantidad":3,"umbralBajo":5,"estado":true,"fechaCreacion":"2026-09-01T10:00:00Z","version":11,"productoVersion":1},{"idProducto":2,"sku":"SNACK-01","nombre":"Snack","detalle":"Snack energético de muestra","imagenUrl":"/assets/demo/producto-snack.png","idHotel":1,"precio":8.00,"cantidad":10,"umbralBajo":5,"estado":true,"fechaCreacion":"2026-09-01T10:00:00Z","version":1,"productoVersion":1},{"idProducto":3,"sku":"ASEO-01","nombre":"Kit de aseo","detalle":"Kit básico de aseo del huésped","imagenUrl":"/assets/demo/producto-aseo.png","idHotel":1,"precio":5.00,"cantidad":5,"umbralBajo":5,"estado":true,"fechaCreacion":"2026-09-01T10:00:00Z","version":1,"productoVersion":1},{"idProducto":4,"sku":"INT-8943799E","nombre":"Producto integración 8943799E editado","detalle":"Edición real con If-Match","imagenUrl":"/assets/demo/producto-agua.png","idHotel":1,"precio":11.50,"cantidad":1,"umbralBajo":3,"estado":true,"fechaCreacion":"2026-10-20T22:59:06.780611Z","version":7,"productoVersion":1},{"idP…
+
+[carrito/listar (inicial)] HTTP 200
+  {"success":true,"message":"OK","data":[],"meta":{"correlationId":"5c9da96b-9dd1-40aa-8dba-8639fd2473b0","page":0,"size":0,"totalElements":0}}
+
+[carrito/agregar] HTTP 200
+  {"success":true,"message":"OK","data":{"idCarrito":5,"idRecepcion":22,"idPersona":100,"idHotel":1,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","precioUnitario":11.50,"imagenUrl":"/assets/demo/producto-agua.png","cantidad":2,"fechaRegistro":"2026-10-20T23:04:12.036452Z","version":1},"meta":{"correlationId":"b89badee-ef78-4d90-9215-6b7f90e9a547"}}
+
+[carrito/listar (tras agregar)] HTTP 200
+  {"success":true,"message":"OK","data":[{"idCarrito":5,"idRecepcion":22,"idPersona":100,"idHotel":1,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","precioUnitario":11.50,"imagenUrl":"/assets/demo/producto-agua.png","cantidad":2,"fechaRegistro":"2026-10-20T23:04:12.036452Z","version":1}],"meta":{"correlationId":"9e13ab92-48a7-4523-af70-657506bf772e","page":0,"size":1,"totalElements":1}}
+
+[carrito/eliminar] HTTP 204 (204 sin cuerpo)
+
+[venta crear PENDIENTE (201)] HTTP 201
+  Location=/api/venta/buscar/22
+  {"success":true,"message":"OK","data":{"idVenta":22,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":23.00,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"fe785eb8-0916-492f-97ff-7ef0762d0ae7","medioPago":null,"version":2,"fechaCreacion":"2026-10-20T23:04:12.437338Z","paidAt":null,"detalles":[{"idDetalleVenta":21,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","cantidad":2,"precioUnitario":11.50,"subTotal":23.00}]},"meta":{"correlationId":"e0c1f195-f500-4b7e-aa87-1f000f874120"}}
+
+[venta/buscar (detalle)] HTTP 200
+  ETag=None
+  {"success":true,"message":"OK","data":{"idVenta":22,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":23.00,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"fe785eb8-0916-492f-97ff-7ef0762d0ae7","medioPago":null,"version":2,"fechaCreacion":"2026-10-20T23:04:12.437338Z","paidAt":null,"detalles":[{"idDetalleVenta":21,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","cantidad":2,"precioUnitario":11.50,"subTotal":23.00}]},"meta":{"correlationId":"e4d14efa-1bda-40d5-9539-b6097cd10b69"}}
+
+[pago 200] HTTP 200
+  Location=None
+  {"success":true,"message":"OK","data":{"idVenta":22,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":23.00,"estado":"PAGADO","estadoOperacion":"CONFIRMADA","operationId":"d498f548-b9ab-43cb-aa48-8c9a3694b615","medioPago":"EFECTIVO","version":3,"fechaCreacion":"2026-10-20T23:04:12.437338Z","paidAt":"2026-10-20T23:04:12.808305Z","detalles":[{"idDetalleVenta":21,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","cantidad":2,"precioUnitario":11.50,"subTotal":23.00}]},"meta":{"correlationId":"535b83e2-40fc-4899-930d-892014ad82b9"}}
+
+[venta crear PENDIENTE para anular (201)] HTTP 201
+  {"success":true,"message":"OK","data":{"idVenta":23,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":11.50,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"90276553-6bc5-437c-bb2a-ead56bce9d4a","medioPago":null,"version":2,"fechaCreacion":"2026-10-20T23:04:12.927749Z","paidAt":null,"detalles":[{"idDetalleVenta":22,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","cantidad":1,"precioUnitario":11.50,"subTotal":11.50}]},"meta":{"correlationId":"5f0100ea-a8f3-4885-9d9b-b4821fbcf5a9"}}
+
+[anulación impagada (202)] HTTP 202
+  Location=/api/venta/buscar/23 Retry-After=2
+  {"success":true,"message":"OK","data":{"idVenta":23,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":11.50,"estado":"PENDIENTE","estadoOperacion":"CANCELACION_PENDIENTE","operationId":"719c47d9-d664-4e84-beb7-eef5053f009a","medioPago":null,"version":3,"fechaCreacion":"2026-10-20T23:04:12.927749Z","paidAt":null,"detalles":[{"idDetalleVenta":22,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","cantidad":1,"precioUnitario":11.50,"subTotal":11.50}]},"meta":{"correlationId":"d15476c4-c381-4ec1-8b50-136e35c430ea"}}
+
+[polling 1] HTTP 200 · estadoOperacion=CANCELACION_PENDIENTE
+
+[polling 2] HTTP 200 · estadoOperacion=CANCELACION_PENDIENTE
+
+[polling 3] HTTP 200 · estadoOperacion=CANCELACION_PENDIENTE
+
+[polling 4] HTTP 200 · estadoOperacion=CANCELACION_PENDIENTE
+
+[polling 5] HTTP 200 · estadoOperacion=CANCELADA
+
+[polling terminal] HTTP 200
+  {"success":true,"message":"OK","data":{"idVenta":23,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":11.50,"estado":"PENDIENTE","estadoOperacion":"CANCELADA","operationId":"719c47d9-d664-4e84-beb7-eef5053f009a","medioPago":null,"version":4,"fechaCreacion":"2026-10-20T23:04:12.927749Z","paidAt":null,"detalles":[{"idDetalleVenta":22,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","cantidad":1,"precioUnitario":11.50,"subTotal":11.50}]},"meta":{"correlationId":"d43870bc-149f-4689-b2f2-d9263cbb30c1"}}
+
+[anulación repetida (200 ya cancelada)] HTTP 200
+  {"success":true,"message":"OK","data":{"idVenta":23,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":11.50,"estado":"PENDIENTE","estadoOperacion":"CANCELADA","operationId":"719c47d9-d664-4e84-beb7-eef5053f009a","medioPago":null,"version":4,"fechaCreacion":"2026-10-20T23:04:12.927749Z","paidAt":null,"detalles":[{"idDetalleVenta":22,"idProducto":8,"nombreProducto":"Producto integración 8F11CD43 editado","cantidad":1,"precioUnitario":11.50,"subTotal":11.50}]},"meta":{"correlationId":"592ee30a-9c1e-4909-9206-a5544ddf264f"}}
+
+[anulación de pagada (409 SALE_ALREADY_PAID)] HTTP 409
+  {"success":false,"message":"Una venta pagada no se anula; requiere devolución (fuera del MVP).","error":{"code":"SALE_ALREADY_PAID","fields":{"idVenta":"22"}},"meta":{"correlationId":"5d79d0d4-865c-40ee-911a-082e69ee2ea2"}}
+
+[venta listar (panel)] HTTP 200
+  {"success":true,"message":"OK","data":[{"idVenta":1,"idRecepcion":4,"idCliente":100,"idHotel":1,"total":7.00,"estado":"PAGADO","estadoOperacion":"CONFIRMADA","operationId":"98132b48-b7b3-430c-86d3-5ba44fa1a871","medioPago":"EFECTIVO","version":3,"fechaCreacion":"2026-10-20T17:08:36.065568Z","paidAt":"2026-10-20T17:08:37.356145Z","detalles":[{"idDetalleVenta":1,"idProducto":1,"nombreProducto":"Agua 500ml","cantidad":2,"precioUnitario":3.50,"subTotal":7.00}]},{"idVenta":2,"idRecepcion":5,"idCliente":100,"idHotel":1,"total":7.00,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"a67e9ca3-2867-47e8-8b9f-642ababda24b","medioPago":null,"version":2,"fechaCreacion":"2026-10-20T17:10:48.922046Z","paidAt":null,"detalles":[{"idDetalleVenta":2,"idProducto":1,"nombreProducto":"Agua 500ml","cantidad":2,"precioUnitario":3.50,"subTotal":7.00}]},{"idVenta":3,"idRecepcion":6,"idCliente":100,"idHotel":1,"total":7.00,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"54de8c12-293f-4123-b6a8-30837c0f16a0","medioPago":null,"version":2,"fechaCreacion":"2026-10-20T17:11:36.926377Z","paidAt":null,"detalles":[{"idDetalleVenta":3,"idProducto":1,"nombreProducto":"Agua 500ml","c…
+
+[venta/operaciones/{operationId}] HTTP 200
+  {"success":true,"message":"OK","data":{"operationId":"90276553-6bc5-437c-bb2a-ead56bce9d4a","idVenta":23,"tipo":"VENTA","estado":"TERMINAL","estadoOperacion":"CANCELADA"},"meta":{"correlationId":"72062fd7-89b7-473a-8f34-697cfb5b1b23"}}
+
+Fin de la integración real.
+
+=== 202 de pago con recuperación real (reception-service detenido) ===
+
+[venta crear para pago 202] HTTP 201
+  {"success":true,"message":"OK","data":{"idVenta":24,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":8.00,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"eba83a3b-51ae-40a0-92ef-aef3062878a1","medioPago":null,"version":2,"fechaCreacion":"2026-10-20T23:04:41.486018Z","paidAt":null,"detalles":[{"idDetalleVenta":23,"idProducto":2,"nombreProducto":"Snack","cantidad":1,"precioUnitario":8.00,"subTotal":8.00}]},"meta":{"correlationId":"9a6abfb8-9b6a-4533-be4a-5d25466111bc"}}
+
+Deteniendo reception-service para que la admisión no se confirme…
+reception-service detenido; puerto 8083 cerrado.
+
+[pago con reception caído (202 esperado)] HTTP 202 · Location=/api/venta/buscar/24 Retry-After=2
+  {"success":true,"message":"OK","data":{"idVenta":24,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":8.00,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"fa38707c-9751-46c7-85cc-6ca994fcc18a","medioPago":null,"version":2,"fechaCreacion":"2026-10-20T23:04:41.486018Z","paidAt":null,"detalles":[{"idDetalleVenta":23,"idProducto":2,"nombreProducto":"Snack","cantidad":1,"precioUnitario":8.00,"subTotal":8.00}]},"meta":{"correlationId":"f52885b6-5311-4464-ad7e-aeba613ecac6"}}
+
+Reiniciando reception-service…
+reception-service listo otra vez.
+[polling pago 202 1] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 2] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 3] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 4] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 5] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 6] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 7] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 8] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 9] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 10] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 11] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 12] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 13] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 14] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 15] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 16] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 17] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 18] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 19] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 20] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 21] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 22] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 23] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 24] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 25] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 26] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 27] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 28] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 29] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 30] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+El pago no llegó a PAGADO en el tiempo de sondeo.

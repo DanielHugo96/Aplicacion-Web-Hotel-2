@@ -196,7 +196,11 @@ describe('ProductosListComponent (acciones A)', () => {
       .expectOne(`${API_BASE_URL}/api/producto/buscar/1?idHotel=1`)
       .flush(envelopeSingle(producto()), { status: 200, statusText: 'OK', headers: { ETag: '"3"' } });
     await microtasks();
-    const post = http.expectOne(`${API_BASE_URL}/api/producto/1/ajustes`);
+    const post = http.expectOne(
+      (r) =>
+        r.url === `${API_BASE_URL}/api/producto/1/ajustes` &&
+        r.params.get('idHotel') === '1'
+    );
     expect(post.request.body).toEqual({
       idHotel: 1,
       delta: 5,
@@ -222,7 +226,7 @@ describe('ProductosListComponent (acciones A)', () => {
     fixture.detectChanges();
     enviarFormulario(fixture);
     await microtasks();
-    http.expectNone(`${API_BASE_URL}/api/producto/1/ajustes`);
+    http.expectNone((r) => r.url === `${API_BASE_URL}/api/producto/1/ajustes`);
     expect(fixture.nativeElement.textContent).toContain('El delta no puede ser 0');
 
     fixture.componentInstance.ajusteDelta = 3;
@@ -235,7 +239,7 @@ describe('ProductosListComponent (acciones A)', () => {
       .flush(envelopeSingle(producto()), { status: 200, statusText: 'OK', headers: { ETag: '"3"' } });
     await microtasks();
     http
-      .expectOne(`${API_BASE_URL}/api/producto/1/ajustes`)
+      .expectOne((r) => r.url === `${API_BASE_URL}/api/producto/1/ajustes`)
       .flush(apiError('VALIDATION_ERROR', { delta: 'El delta no puede ser 0' }), {
         status: 400,
         statusText: 'Bad Request',
@@ -260,7 +264,7 @@ describe('ProductosListComponent (acciones A)', () => {
       .flush(envelopeSingle(producto()), { status: 200, statusText: 'OK', headers: { ETag: '"3"' } });
     await microtasks();
     http
-      .expectOne(`${API_BASE_URL}/api/producto/1/ajustes`)
+      .expectOne((r) => r.url === `${API_BASE_URL}/api/producto/1/ajustes`)
       .flush(apiError('PRECONDITION_FAILED'), { status: 412, statusText: 'Precondition Failed' });
     await microtasks();
     fixture.detectChanges();
