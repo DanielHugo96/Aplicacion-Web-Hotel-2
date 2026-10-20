@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-label="Habitación de demostración">
+  <rect width="800" height="600" fill="#EFEDE6"/>
+  <rect x="90" y="320" width="620" height="190" rx="10" fill="#F8F7F4" stroke="#DCD8CC" stroke-width="5"/>
+  <rect x="130" y="250" width="220" height="80" rx="8" fill="#DCD8CC"/>
+  <rect x="430" y="250" width="220" height="80" rx="8" fill="#DCD8CC"/>
+  <rect x="300" y="120" width="200" height="120" rx="6" fill="#202B3A"/>
+  <circle cx="400" cy="180" r="34" fill="#8A1E33"/>
+</svg>

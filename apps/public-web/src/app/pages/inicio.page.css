@@ -1,0 +1,112 @@
+.hero {
+  position: relative;
+  display: grid;
+  min-height: min(72vh, 640px);
+  align-items: end;
+  overflow: hidden;
+  background: var(--color-azul-noche);
+}
+
+.hero__imagen,
+.hero__scrim {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero__imagen {
+  object-fit: cover;
+}
+
+.hero__scrim {
+  background: var(--color-azul-noche-scrim);
+}
+
+.hero__contenido {
+  position: relative;
+  z-index: 1;
+  padding-block: var(--space-16);
+  color: var(--color-texto-oscuro);
+}
+
+.hero__etiqueta {
+  margin-bottom: var(--space-3);
+  color: var(--color-texto-oscuro);
+  font-size: var(--text-small);
+  letter-spacing: 0.02em;
+}
+
+.hero h1 {
+  max-width: 16ch;
+  color: var(--color-texto-oscuro);
+}
+
+.hero__valor {
+  max-width: 52ch;
+  margin-top: var(--space-4);
+  font-size: var(--text-h3);
+  line-height: 1.4;
+}
+
+.hero__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+}
+
+.hero__acciones .boton {
+  min-width: 160px;
+}
+
+.tarjetas {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-4);
+  margin-top: var(--space-8);
+}
+
+.tarjeta {
+  padding: var(--space-6);
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: var(--color-sillar-piedra);
+}
+
+.tarjeta p {
+  margin-top: var(--space-3);
+  color: var(--color-garua);
+}
+
+.tarjeta a {
+  display: inline-block;
+  margin-top: var(--space-4);
+  font-size: var(--text-ui);
+}
+
+.aviso {
+  padding: var(--space-8);
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: var(--color-sillar-piedra);
+}
+
+.aviso p {
+  max-width: 65ch;
+  margin-top: var(--space-3);
+}
+
+.aviso__tarifa {
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-junta);
+  color: var(--color-tinta);
+  font-weight: 500;
+}
+
+@media (min-width: 768px) {
+  .tarjetas {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+}

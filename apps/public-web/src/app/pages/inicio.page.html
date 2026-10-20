@@ -1,0 +1,74 @@
+<div class="inicio">
+  <section class="hero" aria-labelledby="hero-titulo">
+    <img
+      class="hero__imagen"
+      src="/assets/demo/hero.svg"
+      alt="Fachada de hotel de demostración"
+      fetchpriority="high"
+    />
+    <div class="hero__scrim" aria-hidden="true"></div>
+    <div class="contenedor hero__contenido">
+      <p class="hero__etiqueta">Cadena hotelera de demostración</p>
+      <h1 id="hero-titulo">Hoteles de demostración en Lima y Arequipa</h1>
+      <p class="hero__valor">
+        Catálogo, sedes y contacto; sin reservas ni pagos en línea
+      </p>
+      <div class="hero__acciones">
+        <a class="boton" routerLink="/contacto">Contactar</a>
+        <a class="boton boton--claro" routerLink="/sedes">Ver sedes</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="contenedor pagina">
+    <section class="seccion" aria-labelledby="servicios-titulo">
+      <h2 id="servicios-titulo">Qué encontrarás aquí</h2>
+      <p class="entradilla">
+        Una landing informativa para conocer las sedes y sus tipos de habitación
+        antes de contactar con recepción. Los datos son de demostración.
+      </p>
+
+      <div class="tarjetas">
+        <article class="tarjeta">
+          <h3>Sedes publicadas</h3>
+          <p>
+            Consulta las sedes activas y publicadas en Lima y Arequipa, con su
+            ciudad, descripción y dirección de demostración.
+          </p>
+          <a class="enlace-sutil" routerLink="/sedes">Ver el listado de sedes</a>
+        </article>
+
+        <article class="tarjeta">
+          <h3>Tipos de habitación</h3>
+          <p>
+            Cada sede muestra sus categorías con capacidad, detalle e importe
+            desde. La tarifa siempre se acompaña del aviso de recepción.
+          </p>
+          <a class="enlace-sutil" routerLink="/sedes">Explorar categorías</a>
+        </article>
+
+        <article class="tarjeta">
+          <h3>Contacto directo</h3>
+          <p>
+            El contacto es un enlace externo de negocio. No hay formularios que
+            envíen correos ni pagos en línea.
+          </p>
+          <a class="enlace-sutil" routerLink="/contacto">Cómo contactar</a>
+        </article>
+      </div>
+    </section>
+
+    <section class="seccion aviso" aria-labelledby="aviso-titulo">
+      <h2 id="aviso-titulo">Antes de venir</h2>
+      <p>
+        Esta página no garantiza disponibilidad para fechas ni tramita reservas.
+        Consulta las condiciones directamente con recepción de la sede que te
+        interese.
+      </p>
+      <p class="aviso__tarifa">
+        Desde S/ 70.00 por noche. Consulta disponibilidad con recepción. No
+        constituye una reserva.
+      </p>
+    </section>
+  </div>
+</div>

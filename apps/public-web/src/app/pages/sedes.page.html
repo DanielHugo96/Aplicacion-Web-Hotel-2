@@ -1,0 +1,80 @@
+<div class="contenedor pagina">
+  <header class="cabecera-pagina">
+    <h1>Sedes</h1>
+    <p class="entradilla">
+      Sedes publicadas y activas de la cadena de demostración en Lima y
+      Arequipa. Elige una para ver sus tipos de habitación.
+    </p>
+  </header>
+
+  @if (error(); as fallo) {
+    <app-error-state [error]="fallo" (reintentar)="cargar(pagina())" />
+  }
+
+  @if (cargando()) {
+    <div class="rejilla" aria-busy="true" aria-label="Cargando sedes">
+      @for (item of [1, 2, 3]; track item) {
+        <div class="tarjeta-sede skeleton" aria-hidden="true">
+          <div class="tarjeta-sede__imagen skeleton"></div>
+          <div class="tarjeta-sede__cuerpo">
+            <div class="linea skeleton"></div>
+            <div class="linea linea--corta skeleton"></div>
+          </div>
+        </div>
+      }
+    </div>
+  } @else if (!error()) {
+    @if (hoteles().length === 0) {
+      <p class="vacio">El catálogo está vacío.</p>
+    } @else {
+      <ul class="rejilla" role="list">
+        @for (hotel of hoteles(); track hotel.idHotel) {
+          <li class="tarjeta-sede">
+            <app-demo-image
+              class="tarjeta-sede__imagen"
+              src="/assets/demo/sede.svg"
+              [alt]="'Sede de demostración: ' + hotel.nombre"
+            />
+            <div class="tarjeta-sede__cuerpo">
+              <p class="tarjeta-sede__ciudad">{{ hotel.ciudad }}</p>
+              <h2 class="tarjeta-sede__nombre">{{ hotel.nombre }}</h2>
+              <p class="tarjeta-sede__descripcion">{{ hotel.descripcion }}</p>
+              <a
+                class="tarjeta-sede__enlace"
+                [routerLink]="['/sedes', hotel.slug]"
+                [attr.aria-label]="'Ver sede ' + hotel.nombre"
+              >
+                Ver sede
+              </a>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  }
+
+  @if (meta(); as paginacion) {
+    <nav class="paginacion" aria-label="Paginación de sedes">
+      <button
+        type="button"
+        class="boton boton--secundario"
+        [disabled]="pagina() === 0"
+        (click)="anterior()"
+      >
+        Anterior
+      </button>
+      <p class="paginacion__estado">
+        Página {{ pagina() + 1 }} de {{ paginas() }} ·
+        {{ paginacion.totalElements }} registros
+      </p>
+      <button
+        type="button"
+        class="boton boton--secundario"
+        [disabled]="pagina() + 1 >= paginas()"
+        (click)="siguiente()"
+      >
+        Siguiente
+      </button>
+    </nav>
+  }
+</div>

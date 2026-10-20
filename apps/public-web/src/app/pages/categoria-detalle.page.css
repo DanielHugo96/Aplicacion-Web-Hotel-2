@@ -1,0 +1,106 @@
+.migas {
+  margin-bottom: var(--space-6);
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.detalle {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-8);
+  align-items: start;
+}
+
+.galeria {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-3);
+}
+
+.galeria__imagen {
+  aspect-ratio: 4 / 3;
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+}
+
+.galeria__imagen:first-child {
+  grid-column: 1 / -1;
+}
+
+.galeria__hueco {
+  grid-column: 1 / -1;
+  aspect-ratio: 4 / 3;
+}
+
+.informacion {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.informacion__etiqueta {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.informacion h1 {
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+}
+
+.informacion__detalle {
+  max-width: 60ch;
+  color: var(--color-garua);
+}
+
+.informacion__capacidad {
+  font-weight: 500;
+}
+
+.tarifa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+  padding: var(--space-4);
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: var(--color-sillar-piedra);
+}
+
+.tarifa__importe {
+  font-size: var(--text-h3);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tarifa__aviso {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.informacion .boton {
+  align-self: flex-start;
+  margin-top: var(--space-3);
+}
+
+.titulo-skeleton {
+  width: 70%;
+  height: 40px;
+}
+
+.linea-skeleton {
+  height: 18px;
+  margin-top: var(--space-4);
+}
+
+.linea-skeleton--corta {
+  width: 40%;
+}
+
+@media (min-width: 1024px) {
+  .detalle {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--space-12);
+  }
+}
