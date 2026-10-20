@@ -1,3 +1,3 @@
- M scripts/qa/runbook.py
-?? tests/evidence/qa-runbooks/README.md
-?? tests/evidence/qa-runbooks/git-status.txt
+ M tests/evidence/qa-runbooks/README.md
+ M tests/evidence/qa-runbooks/preflight/preflight.json
+?? tests/evidence/qa-runbooks/cierre/

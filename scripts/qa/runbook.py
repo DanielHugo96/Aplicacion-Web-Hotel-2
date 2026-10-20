@@ -135,6 +135,7 @@ def evidence_index() -> int:
         "ventas-recuperacion": "python scripts/qa/runbook.py ventas",
         "preflight": "python scripts/qa/runbook.py preflight",
         "reset": "python scripts/qa/runbook.py reset",
+        "cierre": "comandos canónicos del README raíz",
     }
     for name, count, files in rows:
         result = "OK" if (Path(base) / name).exists() else "sin evidencia"

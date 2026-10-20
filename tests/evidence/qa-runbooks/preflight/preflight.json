@@ -44,7 +44,7 @@
     },
     "servicio:api-gateway": {
       "status": 401,
-      "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"e8aa63f6-997c-454d-9c1d-f1f7a7363d0c\"}}"
+      "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"6f670e39-8237-4114-b536-8a8657ba695b\"}}"
     },
     "seeds": {
       "hoteles": "3",
@@ -62,6 +62,7 @@
       "inventory.movimiento.v1",
       "inventory.stock.v1",
       "reception.recepcion.v1",
+      "reception.recepcion.v1.hotel-ocupacion-v1.dlt",
       "sales.venta.v1"
     ],
     "rabbitQueues": [

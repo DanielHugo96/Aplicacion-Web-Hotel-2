@@ -8,6 +8,7 @@ están excluidos por el `.gitignore` anidado y nunca se commitean.
 |---|---|---|---|
 | `alertas` | 8 | `python scripts/qa/runbook.py alerts --clean / readiness` | OK |
 | `backup` | 2 | `python scripts/qa/runbook.py backup` | OK |
+| `cierre` | 4 | `—` | OK |
 | `preflight` | 1 | `python scripts/qa/runbook.py preflight` | OK |
 | `rb1-kafka` | 7 | `python scripts/qa/runbook.py rb1-kafka` | OK |
 | `rb1-notificacion` | 14 | `python scripts/qa/runbook.py rb1-notification` | OK |
@@ -38,6 +39,12 @@ Este plan no reclama ningún caso de `06` §5; los ejecuta `qa-matriz-aceptacion
 ### backup
 - `backup/01-dumps.json`
 - `backup/02-git-status.txt`
+
+### cierre
+- `cierre/01-build.txt`
+- `cierre/02-public-web.txt`
+- `cierre/03-admin-web.txt`
+- `cierre/04-compose-validadores.txt`
 
 ### preflight
 - `preflight/preflight.json`
