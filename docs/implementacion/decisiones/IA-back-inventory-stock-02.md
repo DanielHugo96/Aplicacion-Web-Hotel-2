@@ -1,96 +1,83 @@
-# IA-back-inventory-stock-02 — Bloqueo del plan por un defecto en `main` (hotel-service no arranca)
+# IA-back-inventory-stock-02 — Hotel rechaza el token máquina por la audiencia
 
 - **Plan:** `back-inventory-stock`
-- **Paso:** 6 y 14 de la sección 4. Pasos (alta de producto y asignación de sede)
-- **Nivel:** bloqueo (punto 7 del orquestador; no es una decisión de nivel 1, 2 ni 3)
+- **Paso:** 6 y 14 de la sección 4. Pasos (alta de producto y `POST /api/producto/{id}/sedes`)
+- **Nivel:** 2 (decidir, registrar y seguir)
 - **Fecha:** 2026-10-19
 
 ## Qué se encontró
 
-El plan está implementado y verificado salvo dos pasos: `POST /api/producto/registrar` y
-`POST /api/producto/{id}/sedes`, que exigen validar la sede por Feign contra
-`GET /internal/hoteles/{id}` de `hotel-service`. Al ejecutar los casos de aceptación, la ejecutora
-comprobó que **`hotel-service` no puede arrancar desde `main`**, por dos defectos independientes:
+Con `hotel-service` ya arreglado y en marcha (`GET /actuator/health/readiness` → 200, Flyway V1–V4 en
+`success`), el alta de producto sigue fallando con 503 `DEPENDENCY_UNAVAILABLE`. La causa es el
+Feign saliente `GET /internal/hoteles/{id}`: hotel responde **401 `UNAUTHENTICATED`** al token
+máquina que inventory obtiene de identity.
 
-1. `services/hotel-service/src/main/resources/db/migration/V3__hotel_tablas.sql` declara la columna
-   `habitacion.publicada` (línea 58), pero `fn_catalogo_publico` usa `hab.publica` y `h2.publica`
-   (líneas 110 y 116). Flyway aborta con `ERROR: column hab.publica does not exist`.
-2. `Habitacion` mapea una FK compuesta a `piso(id, id_hotel)` que no es clave única: Hibernate falla
-   al construir el metamodelo con `org.hibernate.MappingException: No column with logical name
-   'id_hotel' in table 'piso'`, también con `spring.jpa.hibernate.ddl-auto=none`.
+La cadena, reproducida en este orden:
 
-El orquestador verificó el primero por lectura del fichero: la columna existe como `publicada` y la
-función la referencia como `publica`. El segundo lo reportó la ejecutora con la excepción literal.
+```text
+1) allowlist sembrada por identity (identity_db):
+   inventory-service -> {"hotel": ["hoteles:read"]}
 
-Ambos defectos están en `back-hotel-catalogo`, **un plan ya `cerrado` y mergeado en `main` con el
-PR #66**.
+2) identity emite el token con audience=hotel:
+   {"sub":"inventory-service","aud":"hotel","scope":"hoteles:read","iss":"hotel-identity"}
+
+3) hotel, con ese token:
+   GET http://localhost:8082/internal/hoteles/1
+   HTTP 401 {"error":{"code":"UNAUTHENTICATED"}}
+
+4) identity con audience=hotel-service (lo que hotel espera):
+   HTTP 400 {"error":{"code":"VALIDATION_ERROR","fields":{"audience":"destino no autorizado para este cliente"}}}
+```
+
+El origen es una discrepancia de nombres: `docs/especificacion/03-contrato-comun.md` § Servicio a
+servicio y `docs/contracts/openapi/identity.yaml` fijan `aud=<destino>` con destinos cortos
+(`hotel`, `reception`, `sales`, `inventory`), y la allowlist sembrada por `back-identity-personas`
+usa esos nombres; pero `hotel-service` valida `Set.of("hotel-api", spring.application.name)` y
+`spring.application.name` es `hotel-service`. El mismo patrón existe en `reception-service` e
+`identity-service`, así que afecta a **todas** las llamadas máquina entre servicios, no solo a
+inventory.
 
 ## Qué se decidió
 
-**Bloquear `back-inventory-stock` y no tocar `hotel-service`.**
-
-- PR de implementación **#72** (`back-inventory-stock` → `main`): abierto y **cerrado sin mergear**.
-- La rama `back-inventory-stock` queda en `origin` con sus cuatro commits, para no perder el trabajo.
-- El plan se queda `en curso` en su rama (no está cerrado) y `propuesto` en `main`, como corresponde.
+No se toca `hotel-service` (ni `identity-service`) ni se reconfigura su arranque para esquivarlo
+(por ejemplo, forzando `spring.application.name=hotel`) porque produciría evidencia que no
+representa `main`. Se dejan sin marcar los pasos 6 y 14 y el plan queda bloqueado, con la
+reproducción anterior.
 
 ## Por qué
 
-La campaña **no puede corregir un plan ya `cerrado` en `main`**
-([`../README.md`](../README.md) §9, «Lo que la campaña no puede hacer»). `hotel-service` es zona de
-`back-hotel-catalogo`, no de este plan, y `docs/plans/README.md` §6.4 limita la escritura de un plan
-`back` a su propio servicio. Arreglarlo desde aquí sería tocar zona ajena y enmendar un plan cerrado:
-exactamente lo que la norma prohíbe. La ejecutora aplicó el mismo criterio y lo dejó escrito en
-[`IA-back-inventory-stock-01.md`](IA-back-inventory-stock-01.md).
-
-## Hallazgo que conviene revisar a una persona
-
-El plan `back-hotel-catalogo` (cerrado, PR #66) declara en su §6 evidencia de `LP01` («los cuatro GET
-públicos sin token → 200»), `SEC03`, `CRUD01` y `OCC04` con «evidencia: respuestas». **Esa evidencia
-no puede ser real**: `LP01` llama a `fn_catalogo_publico`, la función que referencia la columna
-inexistente `hab.publica`, y el propio servicio no llega a arrancar. La sección «Evidencia obtenida»
-del plan solo muestra el build y los validadores, más tres clases de pruebas unitarias
-(`SecurityConventionTests`, `JwtValidatorTests`, `IdempotencyFilterTests`); no muestra ninguna
-respuesta HTTP de `SEC03`, `LP01`, `CRUD01` ni `OCC04`.
-
-Es decir: el código de `hotel-service` está mergeado en `main` con dos defectos que impiden arrancar,
-y su plan lo declara cerrado con evidencia que no se corresponde con lo que el código puede hacer.
-Conviene que una persona revise ese plan antes de dar por bueno nada que dependa de él.
-
-## A quién afecta
-
-`back-hotel-catalogo` es dependencia directa o transitiva de **todos** los planes que quedan, así que
-este defecto los alcanza a todos:
-
-- Directa: `back-inventory-stock` (bloqueado), `back-reception-operacion`, `back-reporting-proyecciones`,
-  `front-public-web-landing`, `front-admin-web-catalogo`, `qa-matriz-aceptacion`.
-- Transitiva: `back-hotel-operaciones`, `back-sales-ventas`, `back-reception-cierre`,
-  `front-admin-web-recepcion`, `front-admin-web-ventas`, `front-admin-web-cierre`,
-  `front-admin-web-reportes`, `front-admin-web-area-cliente` y `qa-runbooks`.
-
-No afecta a los ya cerrados (`back-identity-auth`, `back-notification-worker`, `back-hotel-catalogo`
-mismo, `back-identity-personas`, `front-admin-web-base`), que no invocan `hotel-service` en tiempo de
-ejecución. `back-identity-personas` sí usa Feign a `hotel-service`, pero su evidencia se obtuvo antes
-de este hallazgo y conviene revisarla también.
+La norma limita la zona de escritura de un plan `back` a `services/<servicio>-service/**` del propio
+servicio y la campaña prohíbe tocar servicios ajenos. La corrección real es de contrato/plataforma:
+o hotel (y reception/identity) aceptan el destino corto que emite identity, o identity y todos los
+llamadores pasan al nombre largo —y entonces hay que ajustar también la allowlist y el contrato—.
+Ninguna de las dos cabe en este plan.
 
 ## Alternativas descartadas
 
-- **Corregir `V3__hotel_tablas.sql` y el mapeo de `Habitacion` desde esta campaña.** Es la solución
-  real, pero es zona ajena y enmienda un plan cerrado. La norma lo prohíbe, y el orquestador no
-  escribe código de implementación.
-- **Arrancar `hotel-service` con una copia parcheada de la migración.** La ejecutora lo intentó como
-  diagnóstico: la migración pasaba, pero el mapeo JPA seguía fallando. Además, la evidencia no
-  representaría `main`.
-- **Sustituir el Feign por un stub.** Prohibido: la campaña no usa mocks para salvar una verificación.
-- **Marcar el plan `cerrado` con los pasos 6 y 14 sin evidencia.** El §6 del plan exige ejecutar
-  PostgreSQL y el servicio reales; marcarlos sería repetir el defecto de `back-hotel-catalogo`.
+- **Cambiar `HotelClient` para pedir `audience=hotel-service`.** Identity responde 400 porque ese
+  destino no está en la allowlist del cliente `inventory-service`; no depende de este plan.
+- **Arrancar hotel con `SPRING_APPLICATION_NAME=hotel`.** Haría pasar la prueba alterando la
+  configuración del servicio ajeno y su nombre en Eureka; es exactamente el tipo de evidencia
+  fabricada que la campaña prohíbe.
+- **Sustituir el Feign por un stub o un token humano.** Prohibido por la campaña; el token humano
+  tampoco tiene `scope` y hotel lo rechazaría en `/internal/**`.
 
-## Cómo se desbloquea
+## A quién afecta
 
-1. Corregir los dos defectos de `hotel-service` en un PR propio (no de campaña): `publica` →
-   `publicada` en `fn_catalogo_publico`, y el mapeo de `Habitacion` frente a `piso`.
-2. Verificar que `hotel-service` arranca desde `main` y que `LP01` responde 200 de verdad.
-3. Reabrir `back-inventory-stock` (rama ya en `origin`) y ejecutar los pasos 6 y 14.
+- `inventory-service` (pasos 6 y 14 de este plan) y, por el mismo motivo, cualquier llamada máquina
+  de `reception-service`, `identity-service`, `hotel-service` y `sales-service` a `/internal/**`.
+- El arreglo corresponde a un plan de arreglo o a un PR de plataforma que unifique la audiencia
+  (`aud`) entre identity, la allowlist sembrada y los validadores de cada servicio.
 
-Este archivo documenta por qué se paró: **el bloqueo no es de este plan, es de `main`**. Quien lo lea
-tiene que saber que el trabajo de `back-inventory-stock` está completo y esperando, y que el freno
-está fuera de la campaña.
+## Resolución (2026-10-20)
+
+El plan de arreglo [`back-arreglo-audiencia-maquina`](../../plans/back-arreglo-audiencia-maquina.md)
+(PR #79, ya en `main`) alineó los siete validadores con la spec: aceptan el destino corto que emite
+identity (`aud=hotel`) además del nombre largo. Verificado en esta rama con el token máquina real de
+`inventory-service`: `GET /internal/hoteles/{id}` responde 200 con `aud=hotel` y `scope=hoteles:read`.
+
+Al reejecutar el alta aparecieron dos defectos propios de `inventory-service`, ya corregidos: la
+secuencia de `producto` no se ajustaba tras los seeds con id explícito (migración `V5`) y
+`MachineTokenProvider` exigía el client id completo mientras `HotelClient` pasa el destino corto
+`inventory` (ahora acepta corto y completo y autentica con las credenciales configuradas). Con eso,
+`POST /api/producto/registrar` y `POST /api/producto/{id}/sedes` responden 201.

@@ -21,6 +21,10 @@ public enum ErrorCode {
   PRECONDITION_FAILED(HttpStatus.PRECONDITION_FAILED, "Otra persona modificó este registro. Recarga para ver los cambios."),
   PRECONDITION_REQUIRED(HttpStatus.PRECONDITION_REQUIRED, "Falta la versión del registro."),
   DEPENDENCY_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "El servicio no está disponible. Reintenta en unos segundos."),
+  STOCK_INSUFFICIENT(HttpStatus.CONFLICT, "No hay stock suficiente de uno o más productos."),
+  PRODUCT_INACTIVE(HttpStatus.CONFLICT, "El producto ya no está disponible en esta sede."),
+  DEBIT_CANCELLED(HttpStatus.CONFLICT, "La venta fue anulada; el cobro no corresponde."),
+  DUPLICATE_RESOURCE(HttpStatus.CONFLICT, "Ese valor ya está registrado."),
   INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un error inesperado.");
 
   private final HttpStatus status;

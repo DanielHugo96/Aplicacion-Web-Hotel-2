@@ -2,14 +2,17 @@ package pe.hotel.inventory.platform;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
@@ -98,5 +101,63 @@ class SecurityConventionTests {
                                 "SCOPE_hoteles:read"))))
         // Sin controlador todavía sería 404, pero nunca 401/403: el scope de la ruta interna es válido.
         .andExpect(status().isNotFound());
+  }
+
+  // Caso SEC05: una identidad humana (incluso ADMIN) nunca puede invocar rutas /internal/**.
+  @Test
+  void tokenHumanoEnDescontarDevuelve403SinTocarStock() throws Exception {
+    mockMvc
+        .perform(
+            post("/internal/stock/descontar")
+                .with(
+                    jwt()
+                        .jwt(
+                            j -> {
+                              j.claim("roles", List.of("ADMIN"));
+                              j.claim("sedes", List.of(1));
+                            })
+                        .authorities(
+                            new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                "ROLE_ADMIN")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"idVenta\":1,\"idHotel\":1,\"items\":[{\"idProducto\":1,\"cantidad\":1}]}"))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.error.code").value("FORBIDDEN"));
+  }
+
+  // Caso SEC05: token máquina sin scope stock:debit no puede debitar.
+  @Test
+  void tokenMaquinaSinScopeDebitEnDescontarDevuelve403() throws Exception {
+    mockMvc
+        .perform(
+            post("/internal/stock/descontar")
+                .with(
+                    jwt()
+                        .jwt(j -> j.claim("scope", "stock:read"))
+                        .authorities(
+                            new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                "SCOPE_stock:read")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"idVenta\":1,\"idHotel\":1,\"items\":[{\"idProducto\":1,\"cantidad\":1}]}"))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.error.code").value("FORBIDDEN"));
+  }
+
+  // Caso SEC05: token máquina con scope stock:debit llega al controlador (no es 401/403).
+  @Test
+  void tokenMaquinaConScopeDebitLlegaAlControlador() throws Exception {
+    mockMvc
+        .perform(
+            post("/internal/stock/descontar")
+                .with(
+                    jwt()
+                        .jwt(j -> j.claim("scope", "stock:debit"))
+                        .authorities(
+                            new org.springframework.security.core.authority.SimpleGrantedAuthority(
+                                "SCOPE_stock:debit")))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"idVenta\":1,\"idHotel\":1,\"items\":[{\"idProducto\":1,\"cantidad\":1}]}"))
+        // Sin base de datos real el débito falla tras la autorización, pero nunca con 401/403.
+        .andExpect(status().is5xxServerError());
   }
 }
