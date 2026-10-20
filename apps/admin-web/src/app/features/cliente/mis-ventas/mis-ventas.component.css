@@ -1,0 +1,32 @@
+.cliente-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.page-head h1 {
+  font-size: var(--text-h1);
+}
+
+.page-head .sub {
+  color: var(--color-garua);
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-small);
+}
+
+.data-table .monospace {
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+}
+
+.acciones-col {
+  width: 120px;
+  text-align: right;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+}

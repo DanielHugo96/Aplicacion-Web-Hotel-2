@@ -1,0 +1,138 @@
+:host {
+  display: block;
+  min-height: 100dvh;
+  background: var(--color-sillar-blanco);
+  color: var(--color-tinta);
+}
+
+.cliente-shell {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+}
+
+.cliente-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  min-height: var(--topbar-h);
+  padding: var(--space-2) var(--space-6);
+  background: var(--color-sillar-blanco);
+  border-bottom: 1px solid var(--color-junta);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: var(--color-tinta);
+}
+
+.brand-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--color-cochinilla);
+  align-self: center;
+}
+
+.brand-name {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  letter-spacing: 0.01em;
+}
+
+.brand-tag {
+  font-size: var(--text-micro);
+  color: var(--color-garua);
+  border-left: 1px solid var(--color-junta);
+  padding-left: var(--space-2);
+}
+
+.cliente-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  overflow-x: auto;
+  max-width: 100%;
+  scrollbar-width: thin;
+}
+
+.cliente-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control);
+  color: var(--color-tinta);
+  text-decoration: none;
+  font-size: var(--text-ui);
+  white-space: nowrap;
+}
+
+.cliente-nav a:hover {
+  background: var(--color-sillar-piedra);
+}
+
+.cliente-nav a.active {
+  color: var(--color-cochinilla);
+  background: var(--color-cochinilla-wash);
+  box-shadow: inset 3px 0 0 var(--color-cochinilla);
+}
+
+.cliente-account {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-left: auto;
+  font-size: var(--text-small);
+  flex-wrap: wrap;
+}
+
+.rol-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--color-sillar-piedra);
+  color: var(--color-garua);
+  font-size: var(--text-micro);
+}
+
+.nombre {
+  color: var(--color-tinta);
+}
+
+.cliente-content {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: var(--space-6);
+}
+
+@media (max-width: 640px) {
+  .cliente-topbar {
+    padding: var(--space-2) var(--space-4);
+    gap: var(--space-2);
+  }
+
+  .brand-tag {
+    display: none;
+  }
+
+  .cliente-account {
+    width: 100%;
+    margin-left: 0;
+    justify-content: space-between;
+  }
+
+  .cliente-content {
+    padding: var(--space-4);
+  }
+}

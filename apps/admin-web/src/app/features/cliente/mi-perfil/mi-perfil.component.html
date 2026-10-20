@@ -1,0 +1,25 @@
+<section class="cliente-page" aria-labelledby="miPerfilTitulo">
+  <header class="page-head">
+    <div>
+      <h1 id="miPerfilTitulo">Mi perfil</h1>
+      <p class="sub">Edita tu nombre, apellidos y URL de foto; cambia tu clave cuando lo necesites.</p>
+    </div>
+  </header>
+
+  @if (error()) {
+    <app-error-banner
+      [error]="error()"
+      actionLabel="Reintentar"
+      (action)="cargar()"
+    ></app-error-banner>
+  }
+
+  @if (cargando()) {
+    <div class="skeleton-card" aria-label="Cargando perfil">
+      <div class="skeleton skeleton-line w40"></div>
+      <div class="skeleton skeleton-line w70"></div>
+    </div>
+  } @else if (!error()) {
+    <app-perfil-form [persona]="persona()"></app-perfil-form>
+  }
+</section>

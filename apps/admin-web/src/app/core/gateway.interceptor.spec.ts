@@ -1,9 +1,11 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
 import {
   HttpRequest,
   HttpHandlerFn,
   HttpResponse,
   HttpErrorResponse,
+  HttpHeaders,
 } from '@angular/common/http';
 import { of, throwError } from 'rxjs';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
@@ -50,6 +52,7 @@ describe('gatewayInterceptor', () => {
       providers: [
         SessionService,
         ETagCacheService,
+        provideHttpClient(),
         { provide: Router, useValue: { navigateByUrl: vi.fn() } },
       ],
     });
@@ -143,5 +146,32 @@ describe('gatewayInterceptor', () => {
     });
     expect(session.getToken()).toBeNull();
     expect(spy).toHaveBeenCalledWith('/login', { replaceUrl: true });
+  });
+
+  it('deja pasar el 202 de POST /api/venta para que el área C muestre el banner y sondee', () => {
+    let status: number | null = null;
+    let location: string | null = null;
+    TestBed.runInInjectionContext(() => {
+      gatewayInterceptor(new HttpRequest('POST', '/api/venta', { idRecepcion: 1001 }), () =>
+        of(
+          new HttpResponse({
+            status: 202,
+            statusText: 'Accepted',
+            headers: new HttpHeaders({
+              Location: '/api/venta/buscar/5001',
+              'Retry-After': '2',
+            }),
+            body: { ok: true },
+          })
+        )
+      ).subscribe((event) => {
+        if (event instanceof HttpResponse) {
+          status = event.status;
+          location = event.headers.get('Location');
+        }
+      });
+    });
+    expect(status).toBe(202);
+    expect(location).toBe('/api/venta/buscar/5001');
   });
 });

@@ -1,0 +1,32 @@
+.cliente-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.page-head h1 {
+  font-size: var(--text-h1);
+}
+
+.page-head .sub {
+  color: var(--color-garua);
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-small);
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  background: #fff;
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+}
+
+.skeleton-line {
+  height: 18px;
+}
+
+.w40 { width: 40%; }
+.w70 { width: 70%; }

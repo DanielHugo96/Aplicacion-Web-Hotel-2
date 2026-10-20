@@ -1,18 +1,21 @@
-import { Component, inject, signal, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ApiUiError, parseApiError } from '../../core/api-error';
 import { AuthService } from '../../core/services/auth.service';
+import { ErrorBannerComponent } from '../../ui/error-banner/error-banner.component';
 
-interface ApiError {
-  code: string;
-  message: string;
-  fields: Record<string, string>;
-  correlationId: string;
-}
+const MENSAJE_POLITICA =
+  'La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8).';
 
+/**
+ * Cambio de clave: `PUT /api/auth/password` con `Idempotency-Key` del
+ * interceptor. La clave nunca se guarda; el contador es de bytes UTF-8 y el
+ * doble envío se bloquea con spinner. Los 400 se pintan con el catálogo.
+ */
 @Component({
   selector: 'app-password-change',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule, ErrorBannerComponent],
   templateUrl: './password-change.component.html',
   styleUrl: './password-change.component.css',
 })
@@ -24,7 +27,7 @@ export class PasswordChangeComponent {
   claveActual = '';
   claveNueva = '';
   loading = false;
-  error: ApiError | null = null;
+  error: ApiUiError | null = null;
   ok = false;
 
   claveNuevaBytes(): number {
@@ -49,28 +52,34 @@ export class PasswordChangeComponent {
   }
 
   campoInvalido(campo: string): boolean {
-    return !!this.error?.fields[campo];
+    if (this.error?.fields[campo]) return true;
+    if (this.error?.code === 'CURRENT_PASSWORD_MISMATCH' && campo === 'claveActual') {
+      return true;
+    }
+    if (this.error?.code === 'PASSWORD_POLICY' && campo === 'claveNueva') return true;
+    return false;
   }
 
   mensajeCampo(campo: string): string {
-    return this.error?.fields[campo] ?? '';
-  }
-
-  private setError(body: any): void {
-    const err = body?.error ?? {};
-    this.error = {
-      code: err.code ?? 'INTERNAL_ERROR',
-      message: err.message ?? body?.message ?? 'Ocurrió un error inesperado.',
-      fields: err.fields ?? {},
-      correlationId: body?.meta?.correlationId ?? '',
-    };
+    if (this.error?.fields[campo]) return this.error.fields[campo];
+    if (this.error?.code === 'CURRENT_PASSWORD_MISMATCH' && campo === 'claveActual') {
+      return this.error.message;
+    }
+    if (this.error?.code === 'PASSWORD_POLICY' && campo === 'claveNueva') {
+      return this.error.message;
+    }
+    return '';
   }
 
   async onSubmit(event: Event): Promise<void> {
     event.preventDefault();
+    await this.guardar();
+  }
+
+  async guardar(): Promise<void> {
     this.error = null;
     this.ok = false;
-    if (!this.formularioValido()) return;
+    if (this.loading || !this.formularioValido()) return;
     try {
       this.loading = true;
       await this.auth.changePassword({
@@ -78,11 +87,17 @@ export class PasswordChangeComponent {
         claveNueva: this.claveNueva,
       });
       this.ok = true;
+      this.claveActual = '';
+      this.claveNueva = '';
       this.saved.emit();
-    } catch (e: any) {
-      this.setError(e?.error ?? e);
+    } catch (err) {
+      this.error = parseApiError(err);
     } finally {
       this.loading = false;
     }
+  }
+
+  mensajePolitica(): string {
+    return MENSAJE_POLITICA;
   }
 }

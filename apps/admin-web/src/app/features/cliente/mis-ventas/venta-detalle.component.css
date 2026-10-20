@@ -1,0 +1,99 @@
+.cliente-page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.page-head h1 {
+  font-size: var(--text-h1);
+}
+
+.breadcrumb {
+  margin: 0 0 var(--space-1);
+  font-size: var(--text-small);
+  color: var(--color-garua);
+}
+
+.breadcrumb a {
+  color: var(--color-cochinilla);
+}
+
+.skeleton-card,
+.resumen-card {
+  background: #fff;
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  padding: var(--space-6);
+}
+
+.skeleton-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.skeleton-line {
+  height: 18px;
+}
+
+.w40 { width: 40%; }
+.w55 { width: 55%; }
+.w70 { width: 70%; }
+
+.resumen-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-junta);
+}
+
+.pills {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.total {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--space-1);
+}
+
+.total strong {
+  font-size: var(--text-h2);
+}
+
+.datos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--space-4);
+  margin: var(--space-4) 0 0;
+}
+
+.datos dt {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+  margin-bottom: var(--space-1);
+}
+
+.datos dd {
+  margin: 0;
+  font-size: var(--text-ui);
+}
+
+.muted {
+  color: var(--color-garua);
+  margin: 0;
+}

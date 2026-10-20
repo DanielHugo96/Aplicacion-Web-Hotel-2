@@ -1,0 +1,88 @@
+<section class="cliente-page" aria-labelledby="ventaTitulo">
+  <header class="page-head">
+    <div>
+      <p class="breadcrumb"><a routerLink="/mis-ventas">Mis ventas</a> / Detalle</p>
+      <h1 id="ventaTitulo">Venta {{ venta()?.idVenta ? '#' + venta()!.idVenta : '' }}</h1>
+    </div>
+    <a class="btn btn-secondary" routerLink="/mis-ventas">Volver a mis ventas</a>
+  </header>
+
+  @if (error()) {
+    <app-error-banner
+      [error]="error()"
+      [actionLabel]="error()?.retryable ? 'Reintentar' : null"
+      (action)="cargar()"
+    ></app-error-banner>
+  }
+
+  @if (cargando()) {
+    <div class="skeleton-card" aria-label="Cargando venta">
+      <div class="skeleton skeleton-line w40"></div>
+      <div class="skeleton skeleton-line w70"></div>
+      <div class="skeleton skeleton-line w55"></div>
+    </div>
+  } @else if (venta(); as v) {
+    <article class="resumen-card">
+      <header class="resumen-head">
+        <div class="pills">
+          <span [class]="'pill ' + pagoClase(v.estado)">{{ pagoEtiqueta(v.estado) }}</span>
+          <span [class]="'pill ' + operacionClase(v.estadoOperacion)">
+            {{ operacionEtiqueta(v.estadoOperacion) }}
+          </span>
+        </div>
+        <div class="total">
+          <span class="muted text-small">Total</span>
+          <strong class="table-nums">{{ v.total | money }}</strong>
+        </div>
+      </header>
+
+      <dl class="datos">
+        <div>
+          <dt>Fecha de creación</dt>
+          <dd class="table-nums">{{ v.fechaCreacion | peTimestamp }}</dd>
+        </div>
+        <div>
+          <dt>Fecha de pago</dt>
+          <dd class="table-nums">
+            {{ v.paidAt ? (v.paidAt | peTimestamp) : 'No registrado' }}
+          </dd>
+        </div>
+        <div>
+          <dt>Medio de pago</dt>
+          <dd>{{ v.medioPago ?? 'No registrado' }}</dd>
+        </div>
+        <div>
+          <dt>Estadía</dt>
+          <dd class="table-nums">#{{ v.idRecepcion }}</dd>
+        </div>
+      </dl>
+    </article>
+
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th scope="col">Producto</th>
+            <th scope="col" class="num">Cantidad</th>
+            <th scope="col" class="num">Precio unitario</th>
+            <th scope="col" class="num">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of v.detalles; track d.idDetalleVenta) {
+            <tr>
+              <td>{{ d.nombreProducto }}</td>
+              <td class="num">{{ d.cantidad }}</td>
+              <td class="num">{{ d.precioUnitario | money }}</td>
+              <td class="num">{{ d.subTotal | money }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p class="text-small muted">
+      Las líneas y los importes son los registrados al confirmar la venta y no se recalculan.
+    </p>
+  }
+</section>

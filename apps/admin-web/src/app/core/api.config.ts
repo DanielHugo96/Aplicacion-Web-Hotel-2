@@ -55,4 +55,16 @@ export const API_PATHS = {
   estadoHabitacionListar: '/api/estadohabitacion/listar',
   estadoHabitacionBuscar: (id: number | string) => `/api/estadohabitacion/buscar/${id}`,
   estadoHabitacionActualizar: (id: number | string) => `/api/estadohabitacion/actualizar/${id}`,
+
+  // Área de cliente (C)
+  recepcionCliente: (idCliente: number | string) => `/api/recepcion/cliente/${idCliente}`,
+  recepcionBuscar: (id: number | string) => `/api/recepcion/${id}`,
+  ventaCatalogo: '/api/venta/catalogo',
+  carritoAgregar: '/api/carrito/agregar',
+  carritoListar: (idRecepcion: number | string) => `/api/carrito/listar/${idRecepcion}`,
+  carritoEliminar: '/api/carrito/eliminar',
+  ventaCrear: '/api/venta',
+  ventaBuscar: (id: number | string) => `/api/venta/buscar/${id}`,
+  ventaRecepcion: (idRecepcion: number | string) => `/api/venta/recepcion/${idRecepcion}`,
+  ventaOperacion: (operationId: string) => `/api/venta/operaciones/${operationId}`,
 } as const;

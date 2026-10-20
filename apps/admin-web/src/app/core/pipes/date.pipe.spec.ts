@@ -17,6 +17,12 @@ describe('Pipes de fecha es-PE', () => {
     expect(pipe.transform(null)).toBeNull();
   });
 
+  it('PeDatePipe no desplaza las fechas sin hora de la API', () => {
+    const pipe = new PeDatePipe();
+    expect(pipe.transform('2026-10-04')).toBe('04/10/2026');
+    expect(pipe.transform('2026-01-01')).toBe('01/01/2026');
+  });
+
   it('PeTimestampPipe formatea dd/MM/yyyy HH:mm (sin coma)', () => {
     const pipe = new PeTimestampPipe();
     const d = new Date(2026, 9, 4, 15, 30, 0);

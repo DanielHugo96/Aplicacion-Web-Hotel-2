@@ -2,21 +2,15 @@
   <h2>{{ titulo }}</h2>
 
   @if (error) {
-    <div class="banner banner-error" role="alert">
-      @if (error.code === 'PRECONDITION_FAILED') {
-        <span>Otra persona modificó este registro. Recarga para ver los cambios.</span>
-      } @else {
-        <span>{{ error.fields?.['nombre'] || error.fields?.['apellido'] || error.fields?.['fotoUrl'] || error.message }}</span>
-      }
-      <button class="btn btn-link" (click)="recargar()"><strong>Recargar</strong></button>
-      <span class="correlation">{{ error.correlationId }}</span>
-    </div>
+    <app-error-banner
+      [error]="error"
+      [actionLabel]="accionEtiqueta()"
+      (action)="accionError()"
+    ></app-error-banner>
   }
 
   @if (ok) {
-    <div class="banner banner-ok" role="status">
-      Cambios guardados.
-    </div>
+    <div class="banner banner-ok" role="status">Cambios guardados</div>
   }
 
   <form (ngSubmit)="onSubmit($event)" novalidate>
@@ -27,11 +21,14 @@
         [(ngModel)]="nombre"
         name="nombre"
         [class.error]="campoInvalido('nombre')"
+        [attr.aria-invalid]="campoInvalido('nombre') ? 'true' : null"
+        [attr.aria-describedby]="campoInvalido('nombre') ? 'pfNombreError' : null"
         required
+        aria-required="true"
         maxlength="100"
       />
       @if (campoInvalido('nombre')) {
-        <span class="field-msg">{{ mensajeCampo('nombre') }}</span>
+        <span id="pfNombreError" class="field-msg" role="alert">{{ mensajeCampo('nombre') }}</span>
       }
     </div>
 
@@ -42,11 +39,14 @@
         [(ngModel)]="apellido"
         name="apellido"
         [class.error]="campoInvalido('apellido')"
+        [attr.aria-invalid]="campoInvalido('apellido') ? 'true' : null"
+        [attr.aria-describedby]="campoInvalido('apellido') ? 'pfApellidoError' : null"
         required
+        aria-required="true"
         maxlength="100"
       />
       @if (campoInvalido('apellido')) {
-        <span class="field-msg">{{ mensajeCampo('apellido') }}</span>
+        <span id="pfApellidoError" class="field-msg" role="alert">{{ mensajeCampo('apellido') }}</span>
       }
     </div>
 
@@ -57,12 +57,17 @@
         [(ngModel)]="fotoUrl"
         name="fotoUrl"
         [class.error]="campoInvalido('fotoUrl') || !fotoValida()"
+        [attr.aria-invalid]="campoInvalido('fotoUrl') || !fotoValida() ? 'true' : null"
+        [attr.aria-describedby]="'pfFotoAyuda'"
+        maxlength="500"
       />
-      <span class="field-help">
+      <span id="pfFotoAyuda" class="field-help">
         URL permitida: https:// o /assets/ (máximo 500 caracteres).
       </span>
-      @if (!fotoValida() && fotoUrl.length > 0) {
-        <span class="field-msg">URL no permitida.</span>
+      @if (campoInvalido('fotoUrl')) {
+        <span class="field-msg" role="alert">{{ mensajeCampo('fotoUrl') }}</span>
+      } @else if (!fotoValida() && fotoUrl.length > 0) {
+        <span class="field-msg" role="alert">URL no permitida.</span>
       }
     </div>
 
@@ -71,6 +76,6 @@
     </button>
   </form>
 
-  <div class="divider"></div>
+  <hr class="divider" />
   <app-password-change></app-password-change>
 </div>
