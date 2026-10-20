@@ -1,6 +1,7 @@
 package pe.hotel.inventory.platform;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -41,14 +42,12 @@ import org.springframework.http.HttpMethod;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  /** Audiencia de los tokens humanos; los tokens máquina usan el nombre destino de la allowlist. */
-  public static final String HUMAN_AUDIENCE = "hotel-api";
-
   /**
-   * Nombre destino de este servicio en la allowlist de clientes de servicio
-   * (docs/especificacion/03-contrato-comun.md § Servicio a servicio: sales → inventory).
+   * Audiencia de los tokens humanos. Los tokens máquina usan el destino corto
+   * ({@code hotel}, {@code identity}…), que identity emite desde la allowlist; también se acepta
+   * el nombre largo del servicio por compatibilidad aditiva.
    */
-  public static final String MACHINE_AUDIENCE = "inventory";
+  public static final String HUMAN_AUDIENCE = "hotel-api";
 
   @Bean
   SecurityFilterChain securityFilterChain(
@@ -146,13 +145,22 @@ public class SecurityConfig {
 
   /**
    * Valida {@code exp}/{@code nbf} y el {@code issuer} fijo (sin descubrimiento OIDC) y la
-   * {@code audience}: un token humano ({@code hotel-api}) o un token máquina dirigido a este
-   * servicio. Un token con aud incorrecta se rechaza con 401 (caso {@code SEC06}).
+   * {@code audience}: un token humano ({@code hotel-api}), el destino corto que emite identity
+   * ({@code hotel}, {@code identity}…) o el nombre del servicio ({@code hotel-service}, compatibilidad
+   * aditiva). Un token con aud incorrecta se rechaza con 401 (caso `SEC06`).
    */
   @Bean
   OAuth2TokenValidator<Jwt> hotelJwtValidator(
-      @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer) {
-    Set<String> audiences = Set.of(HUMAN_AUDIENCE, MACHINE_AUDIENCE);
+      @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer,
+      @Value("${spring.application.name}") String serviceName) {
+    String destino =
+        serviceName.endsWith("-service")
+            ? serviceName.substring(0, serviceName.length() - "-service".length())
+            : serviceName;
+    Set<String> audiences = new HashSet<>();
+    audiences.add(HUMAN_AUDIENCE);
+    audiences.add(serviceName);
+    audiences.add(destino);
     return new DelegatingOAuth2TokenValidator<>(
         JwtValidators.createDefaultWithIssuer(issuer),
         new JwtClaimValidator<List<String>>(

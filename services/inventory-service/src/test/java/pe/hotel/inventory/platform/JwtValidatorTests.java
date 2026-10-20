@@ -10,12 +10,13 @@ import org.springframework.security.oauth2.jwt.Jwt;
 
 /**
  * Valida la política de {@code iss}/{@code aud} de la convención: aud incorrecta o issuer distinto se
- * rechazan (caso `SEC06`), y la audiencia humana o la del propio servicio se aceptan.
+ * rechazan (caso `SEC06`), y la audiencia humana, el destino corto que emite identity o el nombre
+ * largo del propio servicio se aceptan.
  */
 class JwtValidatorTests {
 
   private final OAuth2TokenValidator<Jwt> validator =
-      new SecurityConfig().hotelJwtValidator("hotel-identity");
+      new SecurityConfig().hotelJwtValidator("hotel-identity", "inventory-service");
 
   private static Jwt token(String issuer, List<String> audiences) {
     return Jwt.withTokenValue("token")
@@ -34,11 +35,13 @@ class JwtValidatorTests {
   }
 
   @Test
-  void aceptaAudienciaMaquinaDelServicio() {
-    assertThat(
-            validator
-                .validate(token("hotel-identity", List.of(SecurityConfig.MACHINE_AUDIENCE)))
-                .hasErrors())
+  void aceptaDestinoCorto() {
+    assertThat(validator.validate(token("hotel-identity", List.of("inventory"))).hasErrors()).isFalse();
+  }
+
+  @Test
+  void aceptaNombreLargoDelServicio() {
+    assertThat(validator.validate(token("hotel-identity", List.of("inventory-service"))).hasErrors())
         .isFalse();
   }
 

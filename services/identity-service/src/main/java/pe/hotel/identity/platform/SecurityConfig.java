@@ -1,6 +1,7 @@
 package pe.hotel.identity.platform;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -42,7 +43,11 @@ import pe.hotel.identity.auth.SigningKeys;
 @EnableWebSecurity
 public class SecurityConfig {
 
-  /** Audiencia de los tokens humanos; los tokens máquina usan el nombre del servicio destino. */
+  /**
+   * Audiencia de los tokens humanos. Los tokens máquina usan el destino corto
+   * ({@code hotel}, {@code identity}…), que identity emite desde la allowlist; también se acepta
+   * el nombre largo del servicio por compatibilidad aditiva.
+   */
   public static final String HUMAN_AUDIENCE = "hotel-api";
 
   @Bean
@@ -131,14 +136,22 @@ public class SecurityConfig {
 
   /**
    * Valida {@code exp}/{@code nbf} y el {@code issuer} fijo (sin descubrimiento OIDC) y la
-   * {@code audience}: un token humano ({@code hotel-api}) o un token máquina dirigido a este
-   * servicio. Un token con aud incorrecta se rechaza con 401 (caso `SEC06`).
+   * {@code audience}: un token humano ({@code hotel-api}), el destino corto que emite identity
+   * ({@code hotel}, {@code identity}…) o el nombre del servicio ({@code hotel-service}, compatibilidad
+   * aditiva). Un token con aud incorrecta se rechaza con 401 (caso `SEC06`).
    */
   @Bean
   OAuth2TokenValidator<Jwt> hotelJwtValidator(
       @Value("${spring.security.oauth2.resourceserver.jwt.issuer-uri}") String issuer,
       @Value("${spring.application.name}") String serviceName) {
-    Set<String> audiences = Set.of(HUMAN_AUDIENCE, serviceName);
+    String destino =
+        serviceName.endsWith("-service")
+            ? serviceName.substring(0, serviceName.length() - "-service".length())
+            : serviceName;
+    Set<String> audiences = new HashSet<>();
+    audiences.add(HUMAN_AUDIENCE);
+    audiences.add(serviceName);
+    audiences.add(destino);
     return new DelegatingOAuth2TokenValidator<>(
         JwtValidators.createDefaultWithIssuer(issuer),
         new JwtClaimValidator<List<String>>(
