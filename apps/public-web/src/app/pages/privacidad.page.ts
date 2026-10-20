@@ -1,7 +1,10 @@
 import { Component } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-privacidad-page',
-  template: `<h1>Privacidad</h1>`,
+  imports: [RouterLink],
+  templateUrl: './privacidad.page.html',
+  styleUrl: './pagina-texto.css',
 })
 export class PrivacidadPage {}
