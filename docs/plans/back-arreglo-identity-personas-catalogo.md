@@ -177,16 +177,16 @@ define `PRECONDITION_REQUIRED`, `VALIDATION_ERROR` y `FORBIDDEN`. No hay regla n
   de persona 403; ADMIN → `PUT` de persona sin `If-Match` 428 y `PUT` de tipo de persona sin
   `If-Match` 428. Verificación: las pruebas pasan con
   `bash scripts/mvn.sh -f services/pom.xml -pl identity-service test`.
-- [ ] 6. Rearrancar `identity-service` desde la rama corregida y repetir la reproducción 1:
+- [x] 6. Rearrancar `identity-service` desde la rama corregida y repetir la reproducción 1:
   `PUT /api/tipopersona/actualizar/{id}` con id 3, `If-Match: "1"`, `Idempotency-Key` y
   `{"descripcion":"Cliente"}`. Verificación: 200, `data.version` pasa de 1 a 2, `ETag` nuevo y el
   log ya no muestra `column "updated_at"`.
-- [ ] 7. Repetir la reproducción 2 con el token EMPLEADO: `GET /api/persona/listar` con
+- [x] 7. Repetir la reproducción 2 con el token EMPLEADO: `GET /api/persona/listar` con
   `documento=90000100` y `GET /api/persona/buscar/{id}` con id 100 y el mismo `documento`.
   Verificación: 200 en
   ambos, `data.personas` solo contiene CLIENTE y ningún 500; sin `documento`, `listar` responde 400
   `VALIDATION_ERROR` como fija la spec.
-- [ ] 8. Comprobar las mutaciones con EMPLEADO y el 428 de ADMIN: `PUT /api/persona/actualizar/{id}`
+- [x] 8. Comprobar las mutaciones con EMPLEADO y el 428 de ADMIN: `PUT /api/persona/actualizar/{id}`
   con id 100 y EMPLEADO → 403 `FORBIDDEN`; el mismo `PUT` con ADMIN y sin `If-Match` → 428
   `PRECONDITION_REQUIRED`; `DELETE /api/persona/eliminar/{id}` sin `If-Match` → 428. Verificación:
   códigos y cuerpos guardados.
@@ -331,11 +331,54 @@ curl -s -w '\nHTTP %{http_code}\n' -X PUT "http://localhost:8080/api/persona/act
   -d '{"nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","idTipoPersona":3,"sedes":[1],"estado":true}'
 ```
 
-Resultados esperados: 200 con `data.version` 2 y `ETag: "2"` en el tipo de persona; 200 en el
-listado y la búsqueda de EMPLEADO con una sola CLIENTE y `meta.page`/`size`/`totalElements`; 400
-`VALIDATION_ERROR` con `error.fields.documento` en el listado sin `documento`; 403 `FORBIDDEN` en
-la mutación con EMPLEADO; 428 `PRECONDITION_REQUIRED` en la mutación de ADMIN sin `If-Match`.
-Evidencia: los cuerpos HTTP completos, en el PR de ejecución y en la bitácora del plan.
+Resultados obtenidos el 2026-10-20 tras rearrancar `identity-service` desde la rama corregida. El
+proceso se relanzó con `spring-boot:run` sobre `services/pom.xml` y el log quedó en
+`C:/Users/juan2/AppData/Local/Temp/opencode/identity-arreglo.log`.
+
+**Paso 6 — `PUT /api/tipopersona/actualizar/{id}` (id 3):**
+
+```text
+HTTP/1.1 200 OK
+ETag: "2"
+{"success":true,"message":"OK","data":{"idTipoPersona":3,"descripcion":"Cliente","codigo":"CLIENTE","estado":true,"version":2},"meta":{"correlationId":"75ff833b-b537-47dc-ba09-39802c3cfe88"}}
+
+$ grep -c 'column "updated_at"' C:/Users/juan2/AppData/Local/Temp/opencode/identity-arreglo.log
+0
+$ grep -c 'ClassCastException' C:/Users/juan2/AppData/Local/Temp/opencode/identity-arreglo.log
+0
+```
+
+**Paso 7 — lecturas con EMPLEADO (`sedes: [1]`):**
+
+```text
+GET /api/persona/listar?page=0&size=20&documento=90000100
+{"success":true,"message":"OK","data":{"personas":[{"idPersona":100,"tipoDocumento":"DNI","documento":"90000100","nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","fotoUrl":null,"idTipoPersona":3,"tipoPersona":"Cliente","sedes":[],"estado":true,"fechaCreacion":"2026-10-18T17:52:02.971456Z","version":5}]},"meta":{"correlationId":"186e27fd-a48b-4a32-9121-8bf12c49c541","page":0,"size":20,"totalElements":1}}
+HTTP 200
+
+GET /api/persona/listar?page=0&size=20
+{"success":false,"message":"Revisa los datos marcados.","data":null,"error":{"code":"VALIDATION_ERROR","fields":{"documento":"obligatorio para consultar como empleado"}},"meta":{"correlationId":"73d57638-6826-41ad-bf9d-381bcc8e9e2d"}}
+HTTP 400
+
+GET /api/persona/buscar/{id}?documento=90000100 (id 100)
+{"success":true,"message":"OK","data":{"idPersona":100,"tipoDocumento":"DNI","documento":"90000100","nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","fotoUrl":null,"idTipoPersona":3,"tipoPersona":"Cliente","sedes":[],"estado":true,"fechaCreacion":"2026-10-18T17:52:02.971456Z","version":5},"meta":{"correlationId":"2a31ac79-47c6-46be-bbbf-db51901ef9d8"}}
+HTTP 200
+```
+
+**Paso 8 — mutaciones de persona y 428:**
+
+```text
+PUT /api/persona/actualizar/{id} (id 100, EMPLEADO)
+{"success":false,"message":"No tienes permiso para esta acción.","data":null,"error":{"code":"FORBIDDEN","fields":{}},"meta":{"correlationId":"cd752ab1-5dfa-45ed-9a41-82569a042755"}}
+HTTP 403
+
+PUT /api/persona/actualizar/{id} (id 100, ADMIN, sin If-Match)
+{"success":false,"message":"Falta la versión del registro.","data":null,"error":{"code":"PRECONDITION_REQUIRED","fields":{"If-Match":"obligatorio"}},"meta":{"correlationId":"3cd546cb-331c-4079-8d75-fa2595b7a871"}}
+HTTP 428
+
+DELETE /api/persona/eliminar/{id} (id 100, ADMIN, sin If-Match)
+{"success":false,"message":"Falta la versión del registro.","data":null,"error":{"code":"PRECONDITION_REQUIRED","fields":{"If-Match":"obligatorio"}},"meta":{"correlationId":"10706aeb-b1b9-4e66-beb9-d3328b392202"}}
+HTTP 428
+```
 
 ### Pruebas de controlador y `If-Match` (pasos 4 y 5)
 
