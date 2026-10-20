@@ -29,7 +29,7 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F3 | [`back-sales-ventas`](../plans/back-sales-ventas.md) | T8 | `cerrado` | `back-sales-ventas` | [#100](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/100) |
 | F4 | [`back-reception-cierre`](../plans/back-reception-cierre.md) | T9 | `cerrado` | `back-reception-cierre` | [#102](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/102) |
 | F4 | [`front-admin-web-area-cliente`](../plans/front-admin-web-area-cliente.md) | T9 | `cerrado` | `front-admin-web-area-cliente` | [#104](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/104) |
-| F4 | [`back-reporting-proyecciones`](../plans/back-reporting-proyecciones.md) | T10 | `propuesto` | — | — |
+| F4 | [`back-reporting-proyecciones`](../plans/back-reporting-proyecciones.md) | T10 | `cerrado` | `back-reporting-proyecciones` | [#107](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/107) |
 | F3 | [`front-admin-web-recepcion`](../plans/front-admin-web-recepcion.md) | T10 | `propuesto` | — | — |
 | F5 | [`qa-runbooks`](../plans/qa-runbooks.md) | T11 | `propuesto` | — | — |
 | F3 | [`front-admin-web-ventas`](../plans/front-admin-web-ventas.md) | T11 | `propuesto` | — | — |
