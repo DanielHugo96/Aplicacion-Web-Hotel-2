@@ -100,4 +100,56 @@ describe('SedesPage', () => {
       'El catálogo está vacío.',
     );
   });
+
+  it('muestra el 429 del catálogo con su acción y correlationId', async () => {
+    const fixture = TestBed.createComponent(SedesPage);
+    fixture.detectChanges();
+
+    http
+      .expectOne('http://localhost:8080/api/public/hoteles?page=0&size=20')
+      .flush(
+        {
+          success: false,
+          message: 'Demasiados intentos',
+          data: null,
+          error: { code: 'RATE_LIMITED', fields: {} },
+          meta: { correlationId: 'corr-429' },
+        },
+        { status: 429, statusText: 'Too Many Requests' },
+      );
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.textContent).toContain(
+      'Demasiados intentos. Espera un momento.',
+    );
+    expect(element.querySelector('.error__acciones')?.textContent).toContain(
+      'Reintentar',
+    );
+    expect(element.querySelector('.error__correlacion')?.textContent).toContain(
+      'corr-429',
+    );
+    expect(element.querySelectorAll('.tarjeta-sede').length).toBe(0);
+  });
+
+  it('muestra un fallo de red con reintento y sin precios inventados', async () => {
+    const fixture = TestBed.createComponent(SedesPage);
+    fixture.detectChanges();
+
+    http
+      .expectOne('http://localhost:8080/api/public/hoteles?page=0&size=20')
+      .error(new ProgressEvent('error'));
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.textContent).toContain(
+      'No se pudo conectar con el servicio. Reintenta en unos segundos.',
+    );
+    expect(element.querySelector('.error__acciones')?.textContent).toContain(
+      'Reintentar',
+    );
+    expect(element.textContent).not.toContain('S/');
+  });
 });

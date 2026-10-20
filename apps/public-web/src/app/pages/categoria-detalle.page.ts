@@ -1,4 +1,3 @@
-import { CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -7,10 +6,11 @@ import { CatalogService } from '../core/catalog.service';
 import { CategoriaPublica } from '../core/catalog.models';
 import { DemoImageComponent } from '../shared/demo-image.component';
 import { ErrorStateComponent } from '../shared/error-state.component';
+import { MonedaPePipe } from '../shared/moneda-pe.pipe';
 
 @Component({
   selector: 'app-categoria-detalle-page',
-  imports: [RouterLink, DemoImageComponent, ErrorStateComponent, CurrencyPipe],
+  imports: [RouterLink, DemoImageComponent, ErrorStateComponent, MonedaPePipe],
   templateUrl: './categoria-detalle.page.html',
   styleUrl: './categoria-detalle.page.css',
 })

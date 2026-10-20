@@ -47,7 +47,7 @@
         <div class="tarifa">
           <p class="tarifa__importe">
             Desde
-            {{ tipo.precioDesde | currency: 'PEN' : 'symbol-narrow' : '1.2-2' }}
+            {{ tipo.precioDesde | monedaPe }}
             por noche.
           </p>
           <p class="tarifa__aviso">

@@ -107,7 +107,7 @@
                   <p class="tarifa">
                     <span class="tarifa__importe">
                       Desde
-                      {{ categoria.precioDesde | currency: 'PEN' : 'symbol-narrow' : '1.2-2' }}
+                      {{ categoria.precioDesde | monedaPe }}
                       por noche.
                     </span>
                     <span class="tarifa__aviso">

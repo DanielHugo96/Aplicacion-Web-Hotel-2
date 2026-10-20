@@ -90,7 +90,9 @@ describe('CategoriaDetallePage', () => {
       'Habitación de demostración',
     );
     expect(element.textContent).toContain('Hasta 1 persona');
-    expect(element.querySelector('.tarifa__importe')?.textContent).toContain('70');
+    expect(element.querySelector('.tarifa__importe')?.textContent).toContain(
+      'S/ 70.00',
+    );
     expect(element.textContent).toContain(
       'Consulta disponibilidad con recepción. No constituye una reserva.',
     );

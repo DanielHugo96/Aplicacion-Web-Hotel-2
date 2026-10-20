@@ -106,6 +106,8 @@ describe('SedeDetallePage', () => {
     expect(element.textContent).toContain('Dirección de demostración');
     expect(element.querySelectorAll('.tarjeta-categoria').length).toBe(2);
     expect(element.textContent).toContain('Hasta 2 personas');
+    expect(element.textContent).toContain('S/ 70.00');
+    expect(element.textContent).toContain('S/ 100.00');
     expect(element.textContent).toContain('Consulta disponibilidad con recepción.');
   });
 

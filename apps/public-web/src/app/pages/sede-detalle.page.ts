@@ -1,4 +1,3 @@
-import { CurrencyPipe } from '@angular/common';
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -11,6 +10,7 @@ import {
 } from '../core/catalog.models';
 import { DemoImageComponent } from '../shared/demo-image.component';
 import { ErrorStateComponent } from '../shared/error-state.component';
+import { MonedaPePipe } from '../shared/moneda-pe.pipe';
 
 const PAGE_SIZE = 20;
 
@@ -20,7 +20,7 @@ const PAGE_SIZE = 20;
     RouterLink,
     DemoImageComponent,
     ErrorStateComponent,
-    CurrencyPipe,
+    MonedaPePipe,
   ],
   templateUrl: './sede-detalle.page.html',
   styleUrl: './sede-detalle.page.css',
