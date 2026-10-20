@@ -32,7 +32,7 @@ public class ReceptionOutbox {
 
   public void emitirCambio(RecepcionView view, long roomVersion, String type) {
     try {
-      Map<String, Object> payload = snapshot(view, roomVersion);
+      Map<String, Object> payload = snapshot(view, roomVersion, "OCUPADA", view.cleaningCycleId());
       Map<String, Object> envelope = new LinkedHashMap<>();
       envelope.put("eventId", UUID.randomUUID().toString());
       envelope.put("type", type);
@@ -54,6 +54,154 @@ public class ReceptionOutbox {
           mapper.writeValueAsString(envelope));
     } catch (Exception e) {
       throw new IllegalStateException("no se pudo encolar " + type, e);
+    }
+  }
+
+  /** {@code SalidaRegistrada}: snapshot completo con el desglose final del cierre. */
+  public void emitirSalida(
+      RecepcionView view,
+      long roomVersion,
+      pe.hotel.reception.domain.dto.CalculoCierre calculo,
+      String medioPago,
+      Instant closedAt) {
+    try {
+      Map<String, Object> payload =
+          snapshot(view, roomVersion, "LIMPIEZA_PENDIENTE", view.cleaningCycleId());
+      Map<String, Object> cierre = new LinkedHashMap<>();
+      cierre.put("alojamientoTotal", money(calculo.alojamientoTotal()));
+      cierre.put("consumosPagadosAntes", money(calculo.consumosPagadosAntes()));
+      cierre.put("consumosPagadosAlCerrar", money(calculo.expectedPendingTotal()));
+      cierre.put("consumosTotal", money(calculo.consumosTotal()));
+      cierre.put("cobroAhora", money(calculo.cobroAhora()));
+      cierre.put("totalGeneral", money(calculo.totalGeneral()));
+      cierre.put("medioPago", medioPago);
+      cierre.put("closedAt", TS.format(closedAt == null ? Instant.now() : closedAt));
+      payload.put("cierre", cierre);
+
+      Map<String, Object> envelope = new LinkedHashMap<>();
+      envelope.put("eventId", UUID.randomUUID().toString());
+      envelope.put("type", "SalidaRegistrada");
+      envelope.put("schemaVersion", 1);
+      envelope.put("aggregateType", "habitacion-ocupacion");
+      envelope.put("aggregateId", String.valueOf(view.idHabitacion()));
+      envelope.put("aggregateVersion", roomVersion);
+      envelope.put("idHotel", view.idHotel());
+      envelope.put("occurredAt", TS.format(Instant.now()));
+      envelope.put("correlationId", correlation());
+      envelope.put("payload", payload);
+      outbox.enqueue(
+          Destination.KAFKA,
+          "reception.recepcion.v1",
+          String.valueOf(view.idHabitacion()),
+          String.valueOf(view.idHabitacion()),
+          roomVersion,
+          "SalidaRegistrada",
+          mapper.writeValueAsString(envelope));
+    } catch (Exception e) {
+      throw new IllegalStateException("no se pudo encolar SalidaRegistrada", e);
+    }
+  }
+
+  /** Comando {@code limpieza.solicitada}: pide el ciclo de limpieza del gate tras el cierre. */
+  public void emitirLimpieza(RecepcionView view, long roomVersion, UUID cleaningCycleId) {
+    try {
+      Map<String, Object> payload = new LinkedHashMap<>();
+      payload.put("idHabitacion", view.idHabitacion());
+      payload.put("idRecepcion", view.idRecepcion());
+      payload.put("cleaningCycleId", cleaningCycleId);
+      payload.put("roomVersion", roomVersion);
+
+      Map<String, Object> envelope = new LinkedHashMap<>();
+      envelope.put("commandId", UUID.randomUUID().toString());
+      envelope.put("type", "LimpiezaSolicitada");
+      envelope.put("schemaVersion", 1);
+      envelope.put("idHotel", view.idHotel());
+      envelope.put("correlationId", correlation());
+      envelope.put("issuedAt", TS.format(Instant.now()));
+      envelope.put("payload", payload);
+      outbox.enqueue(
+          Destination.RABBIT,
+          "limpieza.solicitada",
+          String.valueOf(view.idHabitacion()),
+          String.valueOf(view.idHabitacion()),
+          roomVersion,
+          "LimpiezaSolicitada",
+          mapper.writeValueAsString(envelope));
+    } catch (Exception e) {
+      throw new IllegalStateException("no se pudo encolar limpieza.solicitada", e);
+    }
+  }
+
+  /** Comando {@code notificacion.checkout}: correo de salida; su caída no revierte el cierre. */
+  public void emitirCheckout(
+      RecepcionView view,
+      pe.hotel.reception.domain.dto.CalculoCierre calculo,
+      String hotel) {
+    try {
+      String nombre =
+          ((view.nombre() == null ? "" : view.nombre()) + " "
+                  + (view.apellido() == null ? "" : view.apellido()))
+              .trim();
+      Map<String, Object> payload = new LinkedHashMap<>();
+      payload.put("idPersona", view.idCliente());
+      payload.put("idRecepcion", view.idRecepcion());
+      payload.put("destinatario", view.correo());
+      payload.put("nombre", nombre);
+      payload.put("hotel", hotel == null ? "" : hotel);
+      payload.put("totalAlojamiento", money(calculo.alojamientoTotal()));
+      payload.put("totalConsumos", money(calculo.consumosTotal()));
+      payload.put("templateVersion", 1);
+
+      Map<String, Object> envelope = new LinkedHashMap<>();
+      envelope.put("commandId", UUID.randomUUID().toString());
+      envelope.put("type", "NotificacionCheckout");
+      envelope.put("schemaVersion", 1);
+      envelope.put("idHotel", view.idHotel());
+      envelope.put("correlationId", correlation());
+      envelope.put("issuedAt", TS.format(Instant.now()));
+      envelope.put("payload", payload);
+      outbox.enqueue(
+          Destination.RABBIT,
+          "notificacion.checkout",
+          String.valueOf(view.idHabitacion()),
+          String.valueOf(view.idHabitacion()),
+          0,
+          "NotificacionCheckout",
+          mapper.writeValueAsString(envelope));
+    } catch (Exception e) {
+      throw new IllegalStateException("no se pudo encolar notificacion.checkout", e);
+    }
+  }
+
+  /** {@code RecepcionActualizada} de anulación: ocupación LIBRE, sin limpieza ni cobro. */
+  public void emitirAnulacion(RecepcionView view, long roomVersion) {
+    try {
+      Map<String, Object> payload = snapshot(view, roomVersion, "LIBRE", null);
+      payload.put("closureId", null);
+      payload.put("cleaningCycleId", null);
+      payload.put("cierre", null);
+
+      Map<String, Object> envelope = new LinkedHashMap<>();
+      envelope.put("eventId", UUID.randomUUID().toString());
+      envelope.put("type", "RecepcionActualizada");
+      envelope.put("schemaVersion", 1);
+      envelope.put("aggregateType", "habitacion-ocupacion");
+      envelope.put("aggregateId", String.valueOf(view.idHabitacion()));
+      envelope.put("aggregateVersion", roomVersion);
+      envelope.put("idHotel", view.idHotel());
+      envelope.put("occurredAt", TS.format(Instant.now()));
+      envelope.put("correlationId", correlation());
+      envelope.put("payload", payload);
+      outbox.enqueue(
+          Destination.KAFKA,
+          "reception.recepcion.v1",
+          String.valueOf(view.idHabitacion()),
+          String.valueOf(view.idHabitacion()),
+          roomVersion,
+          "RecepcionActualizada",
+          mapper.writeValueAsString(envelope));
+    } catch (Exception e) {
+      throw new IllegalStateException("no se pudo encolar RecepcionActualizada", e);
     }
   }
 
@@ -92,7 +240,8 @@ public class ReceptionOutbox {
     }
   }
 
-  private Map<String, Object> snapshot(RecepcionView view, long roomVersion) {
+  private Map<String, Object> snapshot(
+      RecepcionView view, long roomVersion, String estadoGate, UUID cleaningCycleId) {
     Map<String, Object> payload = new LinkedHashMap<>();
     payload.put("idRecepcion", view.idRecepcion());
     payload.put("idHotel", view.idHotel());
@@ -106,29 +255,40 @@ public class ReceptionOutbox {
             .trim());
     payload.put("fechaEntrada", view.fechaEntrada().toString());
     payload.put("fechaSalida", view.fechaSalida().toString());
-    payload.put("fechaSalidaConfirmacion", null);
+    payload.put(
+        "fechaSalidaConfirmacion",
+        view.fechaSalidaConfirmacion() == null
+            ? null
+            : TS.format(view.fechaSalidaConfirmacion()));
     payload.put("estadoEstadia", view.estadoEstadia());
-    payload.put("tarifa", view.precioHabitacion());
-    payload.put("precioInicial", view.precioInicial());
-    payload.put("adelanto", view.adelanto());
+    payload.put("tarifa", money(view.precioHabitacion()));
+    payload.put("precioInicial", money(view.precioInicial()));
+    payload.put("adelanto", money(view.adelanto()));
     payload.put("medioPagoAdelanto", view.medioPagoAdelanto());
-    payload.put("costoPenalidad", view.costoPenalidad());
+    payload.put("costoPenalidad", money(view.costoPenalidad()));
     payload.put("motivoPenalidad", view.motivoPenalidad());
-    payload.put("totalPagado", view.totalPagado());
+    payload.put("totalPagado", money(view.totalPagado()));
     payload.put("observacion", null);
     payload.put("archivada", view.archivada());
     payload.put("version", view.version());
     payload.put("roomVersion", roomVersion);
-    payload.put("closureId", null);
-    payload.put("cleaningCycleId", null);
-    payload.put("cierre", null);
+    payload.put("closureId", view.closureId());
+    payload.put("cleaningCycleId", cleaningCycleId);
+    payload.put("cierre", view.cierre());
     Map<String, Object> ocupacion = new LinkedHashMap<>();
-    ocupacion.put("idRecepcion", view.idRecepcion());
-    ocupacion.put("estadoGate", "OCUPADA");
-    ocupacion.put("cleaningCycleId", null);
+    ocupacion.put(
+        "idRecepcion", "OCUPADA".equals(estadoGate) ? view.idRecepcion() : null);
+    ocupacion.put("estadoGate", estadoGate);
+    ocupacion.put("cleaningCycleId", cleaningCycleId);
     ocupacion.put("blockId", null);
     payload.put("ocupacionActual", ocupacion);
     return payload;
+  }
+
+  private static java.math.BigDecimal money(java.math.BigDecimal value) {
+    return value == null
+        ? null
+        : value.setScale(2, java.math.RoundingMode.HALF_UP);
   }
 
   private String correlation() {

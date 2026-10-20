@@ -89,6 +89,12 @@ public class IdempotencyFilter extends OncePerRequestFilter {
         return;
       }
       if ("COMPLETADA".equals(row.status())) {
+        if (row.resourceId() != null) {
+          response.setHeader("Location", row.resourceId());
+        }
+        if (row.httpStatus() != null && row.httpStatus() == 202) {
+          response.setHeader("Retry-After", "2");
+        }
         ResponseWriter.writeJson(
             response, row.httpStatus() == null ? 200 : row.httpStatus(), row.response());
       } else {

@@ -121,6 +121,7 @@ hotel:
     url:
       identity: ${FEIGN_URL_IDENTITY:http://localhost:8081}
       hotel: ${FEIGN_URL_HOTEL:http://localhost:8082}
+      sales: ${FEIGN_URL_SALES:http://localhost:8085}
   identity:
     token-url: ${IDENTITY_TOKEN_URL:http://localhost:8081/internal/auth/token}
   outbox:
@@ -130,6 +131,8 @@ hotel:
     alert-pending-minutes: ${OUTBOX_ALERT_PENDING_MINUTES:15}
   inbox:
     retention-days: ${INBOX_RETENTION_DAYS:30}
+  cierre:
+    recovery-interval-ms: ${CIERRE_RECOVERY_INTERVAL_MS:30000}
   messaging:
     enabled: ${MESSAGING_ENABLED:true}
     schemas-location: ${MESSAGING_SCHEMAS_LOCATION:schemas}

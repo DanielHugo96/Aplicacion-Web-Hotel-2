@@ -26,12 +26,19 @@ public class ReceptionRepository {
 
   public static final ZoneId LIMA = ZoneId.of("America/Lima");
 
-  private static final String RECEPCION_COLUMNS =
-      "r.id, r.id_hotel, r.id_habitacion, r.id_cliente, r.cliente_snapshot::text AS cliente_snapshot,"
+  private static final String RECEPCION_SELECT =
+      "SELECT r.id, r.id_hotel, r.id_habitacion, r.id_cliente, r.cliente_snapshot::text AS cliente_snapshot,"
           + " r.habitacion_snapshot::text AS habitacion_snapshot, r.tarifa, r.fecha_entrada,"
           + " r.fecha_salida, r.fecha_salida_confirmacion, r.precio_inicial, r.adelanto,"
           + " r.medio_pago_adelanto, r.precio_restante, r.total_pagado, r.costo_penalidad,"
-          + " r.motivo_penalidad, r.observacion, r.estado_estadia, r.archivada, r.version";
+          + " r.motivo_penalidad, r.observacion, r.estado_estadia, r.archivada, r.version,"
+          + " c.closure_id AS cierre_id, c.estado AS cierre_estado,"
+          + " c.last_error_code AS cierre_last_error, c.calculo::text AS cierre_calculo,"
+          + " c.medio_pago AS cierre_medio_pago,"
+          + " g.cleaning_cycle_id AS gate_cleaning_cycle_id"
+          + " FROM recepcion r"
+          + " LEFT JOIN cierre c ON c.id_recepcion = r.id AND c.estado <> 'RECHAZADO'"
+          + " LEFT JOIN room_gate g ON g.id_habitacion = r.id_habitacion";
 
   private final JdbcTemplate jdbc;
   private final ObjectMapper mapper;
@@ -191,7 +198,7 @@ public class ReceptionRepository {
   public Optional<RecepcionView> findById(int id) {
     List<RecepcionView> rows =
         jdbc.query(
-            "SELECT " + RECEPCION_COLUMNS + " FROM recepcion r WHERE r.id = ?",
+            RECEPCION_SELECT + " WHERE r.id = ?",
             this::mapRecepcion,
             id);
     return rows.stream().findFirst();
@@ -200,9 +207,8 @@ public class ReceptionRepository {
   public Optional<RecepcionView> findByHabitacionActiva(int idHabitacion) {
     List<RecepcionView> rows =
         jdbc.query(
-            "SELECT "
-                + RECEPCION_COLUMNS
-                + " FROM recepcion r WHERE r.id_habitacion = ?"
+            RECEPCION_SELECT
+                + " WHERE r.id_habitacion = ?"
                 + " AND r.estado_estadia IN ('ACTIVA','CERRANDO')",
             this::mapRecepcion,
             idHabitacion);
@@ -212,8 +218,7 @@ public class ReceptionRepository {
   public List<RecepcionView> listar(
       Integer idHotel, String estadoEstadia, Integer idCliente, int page, int size) {
     List<Object> args = new ArrayList<>();
-    StringBuilder sql = new StringBuilder("SELECT ").append(RECEPCION_COLUMNS)
-        .append(" FROM recepcion r WHERE 1 = 1");
+    StringBuilder sql = new StringBuilder(RECEPCION_SELECT).append(" WHERE 1 = 1");
     if (idHotel != null) {
       sql.append(" AND r.id_hotel = ?");
       args.add(idHotel);
@@ -277,6 +282,144 @@ public class ReceptionRepository {
     return count != null && count > 0;
   }
 
+  public record CierreRow(
+      UUID closureId,
+      int idRecepcion,
+      String estado,
+      String request,
+      String requestHash,
+      String calculo,
+      String receipt,
+      UUID cleaningCycleId,
+      int attempts,
+      String lastErrorCode) {}
+
+  public Map<String, Object> iniciarCierre(UUID closure, int idRecepcion, String requestJson) {
+    String json =
+        jdbc.queryForObject(
+            "SELECT sp_cierre_iniciar(?, ?, CAST(? AS jsonb))::text",
+            String.class,
+            closure,
+            idRecepcion,
+            requestJson);
+    return read(json);
+  }
+
+  public Map<String, Object> rechazarCierre(UUID closure) {
+    String json =
+        jdbc.queryForObject(
+            "SELECT sp_cierre_rechazar_monto(?)::text", String.class, closure);
+    return read(json);
+  }
+
+  public Map<String, Object> prepararConfirmacion(UUID closure, String calculoJson) {
+    String json =
+        jdbc.queryForObject(
+            "SELECT sp_cierre_preparar_confirmacion(?, CAST(? AS jsonb))::text",
+            String.class,
+            closure,
+            calculoJson);
+    return read(json);
+  }
+
+  public Map<String, Object> completarCierre(UUID closure, String receiptJson) {
+    String json =
+        jdbc.queryForObject(
+            "SELECT sp_cierre_completar(?, CAST(? AS jsonb))::text",
+            String.class,
+            closure,
+            receiptJson);
+    return read(json);
+  }
+
+  public Map<String, Object> anularCheckin(
+      int id, String motivo, long version, String actor, UUID correlation) {
+    String json =
+        jdbc.queryForObject(
+            "SELECT sp_recepcion_anular_checkin(?, ?, ?, ?, ?)::text",
+            String.class,
+            id,
+            motivo,
+            version,
+            actor,
+            correlation);
+    return read(json);
+  }
+
+  public Map<String, Object> archivar(int id, long version) {
+    String json =
+        jdbc.queryForObject(
+            "SELECT sp_recepcion_archivar(?, ?)::text", String.class, id, version);
+    return read(json);
+  }
+
+  public Optional<CierreRow> cierre(UUID closure) {
+    List<CierreRow> rows =
+        jdbc.query(
+            "SELECT closure_id, id_recepcion, estado, request::text AS request, request_hash,"
+                + " calculo::text AS calculo, receipt_sales::text AS receipt, cleaning_cycle_id,"
+                + " attempts, last_error_code FROM cierre WHERE closure_id = ?",
+            ReceptionRepository::mapCierre,
+            closure);
+    return rows.stream().findFirst();
+  }
+
+  public Optional<CierreRow> cierreVigente(int idRecepcion) {
+    List<CierreRow> rows =
+        jdbc.query(
+            "SELECT closure_id, id_recepcion, estado, request::text AS request, request_hash,"
+                + " calculo::text AS calculo, receipt_sales::text AS receipt, cleaning_cycle_id,"
+                + " attempts, last_error_code FROM cierre"
+                + " WHERE id_recepcion = ? AND estado <> 'RECHAZADO'",
+            ReceptionRepository::mapCierre,
+            idRecepcion);
+    return rows.stream().findFirst();
+  }
+
+  /** Cierres pendientes por fase para el recuperador de 30 s, en orden de próximo intento. */
+  public List<CierreRow> recuperables(int limit) {
+    return jdbc.query(
+        "SELECT closure_id, id_recepcion, estado, request::text AS request, request_hash,"
+            + " calculo::text AS calculo, receipt_sales::text AS receipt, cleaning_cycle_id,"
+            + " attempts, last_error_code FROM cierre"
+            + " WHERE estado IN ('VALIDANDO','CONFIRMANDO') AND next_attempt_at <= now()"
+            + " ORDER BY next_attempt_at LIMIT ?",
+        ReceptionRepository::mapCierre,
+        limit);
+  }
+
+  public void marcarErrorCierre(UUID closure, String code, int segundos) {
+    jdbc.update(
+        "UPDATE cierre SET attempts = attempts + 1, last_error_code = ?,"
+            + " next_attempt_at = now() + (? * interval '1 second') WHERE closure_id = ?",
+        code,
+        segundos,
+        closure);
+  }
+
+  public String hotelNombre(int idRecepcion) {
+    List<String> rows =
+        jdbc.queryForList(
+            "SELECT habitacion_snapshot->>'hotelNombre' FROM recepcion WHERE id = ?",
+            String.class,
+            idRecepcion);
+    return rows.isEmpty() ? null : rows.get(0);
+  }
+
+  private static CierreRow mapCierre(ResultSet rs, int rowNum) throws SQLException {
+    return new CierreRow(
+        rs.getObject("closure_id", UUID.class),
+        rs.getInt("id_recepcion"),
+        rs.getString("estado"),
+        rs.getString("request"),
+        rs.getString("request_hash"),
+        rs.getString("calculo"),
+        rs.getString("receipt"),
+        rs.getObject("cleaning_cycle_id", UUID.class),
+        rs.getInt("attempts"),
+        rs.getString("last_error_code"));
+  }
+
   private RecepcionView mapRecepcion(ResultSet rs, int rowNum) throws SQLException {
     try {
       JsonNode cliente = mapper.readTree(rs.getString("cliente_snapshot"));
@@ -284,6 +427,21 @@ public class ReceptionRepository {
       String estado = rs.getString("estado_estadia");
       LocalDate salida = rs.getObject("fecha_salida", LocalDate.class);
       OffsetDateTime confirmacion = rs.getObject("fecha_salida_confirmacion", OffsetDateTime.class);
+      UUID closureId = rs.getObject("cierre_id", UUID.class);
+      UUID cleaningCycleId = rs.getObject("gate_cleaning_cycle_id", UUID.class);
+      Object cierre = null;
+      if (closureId != null) {
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("closureId", closureId);
+        view.put("estado", rs.getString("cierre_estado"));
+        view.put("lastErrorCode", rs.getString("cierre_last_error"));
+        String calculoJson = rs.getString("cierre_calculo");
+        view.put("calculo", calculoJson == null ? null : mapper.readTree(calculoJson));
+        if ("COMPLETADO".equals(rs.getString("cierre_estado"))) {
+          view.put("medioPago", rs.getString("cierre_medio_pago"));
+        }
+        cierre = view;
+      }
       return new RecepcionView(
           rs.getInt("id"),
           rs.getInt("id_hotel"),
@@ -315,9 +473,9 @@ public class ReceptionRepository {
           rs.getBoolean("archivada"),
           "ACTIVA".equals(estado) && salida != null && salida.isBefore(LocalDate.now(LIMA)),
           rs.getLong("version"),
-          null,
-          null,
-          null);
+          closureId,
+          cleaningCycleId,
+          cierre);
     } catch (Exception e) {
       throw new SQLException("snapshot JSONB inválido", e);
     }
