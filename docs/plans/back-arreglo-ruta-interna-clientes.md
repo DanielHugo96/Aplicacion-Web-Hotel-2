@@ -7,7 +7,7 @@
 | Componente | `identity-service` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `cerrado` |
 | Depende de | `back-identity-personas` |
 | Repara | `back-identity-personas` |
 | Spec | [`identity/api.md` § REST](../especificacion/microservicios/identity/api.md#rest), [`03-contrato-comun.md` § Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio), [`identity.yaml`](../contracts/openapi/identity.yaml) y [`06-migracion-y-pruebas.md` §5](../especificacion/06-migracion-y-pruebas.md#5-matriz-de-aceptación) |
@@ -112,53 +112,53 @@ audiencia) y fue una comprobación temporal, no un contrato.
 
 ## 4. Pasos
 
-- [ ] 1. Reproducir el fallo desde `main` con `identity-service` arrancado: obtener el token de
+- [x] 1. Reproducir el fallo desde `main` con `identity-service` arrancado: obtener el token de
   `reception-service` con `audience=identity`, llamar a `GET /internal/clientes/{id}` y comprobar
   el 404, y llamar a la ruta con prefijo `/api` y comprobar el 200. Verificación: salidas literales
   de §3 guardadas en *Pruebas*.
-- [ ] 2. Confirmar en la spec y en el contrato que la ruta publicada es sin `/api` y que la
+- [x] 2. Confirmar en la spec y en el contrato que la ruta publicada es sin `/api` y que la
   convención de los demás servicios también lo es:
   `grep -n "@RequestMapping" services/*/src/main/java/**/*Controller.java` debe mostrar
   `/internal` en hotel, inventory e identity (`/internal/auth`), sin ningún controlador interno
   montado bajo `/api`; y
   `grep -R "api/internal" services apps` no debe encontrar consumidores. Verificación: salidas
   anotadas en *Pruebas*.
-- [ ] 3. Crear `ClienteInternoController` en `pe.hotel.identity.persona` con
+- [x] 3. Crear `ClienteInternoController` en `pe.hotel.identity.persona` con
   `@RestController` y `@RequestMapping("/internal")`, un `@GetMapping("/clientes/{id}")` que
   inyecte `PersonaService`, valide el token máquina con scope `clientes:read` y devuelva el mismo
   `ClienteVigenteView` dentro de `ApiResponse.ok(..., Meta.of(CorrelationId.current()))` que hoy
   devuelve el método de `PersonaController`. Verificación: la ruta del handler es
   `/internal/clientes/{id}` y el cuerpo compila.
-- [ ] 4. Retirar de `PersonaController` el método de lectura máquina y el helper
+- [x] 4. Retirar de `PersonaController` el método de lectura máquina y el helper
   `validarTokenMaquinaConScope` si queda sin uso, sin tocar ninguna anotación de las rutas humanas
   ni el `@RequestMapping("/api")` de la clase. Verificación: `git diff` solo elimina el bloque
   interno; `GET /api/persona/listar` y las demás rutas humanas conservan su mapping.
-- [ ] 5. Añadir una prueba de enrutado y seguridad del controlador interno con `MockMvc` y
+- [x] 5. Añadir una prueba de enrutado y seguridad del controlador interno con `MockMvc` y
   `SecurityMockMvcRequestPostProcessors.jwt()`: token máquina con `scope=clientes:read` →
   `200`; token máquina sin ese scope → `403 FORBIDDEN`; petición sin token → `401`; y la ruta
   antigua con prefijo `/api` → `404`. Verificación: la prueba pasa con
   `bash scripts/mvn.sh -f services/pom.xml -pl identity-service test`.
-- [ ] 6. Ejecutar las pruebas del módulo completo:
+- [x] 6. Ejecutar las pruebas del módulo completo:
   `bash scripts/mvn.sh -f services/pom.xml -pl identity-service test`. Verificación:
   `BUILD SUCCESS` y la nueva prueba en verde.
-- [ ] 7. Ejecutar el build completo: `bash scripts/mvn.sh -f services/pom.xml verify`.
+- [x] 7. Ejecutar el build completo: `bash scripts/mvn.sh -f services/pom.xml verify`.
   Verificación: `BUILD SUCCESS` de los nueve módulos.
-- [ ] 8. Rearrancar `identity-service` desde la rama corregida y repetir la reproducción:
+- [x] 8. Rearrancar `identity-service` desde la rama corregida y repetir la reproducción:
   `GET /internal/clientes/{id}` con el token de `reception-service` y `audience=identity` debe
   responder `200` con el mismo cuerpo que devolvía la ruta con prefijo `/api` en el paso 1.
   Verificación: códigos y cuerpos guardados; el `data` de ambas respuestas es idéntico.
-- [ ] 9. Comprobar que la ruta antigua deja de servir y que ningún consumidor dependía de ella:
+- [x] 9. Comprobar que la ruta antigua deja de servir y que ningún consumidor dependía de ella:
   la ruta con prefijo `/api` responde `404` y el `grep` del paso 2 sigue sin consumidores.
   Verificación: código HTTP y salida del `grep`.
-- [ ] 10. Comprobar la regresión de las rutas públicas y de la seguridad: sin token,
+- [x] 10. Comprobar la regresión de las rutas públicas y de la seguridad: sin token,
   `GET /api/persona/listar` sigue respondiendo `401 UNAUTHENTICATED` (no 404); con un JWT humano de
   ADMIN sigue respondiendo `200`; un token humano contra `/internal/clientes/{id}` responde `403`;
   un token máquina con un scope distinto responde `403`. Verificación: códigos guardados en
   *Pruebas*.
-- [ ] 11. Ejecutar `python scripts/validar-planes.py` y
+- [x] 11. Ejecutar `python scripts/validar-planes.py` y
   `python scripts/validar-contratos.py --base origin/main`. Verificación: 0 errores y ningún
   contrato eliminado o renombrado.
-- [ ] 12. Registrar en *Pruebas* la salida de los pasos 1, 2, 5, 6, 8, 9, 10 y 11, marcar los
+- [x] 12. Registrar en *Pruebas* la salida de los pasos 1, 2, 5, 6, 8, 9, 10 y 11, marcar los
   pasos y cerrar el plan. Verificación: todos los pasos `- [x]`, evidencia enlazada y *Preguntas
   abiertas* con `Ninguna`.
 
@@ -185,6 +185,9 @@ audiencia) y fue una comprobación temporal, no un contrato.
 
 ### Reproducción antes del arreglo (paso 1)
 
+Ejecutado el 2026-10-19 sobre la rama `back-arreglo-ruta-interna-clientes` antes de tocar el
+controlador (`identity-service` en `8081`, perfil `dev`, base `identity_db`):
+
 ```text
 $ TOKEN=$(curl -s -u "reception-service:$SERVICE_CLIENT_RECEPTION_SECRET" \
     -d 'grant_type=client_credentials&audience=identity' \
@@ -193,35 +196,104 @@ $ # token obtenido, 606 chars
 
 $ curl -s -w '\nHTTP %{http_code}\n' -H "Authorization: Bearer $TOKEN" \
     http://localhost:8081/internal/clientes/100
-{"success":false,"message":"No encontramos lo que buscas.","data":null,"error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"1b3d8897-16d9-4f3f-ac5d-74996918a196"}}
+{"success":false,"message":"No encontramos lo que buscas.","data":null,"error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"1ec79945-fee7-4ae3-830e-be4467f5082a"}}
 HTTP 404
 
 $ curl -s -w '\nHTTP %{http_code}\n' -H "Authorization: Bearer $TOKEN" \
     http://localhost:8081/api/internal/clientes/100
-{"success":true,"message":"OK","data":{"idPersona":100,"tipoDocumento":"DNI","documento":"90000100","nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","estado":true,"idTipoPersona":3,"version":1},"meta":{"correlationId":"75b35446-a71e-4b45-9738-fc8114608575"}}
+{"success":true,"message":"OK","data":{"idPersona":100,"tipoDocumento":"DNI","documento":"90000100","nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","estado":true,"idTipoPersona":3,"version":1},"meta":{"correlationId":"0714b356-ba8d-4846-8e80-6586d9e1cad2"}}
 HTTP 200
 ```
 
 ### Reproducción después del arreglo (pasos 8, 9 y 10)
 
-Resultado esperado, con el servicio rearrancado desde la rama corregida:
+Ejecutado el 2026-10-19 con el servicio rearrancado desde la rama corregida:
 
 ```text
 $ curl -s -w '\nHTTP %{http_code}\n' -H "Authorization: Bearer $TOKEN" \
     http://localhost:8081/internal/clientes/100
-{"success":true,"message":"OK","data":{"idPersona":100,"tipoDocumento":"DNI","documento":"90000100","nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","estado":true,"idTipoPersona":3,"version":1},"meta":{"correlationId":"..."}}
+{"success":true,"message":"OK","data":{"idPersona":100,"tipoDocumento":"DNI","documento":"90000100","nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","estado":true,"idTipoPersona":3,"version":1},"meta":{"correlationId":"6151c429-fca0-4edd-90cd-c493fab8884e"}}
 HTTP 200
 
-$ curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $TOKEN" \
+$ curl -s -w '\nHTTP %{http_code}\n' -H "Authorization: Bearer $TOKEN" \
     http://localhost:8081/api/internal/clientes/100
-404
+{"success":false,"message":"No encontramos lo que buscas.","data":null,"error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"277a1f5d-476b-4faa-931f-aed2cdc673df"}}
+HTTP 404
 
-$ curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8081/api/persona/listar
-401
+$ curl -s -w '\nHTTP %{http_code}\n' http://localhost:8081/api/persona/listar
+{"success":false,"message":"Tu sesión expiró. Vuelve a iniciar sesión.","data":null,"error":{"code":"UNAUTHENTICATED","fields":{}},"meta":{"correlationId":"244c6580-9b34-499b-b91e-523b94409241"}}
+HTTP 401
 
-$ curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $HUMAN_TOKEN" \
+$ # login humano con admin@hotel.test y DEMO_PASSWORD
+$ curl -s -w '\nHTTP %{http_code}' -H 'Content-Type: application/json' \
+    -d '{"correo":"admin@hotel.test","clave":"<DEMO_PASSWORD>"}' \
+    http://localhost:8081/api/auth/login
+{"success":true,...,"token":"<jwt>"}
+HTTP 200
+
+$ curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $HUMAN" \
+    http://localhost:8081/api/persona/listar
+200
+
+$ curl -s -w '\nHTTP %{http_code}\n' -H "Authorization: Bearer $HUMAN" \
     http://localhost:8081/internal/clientes/100
-403
+{"success":false,"message":"No tienes permiso para esta acción.","data":null,"error":{"code":"FORBIDDEN","fields":{}},"meta":{"correlationId":"396496ef-a055-4b07-8ca6-e870b36ca894"}}
+HTTP 403
+```
+
+El `data` de la respuesta `200` de `/internal/clientes/{id}` es idéntico al que devolvía
+`http://localhost:8081/api/internal/clientes/100` en el paso 1: mismos campos y mismos valores.
+
+### Convención de rutas (paso 2)
+
+```text
+$ grep -rn "@RequestMapping" services/*/src/main/java --include='*Controller.java'
+services/hotel-service/.../HotelInternoController.java:22:@RequestMapping("/internal")
+services/identity-service/.../AuthController.java:28:@RequestMapping("/api/auth")
+services/identity-service/.../MachineTokenController.java:22:@RequestMapping("/internal/auth")
+services/identity-service/.../ClienteInternoController.java:24:@RequestMapping("/internal")
+services/identity-service/.../PersonaController.java:35:@RequestMapping("/api")
+services/inventory-service/.../ProductoInternoController.java:18:@RequestMapping("/internal/productos")
+services/inventory-service/.../StockInternoController.java:26:@RequestMapping("/internal/stock")
+(las rutas humanas de hotel e inventory conservan `/api/...`; ningún controlador interno cuelga de `/api`)
+
+$ grep -R "api/internal" services apps --include='*.java' | grep -v '/src/test/'
+(sin resultados)
+```
+
+La única aparición de `api/internal` en `services/` es la prueba de regresión
+`ClienteInternoControllerTests`, que comprueba que esa ruta responde `404`; no es un consumidor.
+
+### Unidad y build (pasos 5, 6 y 7)
+
+```text
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service test
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.identity.persona.ClienteInternoControllerTests
+[INFO] Tests run: 72, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+$ bash scripts/mvn.sh -f services/pom.xml verify
+[INFO] identity-service ................................... SUCCESS
+[INFO] hotel-service ...................................... SUCCESS
+[INFO] reception-service .................................. SUCCESS
+[INFO] inventory-service .................................. SUCCESS
+[INFO] sales-service ...................................... SUCCESS
+[INFO] reporting-service .................................. SUCCESS
+[INFO] notification-service ............................... SUCCESS
+[INFO] api-gateway ........................................ SUCCESS
+[INFO] discovery-server ................................... SUCCESS
+[INFO] BUILD SUCCESS
+```
+
+### Validadores (paso 11)
+
+```text
+$ python scripts/validar-planes.py
+28 plan(es) revisado(s); 28 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+$ python scripts/validar-contratos.py --base origin/main
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
 ```
 
 - **Reproducción original:** el comando de §3 y de esta sección responde `200` con el `data` de
@@ -247,14 +319,14 @@ Ninguna.
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos de §4 marcados con su verificación.
-- [ ] La reproducción original, `GET /internal/clientes/{id}` con el token de `reception-service`
+- [x] Todos los pasos de §4 marcados con su verificación.
+- [x] La reproducción original, `GET /internal/clientes/{id}` con el token de `reception-service`
   y `audience=identity`, responde `200` con el mismo `ClienteVigente` que devolvía la ruta con
   prefijo `/api`.
-- [ ] La ruta con prefijo `/api` responde `404` y no queda ningún consumidor que la use.
-- [ ] Las rutas públicas de personas y tipos de persona que cuelgan de `/api` y la convención de
+- [x] La ruta con prefijo `/api` responde `404` y no queda ningún consumidor que la use.
+- [x] Las rutas públicas de personas y tipos de persona que cuelgan de `/api` y la convención de
   seguridad siguen sin cambios (401/403 donde correspondía).
-- [ ] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`.
-- [ ] `python scripts/validar-planes.py` termina con 0 errores y
+- [x] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`.
+- [x] `python scripts/validar-planes.py` termina con 0 errores y
   `python scripts/validar-contratos.py --base origin/main` no detecta cambios de contrato.
-- [ ] Sin preguntas abiertas.
+- [x] Sin preguntas abiertas.

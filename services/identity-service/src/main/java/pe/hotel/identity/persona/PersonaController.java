@@ -253,22 +253,6 @@ public class PersonaController {
   }
 
   /* ====================================================================
-   * Lectura máquina: cliente vigente (token máquina, clientes:read)
-   * ==================================================================== */
-
-  @GetMapping("/internal/clientes/{id}")
-  public ResponseEntity<ApiResponse<ClienteVigenteView>> clienteVigente(
-      @AuthenticationPrincipal Jwt jwt,
-      @PathVariable("id") int id) {
-
-    validarTokenMaquinaConScope(jwt, "clientes:read");
-
-    pe.hotel.identity.persona.ClienteVigente vigente = personas.clienteVigente(id);
-    return ResponseEntity.ok()
-        .body(ApiResponse.ok(new ClienteVigenteView(vigente), Meta.of(CorrelationId.current())));
-  }
-
-  /* ====================================================================
    * Privados
    * ==================================================================== */
 
@@ -281,13 +265,6 @@ public class PersonaController {
   private void validarAdmin(Jwt jwt) {
     Map<String, Object> claims = reclamos(jwt);
     if (!"ADMIN".equals(claims.get("rol"))) {
-      throw new ApiException(ErrorCode.FORBIDDEN);
-    }
-  }
-
-  private void validarTokenMaquinaConScope(Jwt jwt, String scopeRequerido) {
-    String scope = jwt.getClaimAsString("scope");
-    if (scope == null || !scope.contains(scopeRequerido)) {
       throw new ApiException(ErrorCode.FORBIDDEN);
     }
   }
