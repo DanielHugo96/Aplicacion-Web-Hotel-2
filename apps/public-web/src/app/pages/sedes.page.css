@@ -1,0 +1,108 @@
+.cabecera-pagina {
+  margin-bottom: var(--space-8);
+}
+
+.rejilla {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarjeta-sede {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: var(--color-sillar-blanco);
+}
+
+.tarjeta-sede__imagen {
+  aspect-ratio: 3 / 2;
+}
+
+.tarjeta-sede__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-6);
+}
+
+.tarjeta-sede__ciudad {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.tarjeta-sede__nombre {
+  font-family: var(--font-ui);
+  font-size: var(--text-h3);
+  font-weight: 600;
+}
+
+.tarjeta-sede__descripcion {
+  color: var(--color-garua);
+}
+
+.tarjeta-sede__enlace {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  font-size: var(--text-ui);
+}
+
+.linea {
+  height: 14px;
+  margin: var(--space-2) 0;
+}
+
+.linea--corta {
+  width: 60%;
+}
+
+.vacio {
+  padding: var(--space-8);
+  border: 1px dashed var(--color-junta);
+  border-radius: var(--radius-card);
+  color: var(--color-garua);
+  text-align: center;
+}
+
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-junta);
+}
+
+.paginacion__estado {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.paginacion .boton {
+  min-height: 44px;
+}
+
+.paginacion .boton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+@media (min-width: 640px) {
+  .rejilla {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .rejilla {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
