@@ -161,7 +161,7 @@ define `PRECONDITION_REQUIRED`, `VALIDATION_ERROR` y `FORBIDDEN`. No hay regla n
   `WHERE id = ? AND version = ?` y la excepción de bloqueo optimista. Verificación: la sentencia no
   menciona `updated_at` y compila; el `UPDATE` equivalente contra `identity_db` deja de fallar con
   `column "updated_at" ... does not exist`.
-- [ ] 3. Añadir a `PersonaController` un helper privado que convierta el claim `sedes` en
+- [x] 3. Añadir a `PersonaController` un helper privado que convierta el claim `sedes` en
   `List<Integer>` aceptando `Number` (`((Number) valor).intValue()`), devolviendo lista vacía si el
   claim no es una lista. Usarlo en `listar`, `buscar`, `registrar`, `actualizar`, `eliminar` y
   `actualizarTipoPersona`, eliminando los cast no comprobados a `List<Integer>`. Verificación:
@@ -274,6 +274,21 @@ $ docker exec -e PGPASSWORD=<variable> hotel-postgres-1 psql -U identity_app -d 
 BEGIN
 UPDATE 1
 ROLLBACK
+```
+
+### Normalización del claim `sedes` (paso 3)
+
+El helper `sedesDe(Map)` convierte cada `Number` con `intValue()` y devuelve lista vacía si el claim
+no es una lista. Ya no queda ningún cast directo; la compilación del módulo termina con código 0:
+
+```text
+$ cd services/identity-service/src/main/java/pe/hotel/identity/persona \
+    && grep -n 'List<Integer>) .*get("sedes")' PersonaController.java
+$ echo $?
+1
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service -q -DskipTests compile
+$ echo $?
+0
 ```
 
 ### Verificación después del arreglo (pasos 6, 7 y 8)
