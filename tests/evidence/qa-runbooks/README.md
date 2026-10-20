@@ -17,7 +17,7 @@ están excluidos por el `.gitignore` anidado y nunca se commitean.
 | `rb3-operacion` | 5 | `python scripts/qa/runbook.py rb3` | OK |
 | `rb4-outbox` | 4 | `python scripts/qa/runbook.py rb4` | OK |
 | `reset` | 1 | `python scripts/qa/runbook.py reset` | OK |
-| `restauracion` | 1 | `python scripts/qa/runbook.py restore` | OK |
+| `restauracion` | 2 | `python scripts/qa/runbook.py restore` | OK |
 | `ventas-recuperacion` | 4 | `python scripts/qa/runbook.py ventas` | OK |
 
 ## Casos de la matriz
@@ -112,6 +112,7 @@ Este plan no reclama ningún caso de `06` §5; los ejecuta `qa-matriz-aceptacion
 
 ### restauracion
 - `restauracion/01-comparacion.json`
+- `restauracion/02-secuencias.json`
 
 ### ventas-recuperacion
 - `ventas-recuperacion/00-fixture-f7.json`

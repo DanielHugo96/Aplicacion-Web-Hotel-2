@@ -1,4 +1,1 @@
  M tests/evidence/qa-runbooks/README.md
-?? tests/evidence/qa-runbooks/alertas/00-alertas-en-limpio-inicial.json
-?? tests/evidence/qa-runbooks/alertas/00-alertas-en-limpio-inicial.txt
-?? tests/evidence/qa-runbooks/alertas/README.md
