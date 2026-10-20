@@ -54,7 +54,7 @@ Al cerrar el plan, `inventory-service` es el único dueño del stock: expone pro
 - [x] 5. Implementar el patrón de idempotencia y de versión del contrato común ([`03` §Respuestas](../especificacion/03-contrato-comun.md#respuestas)): `Idempotency-Key` en POST/PUT/DELETE de negocio (misma clave y cuerpo devuelven el mismo resultado; request distinto 409 `IDEMPOTENCY_CONFLICT`) y `If-Match` en PUT/DELETE con versión de `producto_sede` (sin header 428 `PRECONDITION_REQUIRED`; versión distinta 412 `PRECONDITION_FAILED`), con ETag en lecturas y mutaciones. Verificación: repetir un POST con la misma clave no crea otra fila; PUT sin `If-Match` 428; PUT con la versión anterior 412.
 - [ ] 6. CRUD REST de productos: `GET /api/producto/listar` y `GET /api/producto/buscar/{id}` (A/E con sede), `POST /api/producto/registrar` (A, con asignación inicial y validación de sede por Feign), `PUT /api/producto/actualizar/{id}` (A, V; nunca cantidad; `productoVersion` y V validados juntos en la transacción), `DELETE /api/producto/eliminar/{id}` (A, V; baja solo en la sede, conserva cantidad y movimientos) y `POST /api/producto/{id}/sedes` (A; alta en sede nueva). Verificación: 201/200 con fila persistida y versión incrementada; sku repetido 409 `DUPLICATE_RESOURCE`; DELETE deja `estado=false` y la sede inactiva admite restitución pero rechaza débito con `PRODUCT_INACTIVE`. **(Sin marcar: el alta (`POST /api/producto/registrar`) y `POST /api/producto/{id}/sedes` no se pudieron ejecutar porque `hotel-service` no arranca desde `main`; ver [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md). El resto de la verificación sí se ejecutó.)**
 - [x] 7. Ajustes y movimientos por producto: `POST /api/producto/{id}/ajustes` (A, V; delta distinto de 0, motivo 1..300, lock de stock, saldo nunca negativo, registro en `ajuste_stock`) y `GET /api/producto/{id}/movimientos` (A/E; unión `VENTA` con estado actual o `AJUSTE`; filtros de sede, paginación e intervalo opcional sobre `createdAt`). Verificación: 201 con `ajusteId`, cantidad resultante y versión; un ajuste que dejaría saldo negativo no mueve unidades; el listado muestra el movimiento `DESCONTADO` con su estado actual y ordena por `createdAt`.
-- [x] 8. Feign entrante y saliente: `GET /internal/productos` y `GET /internal/productos/{id}` (scope `stock:read`, siempre con `idHotel`), `POST /internal/stock/descontar` (scope `stock:debit`) y `GET /internal/stock/movimientos/{idVenta}` (scope `stock:read`; 404 sin registro), más `GET /internal/hoteles/{id}` con scope `hoteles:read` al crear asignaciones o activar sedes. Verificación: token máquina con scope correcto 200 con el payload exacto; token humano 403; consulta de venta inexistente 404.
+- [x] 8. Feign entrante y saliente: `GET /internal/productos` y `GET /internal/productos/{id}` (scope `stock:read`, siempre con `idHotel`), `POST /internal/stock/descontar` (scope `stock:debit`) y `GET /internal/stock/movimientos/{idVenta}` (scope `stock:read`; 404 sin registro), más `GET /internal/hoteles/{id}` con scope `hoteles:read` al crear asignaciones o activar sedes. Verificación: token máquina con scope correcto 200 con el payload exacto; token humano 403; consulta de venta inexistente 404. **(La llamada saliente `GET /internal/hoteles/{id}` sale con `aud=hotel` y `scope=hoteles:read` como fija el contrato; hotel la rechaza con 401 por el defecto de audiencia descrito en [`IA-back-inventory-stock-02`](../implementacion/decisiones/IA-back-inventory-stock-02.md).)**
 - [x] 9. Descuento atómico con `fn_stock_descontar`: lock del movimiento por `idVenta`, comparación de hash (mismo hash devuelve el resultado guardado aunque cambie el catálogo; otro hash 409), locks de stock en orden de `idProducto`, verificación de activo y cantidad, todo o nada con precios autoritativos y resultado inmutable, e ítems duplicados rechazados con 400 antes de SQL. Verificación: débito válido 200 `DESCONTADO` con total e ítems; venta multítem con una línea insuficiente 409 `STOCK_INSUFFICIENT` con stocks intactos (caso `STK02`); reintento mismo hash mismo resultado.
 - [x] 10. Restitución idempotente con `sp_stock_restituir`: devuelve las cantidades originales una sola vez, crea lápida `RESTITUIDO` sin detalles ni hash si no hubo descuento, conserva el resultado del `DESCONTADO` para auditoría y rechaza el débito tardío con 409 `DEBIT_CANCELLED`; mismatch de `idHotel` con el movimiento existente va a DLQ con alerta sin mover stock ajeno. Verificación: restituir dos veces no duplica stock; restituir antes de descontar bloquea el débito tardío con 409 (caso `STK04` en su parte de inventory).
 - [x] 11. Emisión por outbox de `inventory.stock.v1` (`ProductoStockSnapshot`; key `idHotel:idProducto`; versión de `producto_sede`; estado efectivo) e `inventory.movimiento.v1` (`MovimientoStockResuelto`; key `idVenta`; versión del movimiento), en la misma transacción de cada mutación y decisión, sin adelantar versiones pendientes del mismo agregado. Verificación: cada mutación deja exactamente una fila en outbox por evento; los payloads validan contra sus JSON Schemas; un cambio de precio deja snapshots con versión incrementada por sede.
@@ -117,7 +117,16 @@ Cada caso anota el comando o endpoint exacto, el resultado literal y dónde vive
   GET /api/producto/2/movimientos?idHotel=1          -> 200 AJUSTE delta=5 motivo=...
   ```
 
-  **No ejecutado:** `POST /api/producto/registrar` con un producto nuevo y `POST /api/producto/{id}/sedes` responden 503 `DEPENDENCY_UNAVAILABLE` porque `hotel-service` no arranca desde `main` (dos defectos en el plan cerrado `back-hotel-catalogo`; detalle y reproducción en [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md)). No se fabricó el entorno ni se sustituyó el Feign por un stub.
+  **No ejecutado:** los dos endpoints que validan la sede por Feign responden 503 porque hotel rechaza el token máquina:
+
+  ```text
+  POST /api/producto/registrar                              -> 503 {"error":{"code":"DEPENDENCY_UNAVAILABLE"}}
+  POST /api/producto/{id}/sedes                             -> 503 {"error":{"code":"DEPENDENCY_UNAVAILABLE"}}
+  GET  /internal/hoteles/{id} con el token de identity
+       (aud=hotel, scope=hoteles:read)                      -> 401 {"error":{"code":"UNAUTHENTICATED"}}
+  ```
+
+  El arranque de `hotel-service` ya está resuelto (PR #76), pero valida `aud` contra `spring.application.name` (`hotel-service`) mientras identity emite el destino del contrato (`aud=hotel`). Reproducción exacta en [`IA-back-inventory-stock-02`](../implementacion/decisiones/IA-back-inventory-stock-02.md). No se fabricó el entorno ni se sustituyó el Feign por un stub.
 
 - Caso `STK01` — concurrencia sobre 20 unidades:
 
@@ -178,16 +187,18 @@ Cada caso anota el comando o endpoint exacto, el resultado literal y dónde vive
 
 ## 7. Preguntas abiertas
 
-- **Bloqueo de dependencia (no es una duda de la spec).** `back-hotel-catalogo` está `cerrado`, pero
-  `hotel-service` no arranca desde `main`: su migración `V3__hotel_tablas.sql` referencia
-  `hab.publica`/`h2.publica` sobre una columna declarada `publicada` (Flyway aborta con
-  `column hab.publica does not exist`) y, aun con el esquema creado, Hibernate falla con
-  `No column with logical name 'id_hotel' in table 'piso'` al mapear `Habitacion` contra `Piso`
-  (falla también con `ddl-auto=none`, así que es el mapeo, no la validación). Sin hotel no se puede
-  ejercitar la validación de sede por Feign, y por eso quedan sin marcar el paso 6 (alta y
-  `POST /api/producto/{id}/sedes`) y el paso 14 en la parte de alta de `CRUD01`. No se toca
-  `hotel-service` (zona ajena) ni se fabrica el entorno. Detalle y reproducción en
-  [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md).
+- **Bloqueo de dependencia (no es una duda de la spec).** `back-arreglo-hotel-arranque` (PR #76) ya
+  resolvió el arranque y el catálogo, pero `hotel-service` sigue rechazando el token máquina de
+  inventory: contra `GET /internal/hoteles/{id}` responde 401 `UNAUTHENTICATED` al token que identity
+  emite con `aud=hotel` y `scope=hoteles:read` (su allowlist sembrada es `{"hotel": ["hoteles:read"]}`),
+  porque el validador de hotel acepta `Set.of("hotel-api", spring.application.name)` y
+  `spring.application.name` vale `hotel-service`. Pedir `audience=hotel-service` a identity devuelve
+  400 `VALIDATION_ERROR` porque ese destino no está en la allowlist del cliente. Sin ese 200,
+  `ProductoService.validarSede` (Feign saliente) responde 503 `DEPENDENCY_UNAVAILABLE` y no se pueden
+  ejecutar el alta ni `POST /api/producto/{id}/sedes`: quedan sin marcar los pasos 6 y 14. Es zona
+  ajena (hotel/identity) y no se toca ni se reconfigura el servicio para esquivarlo. Reproducción y
+  alternativas en [`IA-back-inventory-stock-02`](../implementacion/decisiones/IA-back-inventory-stock-02.md);
+  el bloqueo anterior de arranque queda cerrado por [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md).
 - **Resuelto por IA (nivel 1, sin bitácora).** Migraciones numeradas V3/V4 porque V1 (`api_idempotency`)
   y V2 (`outbox`/`inbox`) son de los planes de plataforma (el propio §3 lo prevé); audiencia máquina
   `inventory` (la allowlist sembrada por `back-identity-personas` publica `{"inventory": [...]}` para el

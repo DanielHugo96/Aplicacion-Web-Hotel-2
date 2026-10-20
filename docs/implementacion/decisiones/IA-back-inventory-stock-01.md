@@ -64,3 +64,13 @@ ajeno.
   `POST /api/producto/{id}/sedes` con un hotel real: no podrá hacerlo hasta que se corrija.
 - Este plan: `CRUD01` queda evidenciado en edición, versión, baja lógica, `If-Match` 428/412 y sku
   duplicado 409; el alta y la asignación de sede quedan sin evidencia de ejecución.
+
+## Resolución (2026-10-19)
+
+Los dos defectos de arranque quedaron corregidos por el plan de arreglo
+[`back-arreglo-hotel-arranque`](../../plans/back-arreglo-hotel-arranque.md) (PR #76, ya en `main`):
+la migración V1–V4 se aplica sobre base vacía, `Habitacion` navega por `id_piso`, los seeds usan ids
+deterministas y el metamodelo JPA valida. El arranque de `hotel-service` ya no es un bloqueo.
+
+Al reejecutar los pasos 6 y 14 apareció un bloqueo distinto, de autenticación máquina, que se
+registra en [`IA-back-inventory-stock-02`](IA-back-inventory-stock-02.md).
