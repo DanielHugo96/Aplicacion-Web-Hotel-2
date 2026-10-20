@@ -24,6 +24,15 @@ spring:
           # Validación local del issuer fijo y JWKS explícito, sin descubrimiento OIDC.
           issuer-uri: ${JWT_ISSUER:hotel-identity}
           jwk-set-uri: ${JWK_SET_URI:http://identity-service/.well-known/jwks.json}
+  cloud:
+    openfeign:
+      circuitbreaker:
+        enabled: true
+      client:
+        config:
+          default:
+            connect-timeout: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
+            read-timeout: ${FEIGN_READ_TIMEOUT_MS:5000}
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
@@ -97,9 +106,18 @@ hotel:
       # Token máquina: este servicio llama rutas /internal/** de otros servicios. Secreto fuera de Git.
       client-id: ${SERVICE_CLIENT_ID:}
       client-secret: ${SERVICE_CLIENT_SECRET:}
+  identity:
+    token-url: ${IDENTITY_TOKEN_URL:http://localhost:8081/internal/auth/token}
   feign:
     connect-timeout-ms: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${FEIGN_READ_TIMEOUT_MS:5000}
+    url:
+      reception: ${FEIGN_URL_RECEPTION:http://localhost:8083}
+  operaciones:
+    recovery-interval-ms: ${OPERACION_RECOVERY_INTERVAL_MS:15000}
+    recovery-batch-size: ${OPERACION_RECOVERY_BATCH_SIZE:20}
+    recovery-max-backoff-seconds: ${OPERACION_RECOVERY_MAX_BACKOFF_SECONDS:300}
+    alert-pending-minutes: ${OPERACION_ALERT_PENDING_MINUTES:10}
   outbox:
     poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
     batch-size: ${OUTBOX_BATCH_SIZE:50}

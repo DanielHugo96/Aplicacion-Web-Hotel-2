@@ -26,6 +26,7 @@ import pe.hotel.hotel.domain.repository.CategoriaRepository;
 import pe.hotel.hotel.domain.repository.EstadoHabitacionRepository;
 import pe.hotel.hotel.domain.repository.HabitacionRepository;
 import pe.hotel.hotel.domain.repository.ImagenHabitacionRepository;
+import pe.hotel.hotel.domain.repository.OperacionHabitacionRepository;
 import pe.hotel.hotel.domain.repository.PisoRepository;
 import pe.hotel.hotel.domain.security.CurrentUser;
 import pe.hotel.hotel.platform.ApiException;
@@ -51,6 +52,8 @@ public class HabitacionService {
   private CurrentUser currentUser;
   @Autowired(required = false)
   private OutboxService outboxService;
+  @Autowired(required = false)
+  private OperacionHabitacionRepository operacionRepository;
 
   public Page<HabitacionView> listar(Integer idHotel, Integer idCategoria, Pageable pageable) {
     if (idHotel == null) {
@@ -78,6 +81,14 @@ public class HabitacionService {
       throw new ResponseStatusException(NOT_FOUND, "habitacion no encontrada o fuera de alcance");
     }
     return toView(h.get());
+  }
+
+  /** Vista sin comprobación de alcance para el job interno y las respuestas de operación. */
+  public HabitacionView vistaInterna(Integer id) {
+    return repository
+        .findById(id)
+        .map(this::toView)
+        .orElseThrow(() -> new ApiException(ErrorCode.RESOURCE_NOT_FOUND, Map.of()));
   }
 
   @Transactional
@@ -141,6 +152,9 @@ public class HabitacionService {
     Long versionEsperada = parseVersion(ifMatch);
     if (!versionEsperada.equals(h.getVersion())) {
       throw new ResponseStatusException(PRECONDITION_FAILED, "version distinta a la vigente");
+    }
+    if (operacionRepository != null && operacionRepository.existsVigente(id)) {
+      throw new ApiException(ErrorCode.ROOM_OPERATION_IN_PROGRESS, Map.of("idHabitacion", String.valueOf(id)));
     }
     pe.hotel.hotel.domain.model.Categoria categoria =
         categoriaRepository
@@ -260,6 +274,16 @@ public class HabitacionService {
   }
 
   private HabitacionView toView(Habitacion h, List<ImagenHabitacionView> urlsImagenes) {
+    String blockId = null;
+    String endpoint = null;
+    if (operacionRepository != null) {
+      OperacionHabitacionRepository.Operacion vigente =
+          operacionRepository.findActiveByHabitacion(h.getId()).orElse(null);
+      if (vigente != null) {
+        blockId = vigente.blockId().toString();
+        endpoint = "/api/habitacion/operaciones/" + blockId;
+      }
+    }
     return new HabitacionView(
         h.getId(),
         h.getIdHotel(),
@@ -281,8 +305,8 @@ public class HabitacionService {
             h.getEstadoHabitacion().getEstado(),
             h.getEstadoHabitacion().getVersion()),
         new pe.hotel.hotel.domain.dto.OcupacionView("DESCONOCIDA", null, null),
-        null,
-        null,
+        blockId,
+        endpoint,
         h.getVersion());
   }
 }
