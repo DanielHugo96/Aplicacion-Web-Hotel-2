@@ -89,14 +89,14 @@ class SecurityConventionTests {
   void tokenMaquinaConScopePasaLaAutorizacion() throws Exception {
     mockMvc
         .perform(
-            get("/internal/hoteles/1")
+            get("/internal/ruta-inexistente")
                 .with(
                     jwt()
-                        .jwt(j -> j.claim("scope", "hoteles:read"))
+                        .jwt(j -> j.claim("scope", "cierres:write"))
                         .authorities(
                             new org.springframework.security.core.authority.SimpleGrantedAuthority(
-                                "SCOPE_hoteles:read"))))
-        // Sin controlador todavía sería 404, pero nunca 401/403: el scope de la ruta interna es válido.
+                                "SCOPE_cierres:write"))))
+        // Sin controlador sería 404, pero nunca 401/403: el scope de las rutas internas es válido.
         .andExpect(status().isNotFound());
   }
 }

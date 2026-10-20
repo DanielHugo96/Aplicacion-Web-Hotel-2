@@ -24,6 +24,17 @@ spring:
           # Validación local del issuer fijo y JWKS explícito, sin descubrimiento OIDC.
           issuer-uri: ${JWT_ISSUER:hotel-identity}
           jwk-set-uri: ${JWK_SET_URI:http://identity-service/.well-known/jwks.json}
+  jackson:
+    deserialization:
+      # JSON cerrado: un campo no declarado (precio, total, idCliente...) devuelve 400.
+      fail-on-unknown-properties: true
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
+            read-timeout: ${FEIGN_READ_TIMEOUT_MS:5000}
 
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
@@ -55,6 +66,18 @@ spring:
       mandatory: true
 server:
   port: 8085
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    username: ${EUREKA_USERNAME:}
+    password: ${EUREKA_PASSWORD:}
+  instance:
+    prefer-ip-address: true
 
 management:
   endpoints:
@@ -88,6 +111,14 @@ hotel:
   feign:
     connect-timeout-ms: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${FEIGN_READ_TIMEOUT_MS:5000}
+    url:
+      reception: ${FEIGN_URL_RECEPTION:http://localhost:8083}
+      inventory: ${FEIGN_URL_INVENTORY:http://localhost:8084}
+  identity:
+    token-url: ${IDENTITY_TOKEN_URL:http://localhost:8081/internal/auth/token}
+  recuperacion:
+    interval-ms: ${RECOVERY_INTERVAL_MS:30000}
+    stale-seconds: ${RECOVERY_STALE_SECONDS:120}
   outbox:
     poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
     batch-size: ${OUTBOX_BATCH_SIZE:50}

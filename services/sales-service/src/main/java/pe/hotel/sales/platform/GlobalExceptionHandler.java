@@ -5,10 +5,13 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -34,6 +37,26 @@ public class GlobalExceptionHandler {
     return build(ErrorCode.VALIDATION_ERROR, fields);
   }
 
+  @ExceptionHandler(HttpMessageNotReadableException.class)
+  public ResponseEntity<ApiResponse<Void>> handleUnreadable(HttpMessageNotReadableException exception) {
+    return build(
+        ErrorCode.VALIDATION_ERROR,
+        Map.of("body", "JSON inválido o con campos no admitidos (precios, totales o estadoOperacion)"));
+  }
+
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<ApiResponse<Void>> handleMissingParameter(
+      MissingServletRequestParameterException exception) {
+    return build(
+        ErrorCode.VALIDATION_ERROR, Map.of(exception.getParameterName(), "obligatorio"));
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(
+      MethodArgumentTypeMismatchException exception) {
+    return build(ErrorCode.VALIDATION_ERROR, Map.of(exception.getName(), "formato inválido"));
+  }
+
   @ExceptionHandler(NoResourceFoundException.class)
   public ResponseEntity<ApiResponse<Void>> handleNotFound(NoResourceFoundException exception) {
     return build(ErrorCode.RESOURCE_NOT_FOUND, Map.of());
@@ -42,7 +65,7 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(Exception.class)
   public ResponseEntity<ApiResponse<Void>> handleUnexpected(Exception exception) {
     // Nunca se devuelve stacktrace ni SQL al cliente; el correlationId permite ubicarlo en los logs.
-    log.error("unhandled error: {}", exception.getMessage());
+    log.error("unhandled error: {}", exception.getMessage(), exception);
     return build(ErrorCode.INTERNAL_ERROR, Map.of());
   }
 
