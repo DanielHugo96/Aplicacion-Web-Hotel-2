@@ -122,7 +122,7 @@ La corrección es una sola: añadir el destino corto al conjunto de audiencias a
 
 ## 4. Pasos
 
-- [ ] 1. Reproducir el fallo desde `main`: arrancar `identity-service` y `hotel-service`, obtener el token de `inventory-service` con `audience=hotel`, llamar a `GET /internal/hoteles/{id}` y comprobar el 401; pedir `audience=hotel-service` y comprobar el 400. Verificación: salidas literales de §3 guardadas en la evidencia.
+- [x] 1. Reproducir el fallo desde `main`: arrancar `identity-service` y `hotel-service`, obtener el token de `inventory-service` con `audience=hotel`, llamar a `GET /internal/hoteles/{id}` y comprobar el 401; pedir `audience=hotel-service` y comprobar el 400. Verificación: salidas literales de §3 guardadas en la evidencia.
 - [ ] 2. Confirmar en la spec que el destino es el nombre corto (`03-contrato-comun.md` § Servicio a servicio y `identity.yaml` `TokenRequest.audience`) y escribir la decisión de nivel 2 en `docs/implementacion/decisiones/IA-back-arreglo-audiencia-maquina-01.md`: se corrige el validador, no la allowlist, y se mantiene el nombre largo como compatibilidad aditiva. Verificación: el archivo existe, cita las dos fuentes y explica por qué no se toca `DemoDataSeeder`.
 - [ ] 3. Corregir `services/hotel-service/src/main/java/pe/hotel/hotel/platform/SecurityConfig.java`: el conjunto `audiences` debe contener la audiencia humana (`hotel-api`), `spring.application.name` y el destino corto derivado de `spring.application.name` quitando el sufijo `-service` (`hotel-service` → `hotel`). Actualizar el Javadoc para citar el destino corto. Verificación: `JwtValidatorTests` de hotel acepta `aud=hotel` y sigue rechazando `aud=otro-servicio`.
 - [ ] 4. Aplicar la misma corrección en `services/identity-service/.../platform/SecurityConfig.java` y actualizar su Javadoc. Verificación: `JwtValidatorTests` de identity acepta `aud=identity` y rechaza una audiencia ajena.
@@ -149,6 +149,39 @@ grep -R "Set.of(HUMAN_AUDIENCE, serviceName)" services/*/src/main/java
 - Seguridad: el validador acepta una audiencia más (el destino corto) y mantiene el nombre largo y `hotel-api`; cualquier otra `aud` sigue rechazada. `SEC06` no cambia.
 
 ## 6. Pruebas
+
+### Reproducción antes del arreglo (paso 1)
+
+Ejecutado el 2026-10-19 con `identity-service` en `8081` y `hotel-service` en `8082`, ambos
+arrancados desde esta rama (idéntica a `main`, sin cambios de código todavía), y la allowlist
+sembrada por `back-identity-auth`.
+
+```text
+$ curl -s -u "inventory-service:$SERVICE_CLIENT_INVENTORY_SECRET" \
+    -d 'grant_type=client_credentials&audience=hotel' \
+    http://localhost:8081/internal/auth/token
+(token obtenido, 601 chars)
+$ payload del token (decodificado):
+{"sub": "inventory-service", "aud": "hotel", "scope": "hoteles:read", "iss": "hotel-identity"}
+$ curl -s -w "\nHTTP %{http_code}\n" -H "Authorization: Bearer $TOKEN" \
+    http://localhost:8082/internal/hoteles/1
+{"success":false,"message":"Tu sesión expiró. Vuelve a iniciar sesión.","data":null,"error":{"code":"UNAUTHENTICATED","fields":{}},"meta":{"correlationId":"0f361f12-1b7d-4706-876d-0a5c0965d275"}}
+HTTP 401
+$ curl -s -w "\nHTTP %{http_code}\n" -u "inventory-service:$SERVICE_CLIENT_INVENTORY_SECRET" \
+    -d 'grant_type=client_credentials&audience=hotel-service' \
+    http://localhost:8081/internal/auth/token
+{"success":false,"message":"Revisa los datos marcados.","data":null,"error":{"code":"VALIDATION_ERROR","fields":{"audience":"destino no autorizado para este cliente"}},"meta":{"correlationId":"9b4f44e4-a108-4b38-af51-47a17bc26a32"}}
+HTTP 400
+$ # identity -> hotel con aud=hotel
+{"success":false,"message":"Tu sesión expiró. Vuelve a iniciar sesión.","data":null,"error":{"code":"UNAUTHENTICATED","fields":{}},"meta":{"correlationId":"7385cca9-b36a-4dd1-bb08-a8935b3669fb"}}
+HTTP 401
+$ # reception -> identity con aud=identity
+{"success":false,"message":"Tu sesión expiró. Vuelve a iniciar sesión.","data":null,"error":{"code":"UNAUTHENTICATED","fields":{}},"meta":{"correlationId":"df6d13e2-9999-465d-ae26-ca3c0d911c22"}}
+HTTP 401
+```
+
+Salida completa guardada en `/tmp/repro-before.txt` de la sesión de ejecución; reproducida
+literalmente arriba.
 
 - **Reproducción antes del arreglo:** los comandos de §3; resultado esperado `401 UNAUTHENTICATED` en hotel e identity y `400 VALIDATION_ERROR` al pedir `audience=hotel-service`. Evidencia: salidas literales en esta sección y en la bitácora.
 - **Reproducción después del arreglo:** mismos comandos; resultado esperado `200` en `GET /internal/hoteles/{id}` con `aud=hotel`, `200` en `GET /internal/clientes/{id}` con `aud=identity`, y `400`/`401` en los controles negativos. Evidencia: códigos y cuerpos guardados por la ejecutora.
