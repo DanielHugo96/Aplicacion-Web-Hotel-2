@@ -7,7 +7,7 @@
 | Componente | `admin-web` |
 | Fase | `F3` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `front-admin-web-base`, `back-reception-operacion`, `back-hotel-operaciones` |
 | Spec | [`08-admin-web.md` §2](../especificacion/08-admin-web.md#2-rutas-angular-y-guards), [§3](../especificacion/08-admin-web.md#3-formularios-campos-validación-y-mensajes), [§4](../especificacion/08-admin-web.md#4-estados-por-pantalla) y [§5](../especificacion/08-admin-web.md#5-menú-por-rol); [`02-landing-y-panel.md` §Panel](../especificacion/02-landing-y-panel.md#panel-matriz-de-acceso) y [§Formatos de UI](../especificacion/02-landing-y-panel.md#formatos-de-ui-obligatorios); [`03-contrato-comun.md` §Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [§Headers](../especificacion/03-contrato-comun.md#headers) y [§Respuestas](../especificacion/03-contrato-comun.md#respuestas); [`06-migracion-y-pruebas.md` §4](../especificacion/06-migracion-y-pruebas.md#4-cambios-frontend-obligatorios); [`DESIGN.md` §10](../DESIGN.md#10-tokens-de-diseño-base-para-implementar) y [§11](../DESIGN.md#11-lenguaje-para-pedir-pantallas-nuevas-stitch--diseño); la sección de admin-web de [`contracts/README.md` §1](../contracts/README.md#1-reglas-transversales), [§3.2](../contracts/README.md#32-sedes-pisos-categorías-habitaciones-hotel) y [§3.3](../contracts/README.md#33-estadías-reception); las rutas que usa [`admin-web.yaml`](../contracts/openapi/admin-web.yaml) (recepciones, habitaciones/operaciones y personas); y [`errors.md`](../contracts/errors.md). |
 | Casos | `—` |
@@ -66,7 +66,7 @@ Al cerrar el plan, `apps/admin-web` opera el módulo de recepción contra el Gat
 - [x] 15. Cerrar cada pantalla con el checklist de [`DESIGN.md` §11](../DESIGN.md#11-lenguaje-para-pedir-pantallas-nuevas-stitch--diseño): rol visible correcto, formatos `S/ 1,234.50` y `dd/MM/yyyy HH:mm` con locale es-PE y cifras tabulares a la derecha, 202 como pendiente, acciones destructivas con confirmación (y motivo cuando el contrato lo exige), sin textos prohibidos («disponible», «reservar»), accesibilidad (teclado, foco visible, etiquetas, `alt`, contraste, `aria-live` del polling) y prueba a 1024px con `prefers-reduced-motion`. Verificación: pruebas del formato exacto de moneda y fecha; revisión registrada en el PR con el checklist por pantalla.
 - [x] 16. Añadir la matriz de pruebas del módulo con mocks de contrato: flujo por pantalla (check-in 201 → listado → detalle → editar salida), mantenimiento y baja 200/202/409, limpieza 200/412, vacío y error de cada pantalla, y visibilidad por rol A/E/C. Verificación: los comandos canónicos de pruebas de `apps/admin-web` quedan en verde y su salida se adjunta como evidencia.
 - [x] 17. Ejecutar la integración real por el Gateway (`http://localhost:8080`) con las dependencias `cerrado`: check-in contra reception (201 y 409 de gate), estadía visible y editable, mantenimiento y baja contra hotel (200; 202 con reception detenido o respuesta incierta; 409 durable), reactivación y limpieza (listado real y completado cuando exista tarea del entorno). Verificación: capturas o transcripciones de las respuestas de cada flujo, sin llamadas a puertos de servicios ni a brokers.
-- [ ] 18. Cierre: correr los comandos canónicos de la sección «Verificación» del `README.md` raíz (build y pruebas de la app) y `python scripts/validar-planes.py` desde la raíz; adjuntar la evidencia de las secciones 6 y 8 al PR. Verificación: comandos y validador en verde (0 errores); al mergear, el plan pasa a `cerrado` ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
+- [x] 18. Cierre: correr los comandos canónicos de la sección «Verificación» del `README.md` raíz (build y pruebas de la app) y `python scripts/validar-planes.py` desde la raíz; adjuntar la evidencia de las secciones 6 y 8 al PR. Verificación: comandos y validador en verde (0 errores); al mergear, el plan pasa a `cerrado` ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
 
 ## 5. Contratos afectados
 
@@ -84,15 +84,36 @@ Al cerrar el plan, `apps/admin-web` opera el módulo de recepción contra el Gat
 - Integración: lo ejecutado en el paso 17; evidencia: capturas o transcripciones de las respuestas por flujo.
 - Comandos: los de la sección «Verificación» del `README.md` raíz (build y pruebas de `apps/admin-web`) y `python scripts/validar-planes.py`; evidencia: salidas adjuntas al PR de ejecución.
 
+- **Evidencia de ejecución (2026-10-20).**
+  - En `apps/admin-web`: `npm ci` → 281 paquetes, 0 vulnerabilidades; `npm run build` → bundle
+    generado sin errores (aviso no bloqueante de presupuesto inicial: 507.19 kB frente a 500 kB);
+    `npm test -- --watch=false` → **29 archivos y 131 pruebas en verde**.
+  - En la raíz: `python scripts/validar-planes.py` → **30 planes, 0 errores, 0 avisos**;
+    `python scripts/validar-contratos.py --base origin/main` → 8 OpenAPI y 20 schemas de evento,
+    «Los contratos solo se han ampliado. Correcto.».
+  - Integración real por el Gateway: `apps/admin-web/evidencias/front-admin-web-recepcion/http-evidence.md`.
+    Incluye check-in 201, 409 `ROOM_OCCUPIED` y 409 `ROOM_NOT_SYNCED`, listado y detalle reales,
+    edición 200/412/428, limpieza con vacío y tarea completada, mantenimiento 200, baja 200 y 409
+    durable, reactivación 200 y **202 real** con `Location`/`Retry-After` y sondeo hasta
+    `APLICADA`.
+  - Checklist de `DESIGN.md` §11 por pantalla y capturas a 1024 px:
+    `apps/admin-web/evidencias/front-admin-web-recepcion/checklist.md` y los PNG de esa carpeta.
+  - Decisiones de nivel 2 registradas en
+    `docs/implementacion/decisiones/IA-front-admin-web-recepcion-01.md` (202 visible para
+    operaciones de habitación), `-02.md` (clave de idempotencia hasta la respuesta terminal) y
+    `-03.md` (`DESCONOCIDA` seleccionable con la admisión en el backend).
+
 ## 7. Preguntas abiertas
 
-Ninguna.
+Ninguna (resuelto por IA: el `202` de mantenimiento y baja se pide en crudo para mostrar banner y
+polling; la clave de idempotencia se conserva hasta la respuesta terminal; `DESCONOCIDA` se muestra
+«Sin datos» y el backend decide la admisión).
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación.
-- [ ] Módulo operable por el Gateway: listado, detalle y edición de estadías, check-in, limpieza y operaciones de habitación con 200, 202 (banner y polling, nunca éxito optimista) y 409 visibles según el catálogo.
-- [ ] Cada pantalla del módulo pasa el checklist de [`DESIGN.md` §11](../DESIGN.md#11-lenguaje-para-pedir-pantallas-nuevas-stitch--diseño) y usa los tokens de [§10](../DESIGN.md#10-tokens-de-diseño-base-para-implementar); sin mensajes, colores, componentes ni movimientos fuera de la spec.
-- [ ] Evidencia de las pruebas y de la integración real adjunta al PR de ejecución; `python scripts/validar-planes.py` sin errores.
-- [ ] El plan pasa a `cerrado` en el último PR del plan ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
-- [ ] Sin preguntas abiertas.
+- [x] Todos los pasos marcados con su verificación.
+- [x] Módulo operable por el Gateway: listado, detalle y edición de estadías, check-in, limpieza y operaciones de habitación con 200, 202 (banner y polling, nunca éxito optimista) y 409 visibles según el catálogo.
+- [x] Cada pantalla del módulo pasa el checklist de [`DESIGN.md` §11](../DESIGN.md#11-lenguaje-para-pedir-pantallas-nuevas-stitch--diseño) y usa los tokens de [§10](../DESIGN.md#10-tokens-de-diseño-base-para-implementar); sin mensajes, colores, componentes ni movimientos fuera de la spec.
+- [x] Evidencia de las pruebas y de la integración real adjunta al PR de ejecución; `python scripts/validar-planes.py` sin errores.
+- [x] El plan pasa a `cerrado` en el último PR del plan ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
+- [x] Sin preguntas abiertas.
