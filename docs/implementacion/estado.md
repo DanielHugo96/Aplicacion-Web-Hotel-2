@@ -21,7 +21,7 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F2 | [`back-hotel-catalogo`](../plans/back-hotel-catalogo.md) | T5 | `cerrado` | `back-hotel-catalogo` | [#66](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/66) |
 | F2 | [`front-admin-web-base`](../plans/front-admin-web-base.md) | T5 | `cerrado` | `front-admin-web-base` | [#68](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/68) |
 | F2 | [`back-identity-personas`](../plans/back-identity-personas.md) | T6 | `cerrado` | `back-identity-personas` | [#70](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/70) |
-| F3 | [`back-inventory-stock`](../plans/back-inventory-stock.md) | T6 | `propuesto` | `back-inventory-stock` | [#72](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/72) (cerrado sin mergear) |
+| F3 | [`back-inventory-stock`](../plans/back-inventory-stock.md) | T6 | `cerrado` | `back-inventory-stock` | [#81](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/81) |
 | F2 | [`front-public-web-landing`](../plans/front-public-web-landing.md) | T6 | `propuesto` | — | — |
 | F3 | [`back-reception-operacion`](../plans/back-reception-operacion.md) | T7 | `propuesto` | — | — |
 | F2 | [`front-admin-web-catalogo`](../plans/front-admin-web-catalogo.md) | T7 | `propuesto` | — | — |
@@ -54,13 +54,4 @@ mergear por la regla 6.11.3 de [`../plans/README.md`](../plans/README.md). El mo
   del plan, una vez que la campaña dejó de tener agente revisor (PR #60). Detalle del bloqueo
   original: [`decisiones/IA-back-identity-auth-11.md`](decisiones/IA-back-identity-auth-11.md).
 
-- `back-inventory-stock` (T6): PR [#72](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/72)
-  cerrado sin mergear. **El bloqueo no era de este plan: `hotel-service` no arrancaba desde `main`**,
-  por defectos del plan ya cerrado `back-hotel-catalogo` (PR #66), dependencia directa o transitiva de
-  todos los planes que quedaron. **Ya está desbloqueado por dos planes de arreglo**: 
-  [`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) corrigió el arranque y el
-  catálogo público (PR [#76](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/76)) y
-  [`back-arreglo-audiencia-maquina`](../plans/back-arreglo-audiencia-maquina.md) alineó la audiencia
-  del token máquina con la spec (PR [#79](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/79)).
-  Así que este plan se puede reabrir desde `origin/back-inventory-stock` para ejecutar sus pasos 6 y 14.
-  Detalle del bloqueo: [`decisiones/IA-back-inventory-stock-02.md`](decisiones/IA-back-inventory-stock-02.md).
+- `back-inventory-stock` (T6): **bloqueado dos veces y ya `cerrado`.** El primer bloqueo no era suyo: `hotel-service` no arrancaba desde `main` (plan cerrado `back-hotel-catalogo`, PR #66), lo que dejó su PR [#72] cerrado sin mergear. El segundo fue la audiencia del token máquina. Los dos se resolvieron con planes de arreglo —[`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) (PR #76) y [`back-arreglo-audiencia-maquina`](../plans/back-arreglo-audiencia-maquina.md) (PR #79)— y después se retomó el plan y se mergeó en [#81](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/81). Bitácora: [`decisiones/IA-back-inventory-stock-02.md`](decisiones/IA-back-inventory-stock-02.md).
