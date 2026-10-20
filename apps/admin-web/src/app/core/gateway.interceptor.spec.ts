@@ -85,22 +85,42 @@ describe('gatewayInterceptor', () => {
     expect(nextCalls[1].headers.has('Idempotency-Key')).toBeFalsy();
   });
 
-  it('conserva la misma Idempotency-Key al reintentar y genera una nueva para intención nueva', () => {
+  it('conserva la Idempotency-Key al reintentar un 503 y la renueva tras cerrar la intención', () => {
+    let intentos = 0;
+    const inestable: HttpHandlerFn = (req) => {
+      nextCalls.push(req);
+      intentos++;
+      if (intentos === 1) {
+        return throwError(() => new HttpErrorResponse({ status: 503, statusText: 'Unavailable' }));
+      }
+      return of(new HttpResponse({ status: 201, body: { ok: true } }));
+    };
+
     TestBed.runInInjectionContext(() => {
-      gatewayInterceptor(new HttpRequest('POST', '/api/auth/registro', { a: 1 }), next).subscribe();
+      gatewayInterceptor(new HttpRequest('POST', '/api/auth/registro', { a: 1 }), inestable).subscribe({
+        error: () => undefined,
+      });
     });
     const key1 = nextCalls[0].headers.get('Idempotency-Key');
     expect(key1).toBeTruthy();
 
+    // Reintento del mismo 503: misma intención, misma clave.
     TestBed.runInInjectionContext(() => {
-      gatewayInterceptor(new HttpRequest('POST', '/api/auth/registro', { a: 1 }), next).subscribe();
+      gatewayInterceptor(new HttpRequest('POST', '/api/auth/registro', { a: 1 }), inestable).subscribe();
     });
     expect(nextCalls[1].headers.get('Idempotency-Key')).toBe(key1);
 
+    // El 201 cierra la intención: la siguiente petición a la misma URL es nueva.
+    TestBed.runInInjectionContext(() => {
+      gatewayInterceptor(new HttpRequest('POST', '/api/auth/registro', { a: 1 }), next).subscribe();
+    });
+    expect(nextCalls[2].headers.get('Idempotency-Key')).not.toBe(key1);
+
+    // Otra URL es otra intención.
     TestBed.runInInjectionContext(() => {
       gatewayInterceptor(new HttpRequest('PUT', '/api/auth/password', {}), next).subscribe();
     });
-    expect(nextCalls[2].headers.get('Idempotency-Key')).not.toBe(key1);
+    expect(nextCalls[3].headers.get('Idempotency-Key')).not.toBe(key1);
   });
 
   it('adjunta If-Match desde el ETag cacheado en PUT', () => {

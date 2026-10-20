@@ -1,0 +1,70 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Roles</h1>
+      <p class="sub">Catálogo fijo del sistema. Solo se edita la etiqueta de cada rol.</p>
+    </div>
+  </div>
+
+  <app-error-banner [error]="error()" [actionLabel]="'Reintentar'" (action)="accionError()"></app-error-banner>
+
+  @if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando roles">
+      @for (fila of [1, 2, 3]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (tipos().length === 0 && !error()) {
+    <div class="empty" role="status">Aún no hay registros</div>
+  } @else if (tipos().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Roles del sistema</caption>
+        <thead>
+          <tr>
+            <th scope="col">Código</th>
+            <th scope="col">Etiqueta</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (tipo of tipos(); track tipo.idTipoPersona) {
+            <tr>
+              <td class="monospace">{{ tipo.codigo }}</td>
+              <td>
+                @if (editando() === tipo.idTipoPersona) {
+                  <label class="sr-only" [for]="'etiqueta-' + tipo.idTipoPersona">Etiqueta del rol {{ tipo.codigo }}</label>
+                  <input
+                    [id]="'etiqueta-' + tipo.idTipoPersona"
+                    [name]="'etiqueta-' + tipo.idTipoPersona"
+                    maxlength="80"
+                    [ngModel]="descripcion()"
+                    (ngModelChange)="descripcion.set($event)"
+                  />
+                } @else {
+                  {{ tipo.descripcion }}
+                }
+              </td>
+              <td><span class="pill pill-ok">Activo</span></td>
+              <td>
+                <div class="row-actions">
+                  @if (esAdmin()) {
+                    @if (editando() === tipo.idTipoPersona) {
+                      <button class="btn btn-primary" type="button" [disabled]="guardando()" (click)="guardar(tipo)">Guardar cambios</button>
+                      <button class="btn btn-secondary" type="button" [disabled]="guardando()" (click)="cancelar()">Cancelar</button>
+                    } @else {
+                      <button class="btn btn-secondary" type="button" (click)="editar(tipo)">Editar etiqueta</button>
+                    }
+                  } @else {
+                    <span class="text-small muted">Solo lectura</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</div>

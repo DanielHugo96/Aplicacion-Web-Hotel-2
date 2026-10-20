@@ -10,8 +10,11 @@
         [routerLink]="item.path"
         routerLinkActive="active"
         [attr.aria-current]="esActivo(item.path) ? 'page' : null"
+        [attr.aria-hidden]="!estaVisible(item) ? 'true' : null"
+        [attr.tabindex]="estaVisible(item) ? null : -1"
         [class.visible]="estaVisible(item)"
         [class.hidden]="!estaVisible(item)"
+        (click)="cerrarMenuSiMovil()"
       >
         <span class="item-label">{{ item.label }}</span>
       </a>
@@ -27,9 +30,23 @@
   <div class="shell-main">
     <header class="topbar">
       <div class="topbar-left">
-        <label class="sede-label">Sede</label>
-        <select class="sede-select" disabled aria-label="Selector de sede (filtro de trabajo)">
-          <option>Todas las sedes</option>
+        <button class="btn btn-secondary mobile-menu" type="button" (click)="toggle()" aria-label="Abrir menú">
+          Menú
+        </button>
+        <label class="sede-label" for="sede-select">Sede</label>
+        <select
+          id="sede-select"
+          class="sede-select"
+          aria-label="Selector de sede (filtro de trabajo)"
+          [value]="sedesContext.selectedId() ?? ''"
+          (change)="cambiarSede($event)"
+        >
+          @if (sedesContext.sedes().length === 0) {
+            <option value="">Sin sede asignada</option>
+          }
+          @for (sede of sedesContext.sedes(); track sede.idHotel) {
+            <option [value]="sede.idHotel">{{ sede.nombre }}</option>
+          }
         </select>
         <span class="demo">Demo</span>
       </div>
@@ -50,5 +67,6 @@
     <main class="content">
       <router-outlet></router-outlet>
     </main>
+    <app-toast></app-toast>
   </div>
 </div>

@@ -1,0 +1,12 @@
+<div class="pagination" role="navigation" aria-label="Paginación">
+  <span class="text-small muted">
+    Página {{ page + 1 }} de {{ totalPages }} · {{ total }} registros
+    @if (total > 0) {
+      <span class="monospace">({{ desde }}–{{ hasta }})</span>
+    }
+  </span>
+  <div class="pagination-actions">
+    <button class="btn btn-secondary" type="button" [disabled]="page <= 0" (click)="anterior()">Anterior</button>
+    <button class="btn btn-secondary" type="button" [disabled]="page + 1 >= totalPages" (click)="siguiente()">Siguiente</button>
+  </div>
+</div>

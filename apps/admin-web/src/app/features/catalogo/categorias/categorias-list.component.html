@@ -1,0 +1,75 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Categorías</h1>
+      <p class="sub">Catálogo global de categorías de habitación.</p>
+    </div>
+    @if (esAdmin()) {
+      <button class="btn btn-primary" type="button" (click)="nueva()">Nueva categoría</button>
+    }
+  </div>
+
+  <app-error-banner [error]="bajaError()" [actionLabel]="'Entendido'" (action)="cerrarBaja()"></app-error-banner>
+  <app-error-banner [error]="error()" [actionLabel]="'Reintentar'" (action)="accionError()"></app-error-banner>
+
+  @if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando categorías">
+      @for (fila of [1, 2, 3]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (categorias().length === 0 && !error()) {
+    <div class="empty" role="status">
+      <p>Aún no hay registros</p>
+      @if (esAdmin()) {
+        <button class="btn btn-primary" type="button" (click)="nueva()">Crear</button>
+      }
+    </div>
+  } @else if (categorias().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Categorías</caption>
+        <thead>
+          <tr>
+            <th scope="col">Descripción</th>
+            <th scope="col">Detalle</th>
+            <th scope="col" class="num">Capacidad</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (categoria of categorias(); track categoria.idCategoria) {
+            <tr>
+              <td>{{ categoria.descripcion }}</td>
+              <td>{{ categoria.detalle }}</td>
+              <td class="num">{{ categoria.capacidad }}</td>
+              <td><span [class]="'pill ' + (categoria.estado ? 'pill-ok' : 'pill-archivado')">{{ categoria.estado ? 'Activa' : 'Inactiva' }}</span></td>
+              <td>
+                <div class="row-actions">
+                  @if (esAdmin()) {
+                    <button class="btn btn-secondary" type="button" (click)="editar(categoria)">Editar</button>
+                    <button class="btn btn-danger" type="button" (click)="prepararBaja(categoria)">Dar de baja</button>
+                  } @else {
+                    <span class="text-small muted">Solo lectura</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [page]="page()" [size]="size()" [total]="total()" (pageChange)="cargar($event)"></app-pagination>
+  }
+</div>
+
+<app-confirm-dialog
+  [open]="baja() !== null"
+  title="Dar de baja"
+  [message]="'La categoría ' + (baja()?.descripcion ?? '') + ' quedará inactiva. No se puede dar de baja mientras tenga elementos activos.'"
+  confirmLabel="Dar de baja"
+  [busy]="bajaBusy()"
+  (confirm)="confirmarBaja()"
+  (cancel)="cerrarBaja()"
+></app-confirm-dialog>

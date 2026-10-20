@@ -1,0 +1,89 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Sedes</h1>
+      <p class="sub">Catálogo de sedes del hotel.</p>
+    </div>
+    @if (esAdmin()) {
+      <button class="btn btn-primary" type="button" (click)="nueva()">Nueva sede</button>
+    }
+  </div>
+
+  <app-error-banner [error]="bajaError()" [actionLabel]="'Entendido'" (action)="cerrarBaja()"></app-error-banner>
+  <app-error-banner [error]="error()" [actionLabel]="'Reintentar'" (action)="accionError()"></app-error-banner>
+
+  @if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando sedes">
+      @for (fila of [1, 2, 3, 4]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (sedes().length === 0 && !error()) {
+    <div class="empty" role="status">
+      <p>Aún no hay registros</p>
+      @if (esAdmin()) {
+        <button class="btn btn-primary" type="button" (click)="nueva()">Crear</button>
+      }
+    </div>
+  } @else if (sedes().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Sedes</caption>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Slug</th>
+            <th scope="col">Ciudad</th>
+            <th scope="col">Dirección</th>
+            <th scope="col">Teléfono</th>
+            <th scope="col">Publicada</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (sede of sedes(); track sede.idHotel) {
+            <tr>
+              <td>{{ sede.nombre }}</td>
+              <td class="monospace">{{ sede.slug }}</td>
+              <td>{{ sede.ciudad }}</td>
+              <td>{{ sede.direccion }}</td>
+              <td class="monospace">{{ sede.telefono }}</td>
+              <td>
+                <span [class]="'pill ' + (sede.publicado ? 'pill-ok' : 'pill-archivado')">
+                  {{ sede.publicado ? 'Publicada' : 'No publicada' }}
+                </span>
+              </td>
+              <td>
+                <span [class]="'pill ' + (sede.estado ? 'pill-ok' : 'pill-archivado')">
+                  {{ sede.estado ? 'Activa' : 'Inactiva' }}
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  @if (esAdmin()) {
+                    <button class="btn btn-secondary" type="button" (click)="editar(sede)">Editar</button>
+                    <button class="btn btn-danger" type="button" (click)="prepararBaja(sede)">Dar de baja</button>
+                  } @else {
+                    <span class="text-small muted">Solo lectura</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [page]="page()" [size]="size()" [total]="total()" (pageChange)="cargar($event)"></app-pagination>
+  }
+</div>
+
+<app-confirm-dialog
+  [open]="baja() !== null"
+  title="Dar de baja"
+  [message]="'La sede ' + (baja()?.nombre ?? '') + ' quedará inactiva. No se puede dar de baja mientras tenga habitaciones activas.'"
+  confirmLabel="Dar de baja"
+  [busy]="bajaBusy()"
+  (confirm)="confirmarBaja()"
+  (cancel)="cerrarBaja()"
+></app-confirm-dialog>

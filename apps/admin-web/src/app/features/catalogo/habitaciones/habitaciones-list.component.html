@@ -1,0 +1,170 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Habitaciones</h1>
+      <p class="sub">Catálogo de habitaciones por sede, con su estado físico y su ocupación.</p>
+    </div>
+    @if (esAdmin()) {
+      <div class="toolbar-actions">
+        <button class="btn btn-secondary" type="button" (click)="abrirEtiquetas()">Editar etiquetas de estado</button>
+        <button class="btn btn-primary" type="button" [disabled]="!sedeSeleccionada()" (click)="nuevo()">Nueva habitación</button>
+      </div>
+    }
+  </div>
+
+  <app-error-banner [error]="error()" [actionLabel]="'Reintentar'" (action)="accionError()"></app-error-banner>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="sede-habitaciones">Sede</label>
+      <select id="sede-habitaciones" [value]="sedeSeleccionada() ?? ''" (change)="cambiarSede($event)">
+        @if (sedes().length === 0) {
+          <option value="">Sin sede asignada</option>
+        }
+        @for (sede of sedes(); track sede.idHotel) {
+          <option [value]="sede.idHotel">{{ sede.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtro-categoria">Categoría</label>
+      <select id="filtro-categoria" name="filtroCategoria" [(ngModel)]="filtroCategoria" (ngModelChange)="aplicarFiltro()">
+        <option [ngValue]="null">Todas</option>
+        @for (categoria of categorias(); track categoria.idCategoria) {
+          <option [ngValue]="categoria.idCategoria">{{ categoria.descripcion }}</option>
+        }
+      </select>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-secondary" type="button" (click)="limpiarFiltro()">Limpiar filtro</button>
+    </div>
+  </div>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando habitaciones">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (habitaciones().length === 0 && !error()) {
+    <div class="empty" role="status">
+      <p>Aún no hay registros</p>
+      @if (esAdmin()) {
+        <button class="btn btn-primary" type="button" (click)="nuevo()">Crear</button>
+      }
+    </div>
+  } @else if (habitaciones().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Habitaciones de la sede seleccionada</caption>
+        <thead>
+          <tr>
+            <th scope="col">Número</th>
+            <th scope="col">Piso</th>
+            <th scope="col">Categoría</th>
+            <th scope="col">Detalle</th>
+            <th scope="col" class="num">Precio</th>
+            <th scope="col">Estado físico</th>
+            <th scope="col">Ocupación</th>
+            <th scope="col">Publicada</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (habitacion of habitaciones(); track habitacion.idHabitacion) {
+            <tr>
+              <td class="monospace">{{ habitacion.numero }}</td>
+              <td>{{ habitacion.pisoNombre ?? ('Piso ' + habitacion.idPiso) }}</td>
+              <td>{{ habitacion.categoriaNombre ?? ('Categoría ' + habitacion.idCategoria) }}</td>
+              <td>{{ habitacion.detalle }}</td>
+              <td class="num">{{ habitacion.precio | money }}</td>
+              <td>
+                <span [class]="'pill ' + claseFisica(habitacion)">{{ habitacion.estadoFisico?.descripcion }}</span>
+              </td>
+              <td>
+                <span [class]="'pill ' + claseOcupacion(habitacion)">{{ textoOcupacion(habitacion) }}</span>
+              </td>
+              <td>
+                <span [class]="'pill ' + (habitacion.publicada ? 'pill-ok' : 'pill-archivado')">
+                  {{ habitacion.publicada ? 'Publicada' : 'No publicada' }}
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  @if (esAdmin()) {
+                    <button class="btn btn-secondary" type="button" (click)="editar(habitacion)">Editar</button>
+                  } @else {
+                    <span class="text-small muted">Solo lectura</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [page]="page()" [size]="size()" [total]="total()" (pageChange)="cargar($event)"></app-pagination>
+  }
+</div>
+
+@if (etiquetasOpen()) {
+  <div class="modal-backdrop" (click)="cerrarEtiquetas()">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="etiquetas-title" (click)="$event.stopPropagation()">
+      <h3 id="etiquetas-title">Etiquetas de estado físico</h3>
+      <p class="text-small muted">Los estados del sistema no se crean ni se eliminan; solo se edita su etiqueta.</p>
+
+      <app-error-banner [error]="etiquetaError()"></app-error-banner>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption class="sr-only">Estados físicos</caption>
+          <thead>
+            <tr>
+              <th scope="col">Código</th>
+              <th scope="col">Etiqueta</th>
+              <th scope="col" class="text-right">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (estado of estados(); track estado.idEstadoHabitacion) {
+              <tr>
+                <td class="monospace">{{ estado.codigo }}</td>
+                <td>
+                  @if (etiquetaEditando()?.idEstadoHabitacion === estado.idEstadoHabitacion) {
+                    <label class="sr-only" [for]="'etiqueta-estado-' + estado.idEstadoHabitacion">Etiqueta del estado {{ estado.codigo }}</label>
+                    <input
+                      [id]="'etiqueta-estado-' + estado.idEstadoHabitacion"
+                      [name]="'etiqueta-estado-' + estado.idEstadoHabitacion"
+                      maxlength="80"
+                      [ngModel]="etiquetaDescripcion()"
+                      (ngModelChange)="etiquetaDescripcion.set($event)"
+                      autofocus
+                    />
+                  } @else {
+                    {{ estado.descripcion }}
+                  }
+                </td>
+                <td>
+                  <div class="row-actions">
+                    @if (etiquetaEditando()?.idEstadoHabitacion === estado.idEstadoHabitacion) {
+                      <button class="btn btn-primary" type="button" [disabled]="etiquetaGuardando()" (click)="guardarEtiqueta()">Guardar cambios</button>
+                      <button class="btn btn-secondary" type="button" [disabled]="etiquetaGuardando()" (click)="cancelarEtiqueta()">Cancelar</button>
+                    } @else {
+                      <button class="btn btn-secondary" type="button" (click)="editarEtiqueta(estado)">Editar etiqueta</button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-actions" style="margin-top: 16px;">
+        <button class="btn btn-secondary" type="button" [disabled]="etiquetaGuardando()" (click)="cerrarEtiquetas()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+}

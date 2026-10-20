@@ -5,7 +5,7 @@
 
 .sidebar {
   position: fixed;
-  inset: 0 0 0 auto;
+  inset: 0 auto 0 0;
   width: var(--sidebar-w);
   background: var(--color-azul-noche);
   color: #F1F0EC;
@@ -104,6 +104,8 @@
 
 .shell-main {
   flex: 1;
+  min-width: 0;
+  width: 100%;
   margin-left: var(--sidebar-w);
   display: flex;
   flex-direction: column;
@@ -184,6 +186,7 @@
 
 .content {
   flex: 1;
+  min-width: 0;
   overflow: auto;
   background: var(--color-sillar-blanco);
 }
@@ -191,11 +194,54 @@
 @media (max-width: 1024px) {
   .shell.collapsed .sidebar {
     transform: translateX(-100%);
+    visibility: hidden;
+  }
+  .shell:not(.collapsed) .sidebar {
+    visibility: visible;
   }
   .shell-main {
     margin-left: 0;
   }
   .topbar {
     padding: 0 var(--space-4);
+  }
+}
+
+.mobile-menu {
+  display: none;
+}
+
+@media (max-width: 1024px) {
+  .mobile-menu {
+    display: inline-flex;
+  }
+  .sede-label {
+    display: none;
+  }
+  .demo,
+  .persona .nombre {
+    display: none;
+  }
+  .topbar {
+    padding: 0 var(--space-3);
+  }
+  .topbar-right {
+    gap: var(--space-2);
+  }
+}
+
+@media (max-width: 640px) {
+  .topbar {
+    flex-wrap: wrap;
+    height: auto;
+    min-height: var(--topbar-h);
+    padding: var(--space-2) var(--space-3);
+    gap: var(--space-2);
+  }
+  .topbar-right {
+    flex-wrap: wrap;
+  }
+  .sede-select {
+    max-width: 170px;
   }
 }
