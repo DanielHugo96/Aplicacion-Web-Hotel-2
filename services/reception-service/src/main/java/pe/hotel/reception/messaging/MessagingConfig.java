@@ -7,16 +7,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Cablea la plataforma de mensajería: outbox, poller, inbox y su purga. Se desactiva con
- * {@code hotel.messaging.enabled=false} (pruebas sin brokers ni base de datos).
+ * Cablea la plataforma de mensajería: outbox, poller, inbox y su purga. Las piezas de persistencia
+ * (outbox/inbox y validador de esquemas) existen siempre; el poller y los consumidores se activan
+ * con {@code hotel.messaging.enabled=true} (las pruebas de contexto los desactivan sin brokers).
  */
 @Configuration
 @EnableScheduling
-@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
-    prefix = "hotel.messaging",
-    name = "enabled",
-    havingValue = "true",
-    matchIfMissing = true)
 public class MessagingConfig {
 
   @Bean
@@ -35,6 +31,11 @@ public class MessagingConfig {
   }
 
   @Bean
+  @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+      prefix = "hotel.messaging",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = true)
   public OutboxPoller outboxPoller(
       OutboxStore outboxStore,
       List<OutboxPublisher> publishers,
@@ -44,6 +45,11 @@ public class MessagingConfig {
   }
 
   @Bean
+  @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+      prefix = "hotel.messaging",
+      name = "enabled",
+      havingValue = "true",
+      matchIfMissing = true)
   public InboxRetentionJob inboxRetentionJob(
       InboxStore inboxStore, MessagingProperties properties) {
     return new InboxRetentionJob(inboxStore, properties);

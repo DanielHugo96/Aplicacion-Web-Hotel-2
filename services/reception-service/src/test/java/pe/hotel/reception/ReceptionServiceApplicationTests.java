@@ -15,7 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest;
           + "org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration"
           + ",org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration,org.springframework.boot.amqp.autoconfigure.RabbitAutoConfiguration",
       "spring.datasource.hikari.initialization-fail-timeout=-1",
-      "hotel.messaging.enabled=false"
+      "hotel.messaging.enabled=false",
+      "eureka.client.enabled=false"
     })
 class ReceptionServiceApplicationTests {
 

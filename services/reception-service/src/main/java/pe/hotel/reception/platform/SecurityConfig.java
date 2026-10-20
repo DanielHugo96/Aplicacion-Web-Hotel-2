@@ -60,7 +60,15 @@ public class SecurityConfig {
                     // Salud: liveness y readiness no requieren token.
                     .requestMatchers("/actuator/health", "/actuator/health/**")
                     .permitAll()
-                    // Rutas internas: solo un token máquina (con scope). Un token humano sin scope da 403.
+                    // Rutas internas: solo un token máquina con el scope de cada contrato.
+                    .requestMatchers(org.springframework.http.HttpMethod.GET, "/internal/recepciones/*")
+                    .access(scope("recepciones:read"))
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.POST, "/internal/recepciones/*/operaciones")
+                    .access(scope("operaciones:write"))
+                    .requestMatchers(
+                        org.springframework.http.HttpMethod.POST, "/internal/habitaciones/*/bloqueos")
+                    .access(scope("bloqueos:write"))
                     .requestMatchers("/internal/**")
                     .access(
                         (authentication, context) -> {
@@ -88,9 +96,28 @@ public class SecurityConfig {
     return http.build();
   }
 
+  /**
+   * Exige un token máquina (con al menos un scope) y el scope concreto del contrato. Un token
+   * humano aunque tenga roles no lleva scopes y recibe 403.
+   */
+  private static org.springframework.security.authorization.AuthorizationManager<RequestAuthorizationContext>
+      scope(String required) {
+    return (authentication, context) -> {
+      Authentication current = authentication.get();
+      boolean allowed =
+          current != null
+              && current.getAuthorities().stream()
+                  .map(GrantedAuthority::getAuthority)
+                  .anyMatch(authority -> authority.startsWith("SCOPE_"))
+              && current.getAuthorities().stream()
+                  .map(GrantedAuthority::getAuthority)
+                  .anyMatch(("SCOPE_" + required)::equals);
+      return new AuthorizationDecision(allowed);
+    };
+  }
+
   @Bean
-  JwtAuthenticationConverter jwtAuthenticationConverter() {
-    JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
+  JwtAuthenticationConverter jwtAuthenticationConverter() {    JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
     converter.setJwtGrantedAuthoritiesConverter(
         jwt -> {
           List<GrantedAuthority> authorities = new ArrayList<>();

@@ -25,6 +25,18 @@ spring:
           issuer-uri: ${JWT_ISSUER:hotel-identity}
           jwk-set-uri: ${JWK_SET_URI:http://identity-service/.well-known/jwks.json}
 
+  jackson:
+    deserialization:
+      # JSON cerrado: un campo no declarado (fechaEntrada, precios, nombre...) devuelve 400.
+      fail-on-unknown-properties: true
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
+            read-timeout: ${FEIGN_READ_TIMEOUT_MS:5000}
+
   kafka:
     bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:29092}
     producer:
@@ -53,8 +65,24 @@ spring:
     publisher-returns: true
     template:
       mandatory: true
+    listener:
+      simple:
+        # Un fallo no vuelve a la cola principal para siempre: el DLX/retry del contrato lo enruta.
+        default-requeue-rejected: false
 server:
   port: 8083
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    username: ${EUREKA_USERNAME:}
+    password: ${EUREKA_PASSWORD:}
+  instance:
+    prefer-ip-address: true
 
 management:
   endpoints:
@@ -65,6 +93,8 @@ management:
     health:
       probes:
         enabled: true
+      # Degradación visible al operador (Kafka/Rabbit/identity) sin bloquear readiness.
+      show-details: always
       group:
         liveness:
           include: livenessState
@@ -88,6 +118,11 @@ hotel:
   feign:
     connect-timeout-ms: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
     read-timeout-ms: ${FEIGN_READ_TIMEOUT_MS:5000}
+    url:
+      identity: ${FEIGN_URL_IDENTITY:http://localhost:8081}
+      hotel: ${FEIGN_URL_HOTEL:http://localhost:8082}
+  identity:
+    token-url: ${IDENTITY_TOKEN_URL:http://localhost:8081/internal/auth/token}
   outbox:
     poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
     batch-size: ${OUTBOX_BATCH_SIZE:50}

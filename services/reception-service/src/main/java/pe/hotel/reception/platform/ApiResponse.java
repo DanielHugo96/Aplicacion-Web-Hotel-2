@@ -9,7 +9,12 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @param <T> tipo de {@code data}
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public record ApiResponse<T>(boolean success, String message, T data, ApiError error, Meta meta) {
+public record ApiResponse<T>(
+    boolean success,
+    String message,
+    @JsonInclude(JsonInclude.Include.ALWAYS) T data,
+    ApiError error,
+    Meta meta) {
 
   public static <T> ApiResponse<T> ok(T data, Meta meta) {
     return new ApiResponse<>(true, "OK", data, null, meta);
