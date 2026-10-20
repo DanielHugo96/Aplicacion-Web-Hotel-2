@@ -7,7 +7,7 @@
 | Componente | `identity-service` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `back-identity-personas` |
 | Repara | `back-identity-personas` |
 | Spec | [`identity/api.md` § REST](../especificacion/microservicios/identity/api.md#rest), [§ DTO de entrada](../especificacion/microservicios/identity/api.md#dto-de-entrada), [`identity/base-de-datos.md` § Tablas](../especificacion/microservicios/identity/base-de-datos.md#tablas), [§ DDL de referencia](../especificacion/microservicios/identity/base-de-datos.md#ddl-de-referencia), [`03-contrato-comun.md` § Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [§ Respuestas](../especificacion/03-contrato-comun.md#respuestas), [§ Transporte, notación y tipos](../especificacion/03-contrato-comun.md#transporte-notación-y-tipos), [`identity.yaml`](../contracts/openapi/identity.yaml) y [`errors.md` § Genéricos](../contracts/errors.md) |
@@ -190,10 +190,10 @@ define `PRECONDITION_REQUIRED`, `VALIDATION_ERROR` y `FORBIDDEN`. No hay regla n
   con id 100 y EMPLEADO → 403 `FORBIDDEN`; el mismo `PUT` con ADMIN y sin `If-Match` → 428
   `PRECONDITION_REQUIRED`; `DELETE /api/persona/eliminar/{id}` sin `If-Match` → 428. Verificación:
   códigos y cuerpos guardados.
-- [ ] 9. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl identity-service test`,
+- [x] 9. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl identity-service test`,
   `bash scripts/mvn.sh -f services/pom.xml verify` y `python scripts/validar-planes.py`.
   Verificación: `BUILD SUCCESS`, 0 errores del validador y los avisos resueltos o justificados.
-- [ ] 10. Guardar en *Pruebas* las salidas de los pasos 1, 5, 6, 7, 8 y 9, marcar todos los pasos y
+- [x] 10. Guardar en *Pruebas* las salidas de los pasos 1, 5, 6, 7, 8 y 9, marcar todos los pasos y
   cambiar `Estado` a `cerrado` en el último commit. Verificación: no quedan pasos sin marcar y las
   tres reproducciones originales están en verde.
 
@@ -405,14 +405,26 @@ $ bash scripts/mvn.sh -f services/pom.xml -pl identity-service test
 
 ### Unidad y build (pasos 5 y 9)
 
-```bash
-bash scripts/mvn.sh -f services/pom.xml -pl identity-service test
-bash scripts/mvn.sh -f services/pom.xml verify
-python scripts/validar-planes.py
-```
+Ejecutado el 2026-10-20. Salida completa en
+`C:/Users/juan2/AppData/Local/Temp/opencode/mvn-verify.log`:
 
-Resultado esperado: `BUILD SUCCESS` del módulo y de los nueve módulos, con las pruebas nuevas en
-verde; 0 errores del validador. Evidencia: salidas adjuntas al PR.
+```text
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service test
+[INFO] Tests run: 79, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+$ bash scripts/mvn.sh -f services/pom.xml verify
+[INFO] Reactor Summary for Hotel services (agregador) 0.0.1-SNAPSHOT:
+...
+[INFO] BUILD SUCCESS
+
+$ python scripts/validar-planes.py
+30 plan(es) revisado(s); 30 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+$ python scripts/validar-contratos.py --base origin/main
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
+```
 
 ### Reproducción original
 
@@ -429,14 +441,14 @@ credenciales de Eureka no aplica a este plan y se trata en `back-arreglo-hotel-c
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos de §4 marcados con su verificación.
-- [ ] `PUT /api/tipopersona/actualizar/{id}` responde 200 con versión incrementada y sin el error de
+- [x] Todos los pasos de §4 marcados con su verificación.
+- [x] `PUT /api/tipopersona/actualizar/{id}` responde 200 con versión incrementada y sin el error de
   `updated_at`.
-- [ ] Las lecturas y mutaciones de personas con EMPLEADO responden 200/400/403 según la spec, sin
+- [x] Las lecturas y mutaciones de personas con EMPLEADO responden 200/400/403 según la spec, sin
   ningún 500 por `ClassCastException`.
-- [ ] `PUT`/`DELETE` de personas y `PUT` de tipo de persona sin `If-Match` responden 428
+- [x] `PUT`/`DELETE` de personas y `PUT` de tipo de persona sin `If-Match` responden 428
   `PRECONDITION_REQUIRED`.
-- [ ] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS` y
+- [x] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS` y
   `python scripts/validar-planes.py` con 0 errores.
-- [ ] La reproducción original de §3 está en verde con evidencia adjunta al PR y sin preguntas
+- [x] La reproducción original de §3 está en verde con evidencia adjunta al PR y sin preguntas
   abiertas.
