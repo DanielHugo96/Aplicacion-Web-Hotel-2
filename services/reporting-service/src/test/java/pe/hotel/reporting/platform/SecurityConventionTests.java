@@ -10,11 +10,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.web.servlet.MockMvc;
 
 /**
  * Humo de la convención de seguridad y del envelope: 401 con envelope ante token ausente o firma
- * ajena, y {@code X-Correlation-Id} aceptado, generado y devuelto.
+ * ajena, 403 para CLIENTE y {@code X-Correlation-Id} aceptado, generado y devuelto.
  */
 @SpringBootTest(
     properties = {
@@ -24,7 +25,8 @@ import org.springframework.test.web.servlet.MockMvc;
           + "org.springframework.boot.data.jpa.autoconfigure.DataJpaRepositoriesAutoConfiguration"
           + ",org.springframework.boot.kafka.autoconfigure.KafkaAutoConfiguration",
       "spring.datasource.hikari.initialization-fail-timeout=-1",
-      "hotel.messaging.enabled=false"
+      "hotel.messaging.enabled=false",
+      "hotel.reporting.bootstrap.enabled=false"
     })
 @AutoConfigureMockMvc
 class SecurityConventionTests {
@@ -36,7 +38,7 @@ class SecurityConventionTests {
   @Test
   void rutaProtegidaSinTokenDevuelve401ConEnvelope() throws Exception {
     mockMvc
-        .perform(get("/api/hotel/listar"))
+        .perform(get("/api/reportes/dashboard"))
         .andExpect(status().isUnauthorized())
         .andExpect(header().exists(CorrelationId.HEADER))
         .andExpect(jsonPath("$.success").value(false))
@@ -48,7 +50,7 @@ class SecurityConventionTests {
   @Test
   void correlacionAceptadaYDevuelta() throws Exception {
     mockMvc
-        .perform(get("/api/hotel/listar").header(CorrelationId.HEADER, CORRELATION))
+        .perform(get("/api/reportes/dashboard").header(CorrelationId.HEADER, CORRELATION))
         .andExpect(status().isUnauthorized())
         .andExpect(header().string(CorrelationId.HEADER, CORRELATION))
         .andExpect(jsonPath("$.meta.correlationId").value(CORRELATION));
@@ -57,9 +59,24 @@ class SecurityConventionTests {
   @Test
   void firmaAjenaDevuelve401() throws Exception {
     mockMvc
-        .perform(get("/api/auth/me").header("Authorization", "Bearer header.payload.firma-ajena"))
+        .perform(
+            get("/api/reportes/dashboard")
+                .header("Authorization", "Bearer header.payload.firma-ajena"))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.error.code").value("UNAUTHENTICATED"));
+  }
+
+  @Test
+  void clienteDevuelve403() throws Exception {
+    mockMvc
+        .perform(
+            get("/api/reportes/dashboard")
+                .with(
+                    jwt()
+                        .jwt(j -> j.claim("roles", java.util.List.of("CLIENTE")))
+                        .authorities(new SimpleGrantedAuthority("ROLE_CLIENTE"))))
+        .andExpect(status().isForbidden())
+        .andExpect(jsonPath("$.error.code").value("FORBIDDEN"));
   }
 
   @Test
@@ -68,35 +85,5 @@ class SecurityConventionTests {
         .perform(get("/actuator/health/liveness"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value("UP"));
-  }
-
-  @Test
-  void tokenHumanoSinScopeEnInternalDevuelve403() throws Exception {
-    mockMvc
-        .perform(
-            get("/internal/hoteles/1")
-                .with(
-                    jwt()
-                        .jwt(j -> j.claim("roles", java.util.List.of("ADMIN")))
-                        .authorities(
-                            new org.springframework.security.core.authority.SimpleGrantedAuthority(
-                                "ROLE_ADMIN"))))
-        .andExpect(status().isForbidden())
-        .andExpect(jsonPath("$.error.code").value("FORBIDDEN"));
-  }
-
-  @Test
-  void tokenMaquinaConScopePasaLaAutorizacion() throws Exception {
-    mockMvc
-        .perform(
-            get("/internal/hoteles/1")
-                .with(
-                    jwt()
-                        .jwt(j -> j.claim("scope", "hoteles:read"))
-                        .authorities(
-                            new org.springframework.security.core.authority.SimpleGrantedAuthority(
-                                "SCOPE_hoteles:read"))))
-        // Sin controlador todavía sería 404, pero nunca 401/403: el scope de la ruta interna es válido.
-        .andExpect(status().isNotFound());
   }
 }

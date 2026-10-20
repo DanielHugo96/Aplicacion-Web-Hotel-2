@@ -1,5 +1,6 @@
 package pe.hotel.reporting.messaging;
 
+import java.util.List;
 import org.apache.kafka.common.TopicPartition;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -12,9 +13,9 @@ import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
 
 /**
- * Productor y consumidor Kafka de la plataforma. El consumidor reintenta hasta 5 veces con esperas
- * de 1s, 5s, 30s, 120s y 300s y deriva a {@code <topic>.<consumerGroup>.dlt} conservando envelope,
- * key, particion/offset y grupo.
+ * Consumidor Kafka del read model. Reintenta hasta 5 veces con esperas de 1s, 5s, 30s, 120s y
+ * 300s y deriva a {@code <topic>.<consumerGroup>.dlt} conservando envelope, key, partición/offset,
+ * grupo y error no sensible (docs/especificacion/05-mensajeria.md).
  */
 @Configuration
 @EnableKafka
@@ -24,13 +25,6 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
     havingValue = "true",
     matchIfMissing = true)
 public class KafkaMessagingConfig {
-
-  @Bean
-  public OutboxPublisher kafkaOutboxPublisher(
-      KafkaTemplate<String, String> kafkaTemplate, MessagingProperties properties) {
-    return new KafkaOutboxPublisher(
-        kafkaTemplate, properties.getMessaging().getKafka().getConsumerGroup());
-  }
 
   @Bean
   public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
@@ -43,7 +37,10 @@ public class KafkaMessagingConfig {
             kafkaTemplate,
             (record, ex) -> new TopicPartition(record.topic() + "." + group + ".dlt", record.partition()));
     DefaultErrorHandler errorHandler =
-        new DefaultErrorHandler(recoverer, new ListBackOff(properties.getMessaging().getKafka().getRetryIntervalsMs()));
+        new DefaultErrorHandler(
+            recoverer, new ListBackOff(properties.getMessaging().getKafka().getRetryIntervalsMs()));
+    // Un payload que no valida contra su esquema es un error permanente: no se reintenta.
+    errorHandler.addNotRetryableExceptions(MessageInvalidException.class);
     ConcurrentKafkaListenerContainerFactory<String, String> factory =
         new ConcurrentKafkaListenerContainerFactory<>();
     factory.setConsumerFactory(consumerFactory);

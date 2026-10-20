@@ -60,18 +60,10 @@ public class SecurityConfig {
                     // Salud: liveness y readiness no requieren token.
                     .requestMatchers("/actuator/health", "/actuator/health/**")
                     .permitAll()
-                    // Rutas internas: solo un token máquina (con scope). Un token humano sin scope da 403.
-                    .requestMatchers("/internal/**")
-                    .access(
-                        (authentication, context) -> {
-                          Authentication current = authentication.get();
-                          boolean machine =
-                              current != null
-                                  && current.getAuthorities().stream()
-                                      .map(GrantedAuthority::getAuthority)
-                                      .anyMatch(authority -> authority.startsWith("SCOPE_"));
-                          return new AuthorizationDecision(machine);
-                        })
+                    // Reporting no tiene rutas internas ni scopes de máquina.
+                    // CLIENTE no accede a reportes; A/E sí, con sede validada en el servicio.
+                    .requestMatchers("/api/reportes/**")
+                    .hasAnyRole("ADMIN", "EMPLEADO")
                     // Denegación por defecto: todo lo demás exige autenticación.
                     .anyRequest()
                     .authenticated())
