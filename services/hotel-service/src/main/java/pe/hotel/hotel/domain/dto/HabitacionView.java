@@ -1,6 +1,7 @@
 package pe.hotel.hotel.domain.dto;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 /** Vista de habitacion enviada al cliente (Habitacion del contrato). */
 public record HabitacionView(
@@ -14,6 +15,7 @@ public record HabitacionView(
     String detalle,
     BigDecimal precio,
     Boolean publicada,
+    List<ImagenHabitacionView> urlsImagenes,
     Boolean estado,
     Integer idEstadoHabitacion,
     EstadoFisicoView estadoFisico,

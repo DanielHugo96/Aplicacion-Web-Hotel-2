@@ -14,6 +14,11 @@ public interface ImagenHabitacionRepository extends JpaRepository<ImagenHabitaci
       "SELECT i FROM ImagenHabitacion i WHERE i.habitacion.id = :idHabitacion ORDER BY i.orden ASC")
   List<ImagenHabitacion> findByHabitacionIdOrderByOrdenAsc(@Param("idHabitacion") Integer idHabitacion);
 
+  @Query(
+      "SELECT i FROM ImagenHabitacion i WHERE i.habitacion.id IN :ids "
+          + "ORDER BY i.habitacion.id ASC, i.orden ASC")
+  List<ImagenHabitacion> findByHabitacionIdInOrderByOrdenAsc(@Param("ids") List<Integer> ids);
+
   @Modifying
   @Query("DELETE FROM ImagenHabitacion i WHERE i.habitacion.id = :idHabitacion")
   void deleteByHabitacionId(@Param("idHabitacion") Integer idHabitacion);

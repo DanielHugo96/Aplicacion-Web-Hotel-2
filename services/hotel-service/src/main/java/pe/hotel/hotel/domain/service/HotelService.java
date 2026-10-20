@@ -3,6 +3,8 @@ package pe.hotel.hotel.domain.service;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,16 +33,20 @@ public class HotelService {
   @Autowired(required = false)
   private OutboxService outboxService;
 
-  public List<HotelView> listar(Boolean estado) {
-    List<Hotel> hoteles;
+  public Page<HotelView> listar(Boolean estado, Pageable pageable) {
+    Page<Hotel> hoteles;
     if (currentUser.isAdmin()) {
       hoteles =
-          estado == null ? repository.findAll() : repository.findByEstado(estado);
+          estado == null
+              ? repository.findPagedAll(pageable)
+              : repository.findPagedByEstado(estado, pageable);
     } else {
       List<Integer> sedes = currentUser.sedes();
-      hoteles = repository.findByIdInAndEstado(sedes, estado == null ? true : estado);
+      hoteles =
+          repository.findPagedByIdInAndEstado(
+              sedes, estado == null ? true : estado, pageable);
     }
-    return hoteles.stream().map(this::toView).toList();
+    return hoteles.map(this::toView);
   }
 
   public HotelView buscar(Integer id) {

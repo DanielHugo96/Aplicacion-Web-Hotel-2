@@ -2,6 +2,8 @@ package pe.hotel.hotel.web;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.hotel.hotel.domain.dto.PisoInput;
@@ -11,6 +13,7 @@ import pe.hotel.hotel.domain.service.PisoService;
 import pe.hotel.hotel.platform.ApiResponse;
 import pe.hotel.hotel.platform.CorrelationId;
 import pe.hotel.hotel.platform.Meta;
+import pe.hotel.hotel.platform.Pagination;
 import static org.springframework.http.HttpStatus.*;
 
 /** CRUD de pisos por sede (A muta; A/E lee su alcance). */
@@ -25,10 +28,19 @@ public class PisoController {
 
   @GetMapping("/listar")
   public ResponseEntity<ApiResponse<List<PisoView>>> listar(
-      @RequestParam Integer idHotel, @RequestParam(required = false) Boolean estado) {
+      @RequestParam Integer idHotel,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @RequestParam(required = false) Boolean estado) {
     soloLecturaPrivada();
+    Pageable pageable = Pagination.validar(page, size);
+    Page<PisoView> resultado = service.listar(idHotel, estado, pageable);
     return ResponseEntity.ok()
-        .body(ApiResponse.ok(service.listar(idHotel, estado), Meta.of(CorrelationId.current())));
+        .body(
+            ApiResponse.ok(
+                resultado.getContent(),
+                Meta.of(
+                    CorrelationId.current(), page, size, resultado.getTotalElements())));
   }
 
   @GetMapping("/buscar/{id}")

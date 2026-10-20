@@ -7,7 +7,7 @@
 | Componente | `hotel-service` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `cerrado` |
 | Depende de | `back-hotel-catalogo` |
 | Repara | `back-hotel-catalogo` |
 | Spec | [`hotel/api.md` § Sedes, pisos y categorías](../especificacion/microservicios/hotel/api.md#sedes-pisos-y-categorías), [§ Habitaciones y físico](../especificacion/microservicios/hotel/api.md#habitaciones-y-físico), [§ DTO](../especificacion/microservicios/hotel/api.md#dto), [`hotel/base-de-datos.md` § Tablas](../especificacion/microservicios/hotel/base-de-datos.md#tablas), [`03-contrato-comun.md` § Respuestas](../especificacion/03-contrato-comun.md#respuestas), [§ Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [`configuracion.md` § Comunes a todos los servicios](../especificacion/infraestructura/configuracion.md#comunes-a-todos-los-servicios), [`hotel.yaml`](../contracts/openapi/hotel.yaml), [`admin-web.yaml`](../contracts/openapi/admin-web.yaml) y [`errors.md` § Genéricos](../contracts/errors.md) |
@@ -193,15 +193,15 @@ están publicados en el mismo OpenAPI. No hay regla nueva que decidir.
 
 ## 4. Pasos
 
-- [ ] 1. Reproducir los cinco fallos desde `main` con el Gateway y los tokens de §3. Verificación: se
+- [x] 1. Reproducir los cinco fallos desde `main` con el Gateway y los tokens de §3. Verificación: se
   observan los `data: []`, los `meta` incompletos, el 500 del estado, la ausencia de
   `urlsImagenes`, el `grep` sin `eureka` y la instancia manual con `hostName: localhost`.
-- [ ] 2. Corregir `CurrentUser.sedes()`: recorrer la lista del claim y convertir cada elemento
+- [x] 2. Corregir `CurrentUser.sedes()`: recorrer la lista del claim y convertir cada elemento
   `Number` con `intValue()`, conservando el orden y devolviendo lista vacía si el claim no es una
   lista. No cambiar `isAdmin`, `isEmpleado`, `puedeAccederASede` ni el origen de la identidad (JWT
   validado). Verificación: un EMPLEADO de la sede 1 deja de obtener lista vacía y `puedeAccederASede(1)`
   devuelve `true` en la prueba; `puedeAccederASede(2)` sigue en `false`.
-- [ ] 3. Añadir paginación a los cuatro listados: `page` con default 0 y mínimo 0, `size` con default
+- [x] 3. Añadir paginación a los cuatro listados: `page` con default 0 y mínimo 0, `size` con default
   20 y rango 1..100, orden estable por id ascendente y `totalElements` del filtro aplicado. Usar
   `Page`/`Pageable` en los repositorios y devolver
   `Meta.of(CorrelationId.current(), page, size, totalElements)` en `HotelController`,
@@ -212,18 +212,18 @@ están publicados en el mismo OpenAPI. No hay regla nueva que decidir.
   valor fuera de rango no termine en 500. Verificación: cada listado
   devuelve `meta.page`, `meta.size` y `meta.totalElements`; `page=-1`, `size=0` y `size=101`
   responden 400 `VALIDATION_ERROR`.
-- [ ] 4. Corregir `PUT /api/estadohabitacion/actualizar/{id}`: retirar `@RequestParam String
+- [x] 4. Corregir `PUT /api/estadohabitacion/actualizar/{id}`: retirar `@RequestParam String
   descripcion`, declarar un `@RequestBody` con el campo `descripcion` del contrato y pasarlo al
   `EstadoHabitacionService` existente. Mantener `If-Match`, `Idempotency-Key`, 428 y 412.
   Verificación: con el cuerpo `{"descripcion":"Lista"}` y sin query param responde 200; sin
   `If-Match` sigue en 428; con versión vieja, 412.
-- [ ] 5. Añadir `urlsImagenes` a `HabitacionView` y poblarlo en `HabitacionService.toView` desde
+- [x] 5. Añadir `urlsImagenes` a `HabitacionView` y poblarlo en `HabitacionService.toView` desde
   `ImagenHabitacionRepository.findByHabitacionIdOrderByOrdenAsc`, con `url`, `alt` y `orden`. Se
   aplica a `buscar`, `listar`, `registrar` y `actualizar`; si el listado lo necesita, resolver las
   imágenes por lote para no multiplicar consultas. Verificación: `GET /api/habitacion/buscar/{id}`
   con id 101 devuelve `urlsImagenes` con `/assets/demo/hab-101-1.jpg`, `alt` y `orden: 1`; una
   habitación sin imágenes devuelve `[]`, nunca `null`.
-- [ ] 6. Añadir a `services/hotel-service/pom.xml` la dependencia
+- [x] 6. Añadir a `services/hotel-service/pom.xml` la dependencia
   `org.springframework.cloud:spring-cloud-starter-netflix-eureka-client` sin `<version>` y, en
   `application.yml`, el bloque `eureka` de `identity-service`: `client.enabled: true`,
   `register-with-eureka: true`, `fetch-registry: true`,
@@ -233,36 +233,36 @@ están publicados en el mismo OpenAPI. No hay regla nueva que decidir.
   `instance.prefer-ip-address: true`. Verificación: los dos `grep -c "eureka"` de §3 dejan de ser 0,
   la dependencia resuelve sin versión explícita y el `application.yml` conserva el puerto 8082 y el
   resto de la configuración.
-- [ ] 7. Añadir pruebas en `services/hotel-service/src/test/java/pe/hotel/hotel/`: `CurrentUser` con
+- [x] 7. Añadir pruebas en `services/hotel-service/src/test/java/pe/hotel/hotel/`: `CurrentUser` con
   claim `sedes` de `Long`; listados con `page`/`size` y `meta` completo; PUT de estado con cuerpo y
   sin query; y `buscar` con `urlsImagenes` ordenadas. Verificación: pasan con
   `bash scripts/mvn.sh -f services/pom.xml -pl hotel-service test`.
-- [ ] 8. Rearrancar Eureka/Gateway y `hotel-service` desde la rama corregida, con el `.env` local que
+- [x] 8. Rearrancar Eureka/Gateway y `hotel-service` desde la rama corregida, con el `.env` local que
   lleva el userinfo en la variable EUREKA_URL (decisión `IA-back-identity-auth-09`), sin registrar la
   instancia a mano. Verificación: `GET /eureka/apps/HOTEL-SERVICE` muestra una sola instancia nueva
   con `hostName` igual a la IP del host (no `localhost`) e `ipAddr` distinta de `127.0.0.1`; el log
   de `hotel-service` no repite errores de registro.
-- [ ] 9. Repetir la reproducción 1 con el token EMPLEADO: `GET /api/hotel/listar?page=0&size=100`,
+- [x] 9. Repetir la reproducción 1 con el token EMPLEADO: `GET /api/hotel/listar?page=0&size=100`,
   `GET /api/hotel/buscar/{id}` con id 1, `GET /api/piso/listar?idHotel=1&page=0&size=20` y
   `GET /api/habitacion/listar?idHotel=1&page=0&size=20`. Verificación: 200 con la sede 1 y sus
   pisos/habitaciones; una sede no asignada (por ejemplo `idHotel=2`) sigue devolviendo 404
   `RESOURCE_NOT_FOUND`.
-- [ ] 10. Repetir la reproducción 2 con ADMIN: los cuatro listados con `page=0&size=2`.
+- [x] 10. Repetir la reproducción 2 con ADMIN: los cuatro listados con `page=0&size=2`.
   Verificación: `data` trae como máximo dos filas, `meta.page=0`, `meta.size=2` y
   `meta.totalElements` es el total del filtro; `page=-1`, `size=0` y `size=101` responden 400.
-- [ ] 11. Repetir las reproducciones 3 y 4: `PUT /api/estadohabitacion/actualizar/{id}` con id 1
+- [x] 11. Repetir las reproducciones 3 y 4: `PUT /api/estadohabitacion/actualizar/{id}` con id 1
   solo con cuerpo → 200 con `version` incrementada; `GET /api/habitacion/buscar/{id}` con id 101 →
   200 con `urlsImagenes`.
   Verificación: cuerpos y `ETag` guardados; sin `If-Match` el PUT sigue en 428.
-- [ ] 12. Comprobar el enrutado limpio por el Gateway sin registro manual: reiniciar `api-gateway`
+- [x] 12. Comprobar el enrutado limpio por el Gateway sin registro manual: reiniciar `api-gateway`
   (o esperar el refresco del registro) y ejecutar `GET /api/hotel/listar` con ADMIN. Verificación:
   200, sin 503 `DEPENDENCY_UNAVAILABLE`, y la instancia de Eureka es la que publicó el propio
   servicio.
-- [ ] 13. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml verify`,
+- [x] 13. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml verify`,
   `python scripts/validar-planes.py` y `python scripts/validar-contratos.py --base origin/main`.
   Verificación: `BUILD SUCCESS` de los nueve módulos, 0 errores del validador y «Los contratos solo
   se han ampliado. Correcto.».
-- [ ] 14. Guardar en *Pruebas* las salidas de los pasos 1, 7, 8, 9, 10, 11, 12 y 13, marcar todos
+- [x] 14. Guardar en *Pruebas* las salidas de los pasos 1, 7, 8, 9, 10, 11, 12 y 13, marcar todos
   los pasos y cambiar `Estado` a `cerrado` en el último commit. Verificación: no quedan pasos sin
   marcar y las cinco reproducciones originales están en verde.
 
@@ -292,9 +292,51 @@ están publicados en el mismo OpenAPI. No hay regla nueva que decidir.
 
 ### Reproducción antes del arreglo (paso 1)
 
-Los comandos y salidas de §3, ejecutados el 2026-10-19 con `hotel-service` en `8082`, el Gateway en
-`8080`, Eureka en `8761` y los dos JWT humanos. Evidencia: cuerpos HTTP, `grep` y respuesta de
-Eureka transcritos en §3; se adjuntan al PR de ejecución.
+Ejecutado el 2026-10-20 sobre `main` (`e1b5b96`) con `hotel-service` en `8082`, el Gateway en
+`8080`, Eureka en `8761` y los JWT humanos de `admin@hotel.test` (ADMIN) y
+`recepcion.lima@hotel.test` (EMPLEADO, `sedes: [1]`). Salida literal (correlationIds incluidos):
+
+```text
+### GET /api/hotel/listar?page=0&size=100 (EMPLEADO)
+{"success":true,"message":"OK","data":[],"meta":{"correlationId":"ed8b5407-4182-4673-af08-eff3c354ca90"}}
+HTTP 200
+### GET /api/hotel/buscar/1 (EMPLEADO)
+{"success":false,"message":"No encontramos lo que buscas.","error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"c5927881-5176-437b-944b-e9a121359c31"}}
+HTTP 404
+### GET /api/piso/listar?idHotel=1&page=0&size=20 (EMPLEADO)
+{"success":false,"message":"No encontramos lo que buscas.","error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"442cf5a6-58a2-416a-8fac-a1f257c49344"}}
+HTTP 404
+### GET /api/habitacion/listar?idHotel=1&page=0&size=20 (EMPLEADO)
+{"success":false,"message":"No encontramos lo que buscas.","error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"c274fd88-c250-4718-b00a-8a7ec5f8fd07"}}
+HTTP 404
+```
+
+```text
+### Listados con ADMIN, page=0&size=2
+/api/hotel/listar           data_len=5 meta={'correlationId': 'fc9f758e-563f-48b0-bd0e-9072e9974643'}
+/api/piso/listar?idHotel=1  data_len=3 meta={'correlationId': '21852f03-f29c-47d5-b783-29133754c5f5'}
+/api/categoria/listar       data_len=6 meta={'correlationId': '2f85fba1-f7cf-4b2f-b6ac-a72b0ee7d25a'}
+/api/habitacion/listar      data_len=5 meta={'correlationId': '9132fe88-38dc-4131-9b10-cb0c2561f0d5'}
+```
+
+```text
+### PUT /api/estadohabitacion/actualizar/1 (ADMIN, solo cuerpo {"descripcion":"Lista"})
+{"success":false,"message":"Ocurrió un error inesperado.","error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"543c9eb3-845d-493b-b515-88075b556f8f"}}
+HTTP 500
+### GET /api/habitacion/buscar/101 (ADMIN)
+claves=['idHabitacion','idHotel','numero','idPiso','pisoNombre','idCategoria','categoriaNombre','detalle','precio','publicada','estado','idEstadoHabitacion','estadoFisico','ocupacion','blockId','endpoint','version']
+urlsImagenes presente: False
+### grep
+services/hotel-service/pom.xml = 0
+services/hotel-service/src/main/resources/application.yml = 0
+services/identity-service/pom.xml = 1
+services/identity-service/src/main/resources/application.yml = 3
+### Eureka
+[('localhost:hotel-service:8082', 'localhost', '127.0.0.1')]
+```
+
+Los cinco fallos de §3 quedan reproducidos. Evidencia: esta salida literal, transcrita en este
+plan y adjunta al PR de ejecución; sin tokens ni credenciales.
 
 ### Verificación después del arreglo (pasos 8 a 12)
 
@@ -352,6 +394,140 @@ estado con `version` incrementada; `urlsImagenes` con la imagen de la habitació
 instancia de Eureka publicada por el servicio, con `hostName` de host y no `localhost`.
 Evidencia: los cuerpos completos, en el PR de ejecución y en la bitácora del plan.
 
+### Evidencia de ejecución del arreglo (pasos 2 a 13)
+
+Ejecutado el 2026-10-20 desde la rama `back-arreglo-hotel-catalogo-admin`, con `hotel-service`
+reiniciado desde el código corregido, Eureka en `8761` y el Gateway reiniciado en `8080`. Tokens
+humanos obtenidos por `POST /api/auth/login` (no se transcriben). Salidas literales; en los cuerpos
+muy largos se abrevia con `…` solo la parte repetida, los campos verificados van completos:
+
+**Paso 2 — `CurrentUser.sedes()` con `Long`.**
+
+```text
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.hotel.domain.security.CurrentUserTests
+```
+
+**Paso 3 y 10 — paginación y meta de página (ADMIN, `page=0&size=2`).**
+
+```text
+/api/hotel/listar           filas=2 meta={'correlationId':'bc5dddce-…','page':0,'size':2,'totalElements':5}  HTTP 200
+/api/piso/listar?idHotel=1  filas=2 meta={'correlationId':'e3c57fbf-…','page':0,'size':2,'totalElements':3}  HTTP 200
+/api/categoria/listar       filas=2 meta={'correlationId':'97c569c6-…','page':0,'size':2,'totalElements':6}  HTTP 200
+/api/habitacion/listar      filas=2 meta={'correlationId':'b31f729c-…','page':0,'size':2,'totalElements':5}  HTTP 200
+
+GET /api/hotel/listar?page=-1&size=20
+{"success":false,"message":"Revisa los datos marcados.","error":{"code":"VALIDATION_ERROR","fields":{"page":"page debe ser mayor o igual que 0"}},"meta":{"correlationId":"e78f62d9-b185-4409-be89-a2d053e97cf2"}}  HTTP 400
+GET /api/hotel/listar?page=0&size=0
+{"success":false,"message":"Revisa los datos marcados.","error":{"code":"VALIDATION_ERROR","fields":{"size":"size debe estar entre 1 y 100"}},"meta":{"correlationId":"4aa25280-c9ad-4808-9244-750d7c9555ed"}}  HTTP 400
+GET /api/hotel/listar?page=0&size=101
+{"success":false,"message":"Revisa los datos marcados.","error":{"code":"VALIDATION_ERROR","fields":{"size":"size debe estar entre 1 y 100"}},"meta":{"correlationId":"ec8cf727-5e65-4239-808f-dbbde2594beb"}}  HTTP 400
+```
+
+**Pasos 4 y 11 — estado físico solo con el cuerpo del contrato.**
+
+```text
+PUT /api/estadohabitacion/actualizar/1  If-Match: "2"  {"descripcion":"Lista"}
+HTTP/1.1 200 OK
+ETag: "3"
+{"success":true,"message":"OK","data":{"idEstadoHabitacion":1,"codigo":"LISTA","descripcion":"Lista","estado":true,"version":3},"meta":{"correlationId":"5b1c4eed-1ddf-4787-b68f-59c589b7259d"}}
+
+PUT sin If-Match  {"descripcion":"Lista"}
+{"success":false,"message":"Falta la versión del registro.","error":{"code":"PRECONDITION_REQUIRED","fields":{}},"meta":{"correlationId":"5d4bd3d9-fb7d-4901-b18d-f7703917c215"}}  HTTP 428
+
+PUT con If-Match "1" (versión vieja)
+{"success":false,"message":"Otra persona modificó este registro. Recarga para ver los cambios.","error":{"code":"PRECONDITION_FAILED","fields":{}},"meta":{"correlationId":"2155a0e0-f0fb-4c44-b0bc-06b42bd679b3"}}  HTTP 412
+```
+
+**Paso 5 y 11 — galería en la búsqueda de habitación.**
+
+```text
+GET /api/habitacion/buscar/101
+urlsImagenes= [{'url': '/assets/demo/hab-101-1.jpg', 'alt': 'Habitacion de demostracion', 'orden': 1}]
+```
+
+**Paso 6 — dependencia y bloque `eureka`.**
+
+```text
+services/hotel-service/pom.xml = 1
+services/hotel-service/src/main/resources/application.yml = 3
+services/identity-service/pom.xml = 1
+services/identity-service/src/main/resources/application.yml = 3
+```
+
+El `application.yml` conserva `server.port: 8082` y el resto de la configuración; el bloque añadido
+es el mismo de `identity-service` (`client.enabled`, `register-with-eureka`, `fetch-registry`,
+`service-url.defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}`, `username`, `password`,
+`instance.prefer-ip-address: true`), y la dependencia va sin `<version>`.
+
+**Paso 7 — pruebas del módulo.**
+
+```text
+[INFO] Tests run: 38, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+**Paso 8 — registro propio en Eureka.**
+
+```text
+DiscoveryClient_HOTEL-SERVICE/localhost:hotel-service:8082 - registration status: 204
+GET /eureka/apps/HOTEL-SERVICE
+[('localhost:hotel-service:8082', '192.168.56.1', '192.168.56.1', 'UP')]
+```
+
+Una sola instancia, `hostName` = IP del host (no `localhost`) e `ipAddr` distinta de `127.0.0.1`.
+El log de arranque no repite errores de registro (`grep -c "registration failed|status code 401"`
+= 0). Se arrancó con EUREKA_URL con userinfo, forma de `IA-back-identity-auth-09`, sin tocar
+`.env` ni `infra/**`.
+
+**Paso 9 — reproducción 1 con EMPLEADO (`sedes: [1]`).**
+
+```text
+GET /api/hotel/listar?page=0&size=100
+{"success":true,...,"data":[{"idHotel":1,"slug":"lima-centro",...}],"meta":{"correlationId":"f6a717e4-…","page":0,"size":100,"totalElements":1}}  HTTP 200
+GET /api/hotel/buscar/1
+{"success":true,...,"data":{"idHotel":1,"slug":"lima-centro",...}}  HTTP 200
+GET /api/piso/listar?idHotel=1&page=0&size=20
+{"success":true,...,"data":[{"idPiso":11,...},{"idPiso":33,...},{"idPiso":35,...}],"meta":{"page":0,"size":20,"totalElements":3}}  HTTP 200
+GET /api/habitacion/listar?idHotel=1&page=0&size=20
+{"success":true,...,"data":[{"idHabitacion":101,...},{"idHabitacion":102,...},...],"meta":{"page":0,"size":20,"totalElements":5}}  HTTP 200
+GET /api/habitacion/listar?idHotel=2&page=0&size=20
+{"success":false,"message":"No encontramos lo que buscas.","error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"5c61b6cd-0572-4ccd-8ef3-6d8f0d442872"}}  HTTP 404
+```
+
+**Paso 12 — Gateway reiniciado, sin registro manual.**
+
+```text
+GET /api/hotel/listar?page=0&size=100  (ADMIN, Gateway recién arrancado)
+{"success":true,"message":"OK","data":[{"idHotel":1,...},{"idHotel":2,...},...]}  HTTP 200
+GET /eureka/apps/HOTEL-SERVICE
+[('localhost:hotel-service:8082', '192.168.56.1', '192.168.56.1', 'UP')]
+```
+
+Sin 503 `DEPENDENCY_UNAVAILABLE`; la instancia es la que publicó el propio servicio.
+
+**Paso 13 — comandos canónicos.**
+
+```text
+$ bash scripts/mvn.sh -f services/pom.xml verify
+[INFO] identity-service ......... SUCCESS
+[INFO] hotel-service ............ SUCCESS
+[INFO] reception-service ........ SUCCESS
+[INFO] inventory-service ........ SUCCESS
+[INFO] sales-service ............ SUCCESS
+[INFO] reporting-service ........ SUCCESS
+[INFO] notification-service ..... SUCCESS
+[INFO] api-gateway .............. SUCCESS
+[INFO] discovery-server ......... SUCCESS
+[INFO] BUILD SUCCESS
+
+$ python scripts/validar-planes.py
+30 plan(es) revisado(s); 30 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+$ python scripts/validar-contratos.py --base origin/main
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
+```
+
 ### Unidad y build (pasos 7 y 13)
 
 ```bash
@@ -382,18 +558,18 @@ cambios en `.env` ni en `infra/**`.
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos de §4 marcados con su verificación.
-- [ ] Un EMPLEADO de la sede 1 ve su sede, sus pisos y sus habitaciones; las sedes ajenas siguen en
+- [x] Todos los pasos de §4 marcados con su verificación.
+- [x] Un EMPLEADO de la sede 1 ve su sede, sus pisos y sus habitaciones; las sedes ajenas siguen en
   404.
-- [ ] Los cuatro listados devuelven `meta.page`, `meta.size` y `meta.totalElements`, con `page`/`size`
+- [x] Los cuatro listados devuelven `meta.page`, `meta.size` y `meta.totalElements`, con `page`/`size`
   fuera de rango en 400.
-- [ ] `PUT /api/estadohabitacion/actualizar/{id}` funciona solo con el `requestBody` del contrato y
+- [x] `PUT /api/estadohabitacion/actualizar/{id}` funciona solo con el `requestBody` del contrato y
   conserva 428/412.
-- [ ] `GET /api/habitacion/buscar/{id}` devuelve `urlsImagenes` ordenadas, y `[]` cuando no hay
+- [x] `GET /api/habitacion/buscar/{id}` devuelve `urlsImagenes` ordenadas, y `[]` cuando no hay
   imágenes.
-- [ ] `hotel-service` se registra solo en Eureka y el Gateway lo enruta sin registro manual ni 503.
-- [ ] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`;
+- [x] `hotel-service` se registra solo en Eureka y el Gateway lo enruta sin registro manual ni 503.
+- [x] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`;
   `python scripts/validar-planes.py` con 0 errores y `python scripts/validar-contratos.py --base
   origin/main` sin cambios de contrato.
-- [ ] La reproducción original de §3 está en verde con evidencia adjunta al PR y sin preguntas
+- [x] La reproducción original de §3 está en verde con evidencia adjunta al PR y sin preguntas
   abiertas.
