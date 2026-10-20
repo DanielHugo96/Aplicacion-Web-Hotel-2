@@ -284,7 +284,7 @@ public class PersonaRepository {
         jdbcTemplate.update(
             """
             UPDATE tipo_persona
-               SET descripcion = ?, version = version + 1, updated_at = now()
+               SET descripcion = ?, version = version + 1
              WHERE id = ? AND version = ?
             """,
             descripcion,

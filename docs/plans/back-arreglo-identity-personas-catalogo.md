@@ -154,9 +154,9 @@ define `PRECONDITION_REQUIRED`, `VALIDATION_ERROR` y `FORBIDDEN`. No hay regla n
 
 ## 4. Pasos
 
-- [ ] 1. Reproducir los tres fallos desde `main` con el Gateway y los tokens de §3. Verificación: se
+- [x] 1. Reproducir los tres fallos desde `main` con el Gateway y los tokens de §3. Verificación: se
   observan los 500 y las salidas literales de §3, y `tipo_persona` no tiene `updated_at`.
-- [ ] 2. Corregir `PersonaRepository.actualizarTipoPersona`: quitar `updated_at = now()` del `UPDATE
+- [x] 2. Corregir `PersonaRepository.actualizarTipoPersona`: quitar `updated_at = now()` del `UPDATE
   tipo_persona`, conservando `descripcion = ?`, `version = version + 1`, la condición
   `WHERE id = ? AND version = ?` y la excepción de bloqueo optimista. Verificación: la sentencia no
   menciona `updated_at` y compila; el `UPDATE` equivalente contra `identity_db` deja de fallar con
@@ -221,9 +221,60 @@ define `PRECONDITION_REQUIRED`, `VALIDATION_ERROR` y `FORBIDDEN`. No hay regla n
 
 ### Reproducción antes del arreglo (paso 1)
 
-Los comandos y salidas de §3, ejecutados el 2026-10-19 con `identity-service` en `8081`, el Gateway
-en `8080` y los dos JWT humanos. Evidencia: cuerpos HTTP y la consulta a `information_schema`
-transcritos en §3; se adjuntan al PR de ejecución.
+Ejecutado el 2026-10-20 sobre `main` (`46dd5b4`), con `identity-service` en `8081`, el Gateway en
+`8080`, Eureka en `8761` y los JWT de `admin@hotel.test` (ADMIN) y `recepcion.lima@hotel.test`
+(EMPLEADO, `sedes: [1]`).
+
+```text
+$ docker exec -e PGPASSWORD=<variable> hotel-postgres-1 psql -U identity_app -d identity_db \
+    -c "SELECT column_name FROM information_schema.columns WHERE table_name='tipo_persona' ORDER BY ordinal_position;"
+ column_name
+-------------
+ id
+ codigo
+ descripcion
+ estado
+ version
+(5 rows)
+
+$ curl -s -i -X PUT "http://localhost:8080/api/tipopersona/actualizar/3" \
+    -H "Authorization: Bearer <ADMIN>" -H 'Content-Type: application/json' \
+    -H 'If-Match: "1"' -H "Idempotency-Key: <uuid>" -d '{"descripcion":"Cliente"}'
+HTTP/1.1 500 Internal Server Error
+{"success":false,"message":"Ocurrió un error inesperado.","data":null,"error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"e5b6a59a-87de-4b15-a235-03510c3c4390"}}
+
+$ curl -s -w '\nHTTP %{http_code}\n' \
+    "http://localhost:8080/api/persona/listar?page=0&size=20&documento=90000100" \
+    -H "Authorization: Bearer <EMPLEADO>"
+{"success":false,"message":"Ocurrió un error inesperado.","data":null,"error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"83783d52-172e-43f2-a541-4bcd68543dcd"}}
+HTTP 500
+
+$ curl -s -w '\nHTTP %{http_code}\n' \
+    "http://localhost:8080/api/persona/buscar/100?documento=90000100" \
+    -H "Authorization: Bearer <EMPLEADO>"
+{"success":false,"message":"Ocurrió un error inesperado.","data":null,"error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"4345b84d-09dd-4a99-a0d7-08f72ce16675"}}
+HTTP 500
+
+$ curl -s -w '\nHTTP %{http_code}\n' -X PUT "http://localhost:8080/api/persona/actualizar/100" \
+    -H "Authorization: Bearer <ADMIN>" -H 'Content-Type: application/json' \
+    -H "Idempotency-Key: <uuid>" \
+    -d '{"nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","idTipoPersona":3,"sedes":[1],"estado":true}'
+{"success":false,"message":"Ocurrió un error inesperado.","data":null,"error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"5e2011eb-0afb-4cab-85ca-bff826e5c759"}}
+HTTP 500
+```
+
+### Corrección del SQL de `tipo_persona` (paso 2)
+
+`grep -n "updated_at" PersonaRepository.java` no encuentra la sentencia de `tipo_persona`; el
+`UPDATE` equivalente contra `identity_db`, dentro de una transacción revertida, ya no falla:
+
+```text
+$ docker exec -e PGPASSWORD=<variable> hotel-postgres-1 psql -U identity_app -d identity_db \
+    -v ON_ERROR_STOP=1 -c "BEGIN; UPDATE tipo_persona SET descripcion='Cliente', version=version+1 WHERE id=3 AND version=1; ROLLBACK;"
+BEGIN
+UPDATE 1
+ROLLBACK
+```
 
 ### Verificación después del arreglo (pasos 6, 7 y 8)
 
