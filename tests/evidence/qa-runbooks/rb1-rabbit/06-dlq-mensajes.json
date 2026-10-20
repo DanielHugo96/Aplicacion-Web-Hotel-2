@@ -1,0 +1,76 @@
+{
+  "mensajes": [
+    {
+      "payload_bytes": 326,
+      "redelivered": false,
+      "exchange": "hotel.dlx.v1",
+      "routing_key": "limpieza.solicitada.dlq",
+      "message_count": 1,
+      "properties": {
+        "message_id": "5dea08e7-ccab-4a61-b987-717a2fbf8a7b",
+        "correlation_id": "11c7d5d3-bc64-47c0-b776-21a396a08f03",
+        "delivery_mode": 2,
+        "headers": {
+          "x-death": [
+            {
+              "count": 1,
+              "exchange": "hotel.commands.v1",
+              "queue": "limpieza.solicitada",
+              "reason": "rejected",
+              "routing-keys": [
+                "limpieza.solicitada"
+              ],
+              "time": 1792512218
+            }
+          ],
+          "x-first-death-exchange": "hotel.commands.v1",
+          "x-first-death-queue": "limpieza.solicitada",
+          "x-first-death-reason": "rejected",
+          "x-last-death-exchange": "hotel.commands.v1",
+          "x-last-death-queue": "limpieza.solicitada",
+          "x-last-death-reason": "rejected",
+          "x-schema-version": 1
+        },
+        "content_type": "application/json"
+      },
+      "payload": "{\"commandId\":\"5dea08e7-ccab-4a61-b987-717a2fbf8a7b\",\"type\":\"LimpiezaSolicitada\",\"schemaVersion\":1,\"idHotel\":1,\"correlationId\":\"0e2e7b55-7c33-42dc-9d62-f8d3a98f80f9\",\"issuedAt\":\"2026-10-20T16:03:36.038269Z\",\"payload\":{\"idHabitacion\":102,\"idRecepcion\":1,\"cleaningCycleId\":\"8a8d2ed7-f010-4dd5-9ac9-bea70e4921a7\",\"roomVersion\":1}}",
+      "payload_encoding": "string"
+    },
+    {
+      "payload_bytes": 284,
+      "redelivered": false,
+      "exchange": "hotel.dlx.v1",
+      "routing_key": "limpieza.solicitada.dlq",
+      "message_count": 0,
+      "properties": {
+        "message_id": "03d90891-0674-4962-b71f-d0fdc486d288",
+        "correlation_id": "20c822e7-e9d5-475c-a603-1239dbfdb56c",
+        "delivery_mode": 2,
+        "headers": {
+          "x-death": [
+            {
+              "count": 1,
+              "exchange": "hotel.commands.v1",
+              "queue": "limpieza.solicitada",
+              "reason": "rejected",
+              "routing-keys": [
+                "limpieza.solicitada"
+              ],
+              "time": 1792512227
+            }
+          ],
+          "x-first-death-exchange": "hotel.commands.v1",
+          "x-first-death-queue": "limpieza.solicitada",
+          "x-first-death-reason": "rejected",
+          "x-last-death-exchange": "hotel.commands.v1",
+          "x-last-death-queue": "limpieza.solicitada",
+          "x-last-death-reason": "rejected",
+          "x-schema-version": 1
+        },
+        "content_type": "application/json"
+      },
+      "payload": "{\"commandId\":\"03d90891-0674-4962-b71f-d0fdc486d288\",\"type\":\"LimpiezaSolicitada\",\"schemaVersion\":1,\"idHotel\":1,\"correlationId\":\"ada52cf5-3102-4577-8f12-156e4de1f4d4\",\"issuedAt\":\"2026-10-20T16:03:45.208058Z\",\"payload\":{\"idHabitacion\":102,\"idRecepcion\":1,\"cleaningCycleId\":\"no-es-uuid\"}}",
+      "payload_encoding": "string"
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "descarte": "management API: ack_requeue_false + purge",
+  "commandIds": [
+    "5dea08e7-ccab-4a61-b987-717a2fbf8a7b",
+    "03d90891-0674-4962-b71f-d0fdc486d288"
+  ],
+  "dlqRestante": 2
+}

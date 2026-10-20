@@ -115,29 +115,39 @@ def kafka() -> None:
     # Reenvío con el mismo eventId y key de un evento ya procesado: el inbox no duplica.
     valid_cycle = str(uuid.uuid4())
     valid = _valid_lista(str(uuid.uuid4()), valid_cycle)
-    inbox_before = c.inbox_rows("reception_db", GROUP, valid["eventId"])
+    inbox_before = f.inbox_rows("reception_db", GROUP, valid["eventId"])
     c.write_json(sim, "05-inbox-antes.json", {"eventId": valid["eventId"], "filas": inbox_before})
     c.kafka_publish(DEST, "101", valid)
     c.wait_until(
-        lambda: len(c.inbox_rows("reception_db", GROUP, valid["eventId"])) == 1,
+        lambda: len(f.inbox_rows("reception_db", GROUP, valid["eventId"])) == 1,
         timeout=90,
         interval=3,
         description="inbox del evento válido",
     )
-    first = c.inbox_rows("reception_db", GROUP, valid["eventId"])
+    first = f.inbox_rows("reception_db", GROUP, valid["eventId"])
     c.kafka_publish(DEST, "101", valid)
     time.sleep(8)
-    second = c.inbox_rows("reception_db", GROUP, valid["eventId"])
+    second = f.inbox_rows("reception_db", GROUP, valid["eventId"])
     c.write_json(
         sim,
         "06-reenvio-mismo-eventid.json",
         {"primeraVez": first, "trasReenvio": second, "filas": len(second), "sinDuplicar": len(second) == 1},
     )
 
-    # Descarte del mensaje de prueba: se registra el contenido y se borra el topic DLT.
-    c.write_json(sim, "07-descarte-dlt.json", {"topic": DLT, "mensajesDescartados": consumed, "accion": "kafka-topics.sh --delete"})
-    c.kafka_delete_topic(DLT)
-    c.wait_until(lambda: DLT not in c.kafka_topics(), timeout=60, interval=3, description="topic DLT eliminado")
+    # Descarte del mensaje de prueba: se registra el contenido y se borran los topics DLT.
+    dlt_topics = [topic for topic in c.kafka_topics() if topic.endswith(".dlt")]
+    c.write_json(
+        sim,
+        "07-descarte-dlt.json",
+        {
+            "topics": dlt_topics,
+            "mensajesDescartados": consumed,
+            "accion": "kafka-topics.sh --delete",
+        },
+    )
+    for topic in dlt_topics:
+        c.kafka_delete_topic(topic)
+    c.wait_until(lambda: not any(t.endswith(".dlt") for t in c.kafka_topics()), timeout=60, interval=3, description="topics DLT eliminados")
     print(f"  DLT alcanzada en {elapsed}s; mensaje conservado y topic descartado")
 
 

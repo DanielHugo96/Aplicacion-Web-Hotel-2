@@ -249,12 +249,12 @@ def notification_jobs() -> list[dict[str, Any]]:
 def inbox_rows(db: str, group: str, message_id: str | None = None) -> list[dict[str, Any]]:
     if not c.table_exists(db, "inbox"):
         return []
-    where = f"where consumer_group='{group}'"
+    where = f"where consumer='{group}'"
     if message_id:
         where += f" and message_id='{message_id}'"
     rows = c.psql(
         db,
-        "select message_id::text, consumer_group, processed_at::text from inbox "
+        "select message_id::text, consumer, processed_at::text from inbox "
         + where
         + " order by processed_at",
     )

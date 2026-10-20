@@ -1,0 +1,40 @@
+{
+  "dlqAntes": 0,
+  "dlqDespues": 2,
+  "retryQueues": {
+    "limpieza.solicitada.retry.120s": 0,
+    "limpieza.solicitada.retry.30s": 0,
+    "limpieza.solicitada.retry.5s": 0
+  },
+  "limpieza102": [],
+  "limpieza102Antes": [],
+  "habitacion102Antes": {
+    "idEstadoHabitacion": [
+      [
+        "102",
+        "1",
+        "1"
+      ]
+    ],
+    "version": 1,
+    "estadoFisico": {
+      "idEstadoHabitacion": 1,
+      "codigo": "LISTA",
+      "descripcion": "Lista",
+      "estado": true,
+      "version": 1
+    }
+  },
+  "habitacion102Despues": {
+    "version": 1,
+    "estadoFisico": {
+      "idEstadoHabitacion": 1,
+      "codigo": "LISTA",
+      "descripcion": "Lista",
+      "estado": true,
+      "version": 1
+    }
+  },
+  "sinTareaNueva": true,
+  "sinCambioFisico": true
+}

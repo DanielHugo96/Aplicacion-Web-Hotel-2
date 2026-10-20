@@ -1,0 +1,28 @@
+{
+  "key": "101",
+  "topic": "hotel.habitacion.v1",
+  "mensaje": {
+    "eventId": "7b237943-3893-4159-9bdb-162645c54be6",
+    "type": "HabitacionLista",
+    "schemaVersion": 1,
+    "aggregateType": "habitacion",
+    "aggregateId": "101",
+    "aggregateVersion": 7,
+    "idHotel": 1,
+    "occurredAt": "2026-10-20T16:02:23.153474Z",
+    "correlationId": "6703a30e-fd39-46ff-b5aa-c075117bd406",
+    "payload": {
+      "idHabitacion": 101,
+      "idHotel": 1,
+      "numero": "101",
+      "idCategoria": 1,
+      "categoriaNombre": "Individual",
+      "pisoNombre": "Primer piso",
+      "precio": 70.0,
+      "estado": true,
+      "estadoFisico": "LISTA",
+      "version": 7,
+      "blockId": null
+    }
+  }
+}

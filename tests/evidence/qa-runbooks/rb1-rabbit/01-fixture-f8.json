@@ -1,0 +1,23 @@
+{
+  "idRecepcion": 1,
+  "checkin": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "6447296c-e8e1-46f9-9423-1c2bae8db2c7",
+      "etag": "\"1\"",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "876",
+      "date": "Tue, 20 Oct 2026 16:03:23 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": "{\"success\":true,\"message\":\"Check-in registrado\",\"data\":{\"idRecepcion\":1,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":101,\"numero\":\"101\",\"categoriaNombre\":\"Individual\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion individual de demostracion\",\"precioHabitacion\":70.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-20\",\"fechaSalida\":\"2026-10-21\",\"fechaSalidaConfirmacion\":null,\"precioInicial\":70.00,\"adelanto\":20.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":50.00,\"totalPagado\":20.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":true,\"estadoEstadia\":\"ACTIVA\",\"archivada\":false,\"vencida\":false,\"version\":1,\"closureId\":null,\"cleaningCycleId\":null,\"cierre\":null},\"meta\":{\"correlationId\":\"6447296c-e8e1-46f9-9423-1c2bae8db2c7\"}}"
+  }
+}

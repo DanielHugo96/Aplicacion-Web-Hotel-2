@@ -1,0 +1,30 @@
+{
+  "publish": {
+    "status": 200,
+    "headers": {
+      "allow": "POST, OPTIONS",
+      "cache-control": "no-cache",
+      "connection": "close",
+      "content-length": "15",
+      "content-security-policy": "script-src 'self'; object-src 'self'",
+      "content-type": "application/json",
+      "date": "Tue, 20 Oct 2026 16:03:46 GMT",
+      "server": "Cowboy",
+      "vary": "accept, accept-encoding, origin"
+    },
+    "body": "{\"routed\":true}"
+  },
+  "comando": {
+    "commandId": "03d90891-0674-4962-b71f-d0fdc486d288",
+    "type": "LimpiezaSolicitada",
+    "schemaVersion": 1,
+    "idHotel": 1,
+    "correlationId": "ada52cf5-3102-4577-8f12-156e4de1f4d4",
+    "issuedAt": "2026-10-20T16:03:45.208058Z",
+    "payload": {
+      "idHabitacion": 102,
+      "idRecepcion": 1,
+      "cleaningCycleId": "no-es-uuid"
+    }
+  }
+}
