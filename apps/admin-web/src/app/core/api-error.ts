@@ -132,6 +132,14 @@ export const ERROR_CATALOG: Record<string, CatalogEntry> = {
     message: 'No hay stock suficiente de uno o más productos.',
     action: 'Ajustar cantidades y crear una venta nueva.',
   },
+  SALE_ALREADY_PAID: {
+    message: 'Una venta pagada no se anula; requiere devolución (fuera del MVP).',
+    action: 'Consultar con administración; no borrar historial.',
+  },
+  LEGACY_MOVEMENT_UNVERIFIED: {
+    message: 'Esta venta antigua no puede anularse automáticamente.',
+    action: 'Solicitar conciliación manual (operador).',
+  },
   PASSWORD_POLICY: {
     message: 'La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8).',
     action: 'Corregir la clave.',

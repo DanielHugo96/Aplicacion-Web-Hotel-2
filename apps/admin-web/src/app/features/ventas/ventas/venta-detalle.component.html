@@ -1,0 +1,221 @@
+@if (loading()) {
+  <div class="page" role="status" aria-label="Cargando venta">
+    <div class="skeleton skeleton-row" style="max-width: 420px; height: 36px;"></div>
+    <div class="skeleton skeleton-row" style="max-width: 720px; height: 280px; margin-top: 24px;"></div>
+  </div>
+} @else {
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1>Venta #{{ venta()?.idVenta }}</h1>
+        <p class="sub">Detalle de la venta con sus líneas inmutables y el estado de su operación.</p>
+      </div>
+      <a class="btn btn-secondary" routerLink="/app/ventas">Volver al listado</a>
+    </div>
+
+    <app-error-banner
+      [error]="error()"
+      [actionLabel]="error() ? (error()!.reloadable ? 'Recargar' : 'Reintentar') : null"
+      (action)="accionError()"
+    ></app-error-banner>
+
+    <app-pending-banner
+      [visible]="pendiente()"
+      [detalle]="detallePendiente()"
+      [actualizadoEn]="actualizadoEn()"
+    ></app-pending-banner>
+
+    @if (venta(); as v) {
+      <div class="form-card" style="margin-bottom: var(--space-4);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-4);">
+          <div>
+            <span class="text-micro muted">Pago</span>
+            <div>
+              <span [class]="v.estado === 'PAGADO' ? 'pill pill-ok' : 'pill pill-atencion'">
+                {{ v.estado === 'PAGADO' ? 'Pagado' : 'Pendiente' }}
+              </span>
+            </div>
+          </div>
+          <div>
+            <span class="text-micro muted">Operación</span>
+            <div>
+              <span
+                [class]="
+                  v.estadoOperacion === 'CONFIRMADA'
+                    ? 'pill pill-ok'
+                    : v.estadoOperacion === 'RECHAZADA'
+                      ? 'pill pill-error'
+                      : v.estadoOperacion === 'CANCELADA'
+                        ? 'pill pill-archivado'
+                        : 'pill pill-proceso'
+                "
+              >
+                @switch (v.estadoOperacion) {
+                  @case ('PENDIENTE') { En proceso }
+                  @case ('CONFIRMADA') { Confirmada }
+                  @case ('RECHAZADA') { Rechazada }
+                  @case ('CANCELACION_PENDIENTE') { Anulación en proceso }
+                  @case ('CANCELADA') { Cancelada }
+                }
+              </span>
+            </div>
+          </div>
+          <div>
+            <span class="text-micro muted">Total</span>
+            <div style="font-variant-numeric: tabular-nums;">{{ v.total | money }}</div>
+          </div>
+          <div>
+            <span class="text-micro muted">Estadía</span>
+            <div class="monospace">#{{ v.idRecepcion }}</div>
+          </div>
+          <div>
+            <span class="text-micro muted">Creada</span>
+            <div>{{ v.fechaCreacion | peTimestamp }}</div>
+          </div>
+          <div>
+            <span class="text-micro muted">Pagada el</span>
+            <div>{{ v.paidAt ? (v.paidAt | peTimestamp) : 'No registrado' }}</div>
+          </div>
+          <div>
+            <span class="text-micro muted">Medio de pago</span>
+            <div>{{ sinRegistrar(v.medioPago) }}</div>
+          </div>
+        </div>
+
+        <div class="row-actions" style="margin-top: var(--space-4);">
+          <button class="btn btn-primary" type="button" [disabled]="!puedePagar()" (click)="abrirPago()">
+            Registrar pago
+          </button>
+          <button class="btn btn-danger" type="button" [disabled]="!puedeAnular()" (click)="abrirAnulacion()">
+            Anular venta
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption class="sr-only">Líneas de la venta</caption>
+          <thead>
+            <tr>
+              <th scope="col">Producto</th>
+              <th scope="col" class="num">Cantidad</th>
+              <th scope="col" class="num">Precio unitario</th>
+              <th scope="col" class="num">Subtotal</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (linea of v.detalles; track linea.idDetalleVenta) {
+              <tr>
+                <td>{{ linea.nombreProducto }}</td>
+                <td class="num">{{ linea.cantidad }}</td>
+                <td class="num">{{ linea.precioUnitario | money }}</td>
+                <td class="num">{{ linea.subTotal | money }}</td>
+              </tr>
+            }
+          </tbody>
+          <tfoot>
+            <tr>
+              <td colspan="3" class="text-right"><strong>Total</strong></td>
+              <td class="num"><strong>{{ v.total | money }}</strong></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    }
+
+    @if (pagoAbierto()) {
+      <div class="modal-backdrop" (click)="cerrarPago()">
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="pago-title"
+          (click)="$event.stopPropagation()"
+        >
+          <h3 id="pago-title">Registrar pago</h3>
+          <p class="modal-message">El cobro queda registrado en la venta y en el reporte de cobros.</p>
+          <form (ngSubmit)="confirmarPago($event)" novalidate>
+            <div class="field">
+              <label for="pago-medio" class="required">Medio de pago</label>
+              <select
+                id="pago-medio"
+                name="pago-medio"
+                [(ngModel)]="medioPago"
+                [class.error]="campoPagoInvalido()"
+                required
+              >
+                <option value="">Selecciona el medio de pago</option>
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA">Tarjeta</option>
+                <option value="OTRO">Otro</option>
+              </select>
+              @if (campoPagoInvalido()) {
+                <span class="field-msg" role="alert">{{ erroresPago()['medioPago'] }}</span>
+              }
+            </div>
+            <div class="modal-actions">
+              <button class="btn btn-secondary" type="button" [disabled]="procesando()" (click)="cerrarPago()">
+                Cancelar
+              </button>
+              <button class="btn btn-primary" type="submit" [disabled]="procesando()">
+                @if (procesando()) {
+                  <span class="spinner" aria-hidden="true"></span>
+                }
+                Registrar pago
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    @if (anulacionAbierta()) {
+      <div class="modal-backdrop" (click)="cerrarAnulacion()">
+        <div
+          class="modal"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="anulacion-title"
+          (click)="$event.stopPropagation()"
+        >
+          <h3 id="anulacion-title">Anular venta</h3>
+          <p class="modal-message">La venta quedará anulada y el stock volverá a la sede.</p>
+          <form (ngSubmit)="confirmarAnulacion($event)" novalidate>
+            <div class="field">
+              <label for="anulacion-motivo" class="required">Motivo</label>
+              <textarea
+                id="anulacion-motivo"
+                name="anulacion-motivo"
+                rows="2"
+                maxlength="300"
+                [(ngModel)]="motivo"
+                [class.error]="campoAnulacionInvalido()"
+                required
+              ></textarea>
+              <span class="field-help">{{ motivo.length }}/300</span>
+              @if (campoAnulacionInvalido()) {
+                <span class="field-msg" role="alert">{{ erroresAnulacion()['motivo'] }}</span>
+              }
+            </div>
+            <div class="modal-actions">
+              <button
+                class="btn btn-secondary"
+                type="button"
+                [disabled]="procesando()"
+                (click)="cerrarAnulacion()"
+              >
+                Cancelar
+              </button>
+              <button class="btn btn-danger" type="submit" [disabled]="procesando()">
+                @if (procesando()) {
+                  <span class="spinner" aria-hidden="true"></span>
+                }
+                Anular venta
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+  </div>
+}
