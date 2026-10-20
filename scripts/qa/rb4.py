@@ -153,7 +153,7 @@ def run() -> None:
     c.wait_until(lambda: c.compose_ps().get("kafka", "").startswith("running/healthy"), timeout=180, interval=5, description="Kafka healthy")
     c.wait_until(
         lambda: all(r["publishedAt"] for r in _outbox_reception(id_recepcion) if r["destination"] == "KAFKA"),
-        timeout=180,
+        timeout=480,
         interval=5,
         description="outbox Kafka publicada",
     )

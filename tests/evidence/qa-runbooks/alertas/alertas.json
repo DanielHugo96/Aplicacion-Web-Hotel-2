@@ -1,5 +1,5 @@
 {
-  "capturadoEn": "2026-10-20T17:52:36.571912Z",
+  "capturadoEn": "2026-10-20T18:13:12.146786Z",
   "alertas": [
     {
       "alerta": "Mensajes en DLT Kafka",
@@ -7,10 +7,10 @@
       "deteccion": "conteo de offsets de los topics *.dlt",
       "severidad": "Alta",
       "runbook": "RB1",
-      "valor": 5,
+      "valor": 6,
       "dispara": true,
       "detalle": {
-        "reception.recepcion.v1.hotel-ocupacion-v1.dlt": 5
+        "reception.recepcion.v1.hotel-ocupacion-v1.dlt": 6
       }
     },
     {

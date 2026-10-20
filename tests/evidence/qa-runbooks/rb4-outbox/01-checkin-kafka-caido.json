@@ -1,0 +1,46 @@
+{
+  "idRecepcion": 16,
+  "status": 201,
+  "body": {
+    "success": true,
+    "message": "Check-in registrado",
+    "data": {
+      "idRecepcion": 16,
+      "idHotel": 3,
+      "idCliente": 100,
+      "idHabitacion": 302,
+      "numero": "102",
+      "categoriaNombre": "Doble",
+      "pisoNombre": "Primer piso",
+      "detalleHabitacion": "Habitacion doble de demostracion",
+      "precioHabitacion": 90.0,
+      "nombre": "Cliente",
+      "apellido": "Uno",
+      "tipoDocumento": "DNI",
+      "documento": "90000100",
+      "correo": "cliente.uno@hotel.test",
+      "fechaEntrada": "2026-10-20",
+      "fechaSalida": "2026-10-21",
+      "fechaSalidaConfirmacion": null,
+      "precioInicial": 90.0,
+      "adelanto": 0.0,
+      "medioPagoAdelanto": "EFECTIVO",
+      "precioRestante": 90.0,
+      "totalPagado": 0.0,
+      "costoPenalidad": 0.0,
+      "motivoPenalidad": null,
+      "observacion": "Fixture qa-runbooks",
+      "estado": true,
+      "estadoEstadia": "ACTIVA",
+      "archivada": false,
+      "vencida": false,
+      "version": 1,
+      "closureId": null,
+      "cleaningCycleId": null,
+      "cierre": null
+    },
+    "meta": {
+      "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209"
+    }
+  }
+}
