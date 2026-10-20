@@ -1,0 +1,119 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Productos</h1>
+      <p class="sub">Productos de la sede seleccionada, con su stock y su umbral de bajo stock.</p>
+    </div>
+    @if (esAdmin()) {
+      <button class="btn btn-primary" type="button" [disabled]="!sedeSeleccionada()" (click)="nuevo()">
+        Nuevo producto
+      </button>
+    }
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="error() ? 'Reintentar' : null"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="sede-productos">Sede</label>
+      <select id="sede-productos" [value]="sedeSeleccionada() ?? ''" (change)="cambiarSede($event)">
+        @if (sedes().length === 0) {
+          <option value="">Sin sede asignada</option>
+        }
+        @for (sede of sedes(); track sede.idHotel) {
+          <option [value]="sede.idHotel">{{ sede.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtro-estado-producto">Estado</label>
+      <select
+        id="filtro-estado-producto"
+        [value]="filtroEstado()"
+        (change)="cambiarFiltro($any($event.target).value)"
+      >
+        <option value="activos">Activos</option>
+        <option value="inactivos">Dados de baja</option>
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+  </div>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando productos">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (productos().length === 0 && !error()) {
+    <div class="empty" role="status">
+      <p>Aún no hay registros</p>
+      @if (esAdmin()) {
+        <button class="btn btn-primary" type="button" (click)="nuevo()">Crear</button>
+      }
+    </div>
+  } @else if (productos().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Productos de la sede seleccionada</caption>
+        <thead>
+          <tr>
+            <th scope="col">SKU</th>
+            <th scope="col">Nombre</th>
+            <th scope="col" class="num">Precio</th>
+            <th scope="col" class="num">Cantidad</th>
+            <th scope="col" class="num">Umbral bajo</th>
+            <th scope="col">Stock</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of productos(); track p.idProducto) {
+            <tr>
+              <td class="monospace">{{ p.sku }}</td>
+              <td>{{ p.nombre }}</td>
+              <td class="num">{{ p.precio | money }}</td>
+              <td class="num">{{ p.cantidad }}</td>
+              <td class="num">{{ p.umbralBajo }}</td>
+              <td>
+                @if (bajoStock(p)) {
+                  <span class="pill pill-atencion">Bajo stock</span>
+                } @else {
+                  <span class="pill pill-ok">Con stock</span>
+                }
+              </td>
+              <td>
+                <span [class]="'pill ' + (p.estado ? 'pill-ok' : 'pill-archivado')">
+                  {{ p.estado ? 'Activo' : 'Dado de baja' }}
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  @if (esAdmin()) {
+                    <button class="btn btn-secondary" type="button" (click)="editar(p)">Editar</button>
+                  }
+                  <button class="btn btn-secondary" type="button" (click)="movimientos(p)">
+                    Movimientos
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [page]="page()"
+      [size]="size()"
+      [total]="total()"
+      (pageChange)="cambiarPagina($event)"
+    ></app-pagination>
+  }
+</div>
