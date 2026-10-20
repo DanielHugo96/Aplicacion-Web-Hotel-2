@@ -35,7 +35,8 @@ public class ReceptionRepository {
           + " c.closure_id AS cierre_id, c.estado AS cierre_estado,"
           + " c.last_error_code AS cierre_last_error, c.calculo::text AS cierre_calculo,"
           + " c.medio_pago AS cierre_medio_pago,"
-          + " g.cleaning_cycle_id AS gate_cleaning_cycle_id"
+          + " CASE WHEN c.estado = 'COMPLETADO' THEN c.cleaning_cycle_id"
+          + "      ELSE g.cleaning_cycle_id END AS gate_cleaning_cycle_id"
           + " FROM recepcion r"
           + " LEFT JOIN cierre c ON c.id_recepcion = r.id AND c.estado <> 'RECHAZADO'"
           + " LEFT JOIN room_gate g ON g.id_habitacion = r.id_habitacion";
@@ -436,7 +437,7 @@ public class ReceptionRepository {
         view.put("estado", rs.getString("cierre_estado"));
         view.put("lastErrorCode", rs.getString("cierre_last_error"));
         String calculoJson = rs.getString("cierre_calculo");
-        view.put("calculo", calculoJson == null ? null : mapper.readTree(calculoJson));
+        view.put("calculo", calculoJson == null ? null : mapper.readValue(calculoJson, Object.class));
         if ("COMPLETADO".equals(rs.getString("cierre_estado"))) {
           view.put("medioPago", rs.getString("cierre_medio_pago"));
         }

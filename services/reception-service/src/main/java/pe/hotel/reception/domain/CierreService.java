@@ -141,7 +141,7 @@ public class CierreService {
       }
       case "RECHAZADO" -> {
         Cotizacion cotizacion = cotizar(view.idRecepcion(), penalidad);
-        throw rechazo(cotizacion, closureId);
+        throw rechazo(cotizacion, closureId, request.montoRecibido());
       }
       case "CONFIRMANDO" -> {
         return continuarConfirmacion(cierre);
@@ -163,7 +163,7 @@ public class CierreService {
             }
             return rechazo;
           });
-      throw rechazo(cotizacion(view, calculo), closureId);
+      throw rechazo(cotizacion(view, calculo), closureId, salida.montoRecibido());
     }
 
     transactions.execute(
@@ -361,14 +361,14 @@ public class CierreService {
         Instant.now());
   }
 
-  private ApiDataException rechazo(Cotizacion cotizacion, UUID closureId) {
+  private ApiDataException rechazo(Cotizacion cotizacion, UUID closureId, BigDecimal recibido) {
     Map<String, Object> data = new LinkedHashMap<>();
     data.put("cotizacion", cotizacion);
     data.put("closureId", closureId);
     return new ApiDataException(
         ErrorCode.AMOUNT_MISMATCH,
         data,
-        Map.of("montoRecibido", cotizacion.cobroAhora().toPlainString()));
+        Map.of("montoRecibido", recibido.toPlainString()));
   }
 
   // ------------------------------------------------------------------ sales
