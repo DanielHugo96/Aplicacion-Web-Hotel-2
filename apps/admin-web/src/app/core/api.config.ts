@@ -50,6 +50,14 @@ export const API_PATHS = {
   habitacionBuscar: (id: number | string) => `/api/habitacion/buscar/${id}`,
   habitacionRegistrar: '/api/habitacion/registrar',
   habitacionActualizar: (id: number | string) => `/api/habitacion/actualizar/${id}`,
+  habitacionEliminar: (id: number | string) => `/api/habitacion/eliminar/${id}`,
+  habitacionMantenimiento: (id: number | string) => `/api/habitacion/${id}/mantenimiento`,
+  habitacionMantenimientoCompletado: (id: number | string) =>
+    `/api/habitacion/${id}/mantenimiento-completado`,
+  habitacionReactivar: (id: number | string) => `/api/habitacion/${id}/reactivar`,
+  habitacionOperacion: (blockId: string) => `/api/habitacion/operaciones/${blockId}`,
+  limpiezas: '/api/habitacion/limpiezas',
+  limpiezaCompletada: (id: number | string) => `/api/habitacion/${id}/limpieza-completada`,
 
   estadosHabitacion: '/api/estadohabitacion',
   estadoHabitacionListar: '/api/estadohabitacion/listar',
@@ -59,6 +67,9 @@ export const API_PATHS = {
   // Área de cliente (C)
   recepcionCliente: (idCliente: number | string) => `/api/recepcion/cliente/${idCliente}`,
   recepcionBuscar: (id: number | string) => `/api/recepcion/${id}`,
+  recepcionListar: '/api/recepcion/listar',
+  recepcionRegistrar: '/api/recepcion/registrar',
+  recepcionActualizar: (id: number | string) => `/api/recepcion/actualizar/${id}`,
   ventaCatalogo: '/api/venta/catalogo',
   carritoAgregar: '/api/carrito/agregar',
   carritoListar: (idRecepcion: number | string) => `/api/carrito/listar/${idRecepcion}`,

@@ -42,6 +42,20 @@ function esVentaPendienteManual(req: HttpRequest<unknown>): boolean {
 }
 
 /**
+ * Las operaciones administrativas de habitación (mantenimiento y baja) también
+ * necesitan el 202 en crudo: la pantalla del panel muestra el banner
+ * persistente, sondea `Location` según `Retry-After` y refresca la fila al
+ * llegar al estado terminal. Ver decisión
+ * `IA-front-admin-web-recepcion-01`.
+ */
+function esOperacionHabitacionManual(req: HttpRequest<unknown>): boolean {
+  const url = (req.urlWithParams ?? req.url).split('?')[0];
+  if (req.method === 'POST') return /\/api\/habitacion\/\d+\/mantenimiento$/.test(url);
+  if (req.method === 'DELETE') return /\/api\/habitacion\/eliminar\/\d+$/.test(url);
+  return false;
+}
+
+/**
  * Una clave de idempotencia por intención (método + URL + query).
  * Se conserva al reintentar; ante una intención nueva se genera otra clave.
  */
@@ -140,7 +154,8 @@ export const gatewayInterceptor: HttpInterceptorFn = (req, next) => {
         event instanceof HttpResponse &&
         event.status === 202 &&
         !isPoll &&
-        !esVentaPendienteManual(req)
+        !esVentaPendienteManual(req) &&
+        !esOperacionHabitacionManual(req)
       ) {
         const location = event.headers.get('Location');
         if (!location) return of(event);

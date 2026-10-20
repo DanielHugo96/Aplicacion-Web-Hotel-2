@@ -174,4 +174,36 @@ describe('gatewayInterceptor', () => {
     expect(status).toBe(202);
     expect(location).toBe('/api/venta/buscar/5001');
   });
+
+  it('deja pasar el 202 de mantenimiento y baja de habitación para el banner del panel', () => {
+    const respuestas: Array<{ status: number; location: string | null }> = [];
+    TestBed.runInInjectionContext(() => {
+      for (const [method, url] of [
+        ['POST', '/api/habitacion/101/mantenimiento'],
+        ['DELETE', '/api/habitacion/eliminar/101'],
+      ] as const) {
+        gatewayInterceptor(new HttpRequest(method, url, method === 'POST' ? { motivo: 'Fuga' } : null), () =>
+          of(
+            new HttpResponse({
+              status: 202,
+              statusText: 'Accepted',
+              headers: new HttpHeaders({
+                Location: '/api/habitacion/operaciones/33333333-3333-4333-8333-333333333333',
+                'Retry-After': '2',
+              }),
+              body: { data: { blockId: '33333333-3333-4333-8333-333333333333' } },
+            })
+          )
+        ).subscribe((event) => {
+          if (event instanceof HttpResponse) {
+            respuestas.push({ status: event.status, location: event.headers.get('Location') });
+          }
+        });
+      }
+    });
+    expect(respuestas).toEqual([
+      { status: 202, location: '/api/habitacion/operaciones/33333333-3333-4333-8333-333333333333' },
+      { status: 202, location: '/api/habitacion/operaciones/33333333-3333-4333-8333-333333333333' },
+    ]);
+  });
 });

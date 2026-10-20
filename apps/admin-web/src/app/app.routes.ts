@@ -17,6 +17,7 @@ import { CategoriasListComponent } from './features/catalogo/categorias/categori
 import { CategoriaFormComponent } from './features/catalogo/categorias/categoria-form.component';
 import { HabitacionesListComponent } from './features/catalogo/habitaciones/habitaciones-list.component';
 import { HabitacionFormComponent } from './features/catalogo/habitaciones/habitacion-form.component';
+import { recepcionRoutes } from './features/recepcion/recepcion.routes';
 import { authGuard } from './core/guards/auth.guard';
 import { rolGuard } from './core/guards/rol.guard';
 
@@ -55,6 +56,8 @@ export const routes: Routes = [
       { path: 'habitaciones', component: HabitacionesListComponent, canActivate: [panel] },
       { path: 'habitaciones/nuevo', component: HabitacionFormComponent, canActivate: [panel] },
       { path: 'habitaciones/:id/editar', component: HabitacionFormComponent, canActivate: [panel] },
+
+      ...recepcionRoutes,
     ],
   },
   ...clienteRoutes,
