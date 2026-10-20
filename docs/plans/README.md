@@ -146,6 +146,12 @@ humana: quien ejecuta un plan a mano sigue las reglas 5, 6 y 9 tal cual.
 | Orquestador | Conduce **un** plan. No elige el orden: lo recibe ya calculado. Delega, da por validado y hace el merge. Si `main` está roto, encarga un plan de arreglo. |
 | Planificador de arreglos | Cuando `main` está roto por un plan ya `cerrado`, o hace falta refactorizar antes de seguir, reproduce el fallo y redacta un plan `<ámbito>-arreglo-<tema>` con evidencia. No implementa, no elige el orden y no mergea. |
 | Ejecutora | Implementa los pasos de **un** plan, se valida a sí misma y lo deja `cerrado`. No sabe qué plan va después, ni mergea, ni pregunta. |
+| Ejecutora de respaldo | Como la ejecutora, pero de **cualquier** ámbito y sobre MiniMax M3.1 Flash Free. Entra cuando DeepSeek se queda sin cuota o sin créditos, para que la campaña no se pare. |
+
+La ejecutora de respaldo existe porque DeepSeek V4.1 Flash se paga con créditos: cuando se
+acaban, el modelo deja de responder y la campaña se pararía a mitad de un plan. El relevo no
+relaja ninguna regla: la ejecutora de respaldo tiene las mismas zonas, el mismo protocolo de
+decisión y la misma exigencia de evidencia que las ejecutoras de ámbito.
 
 **Regla 6.11.1 — Protocolo de decisión.** Ante cualquier bloqueo, la ejecutora aplica:
 

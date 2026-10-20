@@ -154,6 +154,7 @@ Los 20 planes pendientes se ejecutan sin intervención humana. Los agentes viven
 | `plan-back` | `back`, `infra` | `opencode-go/longcat-2.5-preview-free` | Implementa los pasos de un plan, verifica y deja evidencia. |
 | `plan-front` | `front` | `opencode-go/longcat-2.5-preview-free` | Igual, sobre `apps/<app>/`. |
 | `plan-qa` | `qa` | `opencode-go/longcat-2.5-preview-free` | Igual, sobre `tests/**` y `scripts/**`. |
+| `ejecutor` | respaldo: cualquier ámbito | `opencode-go/minimax-m3.1-flash-free#high` | Sustituye a las ejecutoras de ámbito cuando DeepSeek se queda sin cuota o sin créditos. Implementa el plan entero y deja la misma evidencia. |
 
 El orquestador corre con la herramienta de preguntar deshabilitada por
 configuración. "No preguntar" no es una instrucción del prompt: es una prohibición.
@@ -163,6 +164,33 @@ plan `BLOQUEADO`: la ejecutora es quien valida su propio trabajo, y no hay una s
 que lo apruebe. Es la excepción acotada de [`guia-git.md`](../guia-git.md) y de la regla
 6.11.3 de la norma. La separación que la regla 9 protegía se asume aquí como riesgo
 explícito, no se sustituye por otra revisión.
+
+### El relevo: cuándo DeepSeek se queda sin cuota
+
+DeepSeek V4.1 Flash se paga con créditos, y la campaña se los gasta. Cuando el modelo deja de
+responder —cuota agotada, sin créditos o colgado—, la campaña **no se para**, porque hay un
+ejecutor de respaldo.
+
+| Qué | Qué hace |
+|---|---|
+| `ejecutor` | Implementa un plan de **cualquier** ámbito (`back`, `infra`, `front`, `qa`) sobre **MiniMax M3.1 Flash Free** (`opencode-go/minimax-m3.1-flash-free#high`). |
+
+El relevo tiene dos formas:
+
+- **En la sesión**, el orquestador delega en `ejecutor` con el modelo explícito de MiniMax (punto
+  5.1 de su prompt). Si la sesión entera es la que no responde, quien está delante cambia el
+  modelo de la sesión a `opencode-go/minimax-m3.1-flash-free#high` y relanza `/campana`: el plan a
+  medias se retoma solo, porque `proximo-plan.py` devuelve primero los planes `en curso`.
+- **En el runner desatendido**, [`scripts/orquestar.py`](../../scripts/orquestar.py) detecta el
+  error de cuota, relanza el plan con el modelo de respaldo y sigue con el siguiente. Como los
+  subagentes heredan el modelo de la sesión, el relevo pone a MiniMax a todo el equipo.
+
+La variante de esfuerzo es `high` a propósito: con `low` el modelo se pierde en planes largos, y
+con `xhigh` o `max` el servicio gratuito se satura. `high` es donde todavía razona lo suficiente
+para seguir pasos en orden y verificar un build.
+
+Lo que el relevo **no** cambia: la zona que se puede tocar, el protocolo de decisión de tres
+niveles, la evidencia por caso, y el hecho de que quien implementa nunca mergea.
 
 ### Cómo se conduce: desde OpenCode
 
@@ -217,6 +245,14 @@ flag y comprueba al final que el plan quedó cerrado. Es opcional; la vía norma
 python scripts/orquestar.py                  # un plan
 python scripts/orquestar.py --todos          # hasta que no quede ninguno
 python scripts/orquestar.py --todos --seguir # enseñando lo que piensa el orquestador
+```
+
+Si el modelo principal se queda sin cuota, el runner relanza el plan con el de respaldo y sigue
+por ahí:
+
+```bash
+python scripts/orquestar.py --todos --modelo-respaldo opencode-go/minimax-m3.1-flash-free#high
+python scripts/orquestar.py --todos --sin-respaldo   # sin relevo: para si el modelo falla
 ```
 
 ### Qué queda bloqueado, y a quién
