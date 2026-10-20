@@ -65,6 +65,17 @@ describe('VentasListComponent', () => {
     fixture.detectChanges();
   }
 
+  it('muestra el skeleton mientras carga las ventas', async () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.skeleton-table')).toBeTruthy();
+    http
+      .expectOne((r) => r.url === `${API_BASE_URL}/api/venta`)
+      .flush(envelopePage([venta()]));
+    await microtasks();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.skeleton-table')).toBeFalsy();
+  });
+
   it('filtra por pago y operación como query params y pagina desde meta', async () => {
     await cargar([venta()], 0, 21);
     const estado = (fixture.nativeElement as HTMLElement).querySelector(

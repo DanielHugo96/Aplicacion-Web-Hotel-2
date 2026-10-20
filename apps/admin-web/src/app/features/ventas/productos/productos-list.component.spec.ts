@@ -77,6 +77,17 @@ describe('ProductosListComponent', () => {
     fixture.detectChanges();
   }
 
+  it('muestra el skeleton mientras carga el listado', async () => {
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.skeleton-table')).toBeTruthy();
+    http
+      .expectOne((r) => r.url === `${API_BASE_URL}/api/producto/listar`)
+      .flush(envelopePage([producto()]));
+    await microtasks();
+    fixture.detectChanges();
+    expect((fixture.nativeElement as HTMLElement).querySelector('.skeleton-table')).toBeFalsy();
+  });
+
   it('pide los activos de la sede y muestra precios y cantidades del backend', async () => {
     await cargar([
       producto({ precio: 1234.5, cantidad: 20, umbralBajo: 5, sku: 'AGUA-500' }),

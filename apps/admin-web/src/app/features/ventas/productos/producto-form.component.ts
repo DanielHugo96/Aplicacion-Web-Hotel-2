@@ -80,16 +80,7 @@ export class ProductoFormComponent implements OnInit {
     if (id === null) return;
     const idHotel = this.sedesContext.selectedId() ?? this.producto()?.idHotel ?? null;
     if (!idHotel) {
-      this.error.set({
-        code: 'VALIDATION_ERROR',
-        message: 'Selecciona la sede en el topbar para editar este producto.',
-        action: 'Elegir una sede y recargar.',
-        fields: {},
-        correlationId: '',
-        retryable: false,
-        reloadable: false,
-        relogin: false,
-      });
+      this.errores.set({ idHotel: 'Selecciona la sede' });
       this.cargando.set(false);
       return;
     }

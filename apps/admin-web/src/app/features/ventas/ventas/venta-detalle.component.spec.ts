@@ -170,6 +170,9 @@ describe('VentaDetalleComponent', () => {
     expect(fixture.nativeElement.textContent).toContain(
       'Operación en proceso. No repitas la acción.'
     );
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('[aria-live="polite"]')
+    ).toBeTruthy();
     expect(TestBed.inject(ToastService).message()).toBeNull();
     expect(fixture.componentInstance.puedePagar()).toBe(false);
     expect(fixture.componentInstance.pendiente()).toBe(true);
