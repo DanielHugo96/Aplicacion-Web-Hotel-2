@@ -1,0 +1,149 @@
+{
+  "idRecepcion": 15,
+  "primerIntento": {
+    "status": 409,
+    "body": {
+      "success": false,
+      "message": "No se puede bloquear la habitación: está ocupada o en limpieza.",
+      "error": {
+        "code": "GATE_NOT_AVAILABLE",
+        "fields": {
+          "idHabitacion": "202"
+        }
+      },
+      "meta": {
+        "correlationId": "810f3233-21aa-4b47-847a-bdb9cf6b5a25"
+      }
+    },
+    "operacion": {
+      "blockId": "8af0ada8-cae8-4ce7-8b6b-c252f35cf9f1",
+      "idHabitacion": 202,
+      "tipo": "MANTENIMIENTO",
+      "estado": "RECHAZADA",
+      "attempts": 0,
+      "nextAttemptAt": "2026-10-20 17:51:23.186095+00",
+      "requestedAt": "2026-10-20T17:51:23.185914400Z"
+    },
+    "bloqueo": {
+      "blockId": "8af0ada8-cae8-4ce7-8b6b-c252f35cf9f1",
+      "idHabitacion": 202,
+      "idHotel": 2,
+      "estado": "RECHAZADO",
+      "errorCode": "GATE_NOT_AVAILABLE",
+      "createdAt": "2026-10-20 17:51:23.196919+00",
+      "releasedAt": null
+    }
+  },
+  "cierre": {
+    "status": 200,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "64c2efd3-e277-4f40-b9bc-a2779d0a517b",
+      "etag": "\"3\"",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "1276",
+      "date": "Tue, 20 Oct 2026 17:52:09 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": "{\"success\":true,\"message\":\"Salida registrada\",\"data\":{\"idRecepcion\":15,\"idHotel\":2,\"idCliente\":101,\"idHabitacion\":202,\"numero\":\"102\",\"categoriaNombre\":\"Doble\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion doble de demostracion\",\"precioHabitacion\":120.00,\"nombre\":\"Cliente\",\"apellido\":\"Dos\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000101\",\"correo\":\"cliente.dos@hotel.test\",\"fechaEntrada\":\"2026-10-20\",\"fechaSalida\":\"2026-10-21\",\"fechaSalidaConfirmacion\":\"2026-10-20T17:52:09.210338Z\",\"precioInicial\":120.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":0.00,\"totalPagado\":120.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":false,\"estadoEstadia\":\"CERRADA\",\"archivada\":false,\"vencida\":false,\"version\":3,\"closureId\":\"40ffd532-3396-41db-ad87-d8c05845a0ef\",\"cleaningCycleId\":\"ca800d45-0ef6-4773-863c-f399175f0634\",\"cierre\":{\"closureId\":\"40ffd532-3396-41db-ad87-d8c05845a0ef\",\"estado\":\"COMPLETADO\",\"lastErrorCode\":null,\"calculo\":{\"cobroAhora\":120.0,\"totalGeneral\":120.0,\"consumosTotal\":0.0,\"alojamientoTotal\":120.0,\"saldoAlojamiento\":120.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":0.0,\"expectedPendingTotal\":0.0},\"medioPago\":\"EFECTIVO\"}},\"meta\":{\"correlationId\":\"64c2efd3-e277-4f40-b9bc-a2779d0a517b\"}}"
+  },
+  "reintentoMismaClave": {
+    "status": 409,
+    "body": {
+      "success": false,
+      "message": "La operación ya se envió con otros datos.",
+      "data": null,
+      "error": {
+        "code": "IDEMPOTENCY_CONFLICT",
+        "fields": {
+          "Idempotency-Key": "misma clave con un request distinto"
+        }
+      },
+      "meta": {
+        "correlationId": "5b5c7b2b-7a79-4f72-8556-764c81f9d6a8"
+      }
+    }
+  },
+  "operacionesTrasReintento": [
+    [
+      "8af0ada8-cae8-4ce7-8b6b-c252f35cf9f1",
+      "RECHAZADA"
+    ],
+    [
+      "6f5fbba1-a392-49ff-a9b0-000187086977",
+      "RECHAZADA"
+    ]
+  ],
+  "nuevaIntencion": {
+    "status": 200,
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idHabitacion": 202,
+        "idHotel": 2,
+        "numero": "102",
+        "idPiso": 21,
+        "pisoNombre": "Primer piso",
+        "idCategoria": 2,
+        "categoriaNombre": "Doble",
+        "detalle": "Habitacion doble de demostracion",
+        "precio": 120.0,
+        "publicada": true,
+        "urlsImagenes": [],
+        "estado": true,
+        "idEstadoHabitacion": 3,
+        "estadoFisico": {
+          "idEstadoHabitacion": 3,
+          "codigo": "MANTENIMIENTO",
+          "descripcion": "Mantenimiento",
+          "estado": true,
+          "version": 1
+        },
+        "ocupacion": {
+          "estadoEstadia": "DESCONOCIDA",
+          "idRecepcion": null,
+          "updatedAt": null
+        },
+        "blockId": "003f71ab-8e8d-4906-9037-c56ce07a5a8b",
+        "endpoint": "/api/habitacion/operaciones/003f71ab-8e8d-4906-9037-c56ce07a5a8b",
+        "version": 5
+      },
+      "meta": {
+        "correlationId": "236b382d-40db-4824-8692-d1145af5f8cd"
+      }
+    }
+  },
+  "operacionesTrasNueva": [
+    [
+      "8af0ada8-cae8-4ce7-8b6b-c252f35cf9f1",
+      "RECHAZADA"
+    ],
+    [
+      "6f5fbba1-a392-49ff-a9b0-000187086977",
+      "RECHAZADA"
+    ],
+    [
+      "003f71ab-8e8d-4906-9037-c56ce07a5a8b",
+      "APLICADA"
+    ]
+  ],
+  "gate": {
+    "estado": "BLOQUEADA",
+    "blockId": "003f71ab-8e8d-4906-9037-c56ce07a5a8b",
+    "roomVersion": 10
+  },
+  "fisico": {
+    "idHabitacion": 202,
+    "version": 5,
+    "estadoFisico": "MANTENIMIENTO",
+    "estado": true
+  }
+}

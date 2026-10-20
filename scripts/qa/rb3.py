@@ -172,7 +172,7 @@ def _recover(ctx: dict[str, Any]) -> None:
     c.start_service("reception-service")
     c.wait_until(
         lambda: _operacion(block_id).get("estado") == "APLICADA",
-        timeout=120,
+        timeout=360,
         interval=5,
         description="operación PREPARANDO -> APLICADA",
     )

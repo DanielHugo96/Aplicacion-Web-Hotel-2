@@ -1,0 +1,41 @@
+{
+  "operacion": {
+    "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+    "idHabitacion": 201,
+    "tipo": "MANTENIMIENTO",
+    "estado": "APLICADA",
+    "attempts": 9,
+    "nextAttemptAt": "2026-10-20 17:50:44.834959+00",
+    "requestedAt": "2026-10-20T17:35:36.219928900Z"
+  },
+  "bloqueo": {
+    "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+    "idHabitacion": 201,
+    "idHotel": 2,
+    "estado": "ACTIVO",
+    "errorCode": null,
+    "createdAt": "2026-10-20 17:35:53.981905+00",
+    "releasedAt": null
+  },
+  "gate": {
+    "estado": "BLOQUEADA",
+    "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+    "roomVersion": 1
+  },
+  "fisico": {
+    "idHabitacion": 201,
+    "version": 2,
+    "estadoFisico": "MANTENIMIENTO",
+    "estado": true
+  },
+  "alerta": {
+    "alerta": "Operación de habitación",
+    "umbral": "PREPARANDO > 10min",
+    "deteccion": "consulta a operacion_habitacion (request->>'requestedAt')",
+    "severidad": "Media",
+    "runbook": "RB3",
+    "valor": 0,
+    "dispara": false,
+    "detalle": []
+  }
+}

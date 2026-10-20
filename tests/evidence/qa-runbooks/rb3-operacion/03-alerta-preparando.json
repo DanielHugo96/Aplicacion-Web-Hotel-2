@@ -1,0 +1,150 @@
+{
+  "linea": [
+    {
+      "ts": "2026-10-20T17:36:07.621344Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:36:35.496272Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:37:03.391478Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:37:31.326791Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:37:59.129587Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:38:26.969207Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:38:54.715614Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:39:22.642569Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:39:51.164362Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:40:19.615619Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:40:47.955502Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:41:15.752517Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:41:44.023657Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:42:11.724715Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:42:39.597014Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:43:07.696810Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:43:35.571014Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:44:03.395749Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:44:31.238148Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:44:59.246533Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:45:27.054443Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:45:54.874303Z",
+      "valor": 1,
+      "dispara": true
+    }
+  ],
+  "alerta": {
+    "alerta": "Operación de habitación",
+    "umbral": "PREPARANDO > 10min",
+    "deteccion": "consulta a operacion_habitacion (request->>'requestedAt')",
+    "severidad": "Media",
+    "runbook": "RB3",
+    "valor": 1,
+    "dispara": true,
+    "detalle": [
+      {
+        "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+        "idHabitacion": "201",
+        "requestedAt": "2026-10-20T17:35:36.219928900Z"
+      }
+    ]
+  },
+  "operacion": {
+    "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+    "idHabitacion": 201,
+    "tipo": "MANTENIMIENTO",
+    "estado": "PREPARANDO",
+    "attempts": 9,
+    "nextAttemptAt": "2026-10-20 17:50:44.834959+00",
+    "requestedAt": "2026-10-20T17:35:36.219928900Z"
+  },
+  "gateSinCambios": true,
+  "fisicoSinCambios": true,
+  "operacionInicial": {
+    "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+    "idHabitacion": 201,
+    "tipo": "MANTENIMIENTO",
+    "estado": "PREPARANDO",
+    "attempts": 1,
+    "nextAttemptAt": "2026-10-20 17:35:49.470164+00",
+    "requestedAt": "2026-10-20T17:35:36.219928900Z"
+  }
+}

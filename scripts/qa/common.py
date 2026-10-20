@@ -236,13 +236,24 @@ def http(
         return Resp(0, {}, f"{type(err).__name__}: {err}")
 
 
+_TOKEN_CACHE: dict[str, tuple[str, float]] = {}
+
+
 def login(email: str, password: str) -> str:
+    cached = _TOKEN_CACHE.get(email)
+    if cached and time.time() < cached[1]:
+        return cached[0]
     resp = http("POST", "/api/auth/login", body={"correo": email, "clave": password})
+    if resp.status == 429:
+        time.sleep(12)
+        resp = http("POST", "/api/auth/login", body={"correo": email, "clave": password})
     if resp.status != 200:
         raise RunbookError(f"login {email} devolvió {resp.status}: {resp.body[:300]}")
     token = resp.field("data", "token")
     if not token:
         raise RunbookError(f"login {email} sin token: {resp.body[:300]}")
+    expires = resp.field("data", "expiresIn") or 900
+    _TOKEN_CACHE[email] = (token, time.time() + max(60, int(expires) - 120))
     return token
 
 

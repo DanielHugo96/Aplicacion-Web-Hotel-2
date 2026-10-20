@@ -1,5 +1,5 @@
 {
-  "capturadoEn": "2026-10-20T17:04:29.238946Z",
+  "capturadoEn": "2026-10-20T17:52:36.571912Z",
   "alertas": [
     {
       "alerta": "Mensajes en DLT Kafka",
@@ -7,12 +7,10 @@
       "deteccion": "conteo de offsets de los topics *.dlt",
       "severidad": "Alta",
       "runbook": "RB1",
-      "valor": 6,
+      "valor": 5,
       "dispara": true,
       "detalle": {
-        "hotel.habitacion.v1.reception-gates-v1.dlt": 0,
-        "hotel.habitacion.v1.reporting-proyeccion-v1.dlt": 0,
-        "reception.recepcion.v1.hotel-ocupacion-v1.dlt": 6
+        "reception.recepcion.v1.hotel-ocupacion-v1.dlt": 5
       }
     },
     {
@@ -129,9 +127,9 @@
       "detalle": [
         {
           "topic": "hotel.habitacion.v1",
-          "lastOffset": "10",
-          "lastEventAt": "2026-10-20 16:02:48.085721+00",
-          "updatedAt": "2026-10-20 16:02:48.086688+00"
+          "lastOffset": "19",
+          "lastEventAt": "2026-10-20 17:52:20.819531+00",
+          "updatedAt": "2026-10-20 17:52:20.815407+00"
         }
       ]
     },

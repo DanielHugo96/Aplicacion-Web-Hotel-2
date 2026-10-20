@@ -1,0 +1,92 @@
+{
+  "status": 202,
+  "headers": {
+    "vary": "Access-Control-Request-Headers",
+    "x-correlation-id": "3b03ad6f-4630-4ce3-ac80-3e1a4cad189d",
+    "location": "/api/habitacion/operaciones/b4d63999-a05f-4487-92e8-b650183ddce2",
+    "retry-after": "2",
+    "x-content-type-options": "nosniff",
+    "x-xss-protection": "0",
+    "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+    "pragma": "no-cache",
+    "expires": "0",
+    "x-frame-options": "DENY",
+    "content-type": "application/json",
+    "content-length": "234",
+    "date": "Tue, 20 Oct 2026 17:35:36 GMT",
+    "referrer-policy": "no-referrer",
+    "connection": "close"
+  },
+  "body": {
+    "success": true,
+    "message": "Operación en curso",
+    "data": {
+      "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+      "idHabitacion": 201,
+      "tipo": "MANTENIMIENTO",
+      "estado": "PREPARANDO"
+    },
+    "meta": {
+      "correlationId": "3b03ad6f-4630-4ce3-ac80-3e1a4cad189d"
+    }
+  },
+  "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+  "operacion": {
+    "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+    "idHabitacion": 201,
+    "tipo": "MANTENIMIENTO",
+    "estado": "PREPARANDO",
+    "attempts": 0,
+    "nextAttemptAt": "2026-10-20 17:35:36.22133+00",
+    "requestedAt": "2026-10-20T17:35:36.219928900Z"
+  },
+  "bloqueo": {},
+  "sinFilaBloqueo": true,
+  "consulta": {
+    "status": 200,
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+        "idHabitacion": 201,
+        "tipo": "MANTENIMIENTO",
+        "estado": "PREPARANDO"
+      },
+      "meta": {
+        "correlationId": "508b8a51-e013-465e-8f83-b1cac68052cb"
+      }
+    }
+  },
+  "mutacionMismaHabitacion": {
+    "status": 409,
+    "body": {
+      "success": false,
+      "message": "La habitación tiene una operación en curso.",
+      "error": {
+        "code": "ROOM_OPERATION_IN_PROGRESS",
+        "fields": {
+          "idHabitacion": "201"
+        }
+      },
+      "meta": {
+        "correlationId": "4c7eebbd-81eb-4583-bef3-e8eec990fd9e"
+      }
+    }
+  },
+  "antes": {
+    "operacion": [],
+    "bloqueo": [],
+    "gate": {
+      "estado": "LIBRE",
+      "blockId": null,
+      "roomVersion": 0
+    },
+    "fisico": {
+      "idHabitacion": 201,
+      "version": 1,
+      "estadoFisico": "LISTA",
+      "estado": true
+    }
+  }
+}
