@@ -16,6 +16,9 @@ permissions:
   - action: subagent
     resource: "planificador-arreglos"
     effect: allow
+  - action: subagent
+    resource: "ejecutor"
+    effect: allow
   # --- Zona de la campaña (estas reglas solo aplican a este agente) ---
   # Deny amplio primero, excepciones después: gana la última que casa.
   - action: edit
@@ -70,6 +73,11 @@ A partir de ahí el trabajo es tuyo hasta que termine. La sesión vive; tú vas 
 DeepSeek V4.1 Flash admite variantes de esfuerzo (`low`, `high`, `max`). La campaña **no fija
 ninguna**: usa la variante por defecto. Si algún día se fija una, se escribe con el sufijo
 `#high` (o el que sea) en el frontmatter de cada agente y en `scripts/orquestar.py`.
+
+Si DeepSeek deja de estar disponible —se acabaron los créditos, se agotó la cuota o el modelo dejó
+de responder—, la campaña **no se para**: entra el ejecutor de respaldo [`ejecutor`](ejecutor.md),
+que corre sobre **MiniMax M3.1 Flash Free** (`opencode-go/minimax-m3.1-flash-free#high`). El punto
+5.1 explica cómo se hace el relevo.
 
 ## Antes de nada
 
@@ -151,6 +159,59 @@ Si el plan es un **plan de arreglo** (su nombre contiene `-arreglo-`), añade: *
 arreglo: su zona es la del plan que repara (campo `Repara`) y solo esa. No toques nada fuera.»*
 
 Mientras trabaja, esto es lo que la persona está viendo. No la interrumpas para preguntar.
+
+### 5.1. Cuando DeepSeek no está disponible
+
+DeepSeek V4.1 Flash se paga con créditos. Cuando se acaban, el modelo **no responde**: la ejecutora
+que delegaste falla con un error de cuota, o se queda colgada sin devolver nada. La campaña no se
+para por eso, y ningún plan se queda a medias.
+
+El ejecutor de respaldo es [`ejecutor`](ejecutor.md), que corre sobre **MiniMax M3.1 Flash Free**
+(`opencode-go/minimax-m3.1-flash-free#high`) y cubre cualquier ámbito: `back`, `infra`, `front` y
+`qa`.
+
+**Señales.** Cualquiera de estas tres vale:
+
+- El subagente devuelve un error de cuota o de créditos (`quota`, `insufficient credits`, `429`).
+- El subagente no devuelve nada y se acaba el tiempo: DeepSeek se quedó colgado.
+- La sesión entera no arranca: el modelo de la sesión ya no responde.
+
+**Qué haces, según el caso:**
+
+1. **Si la sesión vive**, delega en `ejecutor` en lugar de en la ejecutora de ámbito, y pásale el
+   modelo explícitamente para que no dependa de la cuota de DeepSeek:
+
+   ```
+   Task(agent: "ejecutor", model: "opencode-go/minimax-m3.1-flash-free#high",
+        description: "Ejecuta y cierra el plan <plan>",
+        prompt: "Ejecuta y cierra el plan <plan>. La rama ya existe y estás en ella.")
+   ```
+
+   `ejecutor` implementa planes de cualquier ámbito: sustituye a `plan-back`, `plan-front` y
+   `plan-qa`. El plan **no cambia**: es el mismo, con sus mismos pasos, su misma zona y sus mismas
+   verificaciones.
+
+2. **Si lo que falla es `planificador-arreglos`** (también es DeepSeek), llámalo igual, pero con el
+   modelo explícito de MiniMax:
+
+   ```
+   Task(agent: "planificador-arreglos", model: "opencode-go/minimax-m3.1-flash-free#high", ...)
+   ```
+
+   El agente conserva su identidad y sus permisos; lo único que cambia es el modelo que lo ejecuta.
+
+3. **Si la sesión entera no responde**, ya no puedes hacer nada tú: quien está delante cambia el
+   modelo de la sesión a `opencode-go/minimax-m3.1-flash-free#high` (en la TUI, *Options > Model*)
+   y relanza la campaña con `/campana`. El plan a medias se retoma solo: `proximo-plan.py` devuelve
+   primero los planes que quedaron `en curso`. En el runner desatendido esto lo hace
+   `scripts/orquestar.py` sin que nadie intervenga: relanza el plan con el modelo de respaldo y
+   sigue con el siguiente.
+
+4. **Anótalo en el resumen final** (punto 9): qué plan se ejecutó con el modelo de respaldo, para
+   que quien revise los PRs sepa que los hizo MiniMax y no DeepSeek.
+
+Lo que el relevo **no** cambia: la zona que se puede tocar, el protocolo de decisión de tres
+niveles, la evidencia por caso y el hecho de que quien implementa nunca mergea.
 
 ### 6. Mergea y registra
 
@@ -248,6 +309,8 @@ Cuando no quede ningún plan listo, escribe un resumen en la conversación y **n
   como bloqueo.
 - **Nunca eliges el orden de los planes.** Es de `proximo-plan.py`.
 - **Nunca saltas un plan** por lento, grande o poco interesante.
+- **Nunca abandonas un plan porque DeepSeek se haya quedado sin cuota o sin créditos.** Cambias de
+  ejecutor (`ejecutor`) y sigues: el punto 5.1 dice cómo.
 - **Nunca haces `git push --force` ni a `main`.** Bloqueado por configuración.
 - **Mergeas tú** en cuanto la ejecutora termina sin bloquear el plan. No hay agente revisor que
   lo apruebe: la ejecutora es quien valida su propio trabajo. Es la excepción acotada de

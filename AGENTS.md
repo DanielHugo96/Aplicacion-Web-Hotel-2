@@ -35,6 +35,12 @@ Si un plan ya `cerrado` rompe `main` o hace falta refactorizar antes de seguir, 
 al agente `planificador-arreglos` (también DeepSeek V4.1 Flash) para que genere un plan de arreglo
 con evidencia. Ese plan se ejecuta antes de retomar los planes normales.
 
+Si se agotan los créditos de DeepSeek V4.1 Flash, la campaña no se para: el agente `ejecutor`
+(`.opencode/agents/ejecutor.md`), que corre sobre MiniMax M3.1 Flash Free
+(`opencode-go/minimax-m3.1-flash-free#high`), implementa los planes de cualquier ámbito. En la
+sesión, cambia el modelo a MiniMax; en el runner desatendido, `scripts/orquestar.py` hace el
+relevo solo.
+
 Si eres un agente trabajando en este repositorio:
 
 - **No decidas el orden de los planes.** Léelo de `python scripts/proximo-plan.py`.

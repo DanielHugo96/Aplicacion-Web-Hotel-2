@@ -19,6 +19,10 @@ Contexto adicional para esta ejecución:
   del orquestador).
 - **No cierres la campaña en seco.** Cuando no quede ningún plan listo, escribe el resumen final
   que pide el punto 9 del orquestador: cerrados, arreglos, bloqueados y decisiones de contrato.
+- **Si DeepSeek se queda sin cuota o sin créditos, no pares.** Pasa al ejecutor de respaldo
+  `ejecutor` (MiniMax M3.1 Flash Free) según el punto 5.1 del orquestador. Si la sesión entera es la
+  que no responde, quien está delante cambia el modelo de la sesión a
+  `opencode-go/minimax-m3.1-flash-free#high` y relanza `/campana`: el plan a medias se retoma solo.
 
 Si la persona te da argumentos, úsalos como límites: un nombre de plan acota la campaña a ese
 plan, un número acota a cuántos planes se ejecutan en esta pasada.
