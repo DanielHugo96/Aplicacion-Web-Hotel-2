@@ -1,0 +1,325 @@
+{
+  "inicio": "2026-10-20T17:53:26.419464Z",
+  "linea": [
+    {
+      "ts": "2026-10-20T17:53:34.555781Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:54:02.659718Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:54:30.728203Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:54:58.795320Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:55:26.846087Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:55:54.804956Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:56:22.776012Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:56:50.869338Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:57:18.873613Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:57:46.866366Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:58:15.202481Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:58:43.602118Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:59:11.631386Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T17:59:40.140120Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:00:08.249527Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:00:36.249785Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:01:04.437105Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:01:32.572667Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:02:00.548135Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:02:28.604608Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:02:56.733169Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:03:24.826649Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:03:52.924326Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:04:21.002390Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:04:48.977510Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:05:17.006250Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:05:45.187848Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:06:13.349109Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:06:41.533391Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:07:09.968491Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:07:37.913983Z",
+      "outbox": 0,
+      "dispara": false,
+      "reporting": 1,
+      "reportingDispara": true
+    },
+    {
+      "ts": "2026-10-20T18:08:05.836786Z",
+      "outbox": 1,
+      "dispara": true,
+      "reporting": 1,
+      "reportingDispara": true
+    }
+  ],
+  "alertaOutbox": {
+    "alerta": "Outbox pendiente",
+    "umbral": "> 15min o attempts > 10",
+    "deteccion": "consulta a outbox por base",
+    "severidad": "Alta",
+    "runbook": "RB4",
+    "valor": 1,
+    "dispara": true,
+    "detalle": {
+      "reception_db": [
+        {
+          "id": "7ba1a89e-5214-49cd-b39e-613caf9157d0",
+          "type": "CheckInRegistrado",
+          "attempts": 11,
+          "created_at": "2026-10-20 17:52:51.78835+00",
+          "next_attempt_at": "2026-10-20 18:12:46.949217+00"
+        }
+      ]
+    }
+  },
+  "reporting": {
+    "alerta": "Reporting degradado",
+    "umbral": "degraded=true o sin conexión Kafka > 5min",
+    "deteccion": "projection_checkpoint / meta de la API",
+    "severidad": "Media",
+    "runbook": "RB1",
+    "valor": 1,
+    "dispara": true,
+    "detalle": [
+      {
+        "topic": "hotel.habitacion.v1",
+        "lastOffset": "19",
+        "lastEventAt": "2026-10-20 17:52:20.819531+00",
+        "updatedAt": "2026-10-20 17:52:20.815407+00"
+      }
+    ]
+  },
+  "filaMasAntigua": {
+    "id": "7ba1a89e-5214-49cd-b39e-613caf9157d0",
+    "destination": "KAFKA",
+    "channel": "reception.recepcion.v1",
+    "type": "CheckInRegistrado",
+    "payload": {
+      "type": "CheckInRegistrado",
+      "eventId": "c6b7c4de-a03e-4418-ae27-10ef687c911b",
+      "idHotel": 3,
+      "payload": {
+        "cierre": null,
+        "numero": "102",
+        "tarifa": 90.0,
+        "idHotel": 3,
+        "version": 1,
+        "adelanto": 0.0,
+        "archivada": false,
+        "closureId": null,
+        "idCliente": 100,
+        "fechaSalida": "2026-10-21",
+        "idRecepcion": 16,
+        "observacion": null,
+        "roomVersion": 1,
+        "totalPagado": 0.0,
+        "fechaEntrada": "2026-10-20",
+        "idHabitacion": 302,
+        "estadoEstadia": "ACTIVA",
+        "nombreCliente": "Cliente Uno",
+        "precioInicial": 90.0,
+        "costoPenalidad": 0.0,
+        "cleaningCycleId": null,
+        "motivoPenalidad": null,
+        "ocupacionActual": {
+          "blockId": null,
+          "estadoGate": "OCUPADA",
+          "idRecepcion": 16,
+          "cleaningCycleId": null
+        },
+        "medioPagoAdelanto": "EFECTIVO",
+        "fechaSalidaConfirmacion": null
+      },
+      "occurredAt": "2026-10-20T17:52:51.791904100Z",
+      "aggregateId": "302",
+      "aggregateType": "habitacion-ocupacion",
+      "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+      "schemaVersion": 1,
+      "aggregateVersion": 1
+    },
+    "publishedAt": null,
+    "attempts": 11,
+    "nextAttemptAt": "2026-10-20 18:12:46.949217+00",
+    "createdAt": "2026-10-20 17:52:51.78835+00"
+  },
+  "validacionSchema": {
+    "schema": "reception.recepcion.v1.CheckInRegistrado.schema.json",
+    "valido": true,
+    "errores": []
+  },
+  "sinDescartarPorSql": true
+}

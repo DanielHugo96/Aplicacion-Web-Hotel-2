@@ -1,0 +1,52 @@
+{
+  "despues": {
+    "status": 200,
+    "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+  },
+  "alerta": {
+    "alerta": "Readiness caída",
+    "umbral": "> 1min",
+    "deteccion": "GET /actuator/health/readiness por servicio",
+    "severidad": "Media",
+    "runbook": "Revisar dependencia",
+    "valor": [],
+    "dispara": false,
+    "detalle": {
+      "identity-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "hotel-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "reception-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"components\":{\"db\":{\"details\":{\"database\":\"PostgreSQL\",\"validationQuery\":\"isValid()\"},\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+      },
+      "inventory-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "sales-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "reporting-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "notification-service": {
+        "up": true,
+        "status": 200,
+        "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+      }
+    }
+  }
+}

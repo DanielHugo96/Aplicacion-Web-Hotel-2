@@ -1,0 +1,3 @@
+# Dumps y runtime del runner de runbooks: nunca se commitean.
+backups/
+_runtime/

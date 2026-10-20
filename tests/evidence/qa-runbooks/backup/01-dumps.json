@@ -1,0 +1,119 @@
+{
+  "directorio": "tests\\evidence\\qa-runbooks\\backups",
+  "dumps": {
+    "identity_db": {
+      "archivo": "identity_db-20261020T190254Z.dump",
+      "bytes": 22342,
+      "sha256": "f67fe143d0b4d2a736325ccf28d12cd3e04a7279572bf709527e33f66f9ead5e",
+      "legible": true,
+      "pgRestoreList": [
+        ";",
+        "; Archive created at 2026-10-20 19:02:54 UTC",
+        ";     dbname: identity_db",
+        ";     TOC Entries: 59",
+        ";     Compression: gzip"
+      ],
+      "pgRestoreError": ""
+    },
+    "hotel_db": {
+      "archivo": "hotel_db-20261020T190255Z.dump",
+      "bytes": 55585,
+      "sha256": "6aca650df68c0b9c0991611f87cdf9a21e8f4dc3239f3e24645c39028af579a0",
+      "legible": true,
+      "pgRestoreList": [
+        ";",
+        "; Archive created at 2026-10-20 19:02:55 UTC",
+        ";     dbname: hotel_db",
+        ";     TOC Entries: 107",
+        ";     Compression: gzip"
+      ],
+      "pgRestoreError": ""
+    },
+    "reception_db": {
+      "archivo": "reception_db-20261020T190255Z.dump",
+      "bytes": 86020,
+      "sha256": "523669d7c323ccbcdef7962c380c8e929cfc493691d4e459dfb03cac1eae488a",
+      "legible": true,
+      "pgRestoreList": [
+        ";",
+        "; Archive created at 2026-10-20 19:02:55 UTC",
+        ";     dbname: reception_db",
+        ";     TOC Entries: 95",
+        ";     Compression: gzip"
+      ],
+      "pgRestoreError": ""
+    },
+    "inventory_db": {
+      "archivo": "inventory_db-20261020T190255Z.dump",
+      "bytes": 39907,
+      "sha256": "76f6ba4659d6871a6e3d8da110d3167241fd442a398a26c8acfde9088dbc4fce",
+      "legible": true,
+      "pgRestoreList": [
+        ";",
+        "; Archive created at 2026-10-20 19:02:55 UTC",
+        ";     dbname: inventory_db",
+        ";     TOC Entries: 66",
+        ";     Compression: gzip"
+      ],
+      "pgRestoreError": ""
+    },
+    "sales_db": {
+      "archivo": "sales_db-20261020T190255Z.dump",
+      "bytes": 39342,
+      "sha256": "08b7bf8d4e03900a043d0d3641efbbf8f01b41bb13b13114fb23734b92b46a00",
+      "legible": true,
+      "pgRestoreList": [
+        ";",
+        "; Archive created at 2026-10-20 19:02:55 UTC",
+        ";     dbname: sales_db",
+        ";     TOC Entries: 66",
+        ";     Compression: gzip"
+      ],
+      "pgRestoreError": ""
+    },
+    "reporting_db": {
+      "archivo": "reporting_db-20261020T190256Z.dump",
+      "bytes": 38578,
+      "sha256": "10bd7d7df6d1627d2c3c58ef664436a75e9337c90f0f27d0d9bf3869a514cfc1",
+      "legible": true,
+      "pgRestoreList": [
+        ";",
+        "; Archive created at 2026-10-20 19:02:56 UTC",
+        ";     dbname: reporting_db",
+        ";     TOC Entries: 76",
+        ";     Compression: gzip"
+      ],
+      "pgRestoreError": ""
+    },
+    "notification_db": {
+      "archivo": "notification_db-20261020T190256Z.dump",
+      "bytes": 29665,
+      "sha256": "7c4cb5fed8fa0727a0ca590afe007cf4fbb43d3bb9b7ae2ef07afe59a5dd59f2",
+      "legible": true,
+      "pgRestoreList": [
+        ";",
+        "; Archive created at 2026-10-20 19:02:56 UTC",
+        ";     dbname: notification_db",
+        ";     TOC Entries: 49",
+        ";     Compression: gzip"
+      ],
+      "pgRestoreError": ""
+    }
+  },
+  "sieteDumps": true,
+  "todosLegibles": true,
+  "podado": [
+    "identity_db-20100101T000000Z.dump"
+  ],
+  "retencionDias": 7,
+  "conservados": [
+    "hotel_db-20261020T190255Z.dump",
+    "identity_db-20261020T190254Z.dump",
+    "inventory_db-20261020T190255Z.dump",
+    "notification_db-20261020T190256Z.dump",
+    "reception_db-20261020T190255Z.dump",
+    "reporting_db-20261020T190256Z.dump",
+    "sales_db-20261020T190255Z.dump"
+  ],
+  "oldPodado": true
+}

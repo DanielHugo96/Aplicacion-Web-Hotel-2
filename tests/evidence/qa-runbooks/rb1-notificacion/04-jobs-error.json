@@ -1,0 +1,25 @@
+{
+  "jobs": [
+    {
+      "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+      "tipo": "CHECKOUT",
+      "estado": "ERROR",
+      "attempts": 4,
+      "lastErrorCode": "SMTP_ERROR",
+      "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+      "createdAt": "2026-10-20 16:05:06.971333+00",
+      "idRecepcion": 2
+    },
+    {
+      "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+      "tipo": "CHECKOUT",
+      "estado": "ERROR",
+      "attempts": 4,
+      "lastErrorCode": "SMTP_ERROR",
+      "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+      "createdAt": "2026-10-20 16:05:06.984454+00",
+      "idRecepcion": 3
+    }
+  ],
+  "esperaSegundos": 2715
+}

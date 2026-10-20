@@ -1,0 +1,6 @@
+exit=0
+estado=ERROR filas=4 (actor=juan2)
+dfc34061-ec27-4a88-966d-003aaffa0b1b | tipo=CHECKIN | intentos=4 | ultimoError=SMTP_ERROR | destinatario=c***@hotel.test | proximo=2026-10-20T16:41:24.354621Z
+0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88 | tipo=CHECKOUT | intentos=4 | ultimoError=SMTP_ERROR | destinatario=c***@hotel.test | proximo=2026-10-20T16:41:24.363791Z
+1ce74bf3-3246-4ab6-856c-f371147969fe | tipo=CHECKIN | intentos=4 | ultimoError=SMTP_ERROR | destinatario=c***@hotel.test | proximo=2026-10-20T16:41:28.932261Z
+7b4da864-b7d3-4207-8b38-796622039a98 | tipo=CHECKOUT | intentos=4 | ultimoError=SMTP_ERROR | destinatario=c***@hotel.test | proximo=2026-10-20T16:41:28.950026Z

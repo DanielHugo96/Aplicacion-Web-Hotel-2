@@ -1,0 +1,713 @@
+{
+  "bases": {
+    "identity_db": {
+      "db": "identity_db",
+      "dump": "identity_db-20261020T190254Z.dump",
+      "tablasOrigen": 9,
+      "tablasRestaurado": 9,
+      "comparacion": {
+        "api_idempotency": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "audit_log": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "flyway_schema_history": {
+          "filasOrigen": 4,
+          "filasRestaurado": 4,
+          "checksumOrigen": "39551b64b7ee36703651520922710a0d",
+          "checksumRestaurado": "39551b64b7ee36703651520922710a0d",
+          "igual": true
+        },
+        "inbox": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "outbox": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "9d82560dcf70521b3e7f1eaa1de89407",
+          "checksumRestaurado": "9d82560dcf70521b3e7f1eaa1de89407",
+          "igual": true
+        },
+        "persona": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "01a17933576b6e60b87a4d4aca2caa48",
+          "checksumRestaurado": "01a17933576b6e60b87a4d4aca2caa48",
+          "igual": true
+        },
+        "persona_sede": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "a5038ab4fc0212828dd10177bbb93af7",
+          "checksumRestaurado": "a5038ab4fc0212828dd10177bbb93af7",
+          "igual": true
+        },
+        "service_client": {
+          "filasOrigen": 5,
+          "filasRestaurado": 5,
+          "checksumOrigen": "39f6731d324e4e9f22168e7eddac4e7c",
+          "checksumRestaurado": "39f6731d324e4e9f22168e7eddac4e7c",
+          "igual": true
+        },
+        "tipo_persona": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "7d13624ec825fa05895329f6667fa5c1",
+          "checksumRestaurado": "7d13624ec825fa05895329f6667fa5c1",
+          "igual": true
+        }
+      },
+      "secuenciasIguales": true,
+      "secuenciasOrigen": {
+        "persona_id_seq": "101"
+      },
+      "secuenciasRestaurado": {
+        "persona_id_seq": "101"
+      },
+      "outboxPendienteOrigen": "0",
+      "outboxPendienteRestaurado": "0",
+      "watermarks": null,
+      "divergencias": [],
+      "baseEliminada": "identity_db_restore",
+      "sinBasesResiduales": true
+    },
+    "hotel_db": {
+      "db": "hotel_db",
+      "dump": "hotel_db-20261020T190255Z.dump",
+      "tablasOrigen": 13,
+      "tablasRestaurado": 13,
+      "comparacion": {
+        "api_idempotency": {
+          "filasOrigen": 15,
+          "filasRestaurado": 15,
+          "checksumOrigen": "c4573d42814a1b14192445a4324f8cbc",
+          "checksumRestaurado": "c4573d42814a1b14192445a4324f8cbc",
+          "igual": true
+        },
+        "categoria": {
+          "filasOrigen": 2,
+          "filasRestaurado": 2,
+          "checksumOrigen": "aa9120352decc14b9d9b2580dfcfaebc",
+          "checksumRestaurado": "aa9120352decc14b9d9b2580dfcfaebc",
+          "igual": true
+        },
+        "estado_habitacion": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "5f8b14d7472b2e93d5b2a626d635eec9",
+          "checksumRestaurado": "5f8b14d7472b2e93d5b2a626d635eec9",
+          "igual": true
+        },
+        "flyway_schema_history": {
+          "filasOrigen": 5,
+          "filasRestaurado": 5,
+          "checksumOrigen": "b0b7b85c551713654e395cd1a257b840",
+          "checksumRestaurado": "b0b7b85c551713654e395cd1a257b840",
+          "igual": true
+        },
+        "habitacion": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "dc70a808319eceaff3763fe4a0865bad",
+          "checksumRestaurado": "dc70a808319eceaff3763fe4a0865bad",
+          "igual": true
+        },
+        "hotel": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "d03d69442e63d8053d321af02cf14246",
+          "checksumRestaurado": "d03d69442e63d8053d321af02cf14246",
+          "igual": true
+        },
+        "imagen_habitacion": {
+          "filasOrigen": 2,
+          "filasRestaurado": 2,
+          "checksumOrigen": "e0c7af7adcab8f89ff4ba33e2fff425a",
+          "checksumRestaurado": "e0c7af7adcab8f89ff4ba33e2fff425a",
+          "igual": true
+        },
+        "inbox": {
+          "filasOrigen": 13,
+          "filasRestaurado": 13,
+          "checksumOrigen": "b0d86aaa755bf603d97038fb25b9b746",
+          "checksumRestaurado": "b0d86aaa755bf603d97038fb25b9b746",
+          "igual": true
+        },
+        "limpieza": {
+          "filasOrigen": 12,
+          "filasRestaurado": 12,
+          "checksumOrigen": "93be9533051ed5cfe8f8cc7dfe7a7328",
+          "checksumRestaurado": "93be9533051ed5cfe8f8cc7dfe7a7328",
+          "igual": true
+        },
+        "ocupacion_projection": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "operacion_habitacion": {
+          "filasOrigen": 4,
+          "filasRestaurado": 4,
+          "checksumOrigen": "e93c5d0ab01b963cf2fd6081de66fd5f",
+          "checksumRestaurado": "e93c5d0ab01b963cf2fd6081de66fd5f",
+          "igual": true
+        },
+        "outbox": {
+          "filasOrigen": 10,
+          "filasRestaurado": 10,
+          "checksumOrigen": "30aa38cba90ca64295f98eda5b8c13e1",
+          "checksumRestaurado": "30aa38cba90ca64295f98eda5b8c13e1",
+          "igual": true
+        },
+        "piso": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "89ec9783e0dfdf8bddc652e9bf03699f",
+          "checksumRestaurado": "89ec9783e0dfdf8bddc652e9bf03699f",
+          "igual": true
+        }
+      },
+      "secuenciasIguales": true,
+      "secuenciasOrigen": {
+        "categoria_id_seq": "2",
+        "habitacion_id_seq": "302",
+        "hotel_id_seq": "3",
+        "imagen_habitacion_id_seq": "2",
+        "piso_id_seq": "31"
+      },
+      "secuenciasRestaurado": {
+        "categoria_id_seq": "2",
+        "habitacion_id_seq": "302",
+        "hotel_id_seq": "3",
+        "imagen_habitacion_id_seq": "2",
+        "piso_id_seq": "31"
+      },
+      "outboxPendienteOrigen": "0",
+      "outboxPendienteRestaurado": "0",
+      "watermarks": null,
+      "divergencias": [],
+      "baseEliminada": "hotel_db_restore",
+      "sinBasesResiduales": true
+    },
+    "reception_db": {
+      "db": "reception_db",
+      "dump": "reception_db-20261020T190255Z.dump",
+      "tablasOrigen": 10,
+      "tablasRestaurado": 10,
+      "comparacion": {
+        "api_idempotency": {
+          "filasOrigen": 46,
+          "filasRestaurado": 46,
+          "checksumOrigen": "b24be0989cf0aa98f17998ec59d4624d",
+          "checksumRestaurado": "b24be0989cf0aa98f17998ec59d4624d",
+          "igual": true
+        },
+        "audit_log": {
+          "filasOrigen": 8,
+          "filasRestaurado": 8,
+          "checksumOrigen": "464cadeb7940d220107a334f461fa9d6",
+          "checksumRestaurado": "464cadeb7940d220107a334f461fa9d6",
+          "igual": true
+        },
+        "bloqueo_habitacion": {
+          "filasOrigen": 4,
+          "filasRestaurado": 4,
+          "checksumOrigen": "ec5a1193840d65f45bfbc1742687e531",
+          "checksumRestaurado": "ec5a1193840d65f45bfbc1742687e531",
+          "igual": true
+        },
+        "cierre": {
+          "filasOrigen": 12,
+          "filasRestaurado": 12,
+          "checksumOrigen": "ed33053aa1a03dfa1967df31f34ac1cf",
+          "checksumRestaurado": "ed33053aa1a03dfa1967df31f34ac1cf",
+          "igual": true
+        },
+        "flyway_schema_history": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "ad820b50e439a4612582d9bddaafb4ef",
+          "checksumRestaurado": "ad820b50e439a4612582d9bddaafb4ef",
+          "igual": true
+        },
+        "inbox": {
+          "filasOrigen": 28,
+          "filasRestaurado": 28,
+          "checksumOrigen": "ba7e97a51b8412c22c2a2cf59f895af3",
+          "checksumRestaurado": "ba7e97a51b8412c22c2a2cf59f895af3",
+          "igual": true
+        },
+        "operacion_consumo": {
+          "filasOrigen": 11,
+          "filasRestaurado": 11,
+          "checksumOrigen": "f659179e1fbaed1ef1d73cf9ef5f3f7d",
+          "checksumRestaurado": "f659179e1fbaed1ef1d73cf9ef5f3f7d",
+          "igual": true
+        },
+        "outbox": {
+          "filasOrigen": 88,
+          "filasRestaurado": 88,
+          "checksumOrigen": "34b67922cbacb3e5bfd5e3c1bcb6a539",
+          "checksumRestaurado": "34b67922cbacb3e5bfd5e3c1bcb6a539",
+          "igual": true
+        },
+        "recepcion": {
+          "filasOrigen": 22,
+          "filasRestaurado": 22,
+          "checksumOrigen": "03ab29f6d7b50c0e84456ca904663626",
+          "checksumRestaurado": "03ab29f6d7b50c0e84456ca904663626",
+          "igual": true
+        },
+        "room_gate": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "316bb4bebbd28869c2114f566e79de1d",
+          "checksumRestaurado": "316bb4bebbd28869c2114f566e79de1d",
+          "igual": true
+        }
+      },
+      "secuenciasIguales": true,
+      "secuenciasOrigen": {
+        "recepcion_id_seq": "22"
+      },
+      "secuenciasRestaurado": {
+        "recepcion_id_seq": "22"
+      },
+      "outboxPendienteOrigen": "0",
+      "outboxPendienteRestaurado": "0",
+      "watermarks": null,
+      "divergencias": [],
+      "baseEliminada": "reception_db_restore",
+      "sinBasesResiduales": true
+    },
+    "inventory_db": {
+      "db": "inventory_db",
+      "dump": "inventory_db-20261020T190255Z.dump",
+      "tablasOrigen": 9,
+      "tablasRestaurado": 9,
+      "comparacion": {
+        "ajuste_stock": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "api_idempotency": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "flyway_schema_history": {
+          "filasOrigen": 5,
+          "filasRestaurado": 5,
+          "checksumOrigen": "dbf2456fa9de1f801038ee93894ab4df",
+          "checksumRestaurado": "dbf2456fa9de1f801038ee93894ab4df",
+          "igual": true
+        },
+        "inbox": {
+          "filasOrigen": 31,
+          "filasRestaurado": 31,
+          "checksumOrigen": "8f53d16ff6c89472838bde3b727881fe",
+          "checksumRestaurado": "8f53d16ff6c89472838bde3b727881fe",
+          "igual": true
+        },
+        "movimiento_detalle": {
+          "filasOrigen": 10,
+          "filasRestaurado": 10,
+          "checksumOrigen": "4139eed98aa5176ab0c48a89d33315b7",
+          "checksumRestaurado": "4139eed98aa5176ab0c48a89d33315b7",
+          "igual": true
+        },
+        "movimiento_venta": {
+          "filasOrigen": 11,
+          "filasRestaurado": 11,
+          "checksumOrigen": "03f8cb331a075c1a16500c31ffab4795",
+          "checksumRestaurado": "03f8cb331a075c1a16500c31ffab4795",
+          "igual": true
+        },
+        "outbox": {
+          "filasOrigen": 30,
+          "filasRestaurado": 30,
+          "checksumOrigen": "d35372701014dccaabcf9cd15869535c",
+          "checksumRestaurado": "d35372701014dccaabcf9cd15869535c",
+          "igual": true
+        },
+        "producto": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "556788254769709f35e57f7204b182cf",
+          "checksumRestaurado": "556788254769709f35e57f7204b182cf",
+          "igual": true
+        },
+        "producto_sede": {
+          "filasOrigen": 9,
+          "filasRestaurado": 9,
+          "checksumOrigen": "68e6a7ca3b2addc3f21aa345f277c594",
+          "checksumRestaurado": "68e6a7ca3b2addc3f21aa345f277c594",
+          "igual": true
+        }
+      },
+      "secuenciasIguales": true,
+      "secuenciasOrigen": {
+        "producto_id_seq": "3"
+      },
+      "secuenciasRestaurado": {
+        "producto_id_seq": "3"
+      },
+      "outboxPendienteOrigen": "0",
+      "outboxPendienteRestaurado": "0",
+      "watermarks": null,
+      "divergencias": [],
+      "baseEliminada": "inventory_db_restore",
+      "sinBasesResiduales": true
+    },
+    "sales_db": {
+      "db": "sales_db",
+      "dump": "sales_db-20261020T190255Z.dump",
+      "tablasOrigen": 9,
+      "tablasRestaurado": 9,
+      "comparacion": {
+        "api_idempotency": {
+          "filasOrigen": 11,
+          "filasRestaurado": 11,
+          "checksumOrigen": "cc2e398f67a8bfd860bb0e07fcc0a55a",
+          "checksumRestaurado": "cc2e398f67a8bfd860bb0e07fcc0a55a",
+          "igual": true
+        },
+        "carrito": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "cierre_consumos": {
+          "filasOrigen": 12,
+          "filasRestaurado": 12,
+          "checksumOrigen": "a29f9f63c64798eed614d4f2bf92a509",
+          "checksumRestaurado": "a29f9f63c64798eed614d4f2bf92a509",
+          "igual": true
+        },
+        "detalle_venta": {
+          "filasOrigen": 10,
+          "filasRestaurado": 10,
+          "checksumOrigen": "6ee7b38ba5aecbaae23c9e02b5d950e8",
+          "checksumRestaurado": "6ee7b38ba5aecbaae23c9e02b5d950e8",
+          "igual": true
+        },
+        "flyway_schema_history": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "9a03eae4488edda28350e92c9b0829d5",
+          "checksumRestaurado": "9a03eae4488edda28350e92c9b0829d5",
+          "igual": true
+        },
+        "inbox": {
+          "filasOrigen": 53,
+          "filasRestaurado": 53,
+          "checksumOrigen": "1f6b780e8a6cd046502f3c394bea7aa8",
+          "checksumRestaurado": "1f6b780e8a6cd046502f3c394bea7aa8",
+          "igual": true
+        },
+        "operacion_venta": {
+          "filasOrigen": 11,
+          "filasRestaurado": 11,
+          "checksumOrigen": "d24ce789d878f70bec6b0e5b1d4560cc",
+          "checksumRestaurado": "d24ce789d878f70bec6b0e5b1d4560cc",
+          "igual": true
+        },
+        "outbox": {
+          "filasOrigen": 59,
+          "filasRestaurado": 59,
+          "checksumOrigen": "23ed7e5981336e5d9bb0f24a70c3f5e8",
+          "checksumRestaurado": "23ed7e5981336e5d9bb0f24a70c3f5e8",
+          "igual": true
+        },
+        "venta": {
+          "filasOrigen": 11,
+          "filasRestaurado": 11,
+          "checksumOrigen": "00d571e381148462a6db3aad9fc87ddb",
+          "checksumRestaurado": "00d571e381148462a6db3aad9fc87ddb",
+          "igual": true
+        }
+      },
+      "secuenciasIguales": true,
+      "secuenciasOrigen": {
+        "carrito_id_seq": "",
+        "detalle_venta_id_seq": "10",
+        "venta_id_seq": "11"
+      },
+      "secuenciasRestaurado": {
+        "carrito_id_seq": "",
+        "detalle_venta_id_seq": "10",
+        "venta_id_seq": "11"
+      },
+      "outboxPendienteOrigen": "0",
+      "outboxPendienteRestaurado": "0",
+      "watermarks": null,
+      "divergencias": [],
+      "baseEliminada": "sales_db_restore",
+      "sinBasesResiduales": true
+    },
+    "reporting_db": {
+      "db": "reporting_db",
+      "dump": "reporting_db-20261020T190256Z.dump",
+      "tablasOrigen": 13,
+      "tablasRestaurado": 13,
+      "comparacion": {
+        "flyway_schema_history": {
+          "filasOrigen": 1,
+          "filasRestaurado": 1,
+          "checksumOrigen": "91bb8a69211adc14a1bba3ed43369825",
+          "checksumRestaurado": "91bb8a69211adc14a1bba3ed43369825",
+          "igual": true
+        },
+        "gate_projection": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "84fff6f00d106067fa53f418ff3b6593",
+          "checksumRestaurado": "84fff6f00d106067fa53f418ff3b6593",
+          "igual": true
+        },
+        "habitacion_projection": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "52f7ea32e8c583b9861145b3d0afb400",
+          "checksumRestaurado": "52f7ea32e8c583b9861145b3d0afb400",
+          "igual": true
+        },
+        "hotel_projection": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "2cd8459da29bbd3d5554579e988fe6fd",
+          "checksumRestaurado": "2cd8459da29bbd3d5554579e988fe6fd",
+          "igual": true
+        },
+        "inbox": {
+          "filasOrigen": 101,
+          "filasRestaurado": 101,
+          "checksumOrigen": "7b627e46fd05b949df3b29fb33e00d0c",
+          "checksumRestaurado": "7b627e46fd05b949df3b29fb33e00d0c",
+          "igual": true
+        },
+        "limpieza_completada_projection": {
+          "filasOrigen": 11,
+          "filasRestaurado": 11,
+          "checksumOrigen": "3d6a311e0d13e8111934310716342687",
+          "checksumRestaurado": "3d6a311e0d13e8111934310716342687",
+          "igual": true
+        },
+        "persona_projection": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "98191e652154925d699e1b2f91146343",
+          "checksumRestaurado": "98191e652154925d699e1b2f91146343",
+          "igual": true
+        },
+        "projection_bootstrap": {
+          "filasOrigen": 1,
+          "filasRestaurado": 1,
+          "checksumOrigen": "3847ca4c84ec6ebcf700b8af59f5e25c",
+          "checksumRestaurado": "3847ca4c84ec6ebcf700b8af59f5e25c",
+          "igual": true
+        },
+        "projection_checkpoint": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "ae38bc7684e9c8b6fb0d16fb5ec338c4",
+          "checksumRestaurado": "ae38bc7684e9c8b6fb0d16fb5ec338c4",
+          "igual": true
+        },
+        "recepcion_projection": {
+          "filasOrigen": 22,
+          "filasRestaurado": 22,
+          "checksumOrigen": "fe5cc27c002dfa4f258663f893527039",
+          "checksumRestaurado": "fe5cc27c002dfa4f258663f893527039",
+          "igual": true
+        },
+        "stock_projection": {
+          "filasOrigen": 9,
+          "filasRestaurado": 9,
+          "checksumOrigen": "6c0008de08a92111be8c0d3b98bf99b4",
+          "checksumRestaurado": "6c0008de08a92111be8c0d3b98bf99b4",
+          "igual": true
+        },
+        "venta_detalle_projection": {
+          "filasOrigen": 10,
+          "filasRestaurado": 10,
+          "checksumOrigen": "78a1fc64f4550e0accf4b3516b2b3c92",
+          "checksumRestaurado": "78a1fc64f4550e0accf4b3516b2b3c92",
+          "igual": true
+        },
+        "venta_projection": {
+          "filasOrigen": 10,
+          "filasRestaurado": 10,
+          "checksumOrigen": "279c577cd01eb605da14fea5d0dec632",
+          "checksumRestaurado": "279c577cd01eb605da14fea5d0dec632",
+          "igual": true
+        }
+      },
+      "secuenciasIguales": true,
+      "secuenciasOrigen": {},
+      "secuenciasRestaurado": {},
+      "outboxPendienteOrigen": null,
+      "outboxPendienteRestaurado": null,
+      "watermarks": {
+        "origen": [
+          [
+            "hotel.habitacion.v1",
+            "0",
+            "20"
+          ],
+          [
+            "hotel.sede.v1",
+            "0",
+            "-1"
+          ],
+          [
+            "identity.persona.v1",
+            "0",
+            "5"
+          ],
+          [
+            "inventory.stock.v1",
+            "0",
+            "18"
+          ],
+          [
+            "reception.recepcion.v1",
+            "0",
+            "41"
+          ],
+          [
+            "sales.venta.v1",
+            "0",
+            "16"
+          ]
+        ],
+        "restaurado": [
+          [
+            "hotel.habitacion.v1",
+            "0",
+            "20"
+          ],
+          [
+            "hotel.sede.v1",
+            "0",
+            "-1"
+          ],
+          [
+            "identity.persona.v1",
+            "0",
+            "5"
+          ],
+          [
+            "inventory.stock.v1",
+            "0",
+            "18"
+          ],
+          [
+            "reception.recepcion.v1",
+            "0",
+            "41"
+          ],
+          [
+            "sales.venta.v1",
+            "0",
+            "16"
+          ]
+        ]
+      },
+      "divergencias": [],
+      "baseEliminada": "reporting_db_restore",
+      "sinBasesResiduales": true
+    },
+    "notification_db": {
+      "db": "notification_db",
+      "dump": "notification_db-20261020T190256Z.dump",
+      "tablasOrigen": 7,
+      "tablasRestaurado": 7,
+      "comparacion": {
+        "api_idempotency": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "audit_log": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "015398858d2f0888a3ff2dba82e83a56",
+          "checksumRestaurado": "015398858d2f0888a3ff2dba82e83a56",
+          "igual": true
+        },
+        "flyway_schema_history": {
+          "filasOrigen": 6,
+          "filasRestaurado": 6,
+          "checksumOrigen": "7da5d90c46e321324048b278da696497",
+          "checksumRestaurado": "7da5d90c46e321324048b278da696497",
+          "igual": true
+        },
+        "inbox": {
+          "filasOrigen": 34,
+          "filasRestaurado": 34,
+          "checksumOrigen": "aae666a2cfcd02b59f9110316c4da35c",
+          "checksumRestaurado": "aae666a2cfcd02b59f9110316c4da35c",
+          "igual": true
+        },
+        "notification_job": {
+          "filasOrigen": 34,
+          "filasRestaurado": 34,
+          "checksumOrigen": "3c923809fb0a1bb8bc8f9aa92feec7e1",
+          "checksumRestaurado": "3c923809fb0a1bb8bc8f9aa92feec7e1",
+          "igual": true
+        },
+        "outbox": {
+          "filasOrigen": 0,
+          "filasRestaurado": 0,
+          "checksumOrigen": "vacia",
+          "checksumRestaurado": "vacia",
+          "igual": true
+        },
+        "template": {
+          "filasOrigen": 3,
+          "filasRestaurado": 3,
+          "checksumOrigen": "1187ee1a26a5ee62b54463943a2b6150",
+          "checksumRestaurado": "1187ee1a26a5ee62b54463943a2b6150",
+          "igual": true
+        }
+      },
+      "secuenciasIguales": true,
+      "secuenciasOrigen": {},
+      "secuenciasRestaurado": {},
+      "outboxPendienteOrigen": "0",
+      "outboxPendienteRestaurado": "0",
+      "watermarks": null,
+      "divergencias": [],
+      "baseEliminada": "notification_db_restore",
+      "sinBasesResiduales": true
+    }
+  },
+  "sinDivergencias": true,
+  "basesResiduales": [],
+  "secuenciasPorEncimaDelMayorId": "verificado por tabla en comparacion"
+}

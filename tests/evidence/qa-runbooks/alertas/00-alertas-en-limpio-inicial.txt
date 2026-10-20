@@ -1,0 +1,11 @@
+alerta | umbral | severidad | runbook | valor | dispara
+---|---|---|---|---|---
+Mensajes en DLT Kafka | > 0 | Alta | RB1 | 0 | no
+Mensajes en DLQ Rabbit | > 0 | Alta | RB1 | 0 | no
+Outbox pendiente | > 15min o attempts > 10 | Alta | RB4 | 0 | no
+Cierre atascado | CONFIRMANDO > 5min | Alta | RB2 | 0 | no
+Operación de habitación | PREPARANDO > 10min | Media | RB3 | 0 | no
+Readiness caída | > 1min | Media | Revisar dependencia | 0 | no
+Jobs de notification | estado ERROR > 0 | Media | RB1 (CLI) | 0 | no
+Reporting degradado | degraded=true o sin conexión Kafka > 5min | Media | RB1 | 0 | no
+Ventas en recuperación | CANCELACION_PENDIENTE > 30min | Media | RB1/RB4 | 0 | no

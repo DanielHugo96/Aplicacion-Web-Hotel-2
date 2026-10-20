@@ -1,0 +1,212 @@
+{
+  "primera": {
+    "status": 202,
+    "body": {
+      "data": {
+        "cierre": {
+          "estado": "CONFIRMANDO",
+          "calculo": {
+            "cobroAhora": 57.0,
+            "totalGeneral": 77.0,
+            "consumosTotal": 7.0,
+            "alojamientoTotal": 70.0,
+            "saldoAlojamiento": 50.0,
+            "consumosPendientes": 7.0,
+            "consumosPagadosAntes": 0.0,
+            "expectedPendingTotal": 7.0
+          },
+          "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+          "lastErrorCode": "DEPENDENCY_UNAVAILABLE"
+        },
+        "correo": "cliente.uno@hotel.test",
+        "estado": true,
+        "nombre": "Cliente",
+        "numero": "101",
+        "idHotel": 1,
+        "vencida": false,
+        "version": 2,
+        "adelanto": 20.0,
+        "apellido": "Uno",
+        "archivada": false,
+        "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+        "documento": "90000100",
+        "idCliente": 100,
+        "pisoNombre": "Primer piso",
+        "fechaSalida": "2026-10-21",
+        "idRecepcion": 12,
+        "observacion": "Fixture qa-runbooks",
+        "totalPagado": 20.0,
+        "fechaEntrada": "2026-10-20",
+        "idHabitacion": 101,
+        "estadoEstadia": "CERRANDO",
+        "precioInicial": 70.0,
+        "tipoDocumento": "DNI",
+        "costoPenalidad": 0.0,
+        "precioRestante": 50.0,
+        "categoriaNombre": "Individual",
+        "cleaningCycleId": null,
+        "motivoPenalidad": null,
+        "precioHabitacion": 70.0,
+        "detalleHabitacion": "Habitacion individual de demostracion",
+        "medioPagoAdelanto": "EFECTIVO",
+        "fechaSalidaConfirmacion": null
+      },
+      "meta": {
+        "correlationId": "d3a862ec-94bb-4a53-a296-12d285f4cee3"
+      },
+      "message": "Cierre en curso",
+      "success": true
+    }
+  },
+  "repetida": {
+    "status": 202,
+    "body": {
+      "data": {
+        "cierre": {
+          "estado": "CONFIRMANDO",
+          "calculo": {
+            "cobroAhora": 57.0,
+            "totalGeneral": 77.0,
+            "consumosTotal": 7.0,
+            "alojamientoTotal": 70.0,
+            "saldoAlojamiento": 50.0,
+            "consumosPendientes": 7.0,
+            "consumosPagadosAntes": 0.0,
+            "expectedPendingTotal": 7.0
+          },
+          "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+          "lastErrorCode": "DEPENDENCY_UNAVAILABLE"
+        },
+        "correo": "cliente.uno@hotel.test",
+        "estado": true,
+        "nombre": "Cliente",
+        "numero": "101",
+        "idHotel": 1,
+        "vencida": false,
+        "version": 2,
+        "adelanto": 20.0,
+        "apellido": "Uno",
+        "archivada": false,
+        "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+        "documento": "90000100",
+        "idCliente": 100,
+        "pisoNombre": "Primer piso",
+        "fechaSalida": "2026-10-21",
+        "idRecepcion": 12,
+        "observacion": "Fixture qa-runbooks",
+        "totalPagado": 20.0,
+        "fechaEntrada": "2026-10-20",
+        "idHabitacion": 101,
+        "estadoEstadia": "CERRANDO",
+        "precioInicial": 70.0,
+        "tipoDocumento": "DNI",
+        "costoPenalidad": 0.0,
+        "precioRestante": 50.0,
+        "categoriaNombre": "Individual",
+        "cleaningCycleId": null,
+        "motivoPenalidad": null,
+        "precioHabitacion": 70.0,
+        "detalleHabitacion": "Habitacion individual de demostracion",
+        "medioPagoAdelanto": "EFECTIVO",
+        "fechaSalidaConfirmacion": null
+      },
+      "meta": {
+        "correlationId": "d3a862ec-94bb-4a53-a296-12d285f4cee3"
+      },
+      "message": "Cierre en curso",
+      "success": true
+    }
+  },
+  "cierre": {
+    "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+    "idRecepcion": 12,
+    "estado": "COMPLETADO",
+    "calculo": {
+      "cobroAhora": 57.0,
+      "totalGeneral": 77.0,
+      "consumosTotal": 7.0,
+      "alojamientoTotal": 70.0,
+      "saldoAlojamiento": 50.0,
+      "consumosPendientes": 7.0,
+      "consumosPagadosAntes": 0.0,
+      "expectedPendingTotal": 7.0
+    },
+    "receiptSales": {
+      "idHotel": 1,
+      "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+      "medioPago": "EFECTIVO",
+      "confirmedAt": "2026-10-20T17:33:48.296878500Z",
+      "idRecepcion": 12,
+      "totalConsumos": 7.0,
+      "ventasPagadas": [
+        9
+      ],
+      "totalPagadoAhora": 7.0,
+      "totalPagadoPrevio": 0
+    },
+    "lastErrorCode": null,
+    "attempts": 11,
+    "requestedAt": "2026-10-20T17:28:46.020651600Z",
+    "cleaningCycleId": "44875e73-ad56-4815-9681-842e121ef99f"
+  },
+  "recepcion": {
+    "estadoEstadia": "CERRADA",
+    "fechaSalidaConfirmacion": "2026-10-20 17:34:17.3304+00",
+    "version": 3,
+    "totalPagado": "70.00"
+  },
+  "gate": {
+    "estado": "LIMPIEZA_PENDIENTE",
+    "cleaningCycleId": "44875e73-ad56-4815-9681-842e121ef99f",
+    "roomVersion": 21
+  },
+  "ventas": [
+    {
+      "idVenta": 9,
+      "estado": "PAGADO",
+      "estadoOperacion": "CONFIRMADA",
+      "total": "7.00",
+      "paidAt": "2026-10-20 17:28:46.038297+00",
+      "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63"
+    }
+  ],
+  "salesCierre": [
+    {
+      "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+      "totalPendiente": "7.00",
+      "totalPagadoPrevio": "0.00",
+      "receipt": {
+        "idHotel": 1,
+        "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+        "medioPago": "EFECTIVO",
+        "confirmedAt": 1792517628.2968786,
+        "idRecepcion": 12,
+        "totalConsumos": 7.0,
+        "ventasPagadas": [
+          9
+        ],
+        "totalPagadoAhora": 7.0,
+        "totalPagadoPrevio": 0
+      },
+      "confirmedAt": "2026-10-20 17:28:46.038297+00"
+    }
+  ],
+  "inboxSalida": [
+    {
+      "outboxId": "8131cca5-1a3c-472c-9762-769cad288322",
+      "eventId": "2c580248-4f7e-43ab-aed1-01272624e204",
+      "inboxReporting": 1
+    }
+  ],
+  "mismoReceipt": true,
+  "alertaDespues": {
+    "alerta": "Cierre atascado",
+    "umbral": "CONFIRMANDO > 5min",
+    "deteccion": "consulta a cierre (request->>'requestedAt')",
+    "severidad": "Alta",
+    "runbook": "RB2",
+    "valor": 0,
+    "dispara": false,
+    "detalle": []
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "respuesta": {
+    "status": 200,
+    "headers": {
+      "x-correlation-id": "d0582b4a-4cb2-4360-8647-be6733b4bb0d",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "transfer-encoding": "chunked",
+      "date": "Tue, 20 Oct 2026 17:35:53 GMT",
+      "connection": "close"
+    },
+    "body": "{\"success\":true,\"message\":\"Habitación bloqueada\",\"data\":{\"blockId\":\"b4d63999-a05f-4487-92e8-b650183ddce2\",\"idHabitacion\":201,\"estado\":\"BLOQUEADA\"},\"meta\":{\"correlationId\":\"d0582b4a-4cb2-4360-8647-be6733b4bb0d\"}}"
+  },
+  "bloqueo": {
+    "blockId": "b4d63999-a05f-4487-92e8-b650183ddce2",
+    "idHabitacion": 201,
+    "idHotel": 2,
+    "estado": "ACTIVO",
+    "errorCode": null,
+    "createdAt": "2026-10-20 17:35:53.981905+00",
+    "releasedAt": null
+  }
+}

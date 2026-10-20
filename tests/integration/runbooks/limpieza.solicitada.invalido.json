@@ -1,0 +1,13 @@
+{
+  "commandId": "bbbbbbbb-0000-4000-8000-000000000004",
+  "type": "LimpiezaSolicitada",
+  "schemaVersion": 1,
+  "idHotel": 1,
+  "correlationId": "bbbbbbbb-0000-4000-8000-000000000005",
+  "issuedAt": "2026-10-20T12:15:00Z",
+  "payload": {
+    "idHabitacion": 102,
+    "idRecepcion": 1,
+    "cleaningCycleId": "no-es-uuid"
+  }
+}

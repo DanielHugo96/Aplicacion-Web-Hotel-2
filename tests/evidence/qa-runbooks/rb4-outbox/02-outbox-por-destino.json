@@ -1,0 +1,414 @@
+{
+  "idRecepcion": 16,
+  "filas": [
+    {
+      "id": "32f13e5d-73f7-47ca-9887-545ee7e1762b",
+      "destination": "RABBIT",
+      "channel": "notificacion.checkin",
+      "type": "NotificacionCheckin",
+      "payload": {
+        "type": "NotificacionCheckin",
+        "idHotel": 3,
+        "payload": {
+          "hotel": "Hotel Demo Arequipa",
+          "nombre": "Cliente Uno",
+          "idPersona": 100,
+          "fechaSalida": "2026-10-21",
+          "idRecepcion": 16,
+          "destinatario": "cliente.uno@hotel.test",
+          "templateVersion": 1
+        },
+        "issuedAt": "2026-10-20T17:52:51.793452600Z",
+        "commandId": "cd26f618-284c-44b9-89d3-473a64749ef2",
+        "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+        "schemaVersion": 1
+      },
+      "publishedAt": "2026-10-20 17:53:00.987602+00",
+      "attempts": 0,
+      "nextAttemptAt": "2026-10-20 17:53:30.982669+00",
+      "createdAt": "2026-10-20 17:52:51.78835+00"
+    },
+    {
+      "id": "7ba1a89e-5214-49cd-b39e-613caf9157d0",
+      "destination": "KAFKA",
+      "channel": "reception.recepcion.v1",
+      "type": "CheckInRegistrado",
+      "payload": {
+        "type": "CheckInRegistrado",
+        "eventId": "c6b7c4de-a03e-4418-ae27-10ef687c911b",
+        "idHotel": 3,
+        "payload": {
+          "cierre": null,
+          "numero": "102",
+          "tarifa": 90.0,
+          "idHotel": 3,
+          "version": 1,
+          "adelanto": 0.0,
+          "archivada": false,
+          "closureId": null,
+          "idCliente": 100,
+          "fechaSalida": "2026-10-21",
+          "idRecepcion": 16,
+          "observacion": null,
+          "roomVersion": 1,
+          "totalPagado": 0.0,
+          "fechaEntrada": "2026-10-20",
+          "idHabitacion": 302,
+          "estadoEstadia": "ACTIVA",
+          "nombreCliente": "Cliente Uno",
+          "precioInicial": 90.0,
+          "costoPenalidad": 0.0,
+          "cleaningCycleId": null,
+          "motivoPenalidad": null,
+          "ocupacionActual": {
+            "blockId": null,
+            "estadoGate": "OCUPADA",
+            "idRecepcion": 16,
+            "cleaningCycleId": null
+          },
+          "medioPagoAdelanto": "EFECTIVO",
+          "fechaSalidaConfirmacion": null
+        },
+        "occurredAt": "2026-10-20T17:52:51.791904100Z",
+        "aggregateId": "302",
+        "aggregateType": "habitacion-ocupacion",
+        "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+        "schemaVersion": 1,
+        "aggregateVersion": 1
+      },
+      "publishedAt": null,
+      "attempts": 3,
+      "nextAttemptAt": "2026-10-20 17:53:56.027571+00",
+      "createdAt": "2026-10-20 17:52:51.78835+00"
+    }
+  ],
+  "kafkaPendientes": [
+    {
+      "id": "7ba1a89e-5214-49cd-b39e-613caf9157d0",
+      "destination": "KAFKA",
+      "channel": "reception.recepcion.v1",
+      "type": "CheckInRegistrado",
+      "payload": {
+        "type": "CheckInRegistrado",
+        "eventId": "c6b7c4de-a03e-4418-ae27-10ef687c911b",
+        "idHotel": 3,
+        "payload": {
+          "cierre": null,
+          "numero": "102",
+          "tarifa": 90.0,
+          "idHotel": 3,
+          "version": 1,
+          "adelanto": 0.0,
+          "archivada": false,
+          "closureId": null,
+          "idCliente": 100,
+          "fechaSalida": "2026-10-21",
+          "idRecepcion": 16,
+          "observacion": null,
+          "roomVersion": 1,
+          "totalPagado": 0.0,
+          "fechaEntrada": "2026-10-20",
+          "idHabitacion": 302,
+          "estadoEstadia": "ACTIVA",
+          "nombreCliente": "Cliente Uno",
+          "precioInicial": 90.0,
+          "costoPenalidad": 0.0,
+          "cleaningCycleId": null,
+          "motivoPenalidad": null,
+          "ocupacionActual": {
+            "blockId": null,
+            "estadoGate": "OCUPADA",
+            "idRecepcion": 16,
+            "cleaningCycleId": null
+          },
+          "medioPagoAdelanto": "EFECTIVO",
+          "fechaSalidaConfirmacion": null
+        },
+        "occurredAt": "2026-10-20T17:52:51.791904100Z",
+        "aggregateId": "302",
+        "aggregateType": "habitacion-ocupacion",
+        "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+        "schemaVersion": 1,
+        "aggregateVersion": 1
+      },
+      "publishedAt": null,
+      "attempts": 3,
+      "nextAttemptAt": "2026-10-20 17:53:56.027571+00",
+      "createdAt": "2026-10-20 17:52:51.78835+00"
+    }
+  ],
+  "rabbitPublicadas": [
+    {
+      "id": "32f13e5d-73f7-47ca-9887-545ee7e1762b",
+      "destination": "RABBIT",
+      "channel": "notificacion.checkin",
+      "type": "NotificacionCheckin",
+      "payload": {
+        "type": "NotificacionCheckin",
+        "idHotel": 3,
+        "payload": {
+          "hotel": "Hotel Demo Arequipa",
+          "nombre": "Cliente Uno",
+          "idPersona": 100,
+          "fechaSalida": "2026-10-21",
+          "idRecepcion": 16,
+          "destinatario": "cliente.uno@hotel.test",
+          "templateVersion": 1
+        },
+        "issuedAt": "2026-10-20T17:52:51.793452600Z",
+        "commandId": "cd26f618-284c-44b9-89d3-473a64749ef2",
+        "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+        "schemaVersion": 1
+      },
+      "publishedAt": "2026-10-20 17:53:00.987602+00",
+      "attempts": 0,
+      "nextAttemptAt": "2026-10-20 17:53:30.982669+00",
+      "createdAt": "2026-10-20 17:52:51.78835+00"
+    }
+  ],
+  "snapshots": [
+    {
+      "ts": "2026-10-20T17:53:01.874438Z",
+      "filas": [
+        {
+          "id": "7ba1a89e-5214-49cd-b39e-613caf9157d0",
+          "destination": "KAFKA",
+          "channel": "reception.recepcion.v1",
+          "type": "CheckInRegistrado",
+          "payload": {
+            "type": "CheckInRegistrado",
+            "eventId": "c6b7c4de-a03e-4418-ae27-10ef687c911b",
+            "idHotel": 3,
+            "payload": {
+              "cierre": null,
+              "numero": "102",
+              "tarifa": 90.0,
+              "idHotel": 3,
+              "version": 1,
+              "adelanto": 0.0,
+              "archivada": false,
+              "closureId": null,
+              "idCliente": 100,
+              "fechaSalida": "2026-10-21",
+              "idRecepcion": 16,
+              "observacion": null,
+              "roomVersion": 1,
+              "totalPagado": 0.0,
+              "fechaEntrada": "2026-10-20",
+              "idHabitacion": 302,
+              "estadoEstadia": "ACTIVA",
+              "nombreCliente": "Cliente Uno",
+              "precioInicial": 90.0,
+              "costoPenalidad": 0.0,
+              "cleaningCycleId": null,
+              "motivoPenalidad": null,
+              "ocupacionActual": {
+                "blockId": null,
+                "estadoGate": "OCUPADA",
+                "idRecepcion": 16,
+                "cleaningCycleId": null
+              },
+              "medioPagoAdelanto": "EFECTIVO",
+              "fechaSalidaConfirmacion": null
+            },
+            "occurredAt": "2026-10-20T17:52:51.791904100Z",
+            "aggregateId": "302",
+            "aggregateType": "habitacion-ocupacion",
+            "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+            "schemaVersion": 1,
+            "aggregateVersion": 1
+          },
+          "publishedAt": null,
+          "attempts": 1,
+          "nextAttemptAt": "2026-10-20 17:53:01.971696+00",
+          "createdAt": "2026-10-20 17:52:51.78835+00"
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T17:53:07.983527Z",
+      "filas": [
+        {
+          "id": "7ba1a89e-5214-49cd-b39e-613caf9157d0",
+          "destination": "KAFKA",
+          "channel": "reception.recepcion.v1",
+          "type": "CheckInRegistrado",
+          "payload": {
+            "type": "CheckInRegistrado",
+            "eventId": "c6b7c4de-a03e-4418-ae27-10ef687c911b",
+            "idHotel": 3,
+            "payload": {
+              "cierre": null,
+              "numero": "102",
+              "tarifa": 90.0,
+              "idHotel": 3,
+              "version": 1,
+              "adelanto": 0.0,
+              "archivada": false,
+              "closureId": null,
+              "idCliente": 100,
+              "fechaSalida": "2026-10-21",
+              "idRecepcion": 16,
+              "observacion": null,
+              "roomVersion": 1,
+              "totalPagado": 0.0,
+              "fechaEntrada": "2026-10-20",
+              "idHabitacion": 302,
+              "estadoEstadia": "ACTIVA",
+              "nombreCliente": "Cliente Uno",
+              "precioInicial": 90.0,
+              "costoPenalidad": 0.0,
+              "cleaningCycleId": null,
+              "motivoPenalidad": null,
+              "ocupacionActual": {
+                "blockId": null,
+                "estadoGate": "OCUPADA",
+                "idRecepcion": 16,
+                "cleaningCycleId": null
+              },
+              "medioPagoAdelanto": "EFECTIVO",
+              "fechaSalidaConfirmacion": null
+            },
+            "occurredAt": "2026-10-20T17:52:51.791904100Z",
+            "aggregateId": "302",
+            "aggregateType": "habitacion-ocupacion",
+            "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+            "schemaVersion": 1,
+            "aggregateVersion": 1
+          },
+          "publishedAt": null,
+          "attempts": 1,
+          "nextAttemptAt": "2026-10-20 17:53:35.994738+00",
+          "createdAt": "2026-10-20 17:52:51.78835+00"
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T17:53:14.089976Z",
+      "filas": [
+        {
+          "id": "7ba1a89e-5214-49cd-b39e-613caf9157d0",
+          "destination": "KAFKA",
+          "channel": "reception.recepcion.v1",
+          "type": "CheckInRegistrado",
+          "payload": {
+            "type": "CheckInRegistrado",
+            "eventId": "c6b7c4de-a03e-4418-ae27-10ef687c911b",
+            "idHotel": 3,
+            "payload": {
+              "cierre": null,
+              "numero": "102",
+              "tarifa": 90.0,
+              "idHotel": 3,
+              "version": 1,
+              "adelanto": 0.0,
+              "archivada": false,
+              "closureId": null,
+              "idCliente": 100,
+              "fechaSalida": "2026-10-21",
+              "idRecepcion": 16,
+              "observacion": null,
+              "roomVersion": 1,
+              "totalPagado": 0.0,
+              "fechaEntrada": "2026-10-20",
+              "idHabitacion": 302,
+              "estadoEstadia": "ACTIVA",
+              "nombreCliente": "Cliente Uno",
+              "precioInicial": 90.0,
+              "costoPenalidad": 0.0,
+              "cleaningCycleId": null,
+              "motivoPenalidad": null,
+              "ocupacionActual": {
+                "blockId": null,
+                "estadoGate": "OCUPADA",
+                "idRecepcion": 16,
+                "cleaningCycleId": null
+              },
+              "medioPagoAdelanto": "EFECTIVO",
+              "fechaSalidaConfirmacion": null
+            },
+            "occurredAt": "2026-10-20T17:52:51.791904100Z",
+            "aggregateId": "302",
+            "aggregateType": "habitacion-ocupacion",
+            "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+            "schemaVersion": 1,
+            "aggregateVersion": 1
+          },
+          "publishedAt": null,
+          "attempts": 2,
+          "nextAttemptAt": "2026-10-20 17:53:13.000368+00",
+          "createdAt": "2026-10-20 17:52:51.78835+00"
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T17:53:20.205818Z",
+      "filas": [
+        {
+          "id": "7ba1a89e-5214-49cd-b39e-613caf9157d0",
+          "destination": "KAFKA",
+          "channel": "reception.recepcion.v1",
+          "type": "CheckInRegistrado",
+          "payload": {
+            "type": "CheckInRegistrado",
+            "eventId": "c6b7c4de-a03e-4418-ae27-10ef687c911b",
+            "idHotel": 3,
+            "payload": {
+              "cierre": null,
+              "numero": "102",
+              "tarifa": 90.0,
+              "idHotel": 3,
+              "version": 1,
+              "adelanto": 0.0,
+              "archivada": false,
+              "closureId": null,
+              "idCliente": 100,
+              "fechaSalida": "2026-10-21",
+              "idRecepcion": 16,
+              "observacion": null,
+              "roomVersion": 1,
+              "totalPagado": 0.0,
+              "fechaEntrada": "2026-10-20",
+              "idHabitacion": 302,
+              "estadoEstadia": "ACTIVA",
+              "nombreCliente": "Cliente Uno",
+              "precioInicial": 90.0,
+              "costoPenalidad": 0.0,
+              "cleaningCycleId": null,
+              "motivoPenalidad": null,
+              "ocupacionActual": {
+                "blockId": null,
+                "estadoGate": "OCUPADA",
+                "idRecepcion": 16,
+                "cleaningCycleId": null
+              },
+              "medioPagoAdelanto": "EFECTIVO",
+              "fechaSalidaConfirmacion": null
+            },
+            "occurredAt": "2026-10-20T17:52:51.791904100Z",
+            "aggregateId": "302",
+            "aggregateType": "habitacion-ocupacion",
+            "correlationId": "5f1d7ef9-44e8-46f0-bf6e-b79ada94e209",
+            "schemaVersion": 1,
+            "aggregateVersion": 1
+          },
+          "publishedAt": null,
+          "attempts": 2,
+          "nextAttemptAt": "2026-10-20 17:53:46.011692+00",
+          "createdAt": "2026-10-20 17:52:51.78835+00"
+        }
+      ]
+    }
+  ],
+  "diagnostico": [
+    [
+      "KAFKA",
+      "reception.recepcion.v1",
+      "1",
+      "2026-10-20 17:52:51.78835+00"
+    ]
+  ],
+  "unaFilaPorDestino": true,
+  "kafkaSinPublicar": true,
+  "rabbitPublicada": true
+}

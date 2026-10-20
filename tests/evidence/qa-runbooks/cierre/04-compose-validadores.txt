@@ -1,0 +1,41 @@
+NAME               IMAGE                       COMMAND                  SERVICE    CREATED       STATUS                       PORTS
+hotel-kafka-1      apache/kafka:4.3.1          "/__cacert_entrypoin…"   kafka      3 hours ago   Up About an hour (healthy)   127.0.0.1:29092->29092/tcp
+hotel-mailpit-1    axllent/mailpit:v1.31.5     "/mailpit"               mailpit    3 hours ago   Up 3 hours (healthy)         127.0.0.1:1025->1025/tcp, 127.0.0.1:8025->8025/tcp
+hotel-postgres-1   postgres:18.6               "docker-entrypoint.s…"   postgres   3 hours ago   Up 3 hours (healthy)         127.0.0.1:55432->5432/tcp
+hotel-rabbitmq-1   rabbitmq:4.3.6-management   "/bin/bash /etc/rabb…"   rabbitmq   3 hours ago   Up 20 minutes (healthy)      127.0.0.1:5673->5672/tcp, 127.0.0.1:15673->15672/tcp
+compose_exit=0
+
+30 plan(es) revisado(s); 30 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+planes_exit=0
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
+contratos_exit=0
+usage: runbook.py [-h] <simulacro> ...
+
+Runner de los simulacros de F5: RB1-RB4, alertas, backup y restauración.
+
+positional arguments:
+  <simulacro>
+    preflight         valida Compose, seeds/gates, reporting LISTO y validar-
+                      planes
+    reset             resetea la demo sobre volúmenes nuevos del Compose
+    alerts            evalúa las nueve alertas de runbooks.md
+    rb1-kafka         RB1 Kafka: mensaje inválido hasta DLT y reenvío
+                      idempotente
+    rb1-rabbit        RB1 Rabbit: contradicción y schema inválido hasta DLQ
+    rb1-notification  RB1 Notification: jobs ERROR, retry, discard y purge
+    rb2               RB2: cierre atascado, alerta, invariantes y recuperación
+    rb3               RB3: operación PREPARANDO, alerta, recuperación y F6
+    rb4               RB4: outbox con Kafka caído, alerta, schema y
+                      reanudación
+    ventas            venta en CANCELACION_PENDIENTE > 30min y compensación
+    readiness         readiness caída, limpieza de DLT/DLQ y revalidación
+    backup            pg_dump -Fc de las siete bases con retención de 7 días
+    restore           restaura cada dump en una base nueva y compara
+    evidencia         consolida el índice de evidencia
+
+options:
+  -h, --help          show this help message and exit
+
+Los simulacros se ejecutan contra el Compose real y dejan evidencia en
+tests/evidence/qa-runbooks/.

@@ -1,0 +1,147 @@
+{
+  "capturadoEn": "2026-10-20T18:13:12.146786Z",
+  "alertas": [
+    {
+      "alerta": "Mensajes en DLT Kafka",
+      "umbral": "> 0",
+      "deteccion": "conteo de offsets de los topics *.dlt",
+      "severidad": "Alta",
+      "runbook": "RB1",
+      "valor": 6,
+      "dispara": true,
+      "detalle": {
+        "reception.recepcion.v1.hotel-ocupacion-v1.dlt": 6
+      }
+    },
+    {
+      "alerta": "Mensajes en DLQ Rabbit",
+      "umbral": "> 0",
+      "deteccion": "management /api/queues, suma de q.dlq",
+      "severidad": "Alta",
+      "runbook": "RB1",
+      "valor": 0,
+      "dispara": false,
+      "detalle": {
+        "limpieza.solicitada.dlq": 0,
+        "notificacion.bienvenida.dlq": 0,
+        "notificacion.checkin.dlq": 0,
+        "notificacion.checkout.dlq": 0,
+        "recepcion.operacion-finalizar.dlq": 0,
+        "stock.restituir.dlq": 0
+      }
+    },
+    {
+      "alerta": "Outbox pendiente",
+      "umbral": "> 15min o attempts > 10",
+      "deteccion": "consulta a outbox por base",
+      "severidad": "Alta",
+      "runbook": "RB4",
+      "valor": 0,
+      "dispara": false,
+      "detalle": {}
+    },
+    {
+      "alerta": "Cierre atascado",
+      "umbral": "CONFIRMANDO > 5min",
+      "deteccion": "consulta a cierre (request->>'requestedAt')",
+      "severidad": "Alta",
+      "runbook": "RB2",
+      "valor": 0,
+      "dispara": false,
+      "detalle": []
+    },
+    {
+      "alerta": "Operación de habitación",
+      "umbral": "PREPARANDO > 10min",
+      "deteccion": "consulta a operacion_habitacion (request->>'requestedAt')",
+      "severidad": "Media",
+      "runbook": "RB3",
+      "valor": 0,
+      "dispara": false,
+      "detalle": []
+    },
+    {
+      "alerta": "Readiness caída",
+      "umbral": "> 1min",
+      "deteccion": "GET /actuator/health/readiness por servicio",
+      "severidad": "Media",
+      "runbook": "Revisar dependencia",
+      "valor": [],
+      "dispara": false,
+      "detalle": {
+        "identity-service": {
+          "up": true,
+          "status": 200,
+          "body": "{\"status\":\"UP\"}"
+        },
+        "hotel-service": {
+          "up": true,
+          "status": 200,
+          "body": "{\"status\":\"UP\"}"
+        },
+        "reception-service": {
+          "up": true,
+          "status": 200,
+          "body": "{\"components\":{\"db\":{\"details\":{\"database\":\"PostgreSQL\",\"validationQuery\":\"isValid()\"},\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+        },
+        "inventory-service": {
+          "up": true,
+          "status": 200,
+          "body": "{\"status\":\"UP\"}"
+        },
+        "sales-service": {
+          "up": true,
+          "status": 200,
+          "body": "{\"status\":\"UP\"}"
+        },
+        "reporting-service": {
+          "up": true,
+          "status": 200,
+          "body": "{\"status\":\"UP\"}"
+        },
+        "notification-service": {
+          "up": true,
+          "status": 200,
+          "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+        }
+      }
+    },
+    {
+      "alerta": "Jobs de notification",
+      "umbral": "estado ERROR > 0",
+      "deteccion": "consulta a notification_job",
+      "severidad": "Media",
+      "runbook": "RB1 (CLI)",
+      "valor": 0,
+      "dispara": false,
+      "detalle": []
+    },
+    {
+      "alerta": "Reporting degradado",
+      "umbral": "degraded=true o sin conexión Kafka > 5min",
+      "deteccion": "projection_checkpoint / meta de la API",
+      "severidad": "Media",
+      "runbook": "RB1",
+      "valor": 1,
+      "dispara": true,
+      "detalle": [
+        {
+          "topic": "hotel.habitacion.v1",
+          "lastOffset": "19",
+          "lastEventAt": "2026-10-20 17:52:20.819531+00",
+          "updatedAt": "2026-10-20 17:52:20.815407+00"
+        }
+      ]
+    },
+    {
+      "alerta": "Ventas en recuperación",
+      "umbral": "CANCELACION_PENDIENTE > 30min",
+      "deteccion": "consulta a venta (updated_at)",
+      "severidad": "Media",
+      "runbook": "RB1/RB4",
+      "valor": 0,
+      "dispara": false,
+      "detalle": []
+    }
+  ]
+}

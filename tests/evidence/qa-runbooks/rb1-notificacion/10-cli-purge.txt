@@ -1,0 +1,2 @@
+exit=0
+purga aplicada: ENVIADA anteriores a 2026-10-21T00:00:00Z anonimizadas=3 (PENDIENTE y ERROR intactos)

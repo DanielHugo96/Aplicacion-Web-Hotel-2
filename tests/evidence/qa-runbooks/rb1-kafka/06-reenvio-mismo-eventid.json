@@ -1,0 +1,18 @@
+{
+  "primeraVez": [
+    {
+      "messageId": "257fed0c-8e84-4544-98f2-530f076f5c7f",
+      "consumerGroup": "reception-gates-v1",
+      "processedAt": "2026-10-20 16:02:45.896074+00"
+    }
+  ],
+  "trasReenvio": [
+    {
+      "messageId": "257fed0c-8e84-4544-98f2-530f076f5c7f",
+      "consumerGroup": "reception-gates-v1",
+      "processedAt": "2026-10-20 16:02:45.896074+00"
+    }
+  ],
+  "filas": 1,
+  "sinDuplicar": true
+}

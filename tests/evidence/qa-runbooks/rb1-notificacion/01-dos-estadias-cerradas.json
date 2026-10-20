@@ -1,0 +1,67 @@
+{
+  "mailpit": "detenido",
+  "estadias": [
+    {
+      "room": 202,
+      "idRecepcion": 2,
+      "checkoutStatus": 200,
+      "gate": [
+        [
+          "LIMPIEZA_PENDIENTE",
+          "13e46f96-ed72-4d6a-92b4-524597f28549"
+        ]
+      ],
+      "checkout": {
+        "status": 200,
+        "headers": {
+          "vary": "Access-Control-Request-Headers",
+          "x-correlation-id": "977a5ab1-02d6-430b-9d85-912318fb7b73",
+          "etag": "\"3\"",
+          "x-content-type-options": "nosniff",
+          "x-xss-protection": "0",
+          "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+          "pragma": "no-cache",
+          "expires": "0",
+          "x-frame-options": "DENY",
+          "content-type": "application/json",
+          "content-length": "1275",
+          "date": "Tue, 20 Oct 2026 16:05:04 GMT",
+          "referrer-policy": "no-referrer",
+          "connection": "close"
+        },
+        "body": "{\"success\":true,\"message\":\"Salida registrada\",\"data\":{\"idRecepcion\":2,\"idHotel\":2,\"idCliente\":100,\"idHabitacion\":202,\"numero\":\"102\",\"categoriaNombre\":\"Doble\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion doble de demostracion\",\"precioHabitacion\":120.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-20\",\"fechaSalida\":\"2026-10-21\",\"fechaSalidaConfirmacion\":\"2026-10-20T16:05:04.784483Z\",\"precioInicial\":120.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":0.00,\"totalPagado\":120.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":false,\"estadoEstadia\":\"CERRADA\",\"archivada\":false,\"vencida\":false,\"version\":3,\"closureId\":\"3e492681-e2cf-42a8-8608-67ad6b65332f\",\"cleaningCycleId\":\"13e46f96-ed72-4d6a-92b4-524597f28549\",\"cierre\":{\"closureId\":\"3e492681-e2cf-42a8-8608-67ad6b65332f\",\"estado\":\"COMPLETADO\",\"lastErrorCode\":null,\"calculo\":{\"cobroAhora\":120.0,\"totalGeneral\":120.0,\"consumosTotal\":0.0,\"alojamientoTotal\":120.0,\"saldoAlojamiento\":120.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":0.0,\"expectedPendingTotal\":0.0},\"medioPago\":\"EFECTIVO\"}},\"meta\":{\"correlationId\":\"977a5ab1-02d6-430b-9d85-912318fb7b73\"}}"
+      }
+    },
+    {
+      "room": 301,
+      "idRecepcion": 3,
+      "checkoutStatus": 200,
+      "gate": [
+        [
+          "LIMPIEZA_PENDIENTE",
+          "6c235e30-b918-451a-a89e-41219e830b53"
+        ]
+      ],
+      "checkout": {
+        "status": 200,
+        "headers": {
+          "vary": "Access-Control-Request-Headers",
+          "x-correlation-id": "0bb632d7-8dc0-4002-9155-9813e5f69479",
+          "etag": "\"3\"",
+          "x-content-type-options": "nosniff",
+          "x-xss-protection": "0",
+          "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+          "pragma": "no-cache",
+          "expires": "0",
+          "x-frame-options": "DENY",
+          "content-type": "application/json",
+          "content-length": "1278",
+          "date": "Tue, 20 Oct 2026 16:05:05 GMT",
+          "referrer-policy": "no-referrer",
+          "connection": "close"
+        },
+        "body": "{\"success\":true,\"message\":\"Salida registrada\",\"data\":{\"idRecepcion\":3,\"idHotel\":3,\"idCliente\":101,\"idHabitacion\":301,\"numero\":\"101\",\"categoriaNombre\":\"Individual\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion individual de demostracion\",\"precioHabitacion\":60.00,\"nombre\":\"Cliente\",\"apellido\":\"Dos\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000101\",\"correo\":\"cliente.dos@hotel.test\",\"fechaEntrada\":\"2026-10-20\",\"fechaSalida\":\"2026-10-21\",\"fechaSalidaConfirmacion\":\"2026-10-20T16:05:05.112316Z\",\"precioInicial\":60.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":0.00,\"totalPagado\":60.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":false,\"estadoEstadia\":\"CERRADA\",\"archivada\":false,\"vencida\":false,\"version\":3,\"closureId\":\"8ca7f581-d21b-4aee-99c4-96059920ba94\",\"cleaningCycleId\":\"6c235e30-b918-451a-a89e-41219e830b53\",\"cierre\":{\"closureId\":\"8ca7f581-d21b-4aee-99c4-96059920ba94\",\"estado\":\"COMPLETADO\",\"lastErrorCode\":null,\"calculo\":{\"cobroAhora\":60.0,\"totalGeneral\":60.0,\"consumosTotal\":0.0,\"alojamientoTotal\":60.0,\"saldoAlojamiento\":60.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":0.0,\"expectedPendingTotal\":0.0},\"medioPago\":\"EFECTIVO\"}},\"meta\":{\"correlationId\":\"0bb632d7-8dc0-4002-9155-9813e5f69479\"}}"
+      }
+    }
+  ]
+}

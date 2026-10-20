@@ -1,0 +1,35 @@
+{
+  "ventaFinal": {
+    "idVenta": "11",
+    "estadoOperacion": "CANCELADA",
+    "paidAt": ""
+  },
+  "movimientos": [
+    {
+      "idVenta": "11",
+      "idHotel": "1",
+      "estado": "RESTITUIDO",
+      "resultado": "{\"estado\": \"RESTITUIDO\", \"motivo\": \"resultado incierto del débito\", \"version\": 1, \"restituidoAt\": \"2026-10-20T13:57:16.396184-05:00\"}",
+      "createdAt": "2026-10-20 18:57:16.396184+00",
+      "updatedAt": "2026-10-20 18:57:16.396184+00"
+    }
+  ],
+  "detalle": [],
+  "stock": [
+    {
+      "idProducto": "1",
+      "cantidad": "3"
+    }
+  ],
+  "unMovimiento": true,
+  "alerta": {
+    "alerta": "Ventas en recuperación",
+    "umbral": "CANCELACION_PENDIENTE > 30min",
+    "deteccion": "consulta a venta (updated_at)",
+    "severidad": "Media",
+    "runbook": "RB1/RB4",
+    "valor": 0,
+    "dispara": false,
+    "detalle": []
+  }
+}

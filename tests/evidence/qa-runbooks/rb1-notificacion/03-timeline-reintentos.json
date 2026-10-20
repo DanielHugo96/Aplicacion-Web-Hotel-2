@@ -1,0 +1,4730 @@
+{
+  "inicio": "2026-10-20T16:05:08.541831Z",
+  "linea": [
+    {
+      "ts": "2026-10-20T16:05:08.652813Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 0,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:05:06.971333+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 0,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:05:06.984454+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:05:28.752264Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:06:12.504235+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:06:17.074271+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:05:48.864529Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:06:12.504235+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:06:17.074271+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:06:08.989643Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:06:12.504235+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:06:17.074271+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:06:29.108289Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:06:49.215612Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:07:09.330451Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:07:29.461966Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:07:49.563090Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:08:09.707626Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:08:29.831231Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:08:49.955405Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:09:10.060107Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:09:30.161472Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:09:50.264155Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:10:10.382948Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:10:30.488879Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:10:50.613720Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:11:10.726138Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.761629+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:11:22.78043+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:11:30.869053Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:11:50.972843Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:12:11.081473Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:12:31.219150Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:12:51.320710Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:13:11.429594Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:13:31.538457Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:13:51.640900Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:14:11.742892Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:14:31.848986Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:14:51.954473Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:15:12.065743Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:15:32.187783Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:15:52.299211Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:16:12.423655Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:16:32.526453Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:16:52.644943Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:17:12.751638Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:17:32.870790Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:17:52.993762Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:18:13.096093Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:18:33.208112Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:18:53.316025Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:19:13.425705Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:19:33.533550Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:19:53.639010Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:20:13.755708Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:20:33.876761Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:20:54.006181Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:21:14.123436Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:21:34.225925Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:21:54.358373Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:22:14.467909Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:22:34.595092Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:22:54.714745Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:23:14.857643Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:23:34.967043Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:23:55.076964Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:24:15.180039Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:24:35.357225Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:24:55.461618Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:25:15.571561Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:25:35.680513Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:25:55.786200Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:26:15.893486Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:26:35.998362Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:26:56.108738Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:27:16.247103Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:27:36.348285Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:27:56.456137Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:28:16.571399Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:28:36.672179Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:28:56.785827Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:29:16.889069Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:29:37.010909Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:29:57.116021Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:30:17.257076Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:30:37.477249Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:30:57.598294Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:31:17.706925Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:31:37.808820Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:31:57.915801Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:32:18.038093Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:32:38.141303Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:32:58.248547Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:33:18.372665Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:33:38.520936Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:33:58.628373Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:34:18.730980Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:34:38.847911Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:34:58.990670Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:35:19.092499Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:35:39.215699Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:35:59.317737Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:36:19.421075Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:36:39.532743Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:36:59.659001Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:37:19.778101Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:37:39.882699Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:37:59.986208Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:38:20.097554Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:38:40.208356Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:39:00.309272Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:39:20.413169Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:39:40.518157Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:40:00.633365Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:40:20.729923Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:40:40.843573Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:41:00.944967Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:41:21.042553Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:41:41.148264Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:42:01.263683Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:42:21.374159Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:42:41.476911Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:43:01.587781Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:43:21.692549Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:43:41.797520Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:44:01.903204Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:44:22.007400Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:44:42.117954Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:45:02.218897Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:45:22.321451Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:45:42.425279Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:46:02.536578Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:46:22.638479Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:46:42.738515Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:47:02.840325Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:47:22.943041Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:47:43.063111Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:48:03.167741Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:48:23.268228Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:48:43.374450Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:49:03.484846Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:49:23.589678Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:49:43.697874Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-20T16:50:03.800329Z",
+      "jobs": [
+        {
+          "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 1,
+          "lastErrorCode": "",
+          "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+          "createdAt": "2026-10-20 16:03:26.719921+00",
+          "idRecepcion": 1
+        },
+        {
+          "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:24.363791+00",
+          "createdAt": "2026-10-20 16:05:06.971333+00",
+          "idRecepcion": 2
+        },
+        {
+          "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+          "tipo": "CHECKOUT",
+          "estado": "ERROR",
+          "attempts": 4,
+          "lastErrorCode": "SMTP_ERROR",
+          "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+          "createdAt": "2026-10-20 16:05:06.984454+00",
+          "idRecepcion": 3
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,54 @@
+
+> admin-web@0.0.0 build
+> ng build
+
+❯ Building...
+✔ Building...
+Initial chunk files | Names                      |  Raw size | Estimated transfer size
+chunk-BKE12VXj.js   | -                          | 285.08 kB |                77.69 kB
+main-GLLMIVYY.js    | main                       | 210.64 kB |                37.80 kB
+styles-D7A2UU7M.css | styles                     |  11.47 kB |                 2.60 kB
+
+                    | Initial total              | 507.19 kB |               118.08 kB
+
+Lazy chunk files    | Names                      |  Raw size | Estimated transfer size
+chunk-CF9ZFgUX.js   | check-in-component         |  18.66 kB |                 5.34 kB
+chunk-DQ-U3F77.js   | carrito-component          |  14.66 kB |                 4.13 kB
+chunk-BS7H5aQl.js   | estadia-detalle-component  |  13.64 kB |                 4.10 kB
+chunk-d79gm5S4.js   | mi-estadia-component       |   7.52 kB |                 2.43 kB
+chunk-Bq79s8QJ.js   | limpieza-component         |   7.27 kB |                 2.52 kB
+chunk-ByB1eePC.js   | venta-detalle-component    |   6.97 kB |                 2.41 kB
+chunk-CevbnhuO.js   | catalogo-cliente-component |   6.76 kB |                 2.33 kB
+chunk-Dsmni8bv.js   | estadias-list-component    |   6.33 kB |                 2.43 kB
+chunk-CPQ1IJEa.js   | mis-ventas-component       |   5.52 kB |                 2.19 kB
+chunk-CrIGh_RP.js   | cliente-shell-component    |   4.85 kB |                 1.58 kB
+chunk-Cw_55hlb.js   | mi-perfil-component        |   2.39 kB |                 1.02 kB
+chunk-yy9e7ChQ.js   | -                          |   1.11 kB |               585 bytes
+chunk-A9Ku-db0.js   | -                          | 500 bytes |               500 bytes
+
+Application bundle generation complete. [13.562 seconds] - 2026-10-20T19:19:47.602Z
+
+[33m▲ [43;33m[[43;30mWARNING[43;33m][0m [1mbundle initial exceeded maximum budget. Budget 500.00 kB was not met by 7.19 kB with a total of 507.19 kB.[0m
+
+
+Output location: D:\Cibertec\6to ciclo\DAW II\final\docs\Aplicacion-Web-Hotel-2\apps\admin-web\dist\admin-web
+
+build_exit=0
+
+> admin-web@0.0.0 test
+> ng test --watch=false
+
+❯ Building...
+✔ Building...
+Application bundle generation complete. [7.842 seconds] - 2026-10-20T19:20:02.787Z
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.4 [39m[90mD:/Cibertec/6to ciclo/DAW II/final/docs/Aplicacion-Web-Hotel-2/apps/admin-web[39m
+
+
+[2m Test Files [22m [1m[32m29 passed[39m[22m[90m (29)[39m
+[2m      Tests [22m [1m[32m131 passed[39m[22m[90m (131)[39m
+[2m   Start at [22m 14:20:08
+[2m   Duration [22m 15.08s[2m (environment 90%, setup 5%, transform 2%, tests 2%, import 1%)[22m
+
+test_exit=0

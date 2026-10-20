@@ -1,0 +1,45 @@
+
+> public-web@0.0.0 build
+> ng build
+
+❯ Building...
+✔ Building...
+Initial chunk files | Names                  |  Raw size | Estimated transfer size
+main-MJLHU2S2.js    | main                   | 280.19 kB |                77.26 kB
+styles-HQZYKKAR.css | styles                 |   4.44 kB |                 1.44 kB
+
+                    | Initial total          | 284.63 kB |                78.70 kB
+
+Lazy chunk files    | Names                  |  Raw size | Estimated transfer size
+chunk-AplLfBld.js   | sede-detalle-page      |  13.17 kB |                 3.63 kB
+chunk-D_IwY_Bu.js   | -                      |   7.90 kB |                 2.79 kB
+chunk-NkEmEN6w.js   | categoria-detalle-page |   6.09 kB |                 2.14 kB
+chunk-BayOjm7D.js   | sedes-page             |   5.98 kB |                 2.09 kB
+chunk-C9hX3MZb.js   | inicio-page            |   5.01 kB |                 1.62 kB
+chunk-Dc2_sOZZ.js   | contacto-page          |   3.32 kB |                 1.16 kB
+chunk-4A9s8j_B.js   | privacidad-page        |   3.18 kB |                 1.08 kB
+chunk-BXhgr2IG.js   | -                      | 335 bytes |               335 bytes
+
+Application bundle generation complete. [12.464 seconds] - 2026-10-20T19:19:47.586Z
+
+Output location: D:\Cibertec\6to ciclo\DAW II\final\docs\Aplicacion-Web-Hotel-2\apps\public-web\dist\public-web
+
+build_exit=0
+
+> public-web@0.0.0 test
+> ng test --watch=false
+
+❯ Building...
+✔ Building...
+Application bundle generation complete. [5.791 seconds] - 2026-10-20T19:20:00.958Z
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.4 [39m[90mD:/Cibertec/6to ciclo/DAW II/final/docs/Aplicacion-Web-Hotel-2/apps/public-web[39m
+
+
+[2m Test Files [22m [1m[32m10 passed[39m[22m[90m (10)[39m
+[2m      Tests [22m [1m[32m28 passed[39m[22m[90m (28)[39m
+[2m   Start at [22m 14:20:05
+[2m   Duration [22m 16.00s[2m (environment 84%, setup 9%, transform 5%, tests 1%)[22m
+
+test_exit=0

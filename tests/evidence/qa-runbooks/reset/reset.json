@@ -1,0 +1,48 @@
+{
+  "iniciado": "2026-10-20T15:55:41.864154Z",
+  "compose_up": [],
+  "compose_ps": {
+    "kafka": "running/healthy",
+    "mailpit": "running/healthy",
+    "postgres": "running/healthy",
+    "rabbitmq": "running/healthy"
+  },
+  "servicios": {
+    "discovery-server": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "identity-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "hotel-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "inventory-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "reception-service": {
+      "status": 200,
+      "body": "{\"components\":{\"db\":{\"details\":{\"database\":\"PostgreSQL\",\"validationQuery\":\"isValid()\"},\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+    },
+    "sales-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "reporting-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "notification-service": {
+      "status": 200,
+      "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+    },
+    "api-gateway": {
+      "status": 401,
+      "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"60101212-3b76-42ef-a4b9-e612e53d301f\"}}"
+    }
+  }
+}

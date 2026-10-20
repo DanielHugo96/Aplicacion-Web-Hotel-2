@@ -1,0 +1,184 @@
+{
+  "idRecepcion": 13,
+  "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+  "salesConfirmDirecto": {
+    "status": 200,
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+        "idRecepcion": 13,
+        "idHotel": 1,
+        "totalPagadoPrevio": 0,
+        "totalPagadoAhora": 3.5,
+        "totalConsumos": 3.5,
+        "medioPago": "EFECTIVO",
+        "ventasPagadas": [
+          10
+        ],
+        "confirmedAt": "2026-10-20T17:34:40.385034800Z"
+      },
+      "meta": {
+        "correlationId": "dcaf46eb-118b-47ea-9177-d504cf1ffbc9"
+      }
+    }
+  },
+  "salesCierreAntesReintento": [
+    {
+      "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+      "totalPendiente": "3.50",
+      "totalPagadoPrevio": "0.00",
+      "receipt": {
+        "idHotel": 1,
+        "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+        "medioPago": "EFECTIVO",
+        "confirmedAt": 1792517680.3850348,
+        "idRecepcion": 13,
+        "totalConsumos": 3.5,
+        "ventasPagadas": [
+          10
+        ],
+        "totalPagadoAhora": 3.5,
+        "totalPagadoPrevio": 0
+      },
+      "confirmedAt": "2026-10-20 17:34:35.262824+00"
+    }
+  ],
+  "reintentoReception": {
+    "status": 202,
+    "body": {
+      "data": {
+        "cierre": {
+          "estado": "CONFIRMANDO",
+          "calculo": {
+            "cobroAhora": 103.5,
+            "totalGeneral": 103.5,
+            "consumosTotal": 3.5,
+            "alojamientoTotal": 100.0,
+            "saldoAlojamiento": 100.0,
+            "consumosPendientes": 3.5,
+            "consumosPagadosAntes": 0.0,
+            "expectedPendingTotal": 3.5
+          },
+          "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+          "lastErrorCode": "DEPENDENCY_UNAVAILABLE"
+        },
+        "correo": "cliente.uno@hotel.test",
+        "estado": true,
+        "nombre": "Cliente",
+        "numero": "102",
+        "idHotel": 1,
+        "vencida": false,
+        "version": 2,
+        "adelanto": 0.0,
+        "apellido": "Uno",
+        "archivada": false,
+        "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+        "documento": "90000100",
+        "idCliente": 100,
+        "pisoNombre": "Primer piso",
+        "fechaSalida": "2026-10-21",
+        "idRecepcion": 13,
+        "observacion": "Fixture qa-runbooks",
+        "totalPagado": 0.0,
+        "fechaEntrada": "2026-10-20",
+        "idHabitacion": 102,
+        "estadoEstadia": "CERRANDO",
+        "precioInicial": 100.0,
+        "tipoDocumento": "DNI",
+        "costoPenalidad": 0.0,
+        "precioRestante": 100.0,
+        "categoriaNombre": "Doble",
+        "cleaningCycleId": null,
+        "motivoPenalidad": null,
+        "precioHabitacion": 100.0,
+        "detalleHabitacion": "Habitacion doble de demostracion",
+        "medioPagoAdelanto": "EFECTIVO",
+        "fechaSalidaConfirmacion": null
+      },
+      "meta": {
+        "correlationId": "d8544fba-f296-411d-b589-5637615afe1a"
+      },
+      "message": "Cierre en curso",
+      "success": true
+    }
+  },
+  "cierreFinal": {
+    "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+    "idRecepcion": 13,
+    "estado": "COMPLETADO",
+    "calculo": {
+      "cobroAhora": 103.5,
+      "totalGeneral": 103.5,
+      "consumosTotal": 3.5,
+      "alojamientoTotal": 100.0,
+      "saldoAlojamiento": 100.0,
+      "consumosPendientes": 3.5,
+      "consumosPagadosAntes": 0.0,
+      "expectedPendingTotal": 3.5
+    },
+    "receiptSales": {
+      "idHotel": 1,
+      "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+      "medioPago": "EFECTIVO",
+      "confirmedAt": "2026-10-20T17:34:40.385034800Z",
+      "idRecepcion": 13,
+      "totalConsumos": 3.5,
+      "ventasPagadas": [
+        10
+      ],
+      "totalPagadoAhora": 3.5,
+      "totalPagadoPrevio": 0
+    },
+    "lastErrorCode": null,
+    "attempts": 3,
+    "requestedAt": "2026-10-20T17:34:35.249245900Z",
+    "cleaningCycleId": "c62c5b42-28be-43ca-9be4-63130d3e8348"
+  },
+  "salesCierreDespues": [
+    {
+      "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+      "totalPendiente": "3.50",
+      "totalPagadoPrevio": "0.00",
+      "receipt": {
+        "idHotel": 1,
+        "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+        "medioPago": "EFECTIVO",
+        "confirmedAt": 1792517680.3850348,
+        "idRecepcion": 13,
+        "totalConsumos": 3.5,
+        "ventasPagadas": [
+          10
+        ],
+        "totalPagadoAhora": 3.5,
+        "totalPagadoPrevio": 0
+      },
+      "confirmedAt": "2026-10-20 17:34:35.262824+00"
+    }
+  ],
+  "unSoloReceipt": true,
+  "receiptPersistido": {
+    "idHotel": 1,
+    "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462",
+    "medioPago": "EFECTIVO",
+    "confirmedAt": 1792517680.3850348,
+    "idRecepcion": 13,
+    "totalConsumos": 3.5,
+    "ventasPagadas": [
+      10
+    ],
+    "totalPagadoAhora": 3.5,
+    "totalPagadoPrevio": 0
+  },
+  "ventas": [
+    {
+      "idVenta": 10,
+      "estado": "PAGADO",
+      "estadoOperacion": "CONFIRMADA",
+      "total": "3.50",
+      "paidAt": "2026-10-20 17:34:35.262824+00",
+      "closureId": "7f4400a7-4e6d-4862-a19a-d8078037b462"
+    }
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "checks": {
+    "compose:kafka": "running/healthy",
+    "compose:mailpit": "running/healthy",
+    "compose:postgres": "running/healthy",
+    "compose:rabbitmq": "running/healthy",
+    "compose": {
+      "kafka": "running/healthy",
+      "mailpit": "running/healthy",
+      "postgres": "running/healthy",
+      "rabbitmq": "running/healthy"
+    },
+    "servicio:discovery-server": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "servicio:identity-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "servicio:hotel-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "servicio:inventory-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "servicio:reception-service": {
+      "status": 200,
+      "body": "{\"components\":{\"db\":{\"details\":{\"database\":\"PostgreSQL\",\"validationQuery\":\"isValid()\"},\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+    },
+    "servicio:sales-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "servicio:reporting-service": {
+      "status": 200,
+      "body": "{\"status\":\"UP\"}"
+    },
+    "servicio:notification-service": {
+      "status": 200,
+      "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+    },
+    "servicio:api-gateway": {
+      "status": 401,
+      "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"46bc9ce3-8aa6-4c45-8605-ae8026ad58aa\"}}"
+    },
+    "seeds": {
+      "hoteles": "3",
+      "habitaciones": "6",
+      "personas": "6",
+      "gates": "6",
+      "productosSede": "9"
+    },
+    "reportingBootstrap": "LISTO",
+    "kafkaTopics": [
+      "__consumer_offsets",
+      "hotel.habitacion.v1",
+      "hotel.sede.v1",
+      "identity.persona.v1",
+      "inventory.movimiento.v1",
+      "inventory.stock.v1",
+      "reception.recepcion.v1",
+      "reception.recepcion.v1.hotel-ocupacion-v1.dlt",
+      "sales.venta.v1"
+    ],
+    "rabbitQueues": [
+      "limpieza.solicitada",
+      "limpieza.solicitada.dlq",
+      "limpieza.solicitada.retry.120s",
+      "limpieza.solicitada.retry.30s",
+      "limpieza.solicitada.retry.5s",
+      "notificacion.bienvenida",
+      "notificacion.bienvenida.dlq",
+      "notificacion.bienvenida.retry.120s",
+      "notificacion.bienvenida.retry.30s",
+      "notificacion.bienvenida.retry.5s",
+      "notificacion.checkin",
+      "notificacion.checkin.dlq",
+      "notificacion.checkin.retry.120s",
+      "notificacion.checkin.retry.30s",
+      "notificacion.checkin.retry.5s",
+      "notificacion.checkout",
+      "notificacion.checkout.dlq",
+      "notificacion.checkout.retry.120s",
+      "notificacion.checkout.retry.30s",
+      "notificacion.checkout.retry.5s",
+      "recepcion.operacion-finalizar",
+      "recepcion.operacion-finalizar.dlq",
+      "recepcion.operacion-finalizar.retry.120s",
+      "recepcion.operacion-finalizar.retry.30s",
+      "recepcion.operacion-finalizar.retry.5s",
+      "stock.restituir",
+      "stock.restituir.dlq",
+      "stock.restituir.retry.120s",
+      "stock.restituir.retry.30s",
+      "stock.restituir.retry.5s"
+    ],
+    "validarPlanes": {
+      "exit": 0,
+      "stdout": "\n30 plan(es) revisado(s); 30 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).\n",
+      "stderr": ""
+    }
+  },
+  "fallos": [],
+  "ok": true
+}
