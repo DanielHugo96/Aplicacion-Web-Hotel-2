@@ -93,7 +93,7 @@ $ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8082/internal/hotel
 HTTP 401 {"error":{"code":"UNAUTHENTICATED"}}
 
 # reception -> identity, con aud=identity
-$ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8081/internal/clientes/100
+$ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8081/internal/clientes/{id}
 HTTP 401 {"error":{"code":"UNAUTHENTICATED"}}
 ```
 
@@ -244,7 +244,7 @@ HTTP 200
 
 ### reception -> identity, aud=identity
 payload: {"sub": "reception-service", "aud": "identity", "scope": "clientes:read", "iss": "hotel-identity"}
-$ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8081/internal/clientes/100
+$ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8081/internal/clientes/{id}
 {"success":false,"message":"No encontramos lo que buscas.","data":null,"error":{"code":"RESOURCE_NOT_FOUND","fields":{}},"meta":{"correlationId":"3f49d52c-e79d-4ff7-8160-8f4fb2c933eb"}}
 HTTP 404
 # La ruta publicada en el contrato está montada en identity bajo `/api` (defecto de
@@ -271,7 +271,7 @@ HTTP 400
 
 $ # aud ajena: token con aud=hotel contra identity
 $ curl -s -w '\nHTTP %{http_code}\n' -H "Authorization: Bearer $TOKEN" \
-    http://localhost:8081/internal/clientes/100
+    http://localhost:8081/internal/clientes/{id}
 {"success":false,"message":"Tu sesión expiró. Vuelve a iniciar sesión.","data":null,"error":{"code":"UNAUTHENTICATED","fields":{}},"meta":{"correlationId":"6c5681df-eba7-4dd0-9402-b6d66f658003"}}
 HTTP 401
 
