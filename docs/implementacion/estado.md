@@ -36,6 +36,7 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F4 | [`front-admin-web-cierre`](../plans/front-admin-web-cierre.md) | T12 | `propuesto` | — | — |
 | F4 | [`front-admin-web-reportes`](../plans/front-admin-web-reportes.md) | T13 | `propuesto` | — | — |
 | F5 | [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md) | T14 | `propuesto` | — | — |
+| F2 | [`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) | — | `cerrado` | `back-arreglo-hotel-arranque` | [#76](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/76) |
 
 Valores de `Estado` (norma §8): `propuesto`, `en curso`, `cerrado`. Las tandas y colas están en [`orden.md`](orden.md).
 
@@ -53,8 +54,10 @@ mergear por la regla 6.11.3 de [`../plans/README.md`](../plans/README.md). El mo
   original: [`decisiones/IA-back-identity-auth-11.md`](decisiones/IA-back-identity-auth-11.md).
 
 - `back-inventory-stock` (T6): PR [#72](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/72)
-  cerrado sin mergear. **El bloqueo no es de este plan: `hotel-service` no arranca desde `main`**, por
-  dos defectos del plan ya cerrado `back-hotel-catalogo` (PR #66), y `back-hotel-catalogo` es
-  dependencia directa o transitiva de todos los planes que quedan. La evidencia HTTP que declara ese
-  plan cerrado (`LP01`, `SEC03`, `CRUD01`, `OCC04`) no puede ser real y conviene revisarla. Detalle y
-  cómo desbloquearlo: [`decisiones/IA-back-inventory-stock-02.md`](decisiones/IA-back-inventory-stock-02.md).
+  cerrado sin mergear. **El bloqueo no era de este plan: `hotel-service` no arrancaba desde `main`**,
+  por defectos del plan ya cerrado `back-hotel-catalogo` (PR #66), dependencia directa o transitiva de
+  todos los planes que quedaron. **Ya está desbloqueado**: el plan de arreglo
+  [`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) corrigió el arranque y el
+  catálogo público (PR [#76](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/76)), así que
+  este plan se puede reabrir desde `origin/back-inventory-stock` para ejecutar sus pasos 6 y 14.
+  Detalle del bloqueo: [`decisiones/IA-back-inventory-stock-02.md`](decisiones/IA-back-inventory-stock-02.md).
