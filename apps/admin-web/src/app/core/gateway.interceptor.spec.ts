@@ -175,6 +175,40 @@ describe('gatewayInterceptor', () => {
     expect(location).toBe('/api/venta/buscar/5001');
   });
 
+  it('deja pasar el 202 de pago y anulación de venta para el banner del panel', () => {
+    const respuestas: Array<{ status: number; location: string | null }> = [];
+    TestBed.runInInjectionContext(() => {
+      for (const [method, url] of [
+        ['PUT', '/api/venta/5001'],
+        ['DELETE', '/api/venta/5001?motivo=Error%20de%20cobro'],
+      ] as const) {
+        gatewayInterceptor(
+          new HttpRequest(method, url, method === 'PUT' ? { estado: 'PAGADO' } : null),
+          () =>
+            of(
+              new HttpResponse({
+                status: 202,
+                statusText: 'Accepted',
+                headers: new HttpHeaders({
+                  Location: '/api/venta/buscar/5001',
+                  'Retry-After': '2',
+                }),
+                body: { ok: true },
+              })
+            )
+        ).subscribe((event) => {
+          if (event instanceof HttpResponse) {
+            respuestas.push({ status: event.status, location: event.headers.get('Location') });
+          }
+        });
+      }
+    });
+    expect(respuestas).toEqual([
+      { status: 202, location: '/api/venta/buscar/5001' },
+      { status: 202, location: '/api/venta/buscar/5001' },
+    ]);
+  });
+
   it('deja pasar el 202 de mantenimiento y baja de habitación para el banner del panel', () => {
     const respuestas: Array<{ status: number; location: string | null }> = [];
     TestBed.runInInjectionContext(() => {
