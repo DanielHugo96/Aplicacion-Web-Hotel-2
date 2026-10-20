@@ -167,11 +167,11 @@ define `PRECONDITION_REQUIRED`, `VALIDATION_ERROR` y `FORBIDDEN`. No hay regla n
   `actualizarTipoPersona`, eliminando los cast no comprobados a `List<Integer>`. Verificación:
   `grep -n "List<Integer>) .*get(\"sedes\")"` no encuentra casts directos y la compilación termina
   con código 0.
-- [ ] 4. Declarar `If-Match` con `required = false` en los `PUT`/`DELETE` de persona y en el `PUT` de
+- [x] 4. Declarar `If-Match` con `required = false` en los `PUT`/`DELETE` de persona y en el `PUT` de
   tipo de persona, sin cambiar la firma del servicio ni las comprobaciones que ya hacen
   `ETag.versionDe` y `PRECONDITION_REQUIRED`. Verificación: sin cabecera, los tres métodos llegan al
   servicio y devuelven 428 en vez de 500.
-- [ ] 5. Añadir pruebas de controlador en `services/identity-service/src/test/java/pe/hotel/identity/persona/`
+- [x] 5. Añadir pruebas de controlador en `services/identity-service/src/test/java/pe/hotel/identity/persona/`
   con `MockMvc` y `SecurityMockMvcRequestPostProcessors.jwt()`: claim `sedes` con `List.of(1L)` y rol
   EMPLEADO → `listar` con `documento` 200, sin `documento` 400, `buscar` con `documento` 200 y `PUT`
   de persona 403; ADMIN → `PUT` de persona sin `If-Match` 428 y `PUT` de tipo de persona sin
@@ -336,6 +336,29 @@ listado y la búsqueda de EMPLEADO con una sola CLIENTE y `meta.page`/`size`/`to
 `VALIDATION_ERROR` con `error.fields.documento` en el listado sin `documento`; 403 `FORBIDDEN` en
 la mutación con EMPLEADO; 428 `PRECONDITION_REQUIRED` en la mutación de ADMIN sin `If-Match`.
 Evidencia: los cuerpos HTTP completos, en el PR de ejecución y en la bitácora del plan.
+
+### Pruebas de controlador y `If-Match` (pasos 4 y 5)
+
+`PersonaControllerTests` usa `MockMvc` con `jwt()` y dos claims distintos:
+EMPLEADO con `sedes: [1L]` y ADMIN con `sedes: []`. Cubre los siete casos del paso 5 más el
+`DELETE` sin `If-Match`:
+
+```text
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service -Dtest=PersonaControllerTests test
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+Los tres métodos con versión (`PUT /api/persona/actualizar/{id}`,
+`DELETE /api/persona/eliminar/{id}` y `PUT /api/tipopersona/actualizar/{id}`) llegan al servicio sin
+`If-Match` y responden 428 `PRECONDITION_REQUIRED` en lugar de 500. La suite completa del módulo
+también queda en verde:
+
+```text
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service test
+[INFO] Tests run: 79, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
 
 ### Unidad y build (pasos 5 y 9)
 
