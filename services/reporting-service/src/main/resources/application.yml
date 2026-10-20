@@ -107,3 +107,11 @@ hotel:
         productosSede: 9
         ventas: 0
         recepciones: 0
+      # Watermarks de una exportación/seed terminado. Demo sin stream previo: -1 en cada topic.
+      watermarks:
+        - {topic: identity.persona.v1, partition: 0, lastOffset: -1}
+        - {topic: hotel.sede.v1, partition: 0, lastOffset: -1}
+        - {topic: hotel.habitacion.v1, partition: 0, lastOffset: -1}
+        - {topic: reception.recepcion.v1, partition: 0, lastOffset: -1}
+        - {topic: inventory.stock.v1, partition: 0, lastOffset: -1}
+        - {topic: sales.venta.v1, partition: 0, lastOffset: -1}

@@ -9,8 +9,10 @@ import org.springframework.kafka.annotation.EnableKafka;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.ConsumerRecordRecoverer;
 import org.springframework.kafka.listener.DeadLetterPublishingRecoverer;
 import org.springframework.kafka.listener.DefaultErrorHandler;
+import pe.hotel.reporting.projection.ProjectionStore;
 
 /**
  * Consumidor Kafka del read model. Reintenta hasta 5 veces con esperas de 1s, 5s, 30s, 120s y
@@ -30,12 +32,23 @@ public class KafkaMessagingConfig {
   public ConcurrentKafkaListenerContainerFactory<String, String> kafkaListenerContainerFactory(
       ConsumerFactory<String, String> consumerFactory,
       KafkaTemplate<String, String> kafkaTemplate,
-      MessagingProperties properties) {
+      MessagingProperties properties,
+      ProjectionStore store) {
     String group = properties.getMessaging().getKafka().getConsumerGroup();
-    DeadLetterPublishingRecoverer recoverer =
+    DeadLetterPublishingRecoverer publisher =
         new DeadLetterPublishingRecoverer(
             kafkaTemplate,
             (record, ex) -> new TopicPartition(record.topic() + "." + group + ".dlt", record.partition()));
+    // Ante DLT la proyección queda degradada: la UI muestra la advertencia hasta reparar.
+    ConsumerRecordRecoverer recoverer =
+        (record, ex) -> {
+          try {
+            store.markDegraded(record.topic(), record.partition());
+          } catch (Exception ignored) {
+            // Si la base tampoco responde, readiness lo refleja; el DLT no se pierde.
+          }
+          publisher.accept(record, ex);
+        };
     DefaultErrorHandler errorHandler =
         new DefaultErrorHandler(
             recoverer, new ListBackOff(properties.getMessaging().getKafka().getRetryIntervalsMs()));

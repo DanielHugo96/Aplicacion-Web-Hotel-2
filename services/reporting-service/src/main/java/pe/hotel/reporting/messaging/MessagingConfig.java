@@ -13,11 +13,6 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @Configuration
 @EnableScheduling
-@ConditionalOnProperty(
-    prefix = "hotel.messaging",
-    name = "enabled",
-    havingValue = "true",
-    matchIfMissing = true)
 public class MessagingConfig {
 
   @Bean

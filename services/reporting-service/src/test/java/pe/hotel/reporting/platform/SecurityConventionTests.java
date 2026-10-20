@@ -86,4 +86,33 @@ class SecurityConventionTests {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.status").value("UP"));
   }
+
+  @Test
+  void empleadoSinIdHotelEnumera400() throws Exception {
+    mockMvc
+        .perform(get("/api/reportes/ventas").with(employee(1)))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.error.code").value("VALIDATION_ERROR"))
+        .andExpect(jsonPath("$.error.fields.idHotel").isNotEmpty());
+  }
+
+  @Test
+  void empleadoDeSedeAjenaRecibe404SinDatosDeLaOtraSede() throws Exception {
+    // SEC03 (parte de reporting): E de sede 1 contra dashboard de la sede 2.
+    mockMvc
+        .perform(get("/api/reportes/dashboard").param("idHotel", "2").with(employee(1)))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.error.code").value("RESOURCE_NOT_FOUND"))
+        .andExpect(jsonPath("$.data").isEmpty());
+  }
+
+  private static org.springframework.test.web.servlet.request.RequestPostProcessor employee(
+      int sede) {
+    return jwt()
+        .jwt(
+            j ->
+                j.claim("roles", java.util.List.of("EMPLEADO"))
+                    .claim("sedes", java.util.List.of(sede)))
+        .authorities(new SimpleGrantedAuthority("ROLE_EMPLEADO"));
+  }
 }

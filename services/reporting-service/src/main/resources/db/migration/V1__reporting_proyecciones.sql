@@ -209,6 +209,12 @@ LANGUAGE sql STABLE AS $$
   ORDER BY r.fecha_cierre, r.id_recepcion
 $$;
 
+-- fn_dashboard: la caja del día suma adelantos cobrados hoy + cobro final de ALOJAMIENTO de
+-- cierres de hoy + ventas PAGADO con paid_at de hoy. El adelanto cuenta por su fecha de entrada
+-- (se cobró ese día); el cobro final de alojamiento sale de total_alojamiento - adelanto y solo
+-- existe si la estadía tiene fecha de cierre, de modo que una anulación de check-in (CERRADA sin
+-- recibo ni fecha de cierre) no resta ni inventa un cobro. No se vuelve a sumar el totalGeneral
+-- del cierre: ya contiene alojamiento y consumos.
 CREATE OR REPLACE FUNCTION fn_dashboard(p_hoteles int[], p_dia date)
 RETURNS jsonb
 LANGUAGE sql STABLE AS $$
@@ -231,8 +237,7 @@ LANGUAGE sql STABLE AS $$
           AND s.estado AND s.cantidad <= 5) AS bajo_stock,
       (SELECT COALESCE(sum(r.adelanto), 0) FROM recepcion_projection r
         WHERE (p_hoteles IS NULL OR r.id_hotel = ANY (p_hoteles))
-          AND r.fecha_entrada = p_dia
-          AND (r.estado_estadia <> 'CERRADA' OR r.fecha_cierre IS NOT NULL)) AS adelantos,
+          AND r.fecha_entrada = p_dia) AS adelantos,
       (SELECT COALESCE(sum(r.total_alojamiento - r.adelanto), 0) FROM recepcion_projection r
         WHERE (p_hoteles IS NULL OR r.id_hotel = ANY (p_hoteles))
           AND r.estado_estadia = 'CERRADA'
