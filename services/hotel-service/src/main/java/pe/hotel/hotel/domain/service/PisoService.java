@@ -1,6 +1,7 @@
 package pe.hotel.hotel.domain.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -15,6 +16,7 @@ import pe.hotel.hotel.domain.model.Hotel;
 import pe.hotel.hotel.domain.model.Piso;
 import pe.hotel.hotel.domain.repository.HabitacionRepository;
 import pe.hotel.hotel.domain.repository.HotelRepository;
+import pe.hotel.hotel.domain.repository.OperacionHabitacionRepository;
 import pe.hotel.hotel.domain.repository.PisoRepository;
 import pe.hotel.hotel.domain.security.CurrentUser;
 import pe.hotel.hotel.platform.ApiException;
@@ -36,6 +38,8 @@ public class PisoService {
   private CurrentUser currentUser;
   @Autowired(required = false)
   private OutboxService outboxService;
+  @Autowired(required = false)
+  private OperacionHabitacionRepository operacionRepository;
 
   public Page<PisoView> listar(Integer idHotel, Boolean estado, Pageable pageable) {
     if (idHotel == null) {
@@ -83,6 +87,11 @@ public class PisoService {
     if (!versionEsperada.equals(piso.getVersion())) {
       throw new ResponseStatusException(PRECONDITION_FAILED, "version distinta a la vigente");
     }
+    if (operacionRepository != null
+        && operacionRepository.existsPreparandoByPiso(piso.getId(), piso.getIdHotel())) {
+      throw new ApiException(
+          ErrorCode.ROOM_OPERATION_IN_PROGRESS, Map.of("idPiso", String.valueOf(id)));
+    }
     if (input.idHotel() != null && !piso.getIdHotel().equals(input.idHotel())) {
       throw new ResponseStatusException(BAD_REQUEST, "la sede de un piso no se modifica");
     }
@@ -115,6 +124,11 @@ public class PisoService {
     Long versionEsperada = parseVersion(ifMatch);
     if (!versionEsperada.equals(piso.getVersion())) {
       throw new ResponseStatusException(PRECONDITION_FAILED, "version distinta a la vigente");
+    }
+    if (operacionRepository != null
+        && operacionRepository.existsPreparandoByPiso(piso.getId(), piso.getIdHotel())) {
+      throw new ApiException(
+          ErrorCode.ROOM_OPERATION_IN_PROGRESS, Map.of("idPiso", String.valueOf(id)));
     }
     if (habitacionRepository.existsActiveByIdPisoAndIdHotel(piso.getId(), piso.getIdHotel())) {
       throw new ApiException(ErrorCode.ACTIVE_DEPENDENCIES);

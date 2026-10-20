@@ -8,7 +8,7 @@ Gobierna el ciclo de vida operativo de una habitación en hotel: mantenimiento, 
 
 ### Requirement: Mantenimiento y baja con bloqueo durable
 
-hotel SHALL ejecutar el mantenimiento (`POST /api/habitacion/{id}/mantenimiento`) y la baja (`DELETE /api/habitacion/eliminar/{id}`) de una habitación persistiendo una operación administrativa con `blockId` propio, motivo y actor, y solicitando a reception el bloqueo durable del gate antes de aplicar el cambio local. La respuesta MUST distinguir 200 (bloqueo admitido y cambio aplicado en el request), 202 (operación persistida PREPARANDO porque la admisión no se confirmó) y 409 (rechazo durable del gate u operación vigente). La operación MUST aplicar solo mediante CAS PREPARANDO → APLICADA, y una operación LIBERADA o RECHAZADA no MUST reaplicarse.
+hotel SHALL ejecutar el mantenimiento (`POST /api/habitacion/{id}/mantenimiento`) y la baja (`DELETE /api/habitacion/eliminar/{id}`) persistiendo una operación con `blockId`, motivo y actor, y solicitando a reception el bloqueo durable antes de aplicar el cambio local. La respuesta MUST distinguir 200, 202 y 409. La operación MUST aplicar solo por CAS PREPARANDO → APLICADA y una operación LIBERADA o RECHAZADA no MUST reaplicarse.
 
 #### Scenario: Mantenimiento aplicado en el request
 
@@ -93,7 +93,7 @@ hotel SHALL exponer `GET /api/habitacion/limpiezas` para A/E con `idHotel` oblig
 
 ### Requirement: Completado de limpieza
 
-hotel SHALL completar la limpieza con `PUT /api/habitacion/{id}/limpieza-completada` (A/E) usando como If-Match la version de la tarea y como V la revalidación de esa version, validando ciclo, habitación y sede; la transición PENDIENTE → COMPLETADA MUST registrar `completed_at`, dejar el físico LISTA e incrementar las versiones, devolviendo `{limpieza, habitacion}` con el ETag de la tarea terminada. Un intento repetido con la misma Idempotency-Key MUST devolver el mismo resultado sin repetir efectos.
+hotel SHALL completar la limpieza con `PUT /api/habitacion/{id}/limpieza-completada` (A/E) usando como If-Match la version de la tarea y validando ciclo, habitación y sede. La transición PENDIENTE → COMPLETADA MUST registrar `completed_at`, dejar el físico LISTA e incrementar las versiones, devolviendo `{limpieza, habitacion}` con el ETag de la tarea. La misma Idempotency-Key MUST devolver el mismo resultado sin repetir efectos.
 
 #### Scenario: Limpieza completada
 
@@ -107,7 +107,7 @@ hotel SHALL completar la limpieza con `PUT /api/habitacion/{id}/limpieza-complet
 
 ### Requirement: Eventos de habilitación correlacionados
 
-hotel SHALL emitir por outbox, en la transacción del cambio, `HabitacionLista` al completar una limpieza con el `cleaningCycleId` y el `cleaningRoomVersion` de la tarea, `HabitacionHabilitada` al liberar un bloqueo con el `blockId` obligatorio, y `HabitacionSnapshot` con estado=false al aplicar una baja; la key MUST ser `idHabitacion` y el payload MUST validar contra los JSON Schemas del topic. Un evento posterior no MUST liberar un ciclo o bloqueo distinto: la liberación procede solo con la correlación del evento.
+hotel SHALL emitir por outbox, en la transacción del cambio, `HabitacionLista` al completar una limpieza con el ciclo y `cleaningRoomVersion` de la tarea, `HabitacionHabilitada` al liberar un bloqueo con su `blockId`, y `HabitacionSnapshot` con estado=false al aplicar una baja. La key MUST ser `idHabitacion` y el payload MUST validar contra los JSON Schemas. Un evento posterior no MUST liberar un ciclo o bloqueo distinto.
 
 #### Scenario: Evento de limpieza
 
@@ -140,7 +140,7 @@ hotel SHALL recuperar las operaciones que queden PREPARANDO con un job que reint
 
 ### Requirement: Idempotencia, versión y operación vigente
 
-hotel SHALL aplicar Idempotency-Key y If-Match a las mutaciones de negocio: la misma clave y el mismo cuerpo devuelven la respuesta persistida sin repetir efectos, un request distinto con la misma clave devuelve 409 `IDEMPOTENCY_CONFLICT`, y una version distinta devuelve 412. Un rechazo de negocio posterior a la creación de la operación durable MUST quedar persistido con commit antes de responder 409. Con una operación PREPARANDO o APLICADA sin liberar, las demás mutaciones físicas y de catálogo de esa habitación MUST responder 409 `ROOM_OPERATION_IN_PROGRESS`, y los cambios de categoría o piso que afecten a una habitación en PREPARANDO MUST rechazarse sin aplicar el cambio de catálogo.
+hotel SHALL aplicar Idempotency-Key y If-Match a las mutaciones: la misma clave y cuerpo devuelven la respuesta persistida, un cuerpo distinto con la misma clave da 409 `IDEMPOTENCY_CONFLICT` y una version distinta da 412. Un rechazo posterior a la operación durable MUST persistirse con commit antes del 409. Con una operación PREPARANDO o APLICADA, las demás mutaciones físicas y de catálogo de la habitación MUST dar 409 `ROOM_OPERATION_IN_PROGRESS`; los cambios de categoría o piso que la afecten MUST rechazarse sin aplicar.
 
 #### Scenario: Reintento válido
 

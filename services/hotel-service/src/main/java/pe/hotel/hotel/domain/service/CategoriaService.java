@@ -1,6 +1,7 @@
 package pe.hotel.hotel.domain.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,6 +15,7 @@ import pe.hotel.hotel.domain.dto.CategoriaView;
 import pe.hotel.hotel.domain.model.Categoria;
 import pe.hotel.hotel.domain.repository.CategoriaRepository;
 import pe.hotel.hotel.domain.repository.HabitacionRepository;
+import pe.hotel.hotel.domain.repository.OperacionHabitacionRepository;
 import pe.hotel.hotel.domain.security.CurrentUser;
 import pe.hotel.hotel.platform.ApiException;
 import pe.hotel.hotel.platform.ErrorCode;
@@ -32,6 +34,8 @@ public class CategoriaService {
   private CurrentUser currentUser;
   @Autowired(required = false)
   private OutboxService outboxService;
+  @Autowired(required = false)
+  private OperacionHabitacionRepository operacionRepository;
 
   public Page<CategoriaView> listar(Boolean estado, Pageable pageable) {
     Page<Categoria> cats =
@@ -71,6 +75,10 @@ public class CategoriaService {
     if (!versionEsperada.equals(categoria.getVersion())) {
       throw new ResponseStatusException(PRECONDITION_FAILED, "version distinta a la vigente");
     }
+    if (operacionRepository != null && operacionRepository.existsPreparandoByCategoria(id)) {
+      throw new ApiException(
+          ErrorCode.ROOM_OPERATION_IN_PROGRESS, Map.of("idCategoria", String.valueOf(id)));
+    }
     if (Boolean.FALSE.equals(input.estado())
         && habitacionRepository.countByIdCategoriaEstadoTrue(categoria.getId())) {
       throw new ApiException(ErrorCode.ACTIVE_DEPENDENCIES);
@@ -102,6 +110,10 @@ public class CategoriaService {
     Long versionEsperada = parseVersion(ifMatch);
     if (!versionEsperada.equals(categoria.getVersion())) {
       throw new ResponseStatusException(PRECONDITION_FAILED, "version distinta a la vigente");
+    }
+    if (operacionRepository != null && operacionRepository.existsPreparandoByCategoria(id)) {
+      throw new ApiException(
+          ErrorCode.ROOM_OPERATION_IN_PROGRESS, Map.of("idCategoria", String.valueOf(id)));
     }
     if (habitacionRepository.countByIdCategoriaEstadoTrue(categoria.getId())) {
       throw new ApiException(ErrorCode.ACTIVE_DEPENDENCIES);
