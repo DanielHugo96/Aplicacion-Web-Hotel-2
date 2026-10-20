@@ -101,8 +101,8 @@ se ejecutaron con `docker exec hotel-postgres-1 psql -U postgres -d <db>`.
 - Caso `STK05` — venta 5 **inducida por SQL** con débito real `DESCONTADO` y operación de 4 minutos:
   el job de 30 s la pasó a CANCELACION_PENDIENTE y, tras `RESTITUIDO`, a `CANCELADA`; un solo
   `movimiento_venta` (versión 2, `RESTITUIDO`), stock de vuelta a `20`; nunca `CONFIRMADA`.
-- Caso `STK06` — admisión con timeout (proxy que corta `POST el POST de admisión de reception`
-  a los 5 s de Feign): `POST /api/venta` → `HTTP 202` con `Location` y `Retry-After: 2`, venta 7
+- Caso `STK06` — admisión con timeout (proxy que corta el POST de admisión de reception a los
+  5 s de Feign): `POST /api/venta` → `HTTP 202` con `Location` y `Retry-After: 2`, venta 7
   `RECHAZADA`, operación `TERMINAL`, `recepcion.operacion-finalizar` con `RECHAZADA` y recepción
   `FINALIZADA/RECHAZADA`; `movimiento_venta` venta 7 → `0` filas. Admisión tardía directa a
   reception → `HTTP 409` `STAY_NOT_ACTIVE`. También se reprodujo con la venta 4 envejecida
@@ -150,9 +150,9 @@ se ejecutaron con `docker exec hotel-postgres-1 psql -U postgres -d <db>`.
     un `DESCONTADO` tardío solo registró `alerta_descontado_tardio` sin cambiar el estado; un
     `SalidaRegistrada` limpió el carrito (`carrito_limpiado_por_salida`) y su reentrega con el
     mismo `eventId` no volvió a borrar (inbox `1` fila, línea residual intacta).
-  - Paso 14: `PREPARANDO` viejo → `RECHAZADA` sin stock; DEBITO_SOLICITADO viejo →
-    CANCELACION_PENDIENTE → `CANCELADA` sin confirmar; un `PAGO` en curso se reintentó y pagó
-    sin nuevo movimiento de inventario.
+  - Paso 14: `PREPARANDO` viejo (SQL) → `RECHAZADA` sin stock; DEBITO_SOLICITADO viejo (SQL) →
+    CANCELACION_PENDIENTE → `CANCELADA` sin confirmar; un `PAGO` en curso (SQL) se reintentó y
+    pagó sin nuevo movimiento de inventario.
   - Pasos 15–16: resumen recepción 5 → totales `0` y `ventasPendientes []`; recepción 8 →
     `totalPendiente 7.00`, `totalPagado 11.50`, `ventasPendientes [10]`; con operación abierta →
     `409 OPERATIONS_IN_PROGRESS`; confirmación → receipt `totalPagadoPrevio 11.50`,
