@@ -1,0 +1,2 @@
+exit=0
+reintento encolado commandId=1ce74bf3-3246-4ab6-856c-f371147969fe estado=PENDIENTE

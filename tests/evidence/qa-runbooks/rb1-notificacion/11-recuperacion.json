@@ -1,0 +1,210 @@
+{
+  "reintentado": {
+    "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+    "tipo": "CHECKOUT",
+    "estado": "ENVIADA",
+    "attempts": 1,
+    "lastErrorCode": "",
+    "nextAttemptAt": "2026-10-20 17:00:09.005745+00",
+    "createdAt": "2026-10-20 16:05:06.971333+00",
+    "idRecepcion": 2
+  },
+  "descartado": {
+    "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+    "tipo": "CHECKOUT",
+    "estado": "DESCARTADO",
+    "attempts": 4,
+    "lastErrorCode": "DESCARTADO: descarte",
+    "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+    "createdAt": "2026-10-20 16:05:06.984454+00",
+    "idRecepcion": 3
+  },
+  "mailpit": {
+    "total": 3,
+    "unread": 3,
+    "count": 3,
+    "messages_count": 3,
+    "messages_unread": 3,
+    "start": 0,
+    "tags": [],
+    "messages": [
+      {
+        "ID": "7h9iA6VtCkAaoVe6qn9QOd",
+        "MessageID": "1ce74bf3-3246-4ab6-856c-f371147969fe@hotel.test",
+        "Read": false,
+        "From": {
+          "Name": "",
+          "Address": ""
+        },
+        "To": [
+          {
+            "Name": "",
+            "Address": "cliente.dos@hotel.test"
+          }
+        ],
+        "Cc": null,
+        "Bcc": null,
+        "ReplyTo": [],
+        "Subject": "Estadía registrada",
+        "Created": "2026-10-20T17:01:09.399Z",
+        "Username": "",
+        "Tags": [],
+        "Size": 721,
+        "Attachments": 0,
+        "Snippet": "Estadía registrada Hola Cliente Dos, Tu check-in en Hotel Demo Arequipa quedó registrado (estadía 3). Fecha de salida prevista: 2026-10-21. Notificación de demostración, no comprobante fiscal."
+      },
+      {
+        "ID": "4hPwIkb0BLfeKhV99UMooo",
+        "MessageID": "dfc34061-ec27-4a88-966d-003aaffa0b1b@hotel.test",
+        "Read": false,
+        "From": {
+          "Name": "",
+          "Address": ""
+        },
+        "To": [
+          {
+            "Name": "",
+            "Address": "cliente.uno@hotel.test"
+          }
+        ],
+        "Cc": null,
+        "Bcc": null,
+        "ReplyTo": [],
+        "Subject": "Estadía registrada",
+        "Created": "2026-10-20T17:00:45.703Z",
+        "Username": "",
+        "Tags": [],
+        "Size": 726,
+        "Attachments": 0,
+        "Snippet": "Estadía registrada Hola Cliente Uno, Tu check-in en Hotel Demo Miraflores quedó registrado (estadía 2). Fecha de salida prevista: 2026-10-21. Notificación de demostración, no comprobante fiscal."
+      },
+      {
+        "ID": "5B5fpH552jzDIL3PpjeOnf",
+        "MessageID": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88@hotel.test",
+        "Read": false,
+        "From": {
+          "Name": "",
+          "Address": ""
+        },
+        "To": [
+          {
+            "Name": "",
+            "Address": "cliente.uno@hotel.test"
+          }
+        ],
+        "Cc": null,
+        "Bcc": null,
+        "ReplyTo": [],
+        "Subject": "Salida registrada",
+        "Created": "2026-10-20T17:00:19.993Z",
+        "Username": "",
+        "Tags": [],
+        "Size": 715,
+        "Attachments": 0,
+        "Snippet": "Salida registrada Hola Cliente Uno, Tu salida de Hotel Demo Miraflores quedó registrada (estadía 2). Total de alojamiento: 120.00. Total de consumos: 0.00. Notificación de demostración, no comprob..."
+      }
+    ]
+  },
+  "auditLog": [
+    {
+      "accion": "NOTIFICATION_PURGE",
+      "entidad": "notification_job",
+      "actor": "juan2",
+      "createdAt": "2026-10-20 16:59:44.524185+00"
+    },
+    {
+      "accion": "NOTIFICATION_RETRY",
+      "entidad": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+      "actor": "juan2",
+      "createdAt": "2026-10-20 17:00:09.013983+00"
+    },
+    {
+      "accion": "NOTIFICATION_RETRY",
+      "entidad": "dfc34061-ec27-4a88-966d-003aaffa0b1b",
+      "actor": "juan2",
+      "createdAt": "2026-10-20 17:00:34.137256+00"
+    },
+    {
+      "accion": "NOTIFICATION_RETRY",
+      "entidad": "1ce74bf3-3246-4ab6-856c-f371147969fe",
+      "actor": "juan2",
+      "createdAt": "2026-10-20 17:00:59.276137+00"
+    },
+    {
+      "accion": "NOTIFICATION_DISCARD",
+      "entidad": "7b4da864-b7d3-4207-8b38-796622039a98",
+      "actor": "juan2",
+      "createdAt": "2026-10-20 17:01:24.820617+00"
+    },
+    {
+      "accion": "NOTIFICATION_PURGE",
+      "entidad": "notification_job",
+      "actor": "juan2",
+      "createdAt": "2026-10-20 17:01:37.270633+00"
+    }
+  ],
+  "errorRestante": "0",
+  "pendienteRestante": "0",
+  "jobs": [
+    {
+      "commandId": "7870855d-280e-4882-a24d-234ef6b72848",
+      "tipo": "CHECKIN",
+      "estado": "ENVIADA",
+      "attempts": 1,
+      "lastErrorCode": "",
+      "nextAttemptAt": "2026-10-20 16:03:26.71992+00",
+      "createdAt": "2026-10-20 16:03:26.71992+00",
+      "idRecepcion": 1
+    },
+    {
+      "commandId": "eda4e000-1049-4bd6-9230-d7732f146ad3",
+      "tipo": "CHECKOUT",
+      "estado": "ENVIADA",
+      "attempts": 1,
+      "lastErrorCode": "",
+      "nextAttemptAt": "2026-10-20 16:03:26.719921+00",
+      "createdAt": "2026-10-20 16:03:26.719921+00",
+      "idRecepcion": 1
+    },
+    {
+      "commandId": "dfc34061-ec27-4a88-966d-003aaffa0b1b",
+      "tipo": "CHECKIN",
+      "estado": "ENVIADA",
+      "attempts": 1,
+      "lastErrorCode": "",
+      "nextAttemptAt": "2026-10-20 17:00:34.12889+00",
+      "createdAt": "2026-10-20 16:05:06.963146+00",
+      "idRecepcion": 2
+    },
+    {
+      "commandId": "0b5ce2c4-ea24-4e56-9d45-bdfa233c3e88",
+      "tipo": "CHECKOUT",
+      "estado": "ENVIADA",
+      "attempts": 1,
+      "lastErrorCode": "",
+      "nextAttemptAt": "2026-10-20 17:00:09.005745+00",
+      "createdAt": "2026-10-20 16:05:06.971333+00",
+      "idRecepcion": 2
+    },
+    {
+      "commandId": "1ce74bf3-3246-4ab6-856c-f371147969fe",
+      "tipo": "CHECKIN",
+      "estado": "ENVIADA",
+      "attempts": 1,
+      "lastErrorCode": "",
+      "nextAttemptAt": "2026-10-20 17:00:59.266323+00",
+      "createdAt": "2026-10-20 16:05:06.978141+00",
+      "idRecepcion": 3
+    },
+    {
+      "commandId": "7b4da864-b7d3-4207-8b38-796622039a98",
+      "tipo": "CHECKOUT",
+      "estado": "DESCARTADO",
+      "attempts": 4,
+      "lastErrorCode": "DESCARTADO: descarte",
+      "nextAttemptAt": "2026-10-20 16:41:28.950026+00",
+      "createdAt": "2026-10-20 16:05:06.984454+00",
+      "idRecepcion": 3
+    }
+  ]
+}

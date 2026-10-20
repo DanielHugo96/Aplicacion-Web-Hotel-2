@@ -1,5 +1,5 @@
 {
-  "capturadoEn": "2026-10-20T15:58:59.258960Z",
+  "capturadoEn": "2026-10-20T17:04:29.238946Z",
   "alertas": [
     {
       "alerta": "Mensajes en DLT Kafka",
@@ -7,9 +7,13 @@
       "deteccion": "conteo de offsets de los topics *.dlt",
       "severidad": "Alta",
       "runbook": "RB1",
-      "valor": 0,
-      "dispara": false,
-      "detalle": {}
+      "valor": 6,
+      "dispara": true,
+      "detalle": {
+        "hotel.habitacion.v1.reception-gates-v1.dlt": 0,
+        "hotel.habitacion.v1.reporting-proyeccion-v1.dlt": 0,
+        "reception.recepcion.v1.hotel-ocupacion-v1.dlt": 6
+      }
     },
     {
       "alerta": "Mensajes en DLQ Rabbit",
@@ -120,9 +124,16 @@
       "deteccion": "projection_checkpoint / meta de la API",
       "severidad": "Media",
       "runbook": "RB1",
-      "valor": 0,
-      "dispara": false,
-      "detalle": []
+      "valor": 1,
+      "dispara": true,
+      "detalle": [
+        {
+          "topic": "hotel.habitacion.v1",
+          "lastOffset": "10",
+          "lastEventAt": "2026-10-20 16:02:48.085721+00",
+          "updatedAt": "2026-10-20 16:02:48.086688+00"
+        }
+      ]
     },
     {
       "alerta": "Ventas en recuperación",

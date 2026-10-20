@@ -254,13 +254,31 @@ def rabbit() -> None:
     print("  contradicción y schema inválido en la DLQ; sin tarea ni cambio físico")
 
 
-def _notification_cli(*args: str, timeout: int = 120) -> c.subprocess.CompletedProcess:
-    return c.run(
-        ["java", "-jar", str(c.jar_for("notification-service")), "--admin", *args],
+def _notification_cli(*args: str, timeout: int = 240) -> tuple[int, str]:
+    """Ejecuta la CLI `--admin` con el mismo arranque Maven que el servicio.
+
+    Los jars del proyecto no son ejecutables (`java -jar` no encuentra Main-Class);
+    el arranque canónico es `spring-boot:run`, igual que para los servicios.
+    """
+    argumentos = "--admin " + " ".join(args)
+    proc = c.run(
+        [
+            c.bash_executable(),
+            "scripts/mvn.sh",
+            "-f",
+            "services/pom.xml",
+            "-pl",
+            "notification-service",
+            "spring-boot:run",
+            "-q",
+            f"-Dspring-boot.run.arguments={argumentos}",
+        ],
         env_extra=c.service_env("notification-service"),
         timeout=timeout,
         check=False,
     )
+    lineas = [line for line in proc.stdout.splitlines() if line and not line.startswith("{")]
+    return proc.returncode, "\n".join(lineas)
 
 
 def notification() -> None:
@@ -314,34 +332,40 @@ def notification() -> None:
     alert_before = c.psql_one("notification_db", "select count(*) from notification_job where estado='ERROR'")
 
     # Purga con los dos jobs en ERROR: no debe tocar ERROR ni PENDIENTE.
-    purge_antes = _notification_cli("purge", "--before", (date.today() + timedelta(days=1)).isoformat())
+    purge_antes_exit, purge_antes_out = _notification_cli("purge", "--before", (date.today() + timedelta(days=1)).isoformat())
     jobs_tras_purga = f.notification_jobs()
-    c.write_evidence(sim, "05-cli-purge-con-error.txt", f"exit={purge_antes.returncode}\n{purge_antes.stdout}\n{purge_antes.stderr}\n")
+    c.write_evidence(sim, "05-cli-purge-con-error.txt", f"exit={purge_antes_exit}\n{purge_antes_out}\n")
     c.write_json(sim, "06-estado-tras-purga.json", {"jobs": jobs_tras_purga, "errorAntes": alert_before})
 
     c.docker("start", c.MAILPIT, timeout=60, check=True)
     c.wait_until(lambda: c.http("GET", "http://localhost:8025/api/v1/messages", base="").status == 200, timeout=60, interval=3, description="Mailpit arriba")
 
-    listado = _notification_cli("list", "--estado", "ERROR")
-    c.write_evidence(sim, "07-cli-list.txt", f"exit={listado.returncode}\n{listado.stdout}\n{listado.stderr}\n")
+    list_exit, list_out = _notification_cli("list", "--estado", "ERROR")
+    c.write_evidence(sim, "07-cli-list.txt", f"exit={list_exit}\n{list_out}\n")
 
     retry_job, discard_job = errors[0], errors[1]
-    retry = _notification_cli("retry", retry_job["commandId"])
-    c.write_evidence(sim, "08-cli-retry.txt", f"exit={retry.returncode}\n{retry.stdout}\n{retry.stderr}\n")
+    retry_exit, retry_out = _notification_cli("retry", retry_job["commandId"])
+    c.write_evidence(sim, "08-cli-retry.txt", f"exit={retry_exit}\n{retry_out}\n")
     f.wait_notification_job(retry_job["commandId"], "ENVIADA", timeout=180)
     enviada = [j for j in f.notification_jobs() if j["commandId"] == retry_job["commandId"]][0]
+    # Los CHECKIN del mismo simulacro también están en ERROR: se reintentan para que la
+    # alerta de jobs ERROR quede apagada al terminar (no forman parte del caso NOT01).
+    for extra in [j for j in f.notification_jobs() if j["estado"] == "ERROR" and j["tipo"] == "CHECKIN"]:
+        extra_exit, extra_out = _notification_cli("retry", extra["commandId"])
+        c.write_evidence(sim, f"08b-cli-retry-{extra['commandId'][:8]}.txt", f"exit={extra_exit}\n{extra_out}\n")
+        f.wait_notification_job(extra["commandId"], "ENVIADA", timeout=180)
     mailbox = c.http("GET", "http://localhost:8025/api/v1/messages?limit=20", base="").json
 
-    discard = _notification_cli("discard", discard_job["commandId"], "--motivo", "descarte del simulacro RB1-Notification")
-    c.write_evidence(sim, "09-cli-discard.txt", f"exit={discard.returncode}\n{discard.stdout}\n{discard.stderr}\n")
+    discard_exit, discard_out = _notification_cli("discard", discard_job["commandId"], "--motivo=descarte del simulacro RB1-Notification")
+    c.write_evidence(sim, "09-cli-discard.txt", f"exit={discard_exit}\n{discard_out}\n")
     descartado = [j for j in f.notification_jobs() if j["commandId"] == discard_job["commandId"]][0]
 
-    purge = _notification_cli("purge", "--before", (date.today() + timedelta(days=1)).isoformat())
-    c.write_evidence(sim, "10-cli-purge.txt", f"exit={purge.returncode}\n{purge.stdout}\n{purge.stderr}\n")
+    purge_exit, purge_out = _notification_cli("purge", "--before", (date.today() + timedelta(days=1)).isoformat())
+    c.write_evidence(sim, "10-cli-purge.txt", f"exit={purge_exit}\n{purge_out}\n")
     audit = c.psql(
         "notification_db",
-        "select accion, entidad, actor, created_at::text from audit_log "
-        "where accion in ('NOTIFICATION_RETRY','NOTIFICATION_DISCARD','NOTIFICATION_PURGE') order by created_at",
+        "select action, resource_id, actor, occurred_at::text from audit_log "
+        "where action in ('NOTIFICATION_RETRY','NOTIFICATION_DISCARD','NOTIFICATION_PURGE') order by occurred_at",
     )
     c.write_json(
         sim,
@@ -350,8 +374,7 @@ def notification() -> None:
             "reintentado": enviada,
             "descartado": descartado,
             "mailpit": mailbox,
-            "auditLog": [{"accion": r[0], "entidad": r[1], "actor": r[2], "createdAt": r[3]} for r in audit],
-            "errorRestante": c.psql_one("notification_db", "select count(*) from notification_job where estado='ERROR'"),
+            "auditLog": [{"accion": r[0], "entidad": r[1], "actor": r[2], "createdAt": r[3]} for r in audit],            "errorRestante": c.psql_one("notification_db", "select count(*) from notification_job where estado='ERROR'"),
             "pendienteRestante": c.psql_one("notification_db", "select count(*) from notification_job where estado='PENDIENTE'"),
         },
     )

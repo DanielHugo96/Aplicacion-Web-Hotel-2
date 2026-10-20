@@ -559,7 +559,7 @@ def service_env(name: str) -> dict[str, str]:
         "JWK_SET_URI": env("JWK_SET_URI"),
         "LOG_LEVEL": env("LOG_LEVEL", "INFO"),
         "DEMO_PASSWORD": env("DEMO_PASSWORD"),
-        "SMTP_HOST": env("SMTP_HOST", "localhost"),
+        "SMTP_HOST": "127.0.0.1",
         "SMTP_PORT": env("SMTP_PORT", "1025"),
     }
     if name == "discovery-server":
