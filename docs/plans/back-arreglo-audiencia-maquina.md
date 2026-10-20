@@ -93,7 +93,7 @@ $ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8082/internal/hotel
 HTTP 401 {"error":{"code":"UNAUTHENTICATED"}}
 
 # reception -> identity, con aud=identity
-$ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8081/internal/clientes/{id}
+$ curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8081/internal/clientes/100
 HTTP 401 {"error":{"code":"UNAUTHENTICATED"}}
 ```
 
