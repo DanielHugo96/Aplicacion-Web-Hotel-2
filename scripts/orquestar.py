@@ -58,9 +58,11 @@ AGENTE = "orquestador"
 # también en este nivel. Los `model:` de los .opencode/agents/ se dejan escritos:
 # son la declaración de intención y valen en cuanto la sesión no imponga modelo.
 #
-# LongCat 2.5 Preview Free (OpenCode Go) no admite niveles de esfuerzo, así que no
-# lleva variante `#xhigh`/`#high`: todos los agentes comparten el mismo nivel.
-MODELO = "opencode-go/longcat-2.5-preview-free"
+# DeepSeek V4.1 Flash (OpenCode Go) admite variantes de esfuerzo (low/high/max).
+# No se fija ninguna: se usa la variante por defecto. Si se quiere fijar, se
+# escribe aquí con el sufijo `#high` (o el que sea) y en el frontmatter de los
+# agentes. Los subagentes heredan el modelo de esta sesión.
+MODELO = "opencode-go/deepseek-v4.1-flash"
 
 
 def entorno_campana() -> dict[str, str]:

@@ -15,11 +15,15 @@ import pe.hotel.hotel.domain.dto.ImagenInput;
 import pe.hotel.hotel.domain.model.EstadoHabitacion;
 import pe.hotel.hotel.domain.model.Habitacion;
 import pe.hotel.hotel.domain.model.ImagenHabitacion;
+import pe.hotel.hotel.domain.model.Piso;
 import pe.hotel.hotel.domain.repository.CategoriaRepository;
 import pe.hotel.hotel.domain.repository.EstadoHabitacionRepository;
 import pe.hotel.hotel.domain.repository.HabitacionRepository;
 import pe.hotel.hotel.domain.repository.ImagenHabitacionRepository;
+import pe.hotel.hotel.domain.repository.PisoRepository;
 import pe.hotel.hotel.domain.security.CurrentUser;
+import pe.hotel.hotel.platform.ApiException;
+import pe.hotel.hotel.platform.ErrorCode;
 import static org.springframework.http.HttpStatus.*;
 
 /** Casos de uso de habitaciones: alta LISTA, edicion de catalogo y lecturas con aislamiento por sede. */
@@ -35,6 +39,8 @@ public class HabitacionService {
   private EstadoHabitacionRepository estadoRepository;
   @Autowired(required = false)
   private ImagenHabitacionRepository imagenRepository;
+  @Autowired(required = false)
+  private PisoRepository pisoRepository;
   @Autowired(required = false)
   private CurrentUser currentUser;
   @Autowired(required = false)
@@ -74,7 +80,7 @@ public class HabitacionService {
       throw new ResponseStatusException(BAD_REQUEST, "numero invalido");
     }
     if (repository.existsActiveByIdHotelAndNumero(input.idHotel(), input.numero())) {
-      throw new ResponseStatusException(CONFLICT, "numero ya existe activo en la sede");
+      throw new ApiException(ErrorCode.DUPLICATE_RESOURCE);
     }
     validarPrecio(input.precio());
     List<ImagenInput> imagenes = input.urlsImagenes() == null ? List.of() : input.urlsImagenes();
@@ -88,6 +94,7 @@ public class HabitacionService {
         categoriaRepository
             .findById(input.idCategoria())
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "categoria inexistente"));
+    Piso piso = requerirPisoDeSede(input.idPiso(), input.idHotel());
     Habitacion h =
         new Habitacion(
             input.idHotel(),
@@ -97,6 +104,7 @@ public class HabitacionService {
             input.detalle(),
             input.precio(),
             lista);
+    h.setPiso(piso);
     h.setPublicada(input.publicada());
     h = repository.save(h);
     repository.flush();
@@ -129,6 +137,7 @@ public class HabitacionService {
         categoriaRepository
             .findById(input.idCategoria())
             .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "categoria inexistente"));
+    Piso piso = requerirPisoDeSede(input.idPiso(), h.getIdHotel());
     validarPrecio(input.precio());
     List<ImagenInput> imagenes = input.urlsImagenes() == null ? List.of() : input.urlsImagenes();
     if (imagenes.size() > 10) {
@@ -137,6 +146,7 @@ public class HabitacionService {
     validarImagenes(imagenes);
 
     h.setIdPiso(input.idPiso());
+    h.setPiso(piso);
     h.setCategoria(categoria);
     h.setDetalle(input.detalle());
     h.setPrecio(input.precio());
@@ -159,6 +169,13 @@ public class HabitacionService {
         h.getPiso() == null ? null : h.getPiso().getDescripcion(),
         h.getEstadoHabitacion().getCodigo());
     return toView(h);
+  }
+
+  private Piso requerirPisoDeSede(Integer idPiso, Integer idHotel) {
+    return pisoRepository
+        .findById(idPiso)
+        .filter(p -> p.getIdHotel().equals(idHotel))
+        .orElseThrow(() -> new ResponseStatusException(BAD_REQUEST, "piso inexistente o de otra sede"));
   }
 
   private Habitacion requerirHabitacion(Integer id) {

@@ -26,7 +26,13 @@ public class CatalogoPublicoService {
   public List<HotelPublico> listarHoteles(String slug) {
     List<Map<String, Object>> rows =
         jdbcTemplate.queryForList(
-            "SELECT * FROM fn_catalogo_publico(?, NULL) ORDER BY id_hotel, id_categoria", slug);
+            "SELECT f.id_hotel, f.slug, f.nombre, h.descripcion, h.direccion, h.ciudad, "
+                + "h.telefono, h.correo_contacto, f.id_categoria, f.capacidad, f.precio_desde, "
+                + "f.imagenes::text AS imagenes "
+                + "FROM fn_catalogo_publico(?, NULL) f "
+                + "JOIN hotel h ON h.id = f.id_hotel "
+                + "ORDER BY f.id_hotel, f.id_categoria",
+            slug);
     if (rows.isEmpty()) {
       return List.of();
     }
@@ -64,7 +70,13 @@ public class CatalogoPublicoService {
   public List<CategoriaPublica> listarCategorias(String slug, Integer idCategoria, Integer capacidad) {
     List<Map<String, Object>> rows =
         jdbcTemplate.queryForList(
-            "SELECT * FROM fn_catalogo_publico(?, ?) ORDER BY id_categoria", slug, idCategoria);
+            "SELECT f.id_categoria, f.descripcion, c.detalle, f.capacidad, f.precio_desde, "
+                + "f.imagenes::text AS imagenes "
+                + "FROM fn_catalogo_publico(?, ?) f "
+                + "JOIN categoria c ON c.id = f.id_categoria "
+                + "ORDER BY f.id_categoria",
+            slug,
+            idCategoria);
     if (rows.isEmpty()) {
       throw new NotFoundException("categoria no encontrada");
     }

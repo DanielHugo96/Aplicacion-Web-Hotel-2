@@ -145,11 +145,12 @@ Los 20 planes pendientes se ejecutan sin intervención humana. Los agentes viven
 [`.opencode/agents/`](../../.opencode/agents) y el andamiaje que los conduce está en
 [`scripts/`](../../scripts).
 
-### Los tres agentes
+### Los agentes
 
 | Agente | Ámbito | Modelo | Qué hace |
 |---|---|---|---|
-| `orquestador` | uno por plan | `opencode-go/longcat-2.5-preview-free` | Conduce, delega, da por validado y hace el merge. No elige plan, no escribe código y no puede preguntar. |
+| `orquestador` | uno por plan | `opencode-go/deepseek-v4.1-flash` | Conduce, delega, da por validado y hace el merge. Si `main` está roto, encarga un plan de arreglo. No elige plan, no escribe código y no puede preguntar. |
+| `planificador-arreglos` | cuando `main` se rompe | `opencode-go/deepseek-v4.1-flash` | Reproduce el fallo, redacta un plan `<ámbito>-arreglo-<tema>` con evidencia, lo añade al catálogo y lo publica en un PR `docs:`. No implementa y no mergea. |
 | `plan-back` | `back`, `infra` | `opencode-go/longcat-2.5-preview-free` | Implementa los pasos de un plan, verifica y deja evidencia. |
 | `plan-front` | `front` | `opencode-go/longcat-2.5-preview-free` | Igual, sobre `apps/<app>/`. |
 | `plan-qa` | `qa` | `opencode-go/longcat-2.5-preview-free` | Igual, sobre `tests/**` y `scripts/**`. |
@@ -169,7 +170,7 @@ La campaña se maneja **desde una sesión de OpenCode**, no desde un script. El 
 
 1. Abre OpenCode en el repositorio.
 2. Selecciona el agente **`orquestador`** (con Tab, o escribiéndolo en el selector).
-3. Elige el modelo **LongCat 2.5 Preview Free** (`opencode-go/longcat-2.5-preview-free`).
+3. Elige el modelo **DeepSeek V4.1 Flash** (`opencode-go/deepseek-v4.1-flash`).
 4. Escribe `/campana`, o simplemente dile `ejecuta la campaña`.
 
 A partir de ahí el orquestador hace todo lo demás sin preguntar nada:
@@ -187,6 +188,14 @@ git switch main && git pull        # se sitúa
 
 **El orden de los planes no lo decide el orquestador**: lo calcula `scripts/proximo-plan.py`
 leyendo el `Estado` y el `Depende de`. El orquestador no elige, no salta y no improvisa.
+
+**Cuando `main` se rompe, no se bloquea la campaña.** Si un plan ya `cerrado` deja `main` roto
+(CI en `failure`, un servicio que no arranca, una verificación que no pasa) o hace falta
+refactorizar antes de seguir, el orquestador llama a `planificador-arreglos`. Ese agente reproduce
+el fallo, escribe `docs/plans/<ámbito>-arreglo-<tema>.md` con la evidencia, añade su fila al
+catálogo y publica un PR `docs:`. El orquestador mergea ese PR y después ejecuta el arreglo como
+cualquier plan; `proximo-plan.py` lo devuelve antes que los normales. La norma es la regla 6.11.5
+de [`../plans/README.md`](../plans/README.md#611-ejecución-por-ia-campaña-automática).
 
 Puedes acortar la campaña cuando quieras: `/campana back-identity-auth` la limita a un plan,
 `/campana 3` a tres. Y si lo interrumpes, al volver a escribir `/campana` retoma por donde iba,
@@ -227,6 +236,8 @@ así que **tú puedes seguir enmendando la norma desde tu sesión sin tocar nada
 Qué puede escribir un agente de la campaña dentro de `docs/`:
 
 - `docs/plans/<plan>.md`, el suyo.
+- `docs/plans/catalogo.md`, **solo** `planificador-arreglos` y **solo** para añadir la fila de su
+  plan de arreglo. Nunca para cambiar ni quitar filas existentes.
 - `docs/implementacion/**`: el estado, el calendario y la bitácora de decisiones.
 - `docs/contracts/**`: solo de forma aditiva; quitar algo ya publicado es un fallo de
   `scripts/validar-contratos.py`.
@@ -268,7 +279,10 @@ Ninguna de las dos repara el entorno: eso lo hace una persona.
 - No puede elegir el orden de los planes.
 - No puede inventar un endpoint, un evento ni un código de error. Eso sigue prohibido en los
   tres niveles del protocolo de decisión.
-- No puede corregir un plan ya `cerrado` en `main`.
+- No puede corregir directamente un plan ya `cerrado` en `main`: para eso encarga un plan de
+  arreglo a `planificador-arreglos`, que lo planifica y lo ejecuta una ejecutora.
 
-Cuando un plan no se puede cerrar, la campaña lo registra en [`decisiones/`](decisiones/), deja
-el PR sin mergear y pasa al siguiente. Se detiene sola, pero no se rompe sola.
+Cuando un plan no se puede cerrar por una ambigüedad de negocio, la campaña lo registra en
+[`decisiones/`](decisiones/), deja el PR sin mergear y pasa al siguiente. Cuando el problema es
+código ya mergeado, no pasa de largo: encarga el arreglo, lo cierra y retoma lo que estaba
+esperando. Se detiene sola, pero no se rompe sola.
