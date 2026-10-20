@@ -55,9 +55,8 @@ public class PersonaController {
 
     Map<String, Object> claims = reclamos(jwt);
     String rol = (String) claims.get("rol");
-    @SuppressWarnings("unchecked")
-    List<Integer> sedes = (List<Integer>) claims.get("sedes");
-    Integer idHotelDelActor = sedes == null || sedes.isEmpty() ? null : sedes.get(0);
+    List<Integer> sedes = sedesDe(claims);
+    Integer idHotelDelActor = sedes.isEmpty() ? null : sedes.get(0);
 
     PersonaService.PersonaList lista =
         personas.listar(page, size, idTipoPersona, documento, rol, sedes);
@@ -86,9 +85,8 @@ public class PersonaController {
     String rol = (String) claims.get("rol");
     Integer idDelToken = idDeSub(jwt);
     String actorId = String.valueOf(claims.get("idPersona"));
-    @SuppressWarnings("unchecked")
-    List<Integer> sedes = (List<Integer>) claims.get("sedes");
-    Integer idHotelDelActor = sedes == null || sedes.isEmpty() ? null : sedes.get(0);
+    List<Integer> sedes = sedesDe(claims);
+    Integer idHotelDelActor = sedes.isEmpty() ? null : sedes.get(0);
 
     Persona persona = personas.buscar(id, documento, rol, idDelToken);
 
@@ -111,13 +109,10 @@ public class PersonaController {
 
     Map<String, Object> claims = reclamos(jwt);
     String rol = (String) claims.get("rol");
-    @SuppressWarnings("unchecked")
     Integer idTipoDelActor = idTipoDe(claims);
-    @SuppressWarnings("unchecked")
-    List<Integer> sedesDelActor = (List<Integer>) claims.get("sedes");
+    List<Integer> sedesDelActor = sedesDe(claims);
     String actorId = String.valueOf(claims.get("idPersona"));
-    Integer idHotelDelActor = sedesDelActor == null || sedesDelActor.isEmpty()
-        ? null : sedesDelActor.get(0);
+    Integer idHotelDelActor = sedesDelActor.isEmpty() ? null : sedesDelActor.get(0);
 
     Persona creada = personas.registrar(
         request.tipoDocumento(),
@@ -142,15 +137,14 @@ public class PersonaController {
   public ResponseEntity<ApiResponse<PersonaView>> actualizar(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable("id") int id,
-      @RequestHeader(name = "If-Match") String ifMatch,
+      @RequestHeader(name = "If-Match", required = false) String ifMatch,
       @RequestBody PersonaUpdateRequest request) {
 
     Map<String, Object> claims = reclamos(jwt);
     String rol = (String) claims.get("rol");
     String actorId = String.valueOf(claims.get("idPersona"));
-    @SuppressWarnings("unchecked")
-    List<Integer> sedes = (List<Integer>) claims.get("sedes");
-    Integer idHotelDelActor = sedes == null || sedes.isEmpty() ? null : sedes.get(0);
+    List<Integer> sedes = sedesDe(claims);
+    Integer idHotelDelActor = sedes.isEmpty() ? null : sedes.get(0);
 
     Persona actualizada = personas.actualizar(
         id,
@@ -176,14 +170,13 @@ public class PersonaController {
   public ResponseEntity<ApiResponse<PersonaView>> eliminar(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable("id") int id,
-      @RequestHeader(name = "If-Match") String ifMatch) {
+      @RequestHeader(name = "If-Match", required = false) String ifMatch) {
 
     Map<String, Object> claims = reclamos(jwt);
     String rol = (String) claims.get("rol");
     String actorId = String.valueOf(claims.get("idPersona"));
-    @SuppressWarnings("unchecked")
-    List<Integer> sedes = (List<Integer>) claims.get("sedes");
-    Integer idHotelDelActor = sedes == null || sedes.isEmpty() ? null : sedes.get(0);
+    List<Integer> sedes = sedesDe(claims);
+    Integer idHotelDelActor = sedes.isEmpty() ? null : sedes.get(0);
 
     Persona eliminada = personas.eliminar(
         id, ifMatch, CorrelationId.current(), rol, actorId, idHotelDelActor);
@@ -223,14 +216,14 @@ public class PersonaController {
   public ResponseEntity<ApiResponse<TipoPersonaView>> actualizarTipoPersona(
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable("id") int id,
-      @RequestHeader(name = "If-Match") String ifMatch,
+      @RequestHeader(name = "If-Match", required = false) String ifMatch,
       @RequestBody TipoPersonaUpdateRequest request) {
 
     validarAdmin(jwt);
-    String actorId = String.valueOf(reclamos(jwt).get("idPersona"));
-    @SuppressWarnings("unchecked")
-    List<Integer> sedes = (List<Integer>) reclamos(jwt).get("sedes");
-    Integer idHotelDelActor = sedes == null || sedes.isEmpty() ? null : sedes.get(0);
+    Map<String, Object> claims = reclamos(jwt);
+    String actorId = String.valueOf(claims.get("idPersona"));
+    List<Integer> sedes = sedesDe(claims);
+    Integer idHotelDelActor = sedes.isEmpty() ? null : sedes.get(0);
 
     TipoPersona actualizado = personas.actualizarTipoPersona(
         id, request.descripcion(), ifMatch, CorrelationId.current(), actorId, idHotelDelActor);
@@ -275,14 +268,33 @@ public class PersonaController {
     @SuppressWarnings("unchecked")
     List<String> roles = jwt.getClaimAsStringList("roles");
     String rol = roles == null || roles.isEmpty() ? null : roles.get(0);
-    @SuppressWarnings("unchecked")
-    List<Integer> sedes = (List<Integer>) jwt.getClaim("sedes");
+    Object sedes = jwt.getClaim("sedes");
     String tipoPersona = jwt.getClaimAsString("tipoPersona");
     return Map.of(
         "idPersona", idPersona,
         "rol", rol,
         "tipoPersona", tipoPersona,
         "sedes", sedes == null ? List.of() : sedes);
+  }
+
+  /**
+   * Normaliza el claim {@code sedes} a {@code List<Integer>}. El decoder JWT entrega los números
+   * como {@code Long}; el cast directo a {@code List<Integer>} se borra en ejecución y falla al
+   * leer el primer elemento (ClassCastException). Cualquier valor que no sea una lista de números
+   * se descarta.
+   */
+  private List<Integer> sedesDe(Map<String, Object> claims) {
+    Object valor = claims.get("sedes");
+    if (!(valor instanceof List<?> lista)) {
+      return List.of();
+    }
+    List<Integer> sedes = new java.util.ArrayList<>(lista.size());
+    for (Object elemento : lista) {
+      if (elemento instanceof Number numero) {
+        sedes.add(numero.intValue());
+      }
+    }
+    return sedes;
   }
 
   private Integer idDeSub(Jwt jwt) {

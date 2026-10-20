@@ -2,6 +2,8 @@ package pe.hotel.hotel.web;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.hotel.hotel.domain.dto.HabitacionInput;
@@ -12,6 +14,7 @@ import pe.hotel.hotel.domain.service.HabitacionService;
 import pe.hotel.hotel.platform.ApiResponse;
 import pe.hotel.hotel.platform.CorrelationId;
 import pe.hotel.hotel.platform.Meta;
+import pe.hotel.hotel.platform.Pagination;
 import static org.springframework.http.HttpStatus.*;
 
 /** Lecturas y mutaciones de catalogo de habitaciones (A muta; A/E lee su alcance). */
@@ -26,10 +29,19 @@ public class HabitacionController {
 
   @GetMapping("/listar")
   public ResponseEntity<ApiResponse<List<HabitacionView>>> listar(
-      @RequestParam Integer idHotel, @RequestParam(required = false) Integer idCategoria) {
+      @RequestParam Integer idHotel,
+      @RequestParam(required = false) Integer idCategoria,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size) {
     soloLecturaPrivada();
+    Pageable pageable = Pagination.validar(page, size);
+    Page<HabitacionView> resultado = service.listar(idHotel, idCategoria, pageable);
     return ResponseEntity.ok()
-        .body(ApiResponse.ok(service.listar(idHotel, idCategoria), Meta.of(CorrelationId.current())));
+        .body(
+            ApiResponse.ok(
+                resultado.getContent(),
+                Meta.of(
+                    CorrelationId.current(), page, size, resultado.getTotalElements())));
   }
 
   @GetMapping("/buscar/{id}")

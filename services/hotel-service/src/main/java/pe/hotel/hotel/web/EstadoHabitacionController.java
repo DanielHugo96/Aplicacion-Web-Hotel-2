@@ -1,10 +1,12 @@
 package pe.hotel.hotel.web;
 
 import java.util.List;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.hotel.hotel.domain.dto.EstadoFisicoView;
+import pe.hotel.hotel.domain.dto.EstadoHabitacionUpdate;
 import pe.hotel.hotel.domain.security.CurrentUser;
 import pe.hotel.hotel.domain.service.EstadoHabitacionService;
 import pe.hotel.hotel.platform.ApiResponse;
@@ -41,10 +43,10 @@ public class EstadoHabitacionController {
   @PutMapping("/actualizar/{id}")
   public ResponseEntity<ApiResponse<EstadoFisicoView>> actualizar(
       @PathVariable Integer id,
-      @RequestParam String descripcion,
+      @Valid @RequestBody EstadoHabitacionUpdate input,
       @RequestHeader(name = "If-Match", required = false) String ifMatch) {
     soloAdmin();
-    EstadoFisicoView v = service.actualizar(id, descripcion, ifMatch);
+    EstadoFisicoView v = service.actualizar(id, input.descripcion(), ifMatch);
     return ResponseEntity.ok()
         .eTag(String.valueOf(v.version()))
         .body(ApiResponse.ok(v, Meta.of(CorrelationId.current())));
