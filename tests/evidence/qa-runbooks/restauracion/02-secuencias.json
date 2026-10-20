@@ -1,0 +1,123 @@
+{
+  "identity_db": {
+    "checks": [
+      {
+        "tabla": "persona",
+        "columna": "id",
+        "secuencia": "public.persona_id_seq",
+        "lastValue": 101,
+        "maxId": 101,
+        "porEncimaDelMayorId": true
+      }
+    ],
+    "ok": true
+  },
+  "hotel_db": {
+    "checks": [
+      {
+        "tabla": "categoria",
+        "columna": "id",
+        "secuencia": "public.categoria_id_seq",
+        "lastValue": 2,
+        "maxId": 2,
+        "porEncimaDelMayorId": true
+      },
+      {
+        "tabla": "habitacion",
+        "columna": "id",
+        "secuencia": "public.habitacion_id_seq",
+        "lastValue": 302,
+        "maxId": 302,
+        "porEncimaDelMayorId": true
+      },
+      {
+        "tabla": "hotel",
+        "columna": "id",
+        "secuencia": "public.hotel_id_seq",
+        "lastValue": 3,
+        "maxId": 3,
+        "porEncimaDelMayorId": true
+      },
+      {
+        "tabla": "imagen_habitacion",
+        "columna": "id",
+        "secuencia": "public.imagen_habitacion_id_seq",
+        "lastValue": 2,
+        "maxId": 2,
+        "porEncimaDelMayorId": true
+      },
+      {
+        "tabla": "piso",
+        "columna": "id",
+        "secuencia": "public.piso_id_seq",
+        "lastValue": 31,
+        "maxId": 31,
+        "porEncimaDelMayorId": true
+      }
+    ],
+    "ok": true
+  },
+  "reception_db": {
+    "checks": [
+      {
+        "tabla": "recepcion",
+        "columna": "id",
+        "secuencia": "public.recepcion_id_seq",
+        "lastValue": 23,
+        "maxId": 23,
+        "porEncimaDelMayorId": true
+      }
+    ],
+    "ok": true
+  },
+  "inventory_db": {
+    "checks": [
+      {
+        "tabla": "producto",
+        "columna": "id",
+        "secuencia": "public.producto_id_seq",
+        "lastValue": 3,
+        "maxId": 3,
+        "porEncimaDelMayorId": true
+      }
+    ],
+    "ok": true
+  },
+  "sales_db": {
+    "checks": [
+      {
+        "tabla": "carrito",
+        "columna": "id",
+        "secuencia": "public.carrito_id_seq",
+        "lastValue": 1,
+        "maxId": 0,
+        "porEncimaDelMayorId": true
+      },
+      {
+        "tabla": "detalle_venta",
+        "columna": "id",
+        "secuencia": "public.detalle_venta_id_seq",
+        "lastValue": 10,
+        "maxId": 10,
+        "porEncimaDelMayorId": true
+      },
+      {
+        "tabla": "venta",
+        "columna": "id",
+        "secuencia": "public.venta_id_seq",
+        "lastValue": 11,
+        "maxId": 11,
+        "porEncimaDelMayorId": true
+      }
+    ],
+    "ok": true
+  },
+  "reporting_db": {
+    "checks": [],
+    "ok": true
+  },
+  "notification_db": {
+    "checks": [],
+    "ok": true
+  }
+}
