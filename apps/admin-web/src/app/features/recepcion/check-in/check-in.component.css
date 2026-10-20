@@ -1,1 +1,88 @@
 /* Los estilos comunes viven en src/styles.css (tokens del sistema). */
+.buscador {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.buscador .field {
+  flex: 1 1 240px;
+}
+
+.aviso {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-atencion);
+  border-left: 3px solid var(--color-atencion);
+  border-radius: var(--radius-control);
+  background: var(--color-atencion-bg);
+}
+
+.aviso p {
+  margin: 0 0 var(--space-2);
+}
+
+.seleccionado {
+  margin-top: var(--space-3);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-control);
+  background: var(--color-sillar-piedra);
+}
+
+.seleccionado p {
+  margin: var(--space-1) 0 0;
+}
+
+.resultados {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.resultado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-control);
+  background: #fff;
+  color: var(--color-tinta);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.resultado:hover {
+  background: var(--color-sillar-piedra);
+}
+
+.resultado span:first-child {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.section-head h2 {
+  margin: 0;
+}
+
+.no-seleccionable {
+  color: var(--color-garua);
+}
