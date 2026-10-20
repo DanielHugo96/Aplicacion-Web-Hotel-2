@@ -31,10 +31,14 @@ public class SalesOutbox {
     this.outboxProvider = outboxProvider;
   }
 
-  /** {@code sales.venta.v1} con clave de venta y versión de venta. */
+  /**
+   * {@code sales.venta.v1} con clave de venta y versión de venta. El esquema exige al menos una
+   * línea confirmada: una venta anulada antes de tener snapshot autoritativo no genera evento (no
+   * hubo consumo confirmado que proyectar).
+   */
   public void emitirVenta(VentaRow venta, List<DetalleRow> detalles) {
     OutboxStore outbox = outboxProvider.getIfAvailable();
-    if (outbox == null) {
+    if (outbox == null || detalles == null || detalles.isEmpty()) {
       return;
     }
     try {

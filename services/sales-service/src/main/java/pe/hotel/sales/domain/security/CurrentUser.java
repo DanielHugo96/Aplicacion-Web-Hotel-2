@@ -75,8 +75,8 @@ public class CurrentUser {
     Object sedes = jwt.getClaim("sedes");
     if (sedes instanceof List<?> list) {
       return list.stream()
-          .filter(Integer.class::isInstance)
-          .map(Integer.class::cast)
+          .filter(Number.class::isInstance)
+          .map(value -> ((Number) value).intValue())
           .collect(Collectors.toList());
     }
     return List.of();

@@ -101,10 +101,12 @@ public class CompensacionConsumer {
     }
     JsonNode payload = envelope.path("payload");
     int idHotel = envelope.path("idHotel").asInt();
-    switch (type) {
-      case "MovimientoStockResuelto" -> movimiento(payload, idHotel);
-      case "SalidaRegistrada" -> salida(payload);
-      default -> throw new MessageInvalidException("tipo no soportado por sales: " + type);
+    // Los topics son compartidos: sales solo reacciona a los hechos que el catálogo le asigna y
+    // descarta el resto sin efecto (CheckInRegistrado, RecepcionActualizada, snapshots ajenos).
+    if ("MovimientoStockResuelto".equals(type)) {
+      movimiento(payload, idHotel);
+    } else if ("SalidaRegistrada".equals(type)) {
+      salida(payload);
     }
   }
 

@@ -68,7 +68,7 @@ public class SalesService {
   private final SalesOutbox outbox;
   private final CurrentUser currentUser;
   private final TransactionTemplate tx;
-  private final ObjectMapper mapper = new ObjectMapper();
+  private final ObjectMapper mapper = new ObjectMapper().findAndRegisterModules();
 
   public SalesService(
       SalesRepository repo,

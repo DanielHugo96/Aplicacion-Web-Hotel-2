@@ -66,6 +66,8 @@ public class VentaController {
     SalesService.Resultado resultado = service.crear(body);
     if (resultado.status() == 201) {
       return ResponseEntity.status(HttpStatus.CREATED)
+          .header("Location", "/api/venta/buscar/" + resultado.venta().idVenta())
+          .header("Retry-After", "2")
           .body(ApiResponse.ok(resultado.venta(), Meta.of(CorrelationId.current())));
     }
     return ResponseEntity.status(HttpStatus.ACCEPTED)
