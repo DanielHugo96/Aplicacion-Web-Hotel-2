@@ -33,7 +33,6 @@ spring:
       acks: all
       properties:
         enable.idempotence: true
-        # Sin metadatos (broker caido) el poller no debe bloquearse: falla y reintenta.
         max.block.ms: 5000
     consumer:
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -43,8 +42,21 @@ spring:
       enable-auto-commit: false
     listener:
       ack-mode: record
+
 server:
   port: 8086
+
+eureka:
+  client:
+    enabled: ${EUREKA_ENABLED:true}
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka}
+    username: ${EUREKA_USERNAME:}
+    password: ${EUREKA_PASSWORD:}
+  instance:
+    prefer-ip-address: true
 
 management:
   endpoints:
@@ -70,14 +82,6 @@ logging:
     root: ${LOG_LEVEL:INFO}
 
 hotel:
-  feign:
-    connect-timeout-ms: ${FEIGN_CONNECT_TIMEOUT_MS:2000}
-    read-timeout-ms: ${FEIGN_READ_TIMEOUT_MS:5000}
-  outbox:
-    poll-interval-ms: ${OUTBOX_POLL_INTERVAL_MS:5000}
-    batch-size: ${OUTBOX_BATCH_SIZE:50}
-    alert-attempts: ${OUTBOX_ALERT_ATTEMPTS:10}
-    alert-pending-minutes: ${OUTBOX_ALERT_PENDING_MINUTES:15}
   inbox:
     retention-days: ${INBOX_RETENTION_DAYS:30}
   messaging:
@@ -85,11 +89,29 @@ hotel:
     schemas-location: ${MESSAGING_SCHEMAS_LOCATION:schemas}
     kafka:
       consumer-group: ${MESSAGING_KAFKA_CONSUMER_GROUP:reporting-proyeccion-v1}
-
-resilience4j:
-  circuitbreaker:
-    sliding-window-size: ${CB_WINDOW_SIZE:10}
-    failure-rate-threshold: ${CB_FAILURE_RATE:50}
-    minimum-number-of-calls: ${CB_MIN_CALLS:5}
-    wait-duration-in-open-state: ${CB_OPEN_MS:10000}
-    permitted-number-of-calls-in-half-open-state: ${CB_HALF_OPEN_CALLS:3}
+  reporting:
+    # Máximo de días por intervalo de reporte (docs/especificacion/microservicios/reporting/api.md).
+    max-range-days: ${REPORT_MAX_RANGE_DAYS:366}
+    # Fuera de este umbral sin conexión activa la proyección no es utilizable (503).
+    degraded-timeout-minutes: ${REPORTING_DEGRADED_TIMEOUT_MINUTES:5}
+    connection-check-interval-ms: ${REPORTING_CONNECTION_CHECK_INTERVAL_MS:30000}
+    bootstrap:
+      enabled: ${REPORTING_BOOTSTRAP_ENABLED:true}
+      # Fixture de dev/demo derivado del seed terminado; nunca inventa ventas ni estadías.
+      seed-location: ${REPORTING_BOOTSTRAP_SEED:classpath:bootstrap/demo-seed.json}
+      # Conteos esperados por dominio del seed terminado (REP03).
+      dominios:
+        personas: 6
+        hoteles: 3
+        habitaciones: 6
+        productosSede: 9
+        ventas: 0
+        recepciones: 0
+      # Watermarks de una exportación/seed terminado. Demo sin stream previo: -1 en cada topic.
+      watermarks:
+        - {topic: identity.persona.v1, partition: 0, lastOffset: -1}
+        - {topic: hotel.sede.v1, partition: 0, lastOffset: -1}
+        - {topic: hotel.habitacion.v1, partition: 0, lastOffset: -1}
+        - {topic: reception.recepcion.v1, partition: 0, lastOffset: -1}
+        - {topic: inventory.stock.v1, partition: 0, lastOffset: -1}
+        - {topic: sales.venta.v1, partition: 0, lastOffset: -1}

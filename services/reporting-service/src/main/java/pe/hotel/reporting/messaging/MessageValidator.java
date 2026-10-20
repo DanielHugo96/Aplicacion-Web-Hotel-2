@@ -17,9 +17,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 
 /**
- * Valida el envelope completo (evento Kafka o comando RabbitMQ) contra su JSON Schema v1 de
- * docs/contracts/events/ antes de publicar y al consumir. Los esquemas se copian al classpath en
- * {@code schemas/} durante el build desde la fuente única del repositorio.
+ * Valida un mensaje Kafka contra su JSON Schema v1 de docs/contracts/events/ antes de proyectarlo.
+ * Los esquemas se copian al classpath en {@code schemas/} durante el build desde la fuente única
+ * del repositorio.
  */
 public class MessageValidator {
 
@@ -56,10 +56,11 @@ public class MessageValidator {
             .build();
   }
 
-  public void validate(OutboxMessage message) {
+  /** Valida el payload completo; devuelve el nodo parseado para reutilizarlo. */
+  public JsonNode validate(String topic, String json) {
     JsonNode node;
     try {
-      node = mapper.readTree(message.payload());
+      node = mapper.readTree(json);
     } catch (JsonProcessingException e) {
       throw new MessageInvalidException("payload no es JSON valido: " + e.getOriginalMessage());
     }
@@ -67,9 +68,9 @@ public class MessageValidator {
     if (type.isEmpty()) {
       throw new MessageInvalidException("el mensaje no declara type");
     }
-    String schemaId = idByFileName.get(schemaFileName(message.destination(), message.channel(), type));
+    String schemaId = idByFileName.get(topic + "." + type + ".schema.json");
     if (schemaId == null) {
-      throw new MessageInvalidException("no existe esquema v1 para " + type);
+      throw new MessageInvalidException("no existe esquema v1 para " + topic + "/" + type);
     }
     JsonSchema schema =
         cache.computeIfAbsent(schemaId, id -> factory.getSchema(java.net.URI.create(id)));
@@ -77,11 +78,6 @@ public class MessageValidator {
     if (!errors.isEmpty()) {
       throw new MessageInvalidException("mensaje invalido: " + errors.iterator().next().getMessage());
     }
-  }
-
-  static String schemaFileName(Destination destination, String channel, String type) {
-    return destination == Destination.RABBIT
-        ? channel + "." + type + ".v1.schema.json"
-        : channel + "." + type + ".schema.json";
+    return node;
   }
 }

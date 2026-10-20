@@ -1,25 +1,21 @@
 package pe.hotel.reporting.messaging;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
- * Propiedades de la plataforma de mensajería (docs/especificacion/infraestructura/configuracion.md
- * § Comunes a todos los servicios). Los valores por defecto son los de la especificación y son
- * sobrescribibles por entorno.
+ * Propiedades de mensajería del read model (docs/especificacion/infraestructura/configuracion.md
+ * § Comunes a todos los servicios). Reporting solo consume Kafka: no tiene outbox, Rabbit ni
+ * publicación de eventos.
  */
 @Component
 @ConfigurationProperties(prefix = "hotel")
 public class MessagingProperties {
 
-  private final Outbox outbox = new Outbox();
   private final Inbox inbox = new Inbox();
   private final Messaging messaging = new Messaging();
-
-  public Outbox getOutbox() {
-    return outbox;
-  }
 
   public Inbox getInbox() {
     return inbox;
@@ -27,46 +23,6 @@ public class MessagingProperties {
 
   public Messaging getMessaging() {
     return messaging;
-  }
-
-  public static class Outbox {
-
-    private long pollIntervalMs = 5000;
-    private int batchSize = 50;
-    private int alertAttempts = 10;
-    private int alertPendingMinutes = 15;
-
-    public long getPollIntervalMs() {
-      return pollIntervalMs;
-    }
-
-    public void setPollIntervalMs(long pollIntervalMs) {
-      this.pollIntervalMs = pollIntervalMs;
-    }
-
-    public int getBatchSize() {
-      return batchSize;
-    }
-
-    public void setBatchSize(int batchSize) {
-      this.batchSize = batchSize;
-    }
-
-    public int getAlertAttempts() {
-      return alertAttempts;
-    }
-
-    public void setAlertAttempts(int alertAttempts) {
-      this.alertAttempts = alertAttempts;
-    }
-
-    public int getAlertPendingMinutes() {
-      return alertPendingMinutes;
-    }
-
-    public void setAlertPendingMinutes(int alertPendingMinutes) {
-      this.alertPendingMinutes = alertPendingMinutes;
-    }
   }
 
   public static class Inbox {
@@ -111,9 +67,8 @@ public class MessagingProperties {
 
   public static class Kafka {
 
-    private String consumerGroup = "";
-    private List<Long> retryIntervalsMs =
-        new java.util.ArrayList<>(List.of(1000L, 5000L, 30000L, 120000L, 300000L));
+    private String consumerGroup = "reporting-proyeccion-v1";
+    private List<Long> retryIntervalsMs = new ArrayList<>(List.of(1000L, 5000L, 30000L, 120000L, 300000L));
 
     public String getConsumerGroup() {
       return consumerGroup;

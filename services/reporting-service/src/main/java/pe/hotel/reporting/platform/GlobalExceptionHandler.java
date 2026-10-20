@@ -7,8 +7,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 /**
@@ -34,6 +36,20 @@ public class GlobalExceptionHandler {
     return build(ErrorCode.VALIDATION_ERROR, fields);
   }
 
+  @ExceptionHandler(MissingServletRequestParameterException.class)
+  public ResponseEntity<ApiResponse<Void>> handleMissingParameter(
+      MissingServletRequestParameterException exception) {
+    return build(
+        ErrorCode.VALIDATION_ERROR,
+        Map.of(exception.getParameterName(), "parámetro obligatorio"));
+  }
+
+  @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+  public ResponseEntity<ApiResponse<Void>> handleTypeMismatch(
+      MethodArgumentTypeMismatchException exception) {
+    return build(ErrorCode.VALIDATION_ERROR, Map.of(exception.getName(), "formato inválido"));
+  }
+
   @ExceptionHandler(NoResourceFoundException.class)
   public ResponseEntity<ApiResponse<Void>> handleNotFound(NoResourceFoundException exception) {
     return build(ErrorCode.RESOURCE_NOT_FOUND, Map.of());
@@ -49,6 +65,10 @@ public class GlobalExceptionHandler {
   private ResponseEntity<ApiResponse<Void>> build(ErrorCode code, Map<String, String> fields) {
     Meta meta = Meta.of(CorrelationId.current());
     ApiResponse<Void> body = ApiResponse.fail(code, ApiError.of(code, fields), meta);
-    return ResponseEntity.status(code.status()).body(body);
+    ResponseEntity.BodyBuilder response = ResponseEntity.status(code.status());
+    if (code == ErrorCode.REPORTING_UNAVAILABLE || code == ErrorCode.REPORTING_NOT_READY) {
+      response.header("Retry-After", "60");
+    }
+    return response.body(body);
   }
 }

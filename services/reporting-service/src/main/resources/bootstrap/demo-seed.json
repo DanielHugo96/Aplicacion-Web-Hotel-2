@@ -1,0 +1,34 @@
+{
+  "personas": [
+    {"idPersona": 1, "nombre": "Demo", "apellido": "Admin", "idTipoPersona": 1, "estado": true, "version": 1},
+    {"idPersona": 2, "nombre": "Demo", "apellido": "Empleado Lima", "idTipoPersona": 2, "estado": true, "version": 1},
+    {"idPersona": 3, "nombre": "Demo", "apellido": "Empleado Miraflores", "idTipoPersona": 2, "estado": true, "version": 1},
+    {"idPersona": 4, "nombre": "Demo", "apellido": "Empleado Arequipa", "idTipoPersona": 2, "estado": true, "version": 1},
+    {"idPersona": 100, "nombre": "Cliente", "apellido": "Uno", "idTipoPersona": 3, "estado": true, "version": 1},
+    {"idPersona": 101, "nombre": "Cliente", "apellido": "Dos", "idTipoPersona": 3, "estado": true, "version": 1}
+  ],
+  "hoteles": [
+    {"idHotel": 1, "nombre": "Hotel Demo Lima Centro", "ciudad": "Lima", "estado": true, "version": 1},
+    {"idHotel": 2, "nombre": "Hotel Demo Miraflores", "ciudad": "Lima", "estado": true, "version": 1},
+    {"idHotel": 3, "nombre": "Hotel Demo Arequipa", "ciudad": "Arequipa", "estado": true, "version": 1}
+  ],
+  "habitaciones": [
+    {"idHabitacion": 101, "idHotel": 1, "numero": "101", "categoriaNombre": "Individual", "precio": 70.00, "estado": true, "estadoFisico": "LISTA", "version": 1},
+    {"idHabitacion": 102, "idHotel": 1, "numero": "102", "categoriaNombre": "Doble", "precio": 100.00, "estado": true, "estadoFisico": "LISTA", "version": 1},
+    {"idHabitacion": 201, "idHotel": 2, "numero": "101", "categoriaNombre": "Individual", "precio": 80.00, "estado": true, "estadoFisico": "LISTA", "version": 1},
+    {"idHabitacion": 202, "idHotel": 2, "numero": "102", "categoriaNombre": "Doble", "precio": 120.00, "estado": true, "estadoFisico": "LISTA", "version": 1},
+    {"idHabitacion": 301, "idHotel": 3, "numero": "101", "categoriaNombre": "Individual", "precio": 60.00, "estado": true, "estadoFisico": "LISTA", "version": 1},
+    {"idHabitacion": 302, "idHotel": 3, "numero": "102", "categoriaNombre": "Doble", "precio": 90.00, "estado": true, "estadoFisico": "LISTA", "version": 1}
+  ],
+  "stocks": [
+    {"idProducto": 1, "idHotel": 1, "nombreProducto": "Agua 500ml", "precio": 3.50, "cantidad": 20, "umbralBajo": 5, "estado": true, "version": 1},
+    {"idProducto": 2, "idHotel": 1, "nombreProducto": "Snack", "precio": 8.00, "cantidad": 10, "umbralBajo": 5, "estado": true, "version": 1},
+    {"idProducto": 3, "idHotel": 1, "nombreProducto": "Kit de aseo", "precio": 5.00, "cantidad": 5, "umbralBajo": 5, "estado": true, "version": 1},
+    {"idProducto": 1, "idHotel": 2, "nombreProducto": "Agua 500ml", "precio": 3.50, "cantidad": 20, "umbralBajo": 5, "estado": true, "version": 1},
+    {"idProducto": 2, "idHotel": 2, "nombreProducto": "Snack", "precio": 8.00, "cantidad": 10, "umbralBajo": 5, "estado": true, "version": 1},
+    {"idProducto": 3, "idHotel": 2, "nombreProducto": "Kit de aseo", "precio": 5.00, "cantidad": 5, "umbralBajo": 5, "estado": true, "version": 1},
+    {"idProducto": 1, "idHotel": 3, "nombreProducto": "Agua 500ml", "precio": 3.50, "cantidad": 20, "umbralBajo": 5, "estado": true, "version": 1},
+    {"idProducto": 2, "idHotel": 3, "nombreProducto": "Snack", "precio": 8.00, "cantidad": 10, "umbralBajo": 5, "estado": true, "version": 1},
+    {"idProducto": 3, "idHotel": 3, "nombreProducto": "Kit de aseo", "precio": 5.00, "cantidad": 5, "umbralBajo": 5, "estado": true, "version": 1}
+  ]
+}

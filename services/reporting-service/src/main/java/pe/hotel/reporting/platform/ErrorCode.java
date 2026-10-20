@@ -21,6 +21,8 @@ public enum ErrorCode {
   PRECONDITION_FAILED(HttpStatus.PRECONDITION_FAILED, "Otra persona modificó este registro. Recarga para ver los cambios."),
   PRECONDITION_REQUIRED(HttpStatus.PRECONDITION_REQUIRED, "Falta la versión del registro."),
   DEPENDENCY_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "El servicio no está disponible. Reintenta en unos segundos."),
+  REPORTING_NOT_READY(HttpStatus.SERVICE_UNAVAILABLE, "Los reportes aún se están preparando."),
+  REPORTING_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "Los reportes no están disponibles en este momento."),
   INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "Ocurrió un error inesperado.");
 
   private final HttpStatus status;
