@@ -93,12 +93,12 @@ se ejecutaron con `docker exec hotel-postgres-1 psql -U postgres -d <db>`.
   repetido con el mismo cuerpo → `HTTP 201` las dos veces, `idVenta=1`, `total=7.00`,
   `estadoOperacion=CONFIRMADA`. Counts: `venta=1`, `detalle_venta=1`,
   `movimiento_venta where id_venta=1` → una fila `DESCONTADO`; `producto_sede` cantidad `18`.
-- Caso `STK04` — venta 3 con operación VENTA/DEBITO_SOLICITADO (débito en vuelo):
+- Caso `STK04` — venta 3 con operación VENTA/DEBITO_SOLICITADO **inducida por SQL** para simular el débito en vuelo:
   `DELETE /api/venta/{id}?motivo=...` → `HTTP 202`, `Location: /api/venta/buscar/3`,
   `Retry-After: 2`. Tras la restitución, `POST /internal/stock/descontar` tardío →
   `HTTP 409` `DEBIT_CANCELLED`; `movimiento_venta` venta 3 → `RESTITUIDO`; stock `20`; venta
   `CANCELADA`.
-- Caso `STK05` — venta 5 con débito real `DESCONTADO` y operación de 4 minutos:
+- Caso `STK05` — venta 5 **inducida por SQL** con débito real `DESCONTADO` y operación de 4 minutos:
   el job de 30 s la pasó a CANCELACION_PENDIENTE y, tras `RESTITUIDO`, a `CANCELADA`; un solo
   `movimiento_venta` (versión 2, `RESTITUIDO`), stock de vuelta a `20`; nunca `CONFIRMADA`.
 - Caso `STK06` — admisión con timeout (proxy que corta `POST el POST de admisión de reception`
@@ -106,8 +106,9 @@ se ejecutaron con `docker exec hotel-postgres-1 psql -U postgres -d <db>`.
   `RECHAZADA`, operación `TERMINAL`, `recepcion.operacion-finalizar` con `RECHAZADA` y recepción
   `FINALIZADA/RECHAZADA`; `movimiento_venta` venta 7 → `0` filas. Admisión tardía directa a
   reception → `HTTP 409` `STAY_NOT_ACTIVE`. También se reprodujo con la venta 4 envejecida
-  (`PREPARANDO` de 4 min): el job la dejó `RECHAZADA` y la admisión tardía devolvió `409`.
-- Caso `STK07` — worker de sales detenido con la venta 5 en DEBITO_SOLICITADO y el débito ya
+  (`PREPARANDO` de 4 min, inducida por SQL): el job la dejó `RECHAZADA` y la admisión tardía
+  devolvió `409`.
+- Caso `STK07` — worker de sales detenido con la venta 5 **inducida por SQL** en DEBITO_SOLICITADO y el débito ya
   aplicado (stock `18`, movimiento `DESCONTADO`); al reiniciar, el recuperador compensó:
   `stock.restituir` → `RESTITUIDO`, venta `CANCELADA`, stock `20`, operación `TERMINAL` y
   finalizar `VENTA/CANCELADA`. La venta no se liberó antes de `RESTITUIDO` (permaneció
@@ -133,10 +134,11 @@ se ejecutaron con `docker exec hotel-postgres-1 psql -U postgres -d <db>`.
   - Paso 6: alta válida → `201` con `Location` y `Retry-After: 2`; `precioUnitario` en el body →
     `400 VALIDATION_ERROR`; C con `PAGADO` → `403`; A con `PAGADO` sin medio → `400`.
   - Paso 9: pago válido → `200` con `paidAt` y `medioPago`; con una operación `PAGO/ADMITIDA`
-    en curso → `202` con `Location` y `Retry-After: 2`; repetir la misma clave → misma venta.
+    en curso **insertada por SQL** (para simular una admisión de pago en vuelo) → `202` con
+    `Location` y `Retry-After: 2`; repetir la misma clave → misma venta.
   - Paso 10: anulación de venta impagada → `202` y luego `CANCELADA`; `PAGADA` → `409`;
-    `LEGACY` sin movimiento → `409 LEGACY_MOVEMENT_UNVERIFIED` y `outbox` sin fila de
-    restitución.
+    `LEGACY` sin movimiento **inducida por SQL** → `409 LEGACY_MOVEMENT_UNVERIFIED` y `outbox`
+    sin fila de restitución.
   - Paso 11: `GET /api/venta?idHotel=1&page=0&size=2` → `data` + `meta` con `page/size/
     totalElements`; `recepcion/8` conserva canceladas; `buscar/8` responde `200`; operación
     consultada sin `request`; C101 sobre venta u operación de C100 → `404`.
