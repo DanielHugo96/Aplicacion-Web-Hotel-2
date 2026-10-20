@@ -7,7 +7,7 @@
 | Componente | `identity-service` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `cerrado` |
 | Depende de | `back-identity-personas` |
 | Repara | `back-identity-personas` |
 | Spec | [`identity/api.md` § REST](../especificacion/microservicios/identity/api.md#rest), [§ DTO de entrada](../especificacion/microservicios/identity/api.md#dto-de-entrada), [`identity/base-de-datos.md` § Tablas](../especificacion/microservicios/identity/base-de-datos.md#tablas), [§ DDL de referencia](../especificacion/microservicios/identity/base-de-datos.md#ddl-de-referencia), [`03-contrato-comun.md` § Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [§ Respuestas](../especificacion/03-contrato-comun.md#respuestas), [§ Transporte, notación y tipos](../especificacion/03-contrato-comun.md#transporte-notación-y-tipos), [`identity.yaml`](../contracts/openapi/identity.yaml) y [`errors.md` § Genéricos](../contracts/errors.md) |
@@ -154,46 +154,46 @@ define `PRECONDITION_REQUIRED`, `VALIDATION_ERROR` y `FORBIDDEN`. No hay regla n
 
 ## 4. Pasos
 
-- [ ] 1. Reproducir los tres fallos desde `main` con el Gateway y los tokens de §3. Verificación: se
+- [x] 1. Reproducir los tres fallos desde `main` con el Gateway y los tokens de §3. Verificación: se
   observan los 500 y las salidas literales de §3, y `tipo_persona` no tiene `updated_at`.
-- [ ] 2. Corregir `PersonaRepository.actualizarTipoPersona`: quitar `updated_at = now()` del `UPDATE
+- [x] 2. Corregir `PersonaRepository.actualizarTipoPersona`: quitar `updated_at = now()` del `UPDATE
   tipo_persona`, conservando `descripcion = ?`, `version = version + 1`, la condición
   `WHERE id = ? AND version = ?` y la excepción de bloqueo optimista. Verificación: la sentencia no
   menciona `updated_at` y compila; el `UPDATE` equivalente contra `identity_db` deja de fallar con
   `column "updated_at" ... does not exist`.
-- [ ] 3. Añadir a `PersonaController` un helper privado que convierta el claim `sedes` en
+- [x] 3. Añadir a `PersonaController` un helper privado que convierta el claim `sedes` en
   `List<Integer>` aceptando `Number` (`((Number) valor).intValue()`), devolviendo lista vacía si el
   claim no es una lista. Usarlo en `listar`, `buscar`, `registrar`, `actualizar`, `eliminar` y
   `actualizarTipoPersona`, eliminando los cast no comprobados a `List<Integer>`. Verificación:
   `grep -n "List<Integer>) .*get(\"sedes\")"` no encuentra casts directos y la compilación termina
   con código 0.
-- [ ] 4. Declarar `If-Match` con `required = false` en los `PUT`/`DELETE` de persona y en el `PUT` de
+- [x] 4. Declarar `If-Match` con `required = false` en los `PUT`/`DELETE` de persona y en el `PUT` de
   tipo de persona, sin cambiar la firma del servicio ni las comprobaciones que ya hacen
   `ETag.versionDe` y `PRECONDITION_REQUIRED`. Verificación: sin cabecera, los tres métodos llegan al
   servicio y devuelven 428 en vez de 500.
-- [ ] 5. Añadir pruebas de controlador en `services/identity-service/src/test/java/pe/hotel/identity/persona/`
+- [x] 5. Añadir pruebas de controlador en `services/identity-service/src/test/java/pe/hotel/identity/persona/`
   con `MockMvc` y `SecurityMockMvcRequestPostProcessors.jwt()`: claim `sedes` con `List.of(1L)` y rol
   EMPLEADO → `listar` con `documento` 200, sin `documento` 400, `buscar` con `documento` 200 y `PUT`
   de persona 403; ADMIN → `PUT` de persona sin `If-Match` 428 y `PUT` de tipo de persona sin
   `If-Match` 428. Verificación: las pruebas pasan con
   `bash scripts/mvn.sh -f services/pom.xml -pl identity-service test`.
-- [ ] 6. Rearrancar `identity-service` desde la rama corregida y repetir la reproducción 1:
+- [x] 6. Rearrancar `identity-service` desde la rama corregida y repetir la reproducción 1:
   `PUT /api/tipopersona/actualizar/{id}` con id 3, `If-Match: "1"`, `Idempotency-Key` y
   `{"descripcion":"Cliente"}`. Verificación: 200, `data.version` pasa de 1 a 2, `ETag` nuevo y el
   log ya no muestra `column "updated_at"`.
-- [ ] 7. Repetir la reproducción 2 con el token EMPLEADO: `GET /api/persona/listar` con
+- [x] 7. Repetir la reproducción 2 con el token EMPLEADO: `GET /api/persona/listar` con
   `documento=90000100` y `GET /api/persona/buscar/{id}` con id 100 y el mismo `documento`.
   Verificación: 200 en
   ambos, `data.personas` solo contiene CLIENTE y ningún 500; sin `documento`, `listar` responde 400
   `VALIDATION_ERROR` como fija la spec.
-- [ ] 8. Comprobar las mutaciones con EMPLEADO y el 428 de ADMIN: `PUT /api/persona/actualizar/{id}`
+- [x] 8. Comprobar las mutaciones con EMPLEADO y el 428 de ADMIN: `PUT /api/persona/actualizar/{id}`
   con id 100 y EMPLEADO → 403 `FORBIDDEN`; el mismo `PUT` con ADMIN y sin `If-Match` → 428
   `PRECONDITION_REQUIRED`; `DELETE /api/persona/eliminar/{id}` sin `If-Match` → 428. Verificación:
   códigos y cuerpos guardados.
-- [ ] 9. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl identity-service test`,
+- [x] 9. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl identity-service test`,
   `bash scripts/mvn.sh -f services/pom.xml verify` y `python scripts/validar-planes.py`.
   Verificación: `BUILD SUCCESS`, 0 errores del validador y los avisos resueltos o justificados.
-- [ ] 10. Guardar en *Pruebas* las salidas de los pasos 1, 5, 6, 7, 8 y 9, marcar todos los pasos y
+- [x] 10. Guardar en *Pruebas* las salidas de los pasos 1, 5, 6, 7, 8 y 9, marcar todos los pasos y
   cambiar `Estado` a `cerrado` en el último commit. Verificación: no quedan pasos sin marcar y las
   tres reproducciones originales están en verde.
 
@@ -221,9 +221,75 @@ define `PRECONDITION_REQUIRED`, `VALIDATION_ERROR` y `FORBIDDEN`. No hay regla n
 
 ### Reproducción antes del arreglo (paso 1)
 
-Los comandos y salidas de §3, ejecutados el 2026-10-19 con `identity-service` en `8081`, el Gateway
-en `8080` y los dos JWT humanos. Evidencia: cuerpos HTTP y la consulta a `information_schema`
-transcritos en §3; se adjuntan al PR de ejecución.
+Ejecutado el 2026-10-20 sobre `main` (`46dd5b4`), con `identity-service` en `8081`, el Gateway en
+`8080`, Eureka en `8761` y los JWT de `admin@hotel.test` (ADMIN) y `recepcion.lima@hotel.test`
+(EMPLEADO, `sedes: [1]`).
+
+```text
+$ docker exec -e PGPASSWORD=<variable> hotel-postgres-1 psql -U identity_app -d identity_db \
+    -c "SELECT column_name FROM information_schema.columns WHERE table_name='tipo_persona' ORDER BY ordinal_position;"
+ column_name
+-------------
+ id
+ codigo
+ descripcion
+ estado
+ version
+(5 rows)
+
+$ curl -s -i -X PUT "http://localhost:8080/api/tipopersona/actualizar/3" \
+    -H "Authorization: Bearer <ADMIN>" -H 'Content-Type: application/json' \
+    -H 'If-Match: "1"' -H "Idempotency-Key: <uuid>" -d '{"descripcion":"Cliente"}'
+HTTP/1.1 500 Internal Server Error
+{"success":false,"message":"Ocurrió un error inesperado.","data":null,"error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"e5b6a59a-87de-4b15-a235-03510c3c4390"}}
+
+$ curl -s -w '\nHTTP %{http_code}\n' \
+    "http://localhost:8080/api/persona/listar?page=0&size=20&documento=90000100" \
+    -H "Authorization: Bearer <EMPLEADO>"
+{"success":false,"message":"Ocurrió un error inesperado.","data":null,"error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"83783d52-172e-43f2-a541-4bcd68543dcd"}}
+HTTP 500
+
+$ curl -s -w '\nHTTP %{http_code}\n' \
+    "http://localhost:8080/api/persona/buscar/100?documento=90000100" \
+    -H "Authorization: Bearer <EMPLEADO>"
+{"success":false,"message":"Ocurrió un error inesperado.","data":null,"error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"4345b84d-09dd-4a99-a0d7-08f72ce16675"}}
+HTTP 500
+
+$ curl -s -w '\nHTTP %{http_code}\n' -X PUT "http://localhost:8080/api/persona/actualizar/100" \
+    -H "Authorization: Bearer <ADMIN>" -H 'Content-Type: application/json' \
+    -H "Idempotency-Key: <uuid>" \
+    -d '{"nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","idTipoPersona":3,"sedes":[1],"estado":true}'
+{"success":false,"message":"Ocurrió un error inesperado.","data":null,"error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"5e2011eb-0afb-4cab-85ca-bff826e5c759"}}
+HTTP 500
+```
+
+### Corrección del SQL de `tipo_persona` (paso 2)
+
+`grep -n "updated_at" PersonaRepository.java` no encuentra la sentencia de `tipo_persona`; el
+`UPDATE` equivalente contra `identity_db`, dentro de una transacción revertida, ya no falla:
+
+```text
+$ docker exec -e PGPASSWORD=<variable> hotel-postgres-1 psql -U identity_app -d identity_db \
+    -v ON_ERROR_STOP=1 -c "BEGIN; UPDATE tipo_persona SET descripcion='Cliente', version=version+1 WHERE id=3 AND version=1; ROLLBACK;"
+BEGIN
+UPDATE 1
+ROLLBACK
+```
+
+### Normalización del claim `sedes` (paso 3)
+
+El helper `sedesDe(Map)` convierte cada `Number` con `intValue()` y devuelve lista vacía si el claim
+no es una lista. Ya no queda ningún cast directo; la compilación del módulo termina con código 0:
+
+```text
+$ cd services/identity-service/src/main/java/pe/hotel/identity/persona \
+    && grep -n 'List<Integer>) .*get("sedes")' PersonaController.java
+$ echo $?
+1
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service -q -DskipTests compile
+$ echo $?
+0
+```
 
 ### Verificación después del arreglo (pasos 6, 7 y 8)
 
@@ -265,22 +331,100 @@ curl -s -w '\nHTTP %{http_code}\n' -X PUT "http://localhost:8080/api/persona/act
   -d '{"nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","idTipoPersona":3,"sedes":[1],"estado":true}'
 ```
 
-Resultados esperados: 200 con `data.version` 2 y `ETag: "2"` en el tipo de persona; 200 en el
-listado y la búsqueda de EMPLEADO con una sola CLIENTE y `meta.page`/`size`/`totalElements`; 400
-`VALIDATION_ERROR` con `error.fields.documento` en el listado sin `documento`; 403 `FORBIDDEN` en
-la mutación con EMPLEADO; 428 `PRECONDITION_REQUIRED` en la mutación de ADMIN sin `If-Match`.
-Evidencia: los cuerpos HTTP completos, en el PR de ejecución y en la bitácora del plan.
+Resultados obtenidos el 2026-10-20 tras rearrancar `identity-service` desde la rama corregida. El
+proceso se relanzó con `spring-boot:run` sobre `services/pom.xml` y el log quedó en
+`C:/Users/juan2/AppData/Local/Temp/opencode/identity-arreglo.log`.
+
+**Paso 6 — `PUT /api/tipopersona/actualizar/{id}` (id 3):**
+
+```text
+HTTP/1.1 200 OK
+ETag: "2"
+{"success":true,"message":"OK","data":{"idTipoPersona":3,"descripcion":"Cliente","codigo":"CLIENTE","estado":true,"version":2},"meta":{"correlationId":"75ff833b-b537-47dc-ba09-39802c3cfe88"}}
+
+$ grep -c 'column "updated_at"' C:/Users/juan2/AppData/Local/Temp/opencode/identity-arreglo.log
+0
+$ grep -c 'ClassCastException' C:/Users/juan2/AppData/Local/Temp/opencode/identity-arreglo.log
+0
+```
+
+**Paso 7 — lecturas con EMPLEADO (`sedes: [1]`):**
+
+```text
+GET /api/persona/listar?page=0&size=20&documento=90000100
+{"success":true,"message":"OK","data":{"personas":[{"idPersona":100,"tipoDocumento":"DNI","documento":"90000100","nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","fotoUrl":null,"idTipoPersona":3,"tipoPersona":"Cliente","sedes":[],"estado":true,"fechaCreacion":"2026-10-18T17:52:02.971456Z","version":5}]},"meta":{"correlationId":"186e27fd-a48b-4a32-9121-8bf12c49c541","page":0,"size":20,"totalElements":1}}
+HTTP 200
+
+GET /api/persona/listar?page=0&size=20
+{"success":false,"message":"Revisa los datos marcados.","data":null,"error":{"code":"VALIDATION_ERROR","fields":{"documento":"obligatorio para consultar como empleado"}},"meta":{"correlationId":"73d57638-6826-41ad-bf9d-381bcc8e9e2d"}}
+HTTP 400
+
+GET /api/persona/buscar/{id}?documento=90000100 (id 100)
+{"success":true,"message":"OK","data":{"idPersona":100,"tipoDocumento":"DNI","documento":"90000100","nombre":"Cliente","apellido":"Uno","correo":"cliente.uno@hotel.test","fotoUrl":null,"idTipoPersona":3,"tipoPersona":"Cliente","sedes":[],"estado":true,"fechaCreacion":"2026-10-18T17:52:02.971456Z","version":5},"meta":{"correlationId":"2a31ac79-47c6-46be-bbbf-db51901ef9d8"}}
+HTTP 200
+```
+
+**Paso 8 — mutaciones de persona y 428:**
+
+```text
+PUT /api/persona/actualizar/{id} (id 100, EMPLEADO)
+{"success":false,"message":"No tienes permiso para esta acción.","data":null,"error":{"code":"FORBIDDEN","fields":{}},"meta":{"correlationId":"cd752ab1-5dfa-45ed-9a41-82569a042755"}}
+HTTP 403
+
+PUT /api/persona/actualizar/{id} (id 100, ADMIN, sin If-Match)
+{"success":false,"message":"Falta la versión del registro.","data":null,"error":{"code":"PRECONDITION_REQUIRED","fields":{"If-Match":"obligatorio"}},"meta":{"correlationId":"3cd546cb-331c-4079-8d75-fa2595b7a871"}}
+HTTP 428
+
+DELETE /api/persona/eliminar/{id} (id 100, ADMIN, sin If-Match)
+{"success":false,"message":"Falta la versión del registro.","data":null,"error":{"code":"PRECONDITION_REQUIRED","fields":{"If-Match":"obligatorio"}},"meta":{"correlationId":"10706aeb-b1b9-4e66-beb9-d3328b392202"}}
+HTTP 428
+```
+
+### Pruebas de controlador y `If-Match` (pasos 4 y 5)
+
+`PersonaControllerTests` usa `MockMvc` con `jwt()` y dos claims distintos:
+EMPLEADO con `sedes: [1L]` y ADMIN con `sedes: []`. Cubre los siete casos del paso 5 más el
+`DELETE` sin `If-Match`:
+
+```text
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service -Dtest=PersonaControllerTests test
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
+
+Los tres métodos con versión (`PUT /api/persona/actualizar/{id}`,
+`DELETE /api/persona/eliminar/{id}` y `PUT /api/tipopersona/actualizar/{id}`) llegan al servicio sin
+`If-Match` y responden 428 `PRECONDITION_REQUIRED` en lugar de 500. La suite completa del módulo
+también queda en verde:
+
+```text
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service test
+[INFO] Tests run: 79, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
 
 ### Unidad y build (pasos 5 y 9)
 
-```bash
-bash scripts/mvn.sh -f services/pom.xml -pl identity-service test
-bash scripts/mvn.sh -f services/pom.xml verify
-python scripts/validar-planes.py
-```
+Ejecutado el 2026-10-20. Salida completa en
+`C:/Users/juan2/AppData/Local/Temp/opencode/mvn-verify.log`:
 
-Resultado esperado: `BUILD SUCCESS` del módulo y de los nueve módulos, con las pruebas nuevas en
-verde; 0 errores del validador. Evidencia: salidas adjuntas al PR.
+```text
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service test
+[INFO] Tests run: 79, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+$ bash scripts/mvn.sh -f services/pom.xml verify
+[INFO] Reactor Summary for Hotel services (agregador) 0.0.1-SNAPSHOT:
+...
+[INFO] BUILD SUCCESS
+
+$ python scripts/validar-planes.py
+30 plan(es) revisado(s); 30 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+$ python scripts/validar-contratos.py --base origin/main
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
+```
 
 ### Reproducción original
 
@@ -297,14 +441,14 @@ credenciales de Eureka no aplica a este plan y se trata en `back-arreglo-hotel-c
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos de §4 marcados con su verificación.
-- [ ] `PUT /api/tipopersona/actualizar/{id}` responde 200 con versión incrementada y sin el error de
+- [x] Todos los pasos de §4 marcados con su verificación.
+- [x] `PUT /api/tipopersona/actualizar/{id}` responde 200 con versión incrementada y sin el error de
   `updated_at`.
-- [ ] Las lecturas y mutaciones de personas con EMPLEADO responden 200/400/403 según la spec, sin
+- [x] Las lecturas y mutaciones de personas con EMPLEADO responden 200/400/403 según la spec, sin
   ningún 500 por `ClassCastException`.
-- [ ] `PUT`/`DELETE` de personas y `PUT` de tipo de persona sin `If-Match` responden 428
+- [x] `PUT`/`DELETE` de personas y `PUT` de tipo de persona sin `If-Match` responden 428
   `PRECONDITION_REQUIRED`.
-- [ ] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS` y
+- [x] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS` y
   `python scripts/validar-planes.py` con 0 errores.
-- [ ] La reproducción original de §3 está en verde con evidencia adjunta al PR y sin preguntas
+- [x] La reproducción original de §3 está en verde con evidencia adjunta al PR y sin preguntas
   abiertas.
