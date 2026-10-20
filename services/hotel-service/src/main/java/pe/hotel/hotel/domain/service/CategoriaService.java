@@ -3,6 +3,8 @@ package pe.hotel.hotel.domain.service;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,10 +33,12 @@ public class CategoriaService {
   @Autowired(required = false)
   private OutboxService outboxService;
 
-  public List<CategoriaView> listar(Boolean estado) {
-    List<Categoria> cats =
-        estado == null ? repository.findAll() : repository.findByEstado(estado);
-    return cats.stream().map(this::toView).toList();
+  public Page<CategoriaView> listar(Boolean estado, Pageable pageable) {
+    Page<Categoria> cats =
+        estado == null
+            ? repository.findPagedAll(pageable)
+            : repository.findPagedByEstado(estado, pageable);
+    return cats.map(this::toView);
   }
 
   public CategoriaView buscar(Integer id) {

@@ -58,9 +58,10 @@ public class CurrentUser {
     }
     Object sedes = jwt.getClaim("sedes");
     if (sedes instanceof List<?> list) {
+      // El decoder entrega los números como Long (y con otros claims, Integer): se aceptan ambos.
       return list.stream()
-          .filter(Integer.class::isInstance)
-          .map(Integer.class::cast)
+          .filter(Number.class::isInstance)
+          .map(elemento -> ((Number) elemento).intValue())
           .collect(Collectors.toList());
     }
     return List.of();

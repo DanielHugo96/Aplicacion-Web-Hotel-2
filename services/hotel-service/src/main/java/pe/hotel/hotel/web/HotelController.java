@@ -2,6 +2,8 @@ package pe.hotel.hotel.web;
 
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import pe.hotel.hotel.domain.dto.HotelInput;
@@ -11,6 +13,7 @@ import pe.hotel.hotel.domain.service.HotelService;
 import pe.hotel.hotel.platform.ApiResponse;
 import pe.hotel.hotel.platform.CorrelationId;
 import pe.hotel.hotel.platform.Meta;
+import pe.hotel.hotel.platform.Pagination;
 import static org.springframework.http.HttpStatus.*;
 
 /** CRUD de sedes (A muta; A/E lee su alcance). */
@@ -25,10 +28,18 @@ public class HotelController {
 
   @GetMapping("/listar")
   public ResponseEntity<ApiResponse<List<HotelView>>> listar(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size,
       @RequestParam(required = false) Boolean estado) {
     soloLecturaPrivada();
+    Pageable pageable = Pagination.validar(page, size);
+    Page<HotelView> resultado = service.listar(estado, pageable);
     return ResponseEntity.ok()
-        .body(ApiResponse.ok(service.listar(estado), Meta.of(CorrelationId.current())));
+        .body(
+            ApiResponse.ok(
+                resultado.getContent(),
+                Meta.of(
+                    CorrelationId.current(), page, size, resultado.getTotalElements())));
   }
 
   @GetMapping("/buscar/{id}")

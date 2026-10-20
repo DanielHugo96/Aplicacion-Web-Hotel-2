@@ -3,6 +3,8 @@ package pe.hotel.hotel.domain.service;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -35,16 +37,14 @@ public class PisoService {
   @Autowired(required = false)
   private OutboxService outboxService;
 
-  public List<PisoView> listar(Integer idHotel, Boolean estado) {
+  public Page<PisoView> listar(Integer idHotel, Boolean estado, Pageable pageable) {
     if (idHotel == null) {
       throw new ResponseStatusException(BAD_REQUEST, "idHotel es obligatorio");
     }
-    Hotel hotel = requerirSede(idHotel);
-    List<Piso> pisos = repository.findByHotelIdAndEstadoTrueOrderByIdAsc(idHotel);
-    if (estado != null) {
-      pisos = pisos.stream().filter(p -> p.getEstado().equals(estado)).toList();
-    }
-    return pisos.stream().map(this::toView).toList();
+    requerirSede(idHotel);
+    return repository
+        .findPagedByHotelIdAndEstado(idHotel, estado == null ? true : estado, pageable)
+        .map(this::toView);
   }
 
   public PisoView buscar(Integer id) {

@@ -2,6 +2,8 @@ package pe.hotel.hotel.domain.repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -24,4 +26,14 @@ public interface HotelRepository extends JpaRepository<Hotel, Integer> {
 
   @Query("SELECT h FROM Hotel h WHERE h.id = :id AND h.estado = true")
   Optional<Hotel> findActiveById(@Param("id") Integer id);
+
+  @Query("SELECT h FROM Hotel h ORDER BY h.id ASC")
+  Page<Hotel> findPagedAll(Pageable pageable);
+
+  @Query("SELECT h FROM Hotel h WHERE h.estado = :estado ORDER BY h.id ASC")
+  Page<Hotel> findPagedByEstado(@Param("estado") Boolean estado, Pageable pageable);
+
+  @Query("SELECT h FROM Hotel h WHERE h.id IN :ids AND h.estado = :estado ORDER BY h.id ASC")
+  Page<Hotel> findPagedByIdInAndEstado(
+      @Param("ids") List<Integer> ids, @Param("estado") Boolean estado, Pageable pageable);
 }

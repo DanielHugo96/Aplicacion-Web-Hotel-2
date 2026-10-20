@@ -1,9 +1,14 @@
 package pe.hotel.hotel.domain.service;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 import pe.hotel.hotel.domain.dto.HabitacionInput;
 import pe.hotel.hotel.domain.dto.HabitacionUpdate;
 import pe.hotel.hotel.domain.dto.HabitacionView;
+import pe.hotel.hotel.domain.dto.ImagenHabitacionView;
 import pe.hotel.hotel.domain.dto.ImagenInput;
 import pe.hotel.hotel.domain.model.EstadoHabitacion;
 import pe.hotel.hotel.domain.model.Habitacion;
@@ -46,21 +52,24 @@ public class HabitacionService {
   @Autowired(required = false)
   private OutboxService outboxService;
 
-  public List<HabitacionView> listar(Integer idHotel, Integer idCategoria) {
+  public Page<HabitacionView> listar(Integer idHotel, Integer idCategoria, Pageable pageable) {
     if (idHotel == null) {
       throw new ResponseStatusException(BAD_REQUEST, "idHotel es obligatorio");
     }
     if (!currentUser.puedeAccederASede(idHotel)) {
       throw new ResponseStatusException(NOT_FOUND, "sede fuera de alcance");
     }
-    List<Habitacion> habitaciones;
+    Page<Habitacion> habitaciones;
     if (idCategoria != null) {
       habitaciones =
-          repository.findByIdHotelAndIdCategoriaAndEstadoTrueOrderByIdAsc(idHotel, idCategoria);
+          repository.findPagedByHotelAndCategoriaAndEstado(idHotel, idCategoria, pageable);
     } else {
-      habitaciones = repository.findByIdHotelAndEstadoTrueOrderByIdAsc(idHotel);
+      habitaciones = repository.findPagedByHotelAndEstado(idHotel, pageable);
     }
-    return habitaciones.stream().map(this::toView).toList();
+    Map<Integer, List<ImagenHabitacionView>> galerias =
+        galeriasPorHabitacion(habitaciones.getContent());
+    return habitaciones.map(
+        h -> toView(h, galerias.getOrDefault(h.getId(), List.of())));
   }
 
   public HabitacionView buscar(Integer id) {
@@ -222,6 +231,35 @@ public class HabitacionService {
   }
 
   private HabitacionView toView(Habitacion h) {
+    return toView(h, galeriaDe(h.getId()));
+  }
+
+  private List<ImagenHabitacionView> galeriaDe(Integer idHabitacion) {
+    return imagenRepository.findByHabitacionIdOrderByOrdenAsc(idHabitacion).stream()
+        .map(this::toImagenView)
+        .toList();
+  }
+
+  private Map<Integer, List<ImagenHabitacionView>> galeriasPorHabitacion(
+      List<Habitacion> habitaciones) {
+    List<Integer> ids = habitaciones.stream().map(Habitacion::getId).toList();
+    if (ids.isEmpty()) {
+      return Map.of();
+    }
+    Map<Integer, List<ImagenHabitacionView>> galerias = new LinkedHashMap<>();
+    for (ImagenHabitacion imagen : imagenRepository.findByHabitacionIdInOrderByOrdenAsc(ids)) {
+      galerias
+          .computeIfAbsent(imagen.getIdHabitacion(), clave -> new ArrayList<>())
+          .add(toImagenView(imagen));
+    }
+    return galerias;
+  }
+
+  private ImagenHabitacionView toImagenView(ImagenHabitacion imagen) {
+    return new ImagenHabitacionView(imagen.getUrl(), imagen.getAlt(), imagen.getOrden());
+  }
+
+  private HabitacionView toView(Habitacion h, List<ImagenHabitacionView> urlsImagenes) {
     return new HabitacionView(
         h.getId(),
         h.getIdHotel(),
@@ -233,6 +271,7 @@ public class HabitacionService {
         h.getDetalle(),
         h.getPrecio(),
         h.getPublicada(),
+        urlsImagenes,
         h.getEstado(),
         h.getIdEstadoHabitacion(),
         new pe.hotel.hotel.domain.dto.EstadoFisicoView(
