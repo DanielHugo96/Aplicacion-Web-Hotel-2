@@ -1,0 +1,12 @@
+@if (visible) {
+  <div class="banner banner-pendiente" role="status" aria-live="polite">
+    <span class="spinner" aria-hidden="true"></span>
+    <div class="banner-body">
+      <strong>Operación en proceso. No repitas la acción.</strong>
+      <span class="text-small">{{ detalle }}</span>
+      @if (actualizadoEn) {
+        <span class="text-micro muted">Actualizado {{ actualizadoEn | peTimestamp }}</span>
+      }
+    </div>
+  </div>
+}

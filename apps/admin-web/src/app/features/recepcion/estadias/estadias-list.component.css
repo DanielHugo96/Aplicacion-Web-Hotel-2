@@ -1,0 +1,8 @@
+/* Los estilos comunes viven en src/styles.css (tokens del sistema). */
+.fila-vencida td:first-child {
+  box-shadow: inset 3px 0 0 var(--color-error);
+}
+
+.vencida {
+  margin-left: var(--space-2);
+}

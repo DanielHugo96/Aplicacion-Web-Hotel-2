@@ -1,0 +1,69 @@
+/* Los estilos comunes viven en src/styles.css (tokens del sistema). */
+.tarjetas {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+}
+
+.tarjeta {
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: #fff;
+  padding: var(--space-4);
+}
+
+.tarjeta-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+}
+
+.tarjeta-head h2 {
+  margin: 0;
+  font-size: var(--text-h3);
+}
+
+.datos {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-3);
+}
+
+.datos > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.datos dt {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.datos dd {
+  margin: 0;
+  text-align: right;
+}
+
+.tarjeta-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.skeleton-card {
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: #fff;
+  padding: var(--space-4);
+}
+
+.skeleton-line {
+  height: 14px;
+  margin-bottom: var(--space-3);
+}
+
+.w30 { width: 30%; }
+.w40 { width: 40%; }
+.w70 { width: 70%; }

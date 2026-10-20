@@ -90,6 +90,35 @@ export const ERROR_CATALOG: Record<string, CatalogEntry> = {
     action: 'Reintentar con la misma clave.',
     retryable: true,
   },
+  ROOM_NOT_READY: {
+    message: 'La habitación no admite ingreso todavía (limpieza o mantenimiento).',
+    action: 'Elegir otra habitación o esperar la limpieza.',
+  },
+  ROOM_OCCUPIED: {
+    message: 'La habitación ya está ocupada.',
+    action: 'Elegir otra; refrescar el listado.',
+  },
+  ROOM_NOT_SYNCED: {
+    message: 'La habitación aún no está sincronizada con recepción.',
+    action: 'Reintentar; si persiste, revisar gates (runbook de outbox/proyección).',
+    retryable: true,
+  },
+  ROOM_OPERATION_IN_PROGRESS: {
+    message: 'La habitación tiene una operación en curso.',
+    action: 'Esperar a que se aplique o se libere; no lanzar otra en paralelo.',
+  },
+  GATE_NOT_AVAILABLE: {
+    message: 'No se puede bloquear la habitación: está ocupada o en limpieza.',
+    action: 'No insistir con el mismo blockId; el rechazo es durable.',
+  },
+  OPERATIONS_IN_PROGRESS: {
+    message: 'Hay consumos en proceso. Espera a que terminen.',
+    action: 'Esperar el resultado y reintentar.',
+  },
+  ADVANCE_EXCEEDS_NEW_TOTAL: {
+    message: 'La nueva fecha deja el alojamiento por debajo del adelanto registrado.',
+    action: 'Mantener la fecha o cerrar la estadía; no hay reembolso en el MVP.',
+  },
   // Área de cliente (C) — códigos de `contracts/errors.md`
   STAY_NOT_ACTIVE: {
     message: 'La estadía no está activa para esa operación.',

@@ -1,0 +1,246 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <p class="text-small muted"><a routerLink="/app/recepcion">Recepción</a> / Check-in</p>
+      <h1>Registrar check-in</h1>
+      <p class="sub">Busca al cliente, elige una habitación de la sede y registra la estadía.</p>
+    </div>
+  </div>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">
+      <p>Elige una sede en el selector del panel para ver sus habitaciones.</p>
+    </div>
+  } @else {
+    <app-error-banner
+      [error]="error()"
+      [actionLabel]="actionLabel()"
+      (action)="accionError()"
+    ></app-error-banner>
+
+    <section class="form-card" aria-labelledby="clienteTitulo">
+      <h2 id="clienteTitulo">Cliente</h2>
+      <p class="text-small muted">Búsqueda exacta por documento entre los clientes activos.</p>
+
+      <div class="buscador">
+        <div class="field">
+          <label for="documento" class="required">Documento</label>
+          <input
+            id="documento"
+            name="documento"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            maxlength="20"
+            [ngModel]="documento()"
+            (ngModelChange)="documento.set($event)"
+            (keydown.enter)="buscarCliente(); $event.preventDefault()"
+            [class.error]="errores().idCliente"
+            [attr.aria-invalid]="errores().idCliente ? 'true' : null"
+            aria-describedby="documento-msg"
+          />
+          @if (errores().idCliente) {
+            <p id="documento-msg" class="field-msg" role="alert">{{ errores().idCliente }}</p>
+          }
+        </div>
+        <button class="btn btn-secondary" type="button" [disabled]="buscando()" (click)="buscarCliente()">
+          @if (buscando()) { <span class="spinner" aria-hidden="true"></span> }
+          {{ buscando() ? 'Buscando…' : 'Buscar cliente' }}
+        </button>
+      </div>
+
+      <app-error-banner [error]="errorCliente()"></app-error-banner>
+
+      @if (noEncontrado()) {
+        <div class="aviso" role="status">
+          <p><strong>Cliente no encontrado: créalo primero</strong></p>
+          <a class="btn btn-secondary" routerLink="/app/personas/nuevo">Registrar cliente</a>
+        </div>
+      } @else if (cliente(); as c) {
+        <div class="seleccionado" role="status">
+          <div>
+            <strong>{{ c.nombre }} {{ c.apellido }}</strong>
+            <p class="text-small muted monospace">{{ c.tipoDocumento }} {{ c.documento }} · {{ c.correo }}</p>
+          </div>
+          <span class="pill pill-ok">Cliente activo</span>
+        </div>
+      } @else if (resultados().length > 1) {
+        <div class="resultados" role="list" aria-label="Clientes encontrados">
+          @for (r of resultados(); track r.idPersona) {
+            <button class="resultado" type="button" role="listitem" (click)="seleccionarCliente(r)">
+              <span>
+                <strong>{{ r.nombre }} {{ r.apellido }}</strong>
+                <span class="text-small muted monospace">{{ r.tipoDocumento }} {{ r.documento }}</span>
+              </span>
+              <span class="text-small">Seleccionar</span>
+            </button>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="form-card" aria-labelledby="habitacionTitulo">
+      <div class="section-head">
+        <div>
+          <h2 id="habitacionTitulo">Habitación</h2>
+          <p class="text-small muted">Habitaciones activas de {{ sedeNombre() ?? 'la sede' }}.</p>
+        </div>
+        <button class="btn btn-secondary" type="button" (click)="cargarHabitaciones()">Recargar</button>
+      </div>
+
+      <app-error-banner [error]="errorHabitaciones()" [actionLabel]="'Reintentar'" (action)="cargarHabitaciones()"></app-error-banner>
+
+      @if (cargandoHabitaciones()) {
+        <div class="skeleton-table" role="status" aria-label="Cargando habitaciones">
+          @for (fila of [1, 2, 3]; track fila) {
+            <div class="skeleton skeleton-row"></div>
+          }
+        </div>
+      } @else if (habitaciones().length === 0 && !errorHabitaciones()) {
+        <div class="empty" role="status">No hay habitaciones activas en esta sede</div>
+      } @else if (habitaciones().length > 0) {
+        <div class="table-wrap">
+          <table class="data-table">
+            <caption class="sr-only">Habitaciones activas de la sede</caption>
+            <thead>
+              <tr>
+                <th scope="col"><span class="sr-only">Selección</span></th>
+                <th scope="col">Número</th>
+                <th scope="col">Piso</th>
+                <th scope="col">Categoría</th>
+                <th scope="col" class="num">Precio</th>
+                <th scope="col">Estado físico</th>
+                <th scope="col">Ocupación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (h of habitaciones(); track h.idHabitacion) {
+                <tr [class.no-seleccionable]="!seleccionable(h)">
+                  <td>
+                    <input
+                      type="radio"
+                      name="idHabitacion"
+                      [id]="'habitacion-' + h.idHabitacion"
+                      [value]="h.idHabitacion"
+                      [checked]="idHabitacion() === h.idHabitacion"
+                      [disabled]="!seleccionable(h)"
+                      (change)="seleccionarHabitacion(h)"
+                      [attr.aria-label]="'Elegir habitación ' + h.numero"
+                    />
+                  </td>
+                  <td>
+                    <label [for]="'habitacion-' + h.idHabitacion" class="monospace">{{ h.numero }}</label>
+                  </td>
+                  <td>{{ h.pisoNombre ?? ('Piso ' + h.idPiso) }}</td>
+                  <td>{{ h.categoriaNombre ?? ('Categoría ' + h.idCategoria) }}</td>
+                  <td class="num">{{ h.precio | money }}</td>
+                  <td>
+                    <span [class]="'pill ' + (h.estadoFisico?.codigo === 'LISTA' ? 'pill-ok' : h.estadoFisico?.codigo === 'EN_LIMPIEZA' ? 'pill-proceso' : 'pill-atencion')">
+                      {{ h.estadoFisico?.descripcion }}
+                    </span>
+                  </td>
+                  <td>
+                    <span [class]="'pill ' + claseOcupacion(h)">{{ textoOcupacion(h) }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="field-help">No se pueden elegir habitaciones ocupadas ni en mantenimiento o limpieza; la admisión final la decide el backend al registrar.</p>
+      }
+
+      @if (errores().idHabitacion) {
+        <p class="field-msg" role="alert">{{ errores().idHabitacion }}</p>
+      }
+    </section>
+
+    <section class="form-card" aria-labelledby="estadiaTitulo">
+      <h2 id="estadiaTitulo">Estadía</h2>
+      <form (ngSubmit)="registrar()" novalidate>
+        <div class="form-grid">
+          <div class="field">
+            <label for="fechaSalida" class="required">Fecha de salida</label>
+            <input
+              id="fechaSalida"
+              name="fechaSalida"
+              type="date"
+              required
+              [min]="hoyLima()"
+              [ngModel]="fechaSalida()"
+              (ngModelChange)="fechaSalida.set($event)"
+              [class.error]="errores().fechaSalida"
+              [attr.aria-invalid]="errores().fechaSalida ? 'true' : null"
+              aria-describedby="fechaSalida-msg"
+            />
+            @if (errores().fechaSalida) {
+              <p id="fechaSalida-msg" class="field-msg" role="alert">{{ errores().fechaSalida }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="adelanto">Adelanto</label>
+            <input
+              id="adelanto"
+              name="adelanto"
+              type="number"
+              min="0"
+              step="0.01"
+              [ngModel]="adelanto()"
+              (ngModelChange)="cambiarAdelanto($event)"
+              [class.error]="errores().adelanto"
+              [attr.aria-invalid]="errores().adelanto ? 'true' : null"
+              aria-describedby="adelanto-msg"
+            />
+            @if (errores().adelanto) {
+              <p id="adelanto-msg" class="field-msg" role="alert">{{ errores().adelanto }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="medioPago">Medio de pago del adelanto</label>
+            <select
+              id="medioPago"
+              name="medioPago"
+              [ngModel]="medioPago()"
+              (ngModelChange)="medioPago.set($event)"
+              [class.error]="errores().medioPago"
+              [attr.aria-invalid]="errores().medioPago ? 'true' : null"
+              aria-describedby="medioPago-msg"
+            >
+              <option [ngValue]="null">Selecciona…</option>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TARJETA">Tarjeta</option>
+              <option value="OTRO">Otro</option>
+            </select>
+            @if (errores().medioPago) {
+              <p id="medioPago-msg" class="field-msg" role="alert">{{ errores().medioPago }}</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="observacion">Observación</label>
+            <textarea
+              id="observacion"
+              name="observacion"
+              rows="3"
+              maxlength="500"
+              [ngModel]="observacion()"
+              (ngModelChange)="observacion.set($event)"
+              aria-describedby="observacion-contador"
+            ></textarea>
+            <p id="observacion-contador" class="field-help">{{ contadorObservacion() }} caracteres</p>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <a class="btn btn-secondary" routerLink="/app/recepcion">Cancelar</a>
+          <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+            @if (guardando()) { <span class="spinner" aria-hidden="true"></span> }
+            {{ guardando() ? 'Registrando…' : 'Registrar check-in' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+</div>

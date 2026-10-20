@@ -1,0 +1,106 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Estadías</h1>
+      <p class="sub">
+        Estadías de {{ sedeNombre() ?? 'la sede seleccionada' }}, con su estado y sus fechas.
+      </p>
+    </div>
+    <div class="toolbar-actions">
+      <a class="btn btn-primary" routerLink="/app/recepcion/check-in">Registrar check-in</a>
+    </div>
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="actionLabel()"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="filtro-estado">Estado de la estadía</label>
+      <select
+        id="filtro-estado"
+        name="estado"
+        [ngModel]="estado()"
+        (ngModelChange)="estado.set($event); aplicarFiltro()"
+      >
+        <option [ngValue]="null">Todos</option>
+        <option value="ACTIVA">Activa</option>
+        <option value="CERRANDO">Cierre en curso</option>
+        <option value="CERRADA">Cerrada</option>
+      </select>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-secondary" type="button" (click)="limpiarFiltro()">Limpiar filtro</button>
+    </div>
+  </div>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando estadías">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (estadias().length === 0 && !error()) {
+    <div class="empty" role="status">
+      <p>No hay estadías en esta sede</p>
+    </div>
+  } @else if (estadias().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Estadías de la sede seleccionada</caption>
+        <thead>
+          <tr>
+            <th scope="col">Habitación</th>
+            <th scope="col">Cliente</th>
+            <th scope="col">Documento</th>
+            <th scope="col">Entrada</th>
+            <th scope="col">Salida</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="num">Alojamiento</th>
+            <th scope="col" class="num">Saldo</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (estadia of estadias(); track estadia.idRecepcion) {
+            <tr [class.fila-vencida]="esVencida(estadia)">
+              <td class="monospace">{{ estadia.numero }}</td>
+              <td>
+                {{ estadia.nombre }} {{ estadia.apellido }}
+                @if (esVencida(estadia)) {
+                  <span class="pill pill-error vencida">Estadía vencida sin cierre</span>
+                }
+              </td>
+              <td class="monospace">{{ estadia.documento }}</td>
+              <td class="table-nums">{{ estadia.fechaEntrada | peDate }}</td>
+              <td class="table-nums">{{ estadia.fechaSalida | peDate }}</td>
+              <td>
+                <span [class]="'pill ' + claseEstado(estadia.estadoEstadia)">
+                  {{ etiquetaEstado(estadia.estadoEstadia) }}
+                </span>
+              </td>
+              <td class="num">{{ estadia.precioInicial | money }}</td>
+              <td class="num">{{ estadia.precioRestante | money }}</td>
+              <td>
+                <div class="row-actions">
+                  <a class="btn btn-secondary" [routerLink]="['/app/recepcion', estadia.idRecepcion]">Ver</a>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [page]="page()"
+      [size]="size()"
+      [total]="total()"
+      (pageChange)="cargar($event)"
+    ></app-pagination>
+  }
+</div>
