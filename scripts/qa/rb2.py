@@ -129,6 +129,18 @@ def _create_and_diagnose() -> dict[str, Any]:
     sale, venta = f.create_sale(id_recepcion=id_recepcion, items=[{"idProducto": 1, "cantidad": 2}], token=token)
     if sale.status != 201:
         raise c.RunbookError(f"F2 venta devolvió {sale.status}: {sale.body[:400]}")
+    # La venta se admite de forma asíncrona (operación ABIERTA -> FINALIZADA); el cierre
+    # exige cero operaciones ABIERTAS.
+    c.wait_until(
+        lambda: c.psql_one(
+            "reception_db",
+            f"select count(*) from operacion_consumo where id_recepcion={id_recepcion} and estado='ABIERTA'",
+        )
+        == "0",
+        timeout=60,
+        interval=2,
+        description="operación de consumo FINALIZADA",
+    )
     cotizacion = _cotizacion(id_recepcion, token)
     c.write_json(sim, "01-fixture-f1-f2.json", {"idRecepcion": id_recepcion, "checkin": check.summary(), "venta": sale.summary(), "cotizacion": cotizacion})
 
@@ -140,19 +152,26 @@ def _create_and_diagnose() -> dict[str, Any]:
         "salesCierre": _sales_cierre(id_recepcion),
         "cierreFilas": c.psql_one("reception_db", f"select count(*) from cierre where id_recepcion={id_recepcion} and estado<>'RECHAZADO'"),
     }
+    # Sales sigue arriba: el resumen se calcula, el cierre pasa a CONFIRMANDO y la
+    # confirmación queda retenida por el mismo advisory lock que usa Sales. La llamada
+    # va al puerto interno de reception para no confundir el timeout de 5s del Gateway
+    # con el 202 de la fase.
     lock = c.AdvisoryLock("sales_db", id_recepcion)
-    try:
-        started = time.time()
-        out = f.checkout(id_recepcion=id_recepcion, room_id=101, monto=float(cotizacion["cobroAhora"]), key=key, token=token)
-        elapsed = int((time.time() - started) * 1000)
-    finally:
-        # El lock se mantiene durante la fase CONFIRMANDO; se libera explícitamente en el paso 8.
-        pass
+    started = time.time()
+    out = f.checkout(
+        id_recepcion=id_recepcion,
+        room_id=101,
+        monto=float(cotizacion["cobroAhora"]),
+        key=key,
+        token=token,
+        base="http://localhost:8083",
+    )
+    elapsed = int((time.time() - started) * 1000)
     closure_id = str(out.field("data", "closureId") or "")
     if out.status != 202 or not closure_id:
         lock.release()
         raise c.RunbookError(f"esperaba 202 con closureId, obtuve {out.status}: {out.body[:500]}")
-    cierre = c.wait_cierre_state(closure_id, "CONFIRMANDO", timeout=60)
+    cierre = f.wait_cierre_state(closure_id, "CONFIRMANDO", timeout=60)
     diag1 = _cierre(closure_id)
     diag2 = _cierre(closure_id)
     after = {
@@ -196,7 +215,10 @@ def _alert_and_invariants(ctx: dict[str, Any]) -> dict[str, Any]:
     closure_id = ctx["closureId"]
     id_recepcion = ctx["idRecepcion"]
 
-    # La alerta usa requestedAt > 5min. Se mantiene el lock durante la espera.
+    # La alerta usa requestedAt > 5min. La recuperación de 30s queda bloqueada reteniendo
+    # el mismo advisory lock que usa Sales; la API directa de reception (puerto interno)
+    # evita el timeout de 5s del Gateway y devuelve el 202 real de la fase.
+    lock = ctx["lock"]
     firing: list[dict[str, Any]] = []
     started = time.time()
     while time.time() - started < 420:
@@ -209,7 +231,14 @@ def _alert_and_invariants(ctx: dict[str, Any]) -> dict[str, Any]:
     c.write_json(sim, "03-alerta-cierre.json", {"linea": firing, "alerta": cierre_alert})
 
     calculo_antes = _cierre(closure_id).get("calculo")
-    same = f.checkout(id_recepcion=id_recepcion, room_id=101, monto=float(ctx["cotizacion"]["cobroAhora"]), key=ctx["key"], token=token)
+    same = f.checkout(
+        id_recepcion=id_recepcion,
+        room_id=101,
+        monto=float(ctx["cotizacion"]["cobroAhora"]),
+        key=ctx["key"],
+        token=token,
+        base="http://localhost:8083",
+    )
     other = f.checkout(id_recepcion=id_recepcion, room_id=101, monto=float(ctx["cotizacion"]["cobroAhora"]), key=str(uuid.uuid4()), token=token)
     calculo_despues = _cierre(closure_id).get("calculo")
     cierres = c.psql("reception_db", f"select closure_id::text, estado from cierre where id_recepcion={id_recepcion} and estado<>'RECHAZADO'")
@@ -225,7 +254,7 @@ def _alert_and_invariants(ctx: dict[str, Any]) -> dict[str, Any]:
         },
     )
     if same.status != 202 or other.status != 409:
-        ctx["lock"].release()
+        lock.release()
         raise c.RunbookError(f"invariantes RB2 incumplidos: misma={same.status} distinta={other.status}")
     print("  alerta > 0, misma clave 202, clave distinta 409 y un solo cierre")
 
@@ -235,10 +264,19 @@ def _recover(ctx: dict[str, Any]) -> dict[str, Any]:
     token = f.admin_token()
     closure_id = ctx["closureId"]
     id_recepcion = ctx["idRecepcion"]
-    ctx["lock"].release()
+    if ctx.get("lock"):
+        ctx["lock"].release()
+        ctx["lock"] = None
 
     # La recuperación de 30s o el mismo Idempotency-Key completan con el payload congelado.
-    resp = f.checkout(id_recepcion=id_recepcion, room_id=101, monto=float(ctx["cotizacion"]["cobroAhora"]), key=ctx["key"], token=token)
+    resp = f.checkout(
+        id_recepcion=id_recepcion,
+        room_id=101,
+        monto=float(ctx["cotizacion"]["cobroAhora"]),
+        key=ctx["key"],
+        token=token,
+        base="http://localhost:8083",
+    )
     if resp.status == 202:
         f.wait_cierre_state(closure_id, "COMPLETADO", timeout=120)
     cierre = _cierre(closure_id)
@@ -285,19 +323,38 @@ def _branch_sales_receipt() -> None:
     sale, _ = f.create_sale(id_recepcion=id_recepcion, items=[{"idProducto": 1, "cantidad": 1}], token=token)
     if sale.status != 201:
         raise c.RunbookError(f"rama Sales: venta devolvió {sale.status}: {sale.body[:400]}")
+    c.wait_until(
+        lambda: c.psql_one(
+            "reception_db",
+            f"select count(*) from operacion_consumo where id_recepcion={id_recepcion} and estado='ABIERTA'",
+        )
+        == "0",
+        timeout=60,
+        interval=2,
+        description="operación de consumo FINALIZADA (rama Sales)",
+    )
     cotizacion = _cotizacion(id_recepcion, token)
     key = str(uuid.uuid4())
 
-    c.stop_service("sales-service")
-    time.sleep(2)
+    # Sales sigue arriba: la confirmación se retiene con el advisory lock para que reception
+    # devuelva 202 y no aplique el receipt. Al soltar, Sales confirma primero y reception
+    # reanuda después con el receipt ya persistido.
+    lock = c.AdvisoryLock("sales_db", id_recepcion)
     try:
-        out = f.checkout(id_recepcion=id_recepcion, room_id=102, monto=float(cotizacion["cobroAhora"]), key=key, token=token)
+        out = f.checkout(
+            id_recepcion=id_recepcion,
+            room_id=102,
+            monto=float(cotizacion["cobroAhora"]),
+            key=key,
+            token=token,
+            base="http://localhost:8083",
+        )
         closure_id = str(out.field("data", "closureId") or "")
         if out.status != 202 or not closure_id:
             raise c.RunbookError(f"rama Sales: esperaba 202, obtuve {out.status}: {out.body[:400]}")
-        c.wait_cierre_state(closure_id, "CONFIRMANDO", timeout=60)
+        f.wait_cierre_state(closure_id, "CONFIRMANDO", timeout=60)
     finally:
-        c.start_service("sales-service")
+        lock.release()
     diag = _cierre(closure_id)
     calculo = diag["calculo"] or {}
     expected = calculo.get("expectedPendingTotal")
@@ -318,9 +375,16 @@ def _branch_sales_receipt() -> None:
     )
     sales_before = _sales_cierre(id_recepcion)
     # Reintento de reception: debe devolver el receipt persistido y completar.
-    retry = f.checkout(id_recepcion=id_recepcion, room_id=102, monto=float(cotizacion["cobroAhora"]), key=key, token=token)
+    retry = f.checkout(
+        id_recepcion=id_recepcion,
+        room_id=102,
+        monto=float(cotizacion["cobroAhora"]),
+        key=key,
+        token=token,
+        base="http://localhost:8083",
+    )
     if retry.status == 202:
-        f.wait_cierre_state(closure_id, "COMPLETADO", timeout=120)
+        f.wait_cierre_state(closure_id, "COMPLETADO", timeout=180)
     sales_after = _sales_cierre(id_recepcion)
     c.write_json(
         sim,
@@ -331,13 +395,14 @@ def _branch_sales_receipt() -> None:
             "salesConfirmDirecto": {"status": receipt.status, "body": receipt.json},
             "salesCierreAntesReintento": sales_before,
             "reintentoReception": {"status": retry.status, "body": retry.json},
+            "cierreFinal": _cierre(closure_id),
             "salesCierreDespues": sales_after,
             "unSoloReceipt": len(sales_after) == 1,
             "receiptPersistido": sales_after[0]["receipt"] if sales_after else None,
             "ventas": _ventas(id_recepcion),
         },
     )
-    if retry.status != 200 or len(sales_after) != 1:
+    if _cierre(closure_id).get("estado") != "COMPLETADO" or len(sales_after) != 1:
         raise c.RunbookError(f"rama Sales no completó con un receipt: {retry.status} / {sales_after}")
     print("  rama «Sales ya tiene receipt»: reintento usa el receipt persistido")
 
@@ -351,5 +416,7 @@ def run() -> None:
         c.runbook_step("RB2: recuperación por ramas")
         _recover(ctx)
     finally:
-        ctx["lock"].release()
+        if ctx.get("lock"):
+            ctx["lock"].release()
+            ctx["lock"] = None
     _branch_sales_receipt()

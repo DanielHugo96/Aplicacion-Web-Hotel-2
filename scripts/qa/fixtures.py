@@ -100,6 +100,7 @@ def checkout(
     key: str | None = None,
     token: str | None = None,
     costo_penalidad: float = 0.0,
+    base: str | None = None,
 ) -> c.Resp:
     token = token or admin_token()
     key = key or str(uuid.uuid4())
@@ -116,6 +117,8 @@ def checkout(
         token=token,
         body=body,
         headers={"Idempotency-Key": key},
+        base=base or c.GATEWAY,
+        timeout=30,
     )
 
 
@@ -261,8 +264,9 @@ def inbox_rows(db: str, group: str, message_id: str | None = None) -> list[dict[
     return [{"messageId": r[0], "consumerGroup": r[1], "processedAt": r[2]} for r in rows]
 
 
-def free_room(room_id: int, hotel_id: int) -> None:
+def free_room(room_id: int, hotel_id: int, token: str | None = None) -> None:
     """Devuelve una habitación a LISTA/LIBRE por las rutas del operador (no por SQL)."""
+    token = token or admin_token()
     gate = c.psql(
         "reception_db",
         f"select estado, COALESCE(cleaning_cycle_id::text,'') from room_gate where id_habitacion={room_id}",

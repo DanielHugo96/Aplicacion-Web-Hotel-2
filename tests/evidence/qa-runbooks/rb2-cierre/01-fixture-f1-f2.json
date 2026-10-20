@@ -1,0 +1,56 @@
+{
+  "idRecepcion": 12,
+  "checkin": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "f6692444-9268-4a06-b8d9-24e5596321e4",
+      "etag": "\"1\"",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "877",
+      "date": "Tue, 20 Oct 2026 17:28:40 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": "{\"success\":true,\"message\":\"Check-in registrado\",\"data\":{\"idRecepcion\":12,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":101,\"numero\":\"101\",\"categoriaNombre\":\"Individual\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion individual de demostracion\",\"precioHabitacion\":70.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-20\",\"fechaSalida\":\"2026-10-21\",\"fechaSalidaConfirmacion\":null,\"precioInicial\":70.00,\"adelanto\":20.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":50.00,\"totalPagado\":20.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":true,\"estadoEstadia\":\"ACTIVA\",\"archivada\":false,\"vencida\":false,\"version\":1,\"closureId\":null,\"cleaningCycleId\":null,\"cierre\":null},\"meta\":{\"correlationId\":\"f6692444-9268-4a06-b8d9-24e5596321e4\"}}"
+  },
+  "venta": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "6fe86f49-1904-4c6b-ae8f-ebccbb8e3a8d",
+      "location": "/api/venta/buscar/9",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "498",
+      "date": "Tue, 20 Oct 2026 17:28:41 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"idVenta\":9,\"idRecepcion\":12,\"idCliente\":100,\"idHotel\":1,\"total\":7.00,\"estado\":\"PENDIENTE\",\"estadoOperacion\":\"CONFIRMADA\",\"operationId\":\"28f58746-c345-40fa-88f1-96ce2cb01ca3\",\"medioPago\":null,\"version\":2,\"fechaCreacion\":\"2026-10-20T17:28:40.798343Z\",\"paidAt\":null,\"detalles\":[{\"idDetalleVenta\":9,\"idProducto\":1,\"nombreProducto\":\"Agua 500ml\",\"cantidad\":2,\"precioUnitario\":3.50,\"subTotal\":7.00}]},\"meta\":{\"correlationId\":\"6fe86f49-1904-4c6b-ae8f-ebccbb8e3a8d\"}}"
+  },
+  "cotizacion": {
+    "idRecepcion": 12,
+    "alojamiento": 70.0,
+    "adelanto": 20.0,
+    "penalidad": 0.0,
+    "saldoAlojamiento": 50.0,
+    "consumosPagados": 0.0,
+    "consumosPendientes": 7.0,
+    "cobroAhora": 57.0,
+    "moneda": "PEN",
+    "calculadoEn": "2026-10-20T17:28:45.373809900Z"
+  }
+}

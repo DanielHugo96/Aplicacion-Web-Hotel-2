@@ -1,0 +1,85 @@
+{
+  "linea": [
+    {
+      "ts": "2026-10-20T17:29:00.680945Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:29:24.523324Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:29:48.517333Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:30:12.576258Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:30:36.379485Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:31:00.085918Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:31:23.903618Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:31:48.247928Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:32:11.964414Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:32:35.859276Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:32:59.903309Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:33:23.962408Z",
+      "valor": 0,
+      "dispara": false
+    },
+    {
+      "ts": "2026-10-20T17:33:47.830297Z",
+      "valor": 1,
+      "dispara": true
+    }
+  ],
+  "alerta": {
+    "alerta": "Cierre atascado",
+    "umbral": "CONFIRMANDO > 5min",
+    "deteccion": "consulta a cierre (request->>'requestedAt')",
+    "severidad": "Alta",
+    "runbook": "RB2",
+    "valor": 1,
+    "dispara": true,
+    "detalle": [
+      {
+        "closureId": "22e1aa42-9a62-4d05-906d-4f150af22f63",
+        "idRecepcion": "12",
+        "requestedAt": "2026-10-20T17:28:46.020651600Z"
+      }
+    ]
+  }
+}
