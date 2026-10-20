@@ -1,0 +1,64 @@
+<div class="contenedor pagina">
+  <p class="migas">
+    <a routerLink="/sedes">Sedes</a> /
+    @if (slug()) {
+      <a [routerLink]="['/sedes', slug()]">Volver a la sede</a> /
+    }
+    Tipo de habitación
+  </p>
+
+  @if (error(); as fallo) {
+    <app-error-state
+      [error]="fallo"
+      backLink="/sedes"
+      backLinkLabel="Volver al listado de sedes"
+      (reintentar)="reintentar()"
+    />
+  } @else if (cargando()) {
+    <div class="detalle" aria-busy="true" aria-label="Cargando el tipo de habitación">
+      <div class="galeria">
+        <div class="skeleton galeria__hueco"></div>
+      </div>
+      <div>
+        <div class="skeleton titulo-skeleton"></div>
+        <div class="skeleton linea-skeleton"></div>
+        <div class="skeleton linea-skeleton linea-skeleton--corta"></div>
+      </div>
+    </div>
+  } @else if (categoria(); as tipo) {
+    <div class="detalle">
+      <section class="galeria" aria-label="Galería de la habitación">
+        @for (url of imagen(tipo); track url; let i = $index) {
+          <app-demo-image
+            class="galeria__imagen"
+            [src]="url"
+            [alt]="alt(tipo, i)"
+            [prioritaria]="i === 0"
+          />
+        }
+      </section>
+
+      <section class="informacion" aria-labelledby="tipo-titulo">
+        <p class="informacion__etiqueta">Tipo de habitación</p>
+        <h1 id="tipo-titulo">{{ tipo.descripcion }}</h1>
+        <p class="informacion__detalle">{{ tipo.detalle }}</p>
+        <p class="informacion__capacidad">{{ personas(tipo.capacidad) }}</p>
+
+        <div class="tarifa">
+          <p class="tarifa__importe">
+            Desde
+            {{ tipo.precioDesde | currency: 'PEN' : 'symbol-narrow' : '1.2-2' }}
+            por noche.
+          </p>
+          <p class="tarifa__aviso">
+            Consulta disponibilidad con recepción. No constituye una reserva.
+          </p>
+        </div>
+
+        <a class="boton boton--secundario" [routerLink]="['/sedes', slug()]">
+          Volver a la sede
+        </a>
+      </section>
+    </div>
+  }
+</div>
