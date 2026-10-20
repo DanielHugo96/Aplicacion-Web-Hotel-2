@@ -1,0 +1,118 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Personas</h1>
+      <p class="sub">
+        @if (esEmpleado()) {
+          Consulta de clientes por documento exacto.
+        } @else {
+          Personas del panel: alta, edición y baja lógica.
+        }
+      </p>
+    </div>
+    @if (esAdmin()) {
+      <button class="btn btn-primary" type="button" (click)="nuevo()">Nueva persona</button>
+    }
+  </div>
+
+  <app-error-banner [error]="bajaError()" [actionLabel]="'Reintentar'" (action)="confirmarBaja()"></app-error-banner>
+  <app-error-banner [error]="error()" [actionLabel]="'Reintentar'" (action)="recargar()"></app-error-banner>
+
+  <form class="toolbar" (ngSubmit)="buscar()" aria-label="Filtros de personas">
+    <div class="field">
+      <label for="filtro-tipo">Tipo de persona</label>
+      <select id="filtro-tipo" name="filtroTipo" [(ngModel)]="filtroTipo" [disabled]="esEmpleado()">
+        @if (!esEmpleado()) {
+          <option [ngValue]="null">Todos</option>
+        }
+        @for (tipo of tipos(); track tipo.idTipoPersona) {
+          @if (!esEmpleado() || tipo.codigo === 'CLIENTE') {
+            <option [ngValue]="tipo.idTipoPersona">{{ tipo.descripcion }}</option>
+          }
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtro-documento" [class.required]="esEmpleado()">Documento</label>
+      <input
+        id="filtro-documento"
+        name="filtroDocumento"
+        [(ngModel)]="filtroDocumento"
+        maxlength="20"
+        autocomplete="off"
+      />
+      @if (esEmpleado()) {
+        <span class="field-help">La búsqueda de clientes exige el documento exacto.</span>
+      }
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-primary" type="submit" [disabled]="loading()">Buscar</button>
+      <button class="btn btn-secondary" type="button" (click)="limpiar()">Limpiar</button>
+    </div>
+  </form>
+
+  @if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando personas">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (personas().length === 0 && !error()) {
+    <div class="empty" role="status">No hay personas que coincidan</div>
+  } @else if (personas().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Personas</caption>
+        <thead>
+          <tr>
+            <th scope="col">Documento</th>
+            <th scope="col">Nombre</th>
+            <th scope="col">Correo</th>
+            <th scope="col">Rol</th>
+            <th scope="col">Sedes</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (persona of personas(); track persona.idPersona) {
+            <tr>
+              <td class="monospace">{{ persona.tipoDocumento }} {{ persona.documento }}</td>
+              <td>{{ persona.nombre }} {{ persona.apellido }}</td>
+              <td>{{ persona.correo }}</td>
+              <td>{{ persona.tipoPersona }}</td>
+              <td>{{ sedesTexto(persona) }}</td>
+              <td><span [class]="'pill ' + estadoClase(persona)">{{ estadoTexto(persona) }}</span></td>
+              <td>
+                <div class="row-actions">
+                  @if (esAdmin()) {
+                    <button class="btn btn-secondary" type="button" (click)="editar(persona)">Editar</button>
+                    <button class="btn btn-danger" type="button" (click)="prepararBaja(persona)">Dar de baja</button>
+                  } @else {
+                    <span class="text-small muted">Solo lectura</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [page]="page()"
+      [size]="size()"
+      [total]="total()"
+      (pageChange)="cambiarPagina($event)"
+    ></app-pagination>
+  }
+</div>
+
+<app-confirm-dialog
+  [open]="baja() !== null"
+  title="Dar de baja"
+  [message]="'La persona ' + (baja()?.nombre ?? '') + ' ' + (baja()?.apellido ?? '') + ' quedará inactiva. Debe quedar al menos un administrador activo.'"
+  confirmLabel="Dar de baja"
+  [busy]="bajaBusy()"
+  (confirm)="confirmarBaja()"
+  (cancel)="cerrarBaja()"
+></app-confirm-dialog>

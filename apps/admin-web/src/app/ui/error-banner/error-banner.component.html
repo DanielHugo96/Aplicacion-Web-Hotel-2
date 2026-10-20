@@ -1,0 +1,22 @@
+@if (error) {
+  <div class="banner banner-error" role="alert">
+    <div class="banner-body">
+      <strong>{{ error.message }}</strong>
+      <span class="text-small">{{ error.action }}</span>
+      <div class="error-meta">
+        <span class="monospace text-micro">{{ error.code }}</span>
+        @if (error.correlationId) {
+          <span class="correlation">correlationId: {{ error.correlationId }}</span>
+          <button class="copy-btn" type="button" (click)="copyCorrelation()">
+            {{ copied() ? 'Copiado' : 'Copiar' }}
+          </button>
+        }
+      </div>
+    </div>
+    @if (actionLabel) {
+      <div class="banner-actions">
+        <button class="btn btn-secondary" type="button" (click)="action.emit()">{{ actionLabel }}</button>
+      </div>
+    }
+  </div>
+}

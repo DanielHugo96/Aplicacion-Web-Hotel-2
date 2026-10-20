@@ -1,0 +1,71 @@
+@if (cargando()) {
+  <div class="page" role="status" aria-label="Cargando piso">
+    <div class="skeleton skeleton-row" style="max-width: 420px; height: 36px;"></div>
+    <div class="skeleton skeleton-row" style="max-width: 640px; height: 180px; margin-top: 24px;"></div>
+  </div>
+} @else {
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1>{{ esEdicion() ? 'Editar piso' : 'Nuevo piso' }}</h1>
+        <p class="sub">El piso pertenece a una sede y no cambia de sede por edición.</p>
+      </div>
+      <a class="btn btn-secondary" routerLink="/app/pisos">Volver al listado</a>
+    </div>
+
+    <app-error-banner [error]="error()" [actionLabel]="actionLabel()" (action)="accionError()"></app-error-banner>
+
+    <form class="form-card form-grid" (ngSubmit)="onSubmit($event)" novalidate>
+      <div class="field">
+        <label for="idHotel" class="required">Sede</label>
+        @if (esEdicion()) {
+          <input id="idHotel" name="idHotelTexto" [value]="sedeNombre()" readonly />
+          <span class="field-help">La sede no se puede cambiar en la edición.</span>
+        } @else {
+          <select
+            id="idHotel"
+            name="idHotel"
+            [(ngModel)]="idHotel"
+            [class.error]="campoInvalido('idHotel')"
+            required
+          >
+            <option [ngValue]="null">Selecciona la sede</option>
+            @for (sede of sedes(); track sede.idHotel) {
+              <option [ngValue]="sede.idHotel">{{ sede.nombre }}</option>
+            }
+          </select>
+        }
+        @if (campoInvalido('idHotel')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('idHotel') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="descripcion" class="required">Descripción</label>
+        <input id="descripcion" name="descripcion" [(ngModel)]="descripcion" maxlength="80" [class.error]="campoInvalido('descripcion')" required />
+        <span class="field-help">{{ descripcion.length }}/80 · única por sede</span>
+        @if (campoInvalido('descripcion')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('descripcion') }}</span>
+        }
+      </div>
+
+      @if (esEdicion()) {
+        <div class="field">
+          <label class="field-check"><input id="estado" name="estado" type="checkbox" [(ngModel)]="estado" /> Activo</label>
+        </div>
+      }
+
+      <div class="form-actions" style="grid-column: 1 / -1;">
+        @if (esAdmin()) {
+          <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+            @if (guardando()) { <span class="spinner" aria-hidden="true"></span> }
+            {{ esEdicion() ? 'Guardar cambios' : 'Registrar piso' }}
+          </button>
+        } @else {
+          <span class="text-small muted">Solo lectura: la mutación del catálogo es de ADMIN.</span>
+        }
+        <a class="btn btn-secondary" routerLink="/app/pisos">Cancelar</a>
+      </div>
+    </form>
+  </div>
+}

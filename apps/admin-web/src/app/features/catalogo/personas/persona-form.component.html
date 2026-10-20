@@ -1,0 +1,176 @@
+@if (cargando()) {
+  <div class="page" role="status" aria-label="Cargando persona">
+    <div class="skeleton skeleton-row" style="max-width: 420px; height: 36px;"></div>
+    <div class="skeleton skeleton-row" style="max-width: 640px; height: 220px; margin-top: 24px;"></div>
+  </div>
+} @else {
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1>{{ esEdicion() ? 'Editar persona' : 'Nueva persona' }}</h1>
+        <p class="sub">Los campos con asterisco son obligatorios.</p>
+      </div>
+      <a class="btn btn-secondary" routerLink="/app/personas">Volver al listado</a>
+    </div>
+
+    <app-error-banner [error]="error()" [actionLabel]="actionLabel()" (action)="accionError()"></app-error-banner>
+
+    <form class="form-card form-grid two" (ngSubmit)="onSubmit($event)" novalidate>
+      <div class="field">
+        <label for="tipoDocumento" class="required">Tipo de documento</label>
+        <select
+          id="tipoDocumento"
+          name="tipoDocumento"
+          [(ngModel)]="tipoDocumento"
+          [class.error]="campoInvalido('tipoDocumento')"
+          [disabled]="esEdicion()"
+          required
+        >
+          <option value="DNI">DNI</option>
+          <option value="PASAPORTE">Pasaporte</option>
+          <option value="CE">CE</option>
+        </select>
+        @if (campoInvalido('tipoDocumento')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('tipoDocumento') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="documento" class="required">Documento</label>
+        <input
+          id="documento"
+          name="documento"
+          [(ngModel)]="documento"
+          maxlength="20"
+          autocomplete="off"
+          [class.error]="campoInvalido('documento')"
+          [readonly]="esEdicion()"
+          [attr.aria-describedby]="esEdicion() ? 'documento-ayuda' : null"
+          required
+        />
+        @if (esEdicion()) {
+          <span id="documento-ayuda" class="field-help">El documento no se puede cambiar.</span>
+        }
+        @if (campoInvalido('documento')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('documento') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="nombre" class="required">Nombre</label>
+        <input id="nombre" name="nombre" [(ngModel)]="nombre" maxlength="100" [class.error]="campoInvalido('nombre')" required />
+        @if (campoInvalido('nombre')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('nombre') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="apellido" class="required">Apellido</label>
+        <input id="apellido" name="apellido" [(ngModel)]="apellido" maxlength="100" [class.error]="campoInvalido('apellido')" required />
+        @if (campoInvalido('apellido')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('apellido') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="correo" class="required">Correo</label>
+        <input id="correo" name="correo" type="email" [(ngModel)]="correo" maxlength="254" [class.error]="campoInvalido('correo')" required />
+        @if (campoInvalido('correo')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('correo') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="idTipoPersona" class="required">Tipo de persona</label>
+        <select
+          id="idTipoPersona"
+          name="idTipoPersona"
+          [(ngModel)]="idTipoPersona"
+          [class.error]="campoInvalido('idTipoPersona')"
+          [disabled]="esEmpleado()"
+          required
+        >
+          @for (tipo of tipos(); track tipo.idTipoPersona) {
+            @if (!clienteBloqueado(tipo)) {
+              <option [ngValue]="tipo.idTipoPersona">{{ tipo.descripcion }}</option>
+            }
+          }
+        </select>
+        @if (esEmpleado()) {
+          <span class="field-help">Solo puedes registrar clientes.</span>
+        }
+        @if (campoInvalido('idTipoPersona')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('idTipoPersona') }}</span>
+        }
+      </div>
+
+      @if (!esClienteSeleccionado()) {
+        <div class="field" style="grid-column: 1 / -1;">
+          <span class="label" id="sedes-label">Sedes</span>
+          <div class="checks-grid" role="group" aria-labelledby="sedes-label">
+            @for (sede of sedesContext.sedes(); track sede.idHotel) {
+              <label class="field-check">
+                <input
+                  type="checkbox"
+                  [checked]="sedesSeleccionadas.includes(sede.idHotel)"
+                  (change)="toggleSede(sede.idHotel, $event)"
+                />
+                {{ sede.nombre }}
+              </label>
+            } @empty {
+              <span class="text-small muted">No hay sedes disponibles para asignar.</span>
+            }
+          </div>
+          @if (tipoSeleccionado()?.codigo === 'ADMIN') {
+            <span class="field-help">Un administrador sin sedes tiene alcance global.</span>
+          }
+          @if (campoInvalido('sedes')) {
+            <span class="field-msg" role="alert">{{ mensajeCampo('sedes') }}</span>
+          }
+        </div>
+      }
+
+      @if (!esEdicion()) {
+        <div class="field">
+          <label for="clave" [class.required]="esPersonalSeleccionado()">Clave</label>
+          <input
+            id="clave"
+            name="clave"
+            type="password"
+            autocomplete="new-password"
+            [(ngModel)]="clave"
+            [class.error]="campoInvalido('clave')"
+          />
+          <span class="field-help">
+            {{ esPersonalSeleccionado() ? 'Obligatoria para el personal nuevo. ' : '' }}Entre 12 y 72 bytes UTF-8.
+          </span>
+          @if (campoInvalido('clave')) {
+            <span class="field-msg" role="alert">{{ mensajeCampo('clave') }}</span>
+          }
+        </div>
+      }
+
+      @if (esEdicion()) {
+        <div class="field">
+          <label for="estado">Estado</label>
+          <label class="field-check">
+            <input id="estado" name="estado" type="checkbox" [(ngModel)]="estado" />
+            Activo
+          </label>
+        </div>
+      }
+
+      <div class="form-actions" style="grid-column: 1 / -1;">
+        @if (esAdmin() || !esEdicion()) {
+          <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+            @if (guardando()) { <span class="spinner" aria-hidden="true"></span> }
+            {{ esEdicion() ? 'Guardar cambios' : 'Registrar persona' }}
+          </button>
+        } @else {
+          <span class="text-small muted">Solo lectura: la edición de personas es de ADMIN.</span>
+        }
+        <a class="btn btn-secondary" routerLink="/app/personas">Cancelar</a>
+      </div>
+    </form>
+  </div>
+}

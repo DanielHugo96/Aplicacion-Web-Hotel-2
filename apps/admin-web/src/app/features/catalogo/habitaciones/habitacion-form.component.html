@@ -1,0 +1,127 @@
+@if (cargando()) {
+  <div class="page" role="status" aria-label="Cargando habitación">
+    <div class="skeleton skeleton-row" style="max-width: 420px; height: 36px;"></div>
+    <div class="skeleton skeleton-row" style="max-width: 720px; height: 320px; margin-top: 24px;"></div>
+  </div>
+} @else {
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1>{{ esEdicion() ? 'Editar habitación' : 'Nueva habitación' }}</h1>
+        <p class="sub">El alta nace Lista. La edición no cambia el estado físico, el número ni la sede.</p>
+      </div>
+      <a class="btn btn-secondary" routerLink="/app/habitaciones">Volver al listado</a>
+    </div>
+
+    <app-error-banner [error]="error()" [actionLabel]="actionLabel()" (action)="accionError()"></app-error-banner>
+
+    <form class="form-card form-grid two" (ngSubmit)="onSubmit($event)" novalidate>
+      <div class="field">
+        <label for="sedeHabitacion" class="required">Sede</label>
+        <input id="sedeHabitacion" name="sedeHabitacion" [value]="sedeNombre()" readonly />
+        <span class="field-help">Se toma del selector de sede del topbar.</span>
+        @if (campoInvalido('idHotel')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('idHotel') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="numero" class="required">Número</label>
+        <input id="numero" name="numero" [(ngModel)]="numero" maxlength="10" [readonly]="esEdicion()" [class.error]="campoInvalido('numero')" required />
+        @if (esEdicion()) {
+          <span class="field-help">El número no se puede cambiar.</span>
+        }
+        @if (campoInvalido('numero')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('numero') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="idPiso" class="required">Piso</label>
+        <select id="idPiso" name="idPiso" [(ngModel)]="idPiso" [class.error]="campoInvalido('idPiso')" required>
+          <option [ngValue]="null">Selecciona el piso</option>
+          @for (piso of pisos(); track piso.idPiso) {
+            <option [ngValue]="piso.idPiso">{{ piso.descripcion }}</option>
+          }
+        </select>
+        @if (campoInvalido('idPiso')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('idPiso') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="idCategoria" class="required">Categoría</label>
+        <select id="idCategoria" name="idCategoria" [(ngModel)]="idCategoria" [class.error]="campoInvalido('idCategoria')" required>
+          <option [ngValue]="null">Selecciona la categoría</option>
+          @for (categoria of categorias(); track categoria.idCategoria) {
+            <option [ngValue]="categoria.idCategoria">{{ categoria.descripcion }}</option>
+          }
+        </select>
+        @if (campoInvalido('idCategoria')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('idCategoria') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="precio" class="required">Precio por noche</label>
+        <input id="precio" name="precio" type="number" min="0.01" step="0.01" [(ngModel)]="precio" [class.error]="campoInvalido('precio')" required />
+        @if (campoInvalido('precio')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('precio') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label class="field-check"><input id="publicada" name="publicada" type="checkbox" [(ngModel)]="publicada" /> Publicada</label>
+      </div>
+
+      <div class="field" style="grid-column: 1 / -1;">
+        <label for="detalle" class="required">Detalle</label>
+        <textarea id="detalle" name="detalle" rows="3" [(ngModel)]="detalle" maxlength="500" [class.error]="campoInvalido('detalle')" required></textarea>
+        <span class="field-help">{{ detalle.length }}/500</span>
+        @if (campoInvalido('detalle')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('detalle') }}</span>
+        }
+      </div>
+
+      <div class="field" style="grid-column: 1 / -1;">
+        <span class="label" id="imagenes-label">Imágenes (máximo 10)</span>
+        <p class="field-help">URL https o /assets/ (máximo 500 caracteres), texto alternativo obligatorio y orden único.</p>
+        @for (imagen of imagenes; track $index) {
+          <div class="image-row">
+            <div>
+              <label class="sr-only" [for]="'imagen-url-' + $index">URL de la imagen {{ $index + 1 }}</label>
+              <input [id]="'imagen-url-' + $index" [name]="'imagenUrl' + $index" [(ngModel)]="imagen.url" maxlength="500" placeholder="https://..." />
+            </div>
+            <div>
+              <label class="sr-only" [for]="'imagen-alt-' + $index">Texto alternativo de la imagen {{ $index + 1 }}</label>
+              <input [id]="'imagen-alt-' + $index" [name]="'imagenAlt' + $index" [(ngModel)]="imagen.alt" maxlength="150" placeholder="Habitación de demostración" />
+            </div>
+            <div>
+              <label class="sr-only" [for]="'imagen-orden-' + $index">Orden de la imagen {{ $index + 1 }}</label>
+              <input [id]="'imagen-orden-' + $index" [name]="'imagenOrden' + $index" type="number" min="0" step="1" [(ngModel)]="imagen.orden" />
+            </div>
+            <button class="btn btn-secondary" type="button" (click)="quitarImagen($index)">Quitar</button>
+          </div>
+        } @empty {
+          <p class="text-small muted">Sin imágenes.</p>
+        }
+        <button class="btn btn-secondary" type="button" [disabled]="imagenes.length >= 10" (click)="agregarImagen()">Agregar imagen</button>
+        @if (campoInvalido('urlsImagenes')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('urlsImagenes') }}</span>
+        }
+      </div>
+
+      <div class="form-actions" style="grid-column: 1 / -1;">
+        @if (esAdmin()) {
+          <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+            @if (guardando()) { <span class="spinner" aria-hidden="true"></span> }
+            {{ esEdicion() ? 'Guardar cambios' : 'Registrar habitación' }}
+          </button>
+        } @else {
+          <span class="text-small muted">Solo lectura: la mutación del catálogo es de ADMIN.</span>
+        }
+        <a class="btn btn-secondary" routerLink="/app/habitaciones">Cancelar</a>
+      </div>
+    </form>
+  </div>
+}

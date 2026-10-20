@@ -131,12 +131,20 @@ export const gatewayInterceptor: HttpInterceptorFn = (req, next) => {
         const delayMs = parseRetryAfter(event.headers.get('Retry-After'));
         return poll202(http, location, nextReq, delayMs);
       }
+      if (isMutating && !isLogin && !isPoll) {
+        // Intención terminada: la próxima mutación a la misma URL es una intención nueva.
+        intentionKeys.delete(requestKey(req));
+      }
       return of(event);
     }),
     catchError((err: HttpErrorResponse) => {
       if (err.status === 401) {
         session.logout();
         router.navigateByUrl('/login', { replaceUrl: true });
+      }
+      // 503/429 se reintentan con la misma clave; el resto abre una intención nueva.
+      if (isMutating && !isLogin && !isPoll && err.status !== 503 && err.status !== 429) {
+        intentionKeys.delete(requestKey(req));
       }
       throw err;
     })

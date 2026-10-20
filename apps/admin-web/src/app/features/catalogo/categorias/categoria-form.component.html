@@ -1,0 +1,58 @@
+@if (cargando()) {
+  <div class="page" role="status" aria-label="Cargando categoría">
+    <div class="skeleton skeleton-row" style="max-width: 420px; height: 36px;"></div>
+    <div class="skeleton skeleton-row" style="max-width: 640px; height: 220px; margin-top: 24px;"></div>
+  </div>
+} @else {
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1>{{ esEdicion() ? 'Editar categoría' : 'Nueva categoría' }}</h1>
+        <p class="sub">La categoría es global; su descripción no se repite.</p>
+      </div>
+      <a class="btn btn-secondary" routerLink="/app/categorias">Volver al listado</a>
+    </div>
+
+    <app-error-banner [error]="error()" [actionLabel]="actionLabel()" (action)="accionError()"></app-error-banner>
+
+    <form class="form-card form-grid two" (ngSubmit)="onSubmit($event)" novalidate>
+      <div class="field">
+        <label for="descripcion" class="required">Descripción</label>
+        <input id="descripcion" name="descripcion" [(ngModel)]="descripcion" maxlength="80" [class.error]="campoInvalido('descripcion')" required />
+        <span class="field-help">{{ descripcion.length }}/80 · única</span>
+        @if (campoInvalido('descripcion')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('descripcion') }}</span>
+        }
+      </div>
+      <div class="field">
+        <label for="capacidad" class="required">Capacidad</label>
+        <input id="capacidad" name="capacidad" type="number" min="1" max="10" [(ngModel)]="capacidad" [class.error]="campoInvalido('capacidad')" required />
+        @if (campoInvalido('capacidad')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('capacidad') }}</span>
+        }
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label for="detalle" class="required">Detalle</label>
+        <textarea id="detalle" name="detalle" rows="4" [(ngModel)]="detalle" maxlength="500" [class.error]="campoInvalido('detalle')" required></textarea>
+        <span class="field-help">{{ detalle.length }}/500</span>
+        @if (campoInvalido('detalle')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('detalle') }}</span>
+        }
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label class="field-check"><input id="estado" name="estado" type="checkbox" [(ngModel)]="estado" /> Activa</label>
+      </div>
+      <div class="form-actions" style="grid-column: 1 / -1;">
+        @if (esAdmin()) {
+          <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+            @if (guardando()) { <span class="spinner" aria-hidden="true"></span> }
+            {{ esEdicion() ? 'Guardar cambios' : 'Registrar categoría' }}
+          </button>
+        } @else {
+          <span class="text-small muted">Solo lectura: la mutación del catálogo es de ADMIN.</span>
+        }
+        <a class="btn btn-secondary" routerLink="/app/categorias">Cancelar</a>
+      </div>
+    </form>
+  </div>
+}

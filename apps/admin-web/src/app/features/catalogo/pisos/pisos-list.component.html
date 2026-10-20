@@ -1,0 +1,89 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Pisos</h1>
+      <p class="sub">Pisos por sede. El selector de sede es un filtro de trabajo.</p>
+    </div>
+    @if (esAdmin()) {
+      <button class="btn btn-primary" type="button" [disabled]="!sedeSeleccionada()" (click)="nuevo()">Nuevo piso</button>
+    }
+  </div>
+
+  <app-error-banner [error]="bajaError()" [actionLabel]="'Entendido'" (action)="cerrarBaja()"></app-error-banner>
+  <app-error-banner [error]="error()" [actionLabel]="'Reintentar'" (action)="accionError()"></app-error-banner>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="sede-pisos">Sede</label>
+      <select id="sede-pisos" [value]="sedeSeleccionada() ?? ''" (change)="cambiarSede($event)">
+        @if (sedes().length === 0) {
+          <option value="">Sin sede asignada</option>
+        }
+        @for (sede of sedes(); track sede.idHotel) {
+          <option [value]="sede.idHotel">{{ sede.nombre }}</option>
+        }
+      </select>
+    </div>
+  </div>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando pisos">
+      @for (fila of [1, 2, 3]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (pisos().length === 0 && !error()) {
+    <div class="empty" role="status">
+      <p>Aún no hay registros</p>
+      @if (esAdmin()) {
+        <button class="btn btn-primary" type="button" (click)="nuevo()">Crear</button>
+      }
+    </div>
+  } @else if (pisos().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Pisos de la sede seleccionada</caption>
+        <thead>
+          <tr>
+            <th scope="col">Descripción</th>
+            <th scope="col">Sede</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (piso of pisos(); track piso.idPiso) {
+            <tr>
+              <td>{{ piso.descripcion }}</td>
+              <td>{{ sedeNombre(piso.idHotel) }}</td>
+              <td><span [class]="'pill ' + (piso.estado ? 'pill-ok' : 'pill-archivado')">{{ piso.estado ? 'Activo' : 'Inactivo' }}</span></td>
+              <td>
+                <div class="row-actions">
+                  @if (esAdmin()) {
+                    <button class="btn btn-secondary" type="button" (click)="editar(piso)">Editar</button>
+                    <button class="btn btn-danger" type="button" (click)="prepararBaja(piso)">Dar de baja</button>
+                  } @else {
+                    <span class="text-small muted">Solo lectura</span>
+                  }
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination [page]="page()" [size]="size()" [total]="total()" (pageChange)="cargar($event)"></app-pagination>
+  }
+</div>
+
+<app-confirm-dialog
+  [open]="baja() !== null"
+  title="Dar de baja"
+  [message]="'El piso ' + (baja()?.descripcion ?? '') + ' quedará inactivo. No se puede dar de baja mientras tenga elementos activos.'"
+  confirmLabel="Dar de baja"
+  [busy]="bajaBusy()"
+  (confirm)="confirmarBaja()"
+  (cancel)="cerrarBaja()"
+></app-confirm-dialog>

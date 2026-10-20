@@ -1,4 +1,4 @@
-import { inject, computed, signal } from '@angular/core';
+import { inject, computed, signal, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { API_BASE_URL, API_PATHS } from '../api.config';
@@ -58,6 +58,7 @@ function homeByRole(rol: Rol): string {
  * Logout borra el token. Rol y sede se leen del JWT solo como UX: el backend
  * revalida en cada petición.
  */
+@Injectable({ providedIn: 'root' })
 export class SessionService {
   private readonly http = inject(HttpClient);
   private readonly router = inject(Router);

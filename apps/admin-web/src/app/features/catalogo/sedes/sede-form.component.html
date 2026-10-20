@@ -1,0 +1,89 @@
+@if (cargando()) {
+  <div class="page" role="status" aria-label="Cargando sede">
+    <div class="skeleton skeleton-row" style="max-width: 420px; height: 36px;"></div>
+    <div class="skeleton skeleton-row" style="max-width: 640px; height: 240px; margin-top: 24px;"></div>
+  </div>
+} @else {
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1>{{ esEdicion() ? 'Editar sede' : 'Nueva sede' }}</h1>
+        <p class="sub">Los campos con asterisco son obligatorios.</p>
+      </div>
+      <a class="btn btn-secondary" routerLink="/app/sedes">Volver al listado</a>
+    </div>
+
+    <app-error-banner [error]="error()" [actionLabel]="actionLabel()" (action)="accionError()"></app-error-banner>
+
+    <form class="form-card form-grid two" (ngSubmit)="onSubmit($event)" novalidate>
+      <div class="field">
+        <label for="slug" class="required">Slug</label>
+        <input id="slug" name="slug" [(ngModel)]="slug" maxlength="80" [class.error]="campoInvalido('slug')" required />
+        <span class="field-help">Solo minúsculas, números y guiones. Estable tras publicar.</span>
+        @if (campoInvalido('slug')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('slug') }}</span>
+        }
+      </div>
+      <div class="field">
+        <label for="nombre" class="required">Nombre</label>
+        <input id="nombre" name="nombre" [(ngModel)]="nombre" maxlength="120" [class.error]="campoInvalido('nombre')" required />
+        @if (campoInvalido('nombre')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('nombre') }}</span>
+        }
+      </div>
+      <div class="field">
+        <label for="direccion" class="required">Dirección</label>
+        <input id="direccion" name="direccion" [(ngModel)]="direccion" maxlength="200" [class.error]="campoInvalido('direccion')" required />
+        @if (campoInvalido('direccion')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('direccion') }}</span>
+        }
+      </div>
+      <div class="field">
+        <label for="ciudad" class="required">Ciudad</label>
+        <input id="ciudad" name="ciudad" [(ngModel)]="ciudad" maxlength="80" [class.error]="campoInvalido('ciudad')" required />
+        @if (campoInvalido('ciudad')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('ciudad') }}</span>
+        }
+      </div>
+      <div class="field">
+        <label for="telefono">Teléfono</label>
+        <input id="telefono" name="telefono" [(ngModel)]="telefono" maxlength="20" [class.error]="campoInvalido('telefono')" />
+        @if (campoInvalido('telefono')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('telefono') }}</span>
+        }
+      </div>
+      <div class="field">
+        <label for="correoContacto" class="required">Correo de contacto</label>
+        <input id="correoContacto" name="correoContacto" type="email" [(ngModel)]="correoContacto" maxlength="254" [class.error]="campoInvalido('correoContacto')" required />
+        @if (campoInvalido('correoContacto')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('correoContacto') }}</span>
+        }
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label for="descripcion">Descripción</label>
+        <textarea id="descripcion" name="descripcion" rows="3" [(ngModel)]="descripcion" maxlength="300" [class.error]="campoInvalido('descripcion')"></textarea>
+        <span class="field-help">{{ descripcion.length }}/300</span>
+        @if (campoInvalido('descripcion')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('descripcion') }}</span>
+        }
+      </div>
+      <div class="field">
+        <label class="field-check"><input name="publicado" type="checkbox" [(ngModel)]="publicado" /> Publicada</label>
+      </div>
+      <div class="field">
+        <label class="field-check"><input name="estado" type="checkbox" [(ngModel)]="estado" /> Activa</label>
+      </div>
+      <div class="form-actions" style="grid-column: 1 / -1;">
+        @if (esAdmin()) {
+          <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+            @if (guardando()) { <span class="spinner" aria-hidden="true"></span> }
+            {{ esEdicion() ? 'Guardar cambios' : 'Registrar sede' }}
+          </button>
+        } @else {
+          <span class="text-small muted">Solo lectura: la mutación del catálogo es de ADMIN.</span>
+        }
+        <a class="btn btn-secondary" routerLink="/app/sedes">Cancelar</a>
+      </div>
+    </form>
+  </div>
+}
