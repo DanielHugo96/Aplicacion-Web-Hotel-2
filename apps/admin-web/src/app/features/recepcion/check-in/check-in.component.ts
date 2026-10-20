@@ -143,9 +143,16 @@ export class CheckInComponent {
     this.errores.update((e) => ({ ...e, idHabitacion: undefined }));
   }
 
-  /** LISTA y libre son requisito del formulario; el backend decide igual. */
+  /**
+   * Solo se bloquean los estados conocidos como no disponibles (ocupada o
+   * físico distinto de LISTA). `DESCONOCIDA` sigue seleccionable y se muestra
+   * «Sin datos»: la admisión final la decide el backend, que responde 409 si el
+   * gate no está sincronizado. Nunca se traduce a libre/disponible.
+   */
   seleccionable(h: Habitacion): boolean {
-    return h.estadoFisico?.codigo === 'LISTA' && h.ocupacion?.estadoEstadia === 'LIBRE';
+    return (
+      h.estadoFisico?.codigo === 'LISTA' && h.ocupacion?.estadoEstadia !== 'OCUPADA'
+    );
   }
 
   textoOcupacion(h: Habitacion): string {
@@ -255,7 +262,13 @@ export class CheckInComponent {
       const apiError = parseApiError(err);
       this.error.set(apiError);
       const campos: ErroresCheckIn = {};
-      if (apiError.fields['idHabitacion']) {
+      // El contrato documenta `idHabitacion` como campo afectado, pero el
+      // servicio real puede devolver `fields` vacío: el mensaje del catálogo
+      // se pinta igual junto al selector.
+      if (
+        ['ROOM_OCCUPIED', 'ROOM_NOT_READY', 'ROOM_NOT_SYNCED'].includes(apiError.code) ||
+        apiError.fields['idHabitacion']
+      ) {
         campos.idHabitacion = apiError.message;
       }
       if (apiError.fields['fechaSalida']) {

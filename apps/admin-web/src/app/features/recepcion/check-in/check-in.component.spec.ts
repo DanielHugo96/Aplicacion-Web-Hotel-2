@@ -149,7 +149,7 @@ describe('CheckInComponent', () => {
     expect(componente.cliente()).toBeNull();
   });
 
-  it('solo lista habitaciones activas y muestra DESCONOCIDA como «Sin datos», nunca libre', async () => {
+  it('muestra DESCONOCIDA como «Sin datos» sin traducirla a libre y deja decidir al backend', async () => {
     await crear([
       habitacion(),
       habitacion({
@@ -166,14 +166,29 @@ describe('CheckInComponent', () => {
     const texto = fixture.nativeElement.textContent as string;
     expect(texto).toContain('Sin datos');
     expect(texto).not.toContain('Disponible');
-    expect(componente.seleccionable(habitacion({
-      idHabitacion: 102,
-      ocupacion: { estadoEstadia: 'DESCONOCIDA', idRecepcion: null, updatedAt: '2026-10-20T12:00:00Z' },
-    }))).toBe(false);
+    const fila102 = Array.from(filas).find((f) => f.textContent?.includes('102'))!;
+    expect(fila102.textContent).not.toContain('Libre');
     const radio102 = (fixture.nativeElement as HTMLElement).querySelector(
       '#habitacion-102'
     ) as HTMLInputElement;
-    expect(radio102.disabled).toBe(true);
+    expect(radio102.disabled).toBe(false);
+
+    // La habitación DESCONOCIDA se puede intentar: el backend responde 409 y el
+    // front pinta el mensaje del catálogo junto al campo.
+    componente.seleccionarCliente(persona());
+    componente.idHabitacion.set(102);
+    const promesa = componente.registrar();
+    http
+      .expectOne(`${API_BASE_URL}/api/recepcion/registrar`)
+      .flush(apiError('ROOM_NOT_SYNCED', { idHabitacion: '102' }, 'cid-sync'), {
+        status: 409,
+        statusText: 'Conflict',
+      });
+    await promesa;
+    fixture.detectChanges();
+    expect(componente.errores().idHabitacion).toBe(
+      'La habitación aún no está sincronizada con recepción.'
+    );
   });
 
   it('sin sede seleccionada pide elegirla y no pide habitaciones', async () => {
@@ -255,7 +270,7 @@ describe('CheckInComponent', () => {
     const promesa = componente.registrar();
     http
       .expectOne(`${API_BASE_URL}/api/recepcion/registrar`)
-      .flush(apiError('ROOM_OCCUPIED', { idHabitacion: '101' }, 'cid-409'), {
+      .flush(apiError('ROOM_OCCUPIED', {}, 'cid-409'), {
         status: 409,
         statusText: 'Conflict',
       });
