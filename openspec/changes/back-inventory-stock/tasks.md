@@ -13,7 +13,7 @@
 ## 3. Catálogo REST e interno
 
 - [x] 3.1 Implementar idempotencia HTTP (`Idempotency-Key`, 409 `IDEMPOTENCY_CONFLICT` ante distinto cuerpo) y versión (`If-Match`, 428 sin header y 412 ante versión distinta, ETag en lecturas); verificar repitiendo un POST con la misma clave y un PUT sin `If-Match` y con versión vieja
-- [ ] 3.2 Implementar el CRUD REST de productos (rutas LEGACY más `POST /api/producto/{id}/sedes`) con baja lógica por sede que conserva cantidad y movimientos; verificar con 201/200, `DUPLICATE_RESOURCE` ante sku repetido y `PRODUCT_INACTIVE` al vender desde sede dada de baja
+- [x] 3.2 Implementar el CRUD REST de productos (rutas LEGACY más `POST /api/producto/{id}/sedes`) con baja lógica por sede que conserva cantidad y movimientos; verificar con 201/200, `DUPLICATE_RESOURCE` ante sku repetido y `PRODUCT_INACTIVE` al vender desde sede dada de baja
 - [x] 3.3 Implementar `POST /api/producto/{id}/ajustes` con lock, motivo y registro en `ajuste_stock`, y `GET /api/producto/{id}/movimientos` con unión VENTA/AJUSTE, filtros e intervalo; verificar con 201 de ajuste, rechazo sin saldo negativo y listado paginado
 - [x] 3.4 Implementar el Feign entrante (`GET /internal/productos`, `GET /internal/productos/{id}`, `POST /internal/stock/descontar`, `GET /internal/stock/movimientos/{idVenta}`) y el saliente (`GET /internal/hoteles/{id}` con scope `hoteles:read`); verificar con token máquina, 404 sin registro de movimiento y validación de sede contra hotel
 
@@ -30,5 +30,5 @@
 ## 6. Concurrencia, casos y cierre
 
 - [x] 6.1 Verificar serialización bajo concurrencia (dos débitos de 15 sobre stock 20, baja y cambio de precio concurrentes con débito); verificar que solo un débito gana, el stock final es 5 y la respuesta conserva el precio usado
-- [ ] 6.2 Ejecutar los casos `SEC05`, `CRUD01`, `STK01`, `STK02` y `STK04` con PostgreSQL y brokers reales y guardar respuestas y consultas como evidencia; verificar cada resultado exigido en la matriz
+- [x] 6.2 Ejecutar los casos `SEC05`, `CRUD01`, `STK01`, `STK02` y `STK04` con PostgreSQL y brokers reales y guardar respuestas y consultas como evidencia; verificar cada resultado exigido en la matriz
 - [x] 6.3 Correr los comandos canónicos de la sección «Verificación» del `README.md` raíz y `python scripts/validar-planes.py`; verificar build y pruebas en verde y 0 errores del validador

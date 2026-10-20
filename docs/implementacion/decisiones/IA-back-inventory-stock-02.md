@@ -68,3 +68,16 @@ Ninguna de las dos cabe en este plan.
   de `reception-service`, `identity-service`, `hotel-service` y `sales-service` a `/internal/**`.
 - El arreglo corresponde a un plan de arreglo o a un PR de plataforma que unifique la audiencia
   (`aud`) entre identity, la allowlist sembrada y los validadores de cada servicio.
+
+## Resolución (2026-10-20)
+
+El plan de arreglo [`back-arreglo-audiencia-maquina`](../../plans/back-arreglo-audiencia-maquina.md)
+(PR #79, ya en `main`) alineó los siete validadores con la spec: aceptan el destino corto que emite
+identity (`aud=hotel`) además del nombre largo. Verificado en esta rama con el token máquina real de
+`inventory-service`: `GET /internal/hoteles/{id}` responde 200 con `aud=hotel` y `scope=hoteles:read`.
+
+Al reejecutar el alta aparecieron dos defectos propios de `inventory-service`, ya corregidos: la
+secuencia de `producto` no se ajustaba tras los seeds con id explícito (migración `V5`) y
+`MachineTokenProvider` exigía el client id completo mientras `HotelClient` pasa el destino corto
+`inventory` (ahora acepta corto y completo y autentica con las credenciales configuradas). Con eso,
+`POST /api/producto/registrar` y `POST /api/producto/{id}/sedes` responden 201.

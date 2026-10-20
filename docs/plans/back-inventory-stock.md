@@ -7,7 +7,7 @@
 | Componente | `inventory-service` |
 | Fase | `F3` |
 | Modo | `openspec` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `back-hotel-catalogo`, `back-plataforma-mensajeria` |
 | Spec | [`inventory/api.md` §REST](../especificacion/microservicios/inventory/api.md#rest), [§Feign entrante](../especificacion/microservicios/inventory/api.md#feign-entrante), [§Kafka](../especificacion/microservicios/inventory/api.md#kafka) y [§Rabbit](../especificacion/microservicios/inventory/api.md#rabbit); [`inventory/base-de-datos.md` §Tablas](../especificacion/microservicios/inventory/base-de-datos.md#tablas), [§Funciones/procedimientos](../especificacion/microservicios/inventory/base-de-datos.md#funcionesprocedimientos), [§DDL de referencia](../especificacion/microservicios/inventory/base-de-datos.md#ddl-de-referencia), [§Esquemas JSONB](../especificacion/microservicios/inventory/base-de-datos.md#esquemas-jsonb), [§Seeds](../especificacion/microservicios/inventory/base-de-datos.md#seeds) y [§Verificación](../especificacion/microservicios/inventory/base-de-datos.md#verificación); [`03-contrato-comun.md` §Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [§Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio), [§Headers](../especificacion/03-contrato-comun.md#headers), [§Respuestas](../especificacion/03-contrato-comun.md#respuestas), [§Límites de campos comunes](../especificacion/03-contrato-comun.md#límites-de-campos-comunes) y [§Persistencia transversal](../especificacion/03-contrato-comun.md#persistencia-transversal); [`04-flujos.md` §2](../especificacion/04-flujos.md#2-venta-y-stock) y [§7](../especificacion/04-flujos.md#7-entrega-duplicados-y-orden); [`05-mensajeria.md` §Envelope de evento Kafka](../especificacion/05-mensajeria.md#envelope-de-evento-kafka), [§Topics y asignación exacta](../especificacion/05-mensajeria.md#topics-y-asignación-exacta), [§Envelope de comando RabbitMQ](../especificacion/05-mensajeria.md#envelope-de-comando-rabbitmq) y [§Reintentos y DLQ Rabbit](../especificacion/05-mensajeria.md#reintentos-y-dlq-rabbit); [`06-migracion-y-pruebas.md` §5](../especificacion/06-migracion-y-pruebas.md#5-matriz-de-aceptación-funcional); [`errors.md` §Inventory y Sales](../contracts/errors.md#inventory-y-sales); schemas [`ProductoStockSnapshot`](../contracts/events/inventory.stock.v1.ProductoStockSnapshot.schema.json), [`MovimientoStockResuelto`](../contracts/events/inventory.movimiento.v1.MovimientoStockResuelto.schema.json) y [`StockRestituir`](../contracts/events/stock.restituir.StockRestituir.v1.schema.json) |
 | Casos | `SEC05`, `CRUD01`, `STK01–STK02`, `STK04` |
@@ -52,7 +52,7 @@ Al cerrar el plan, `inventory-service` es el único dueño del stock: expone pro
 - [x] 3. Migración V1 de `inventory_db` con `producto`, `producto_sede`, `movimiento_venta`, `movimiento_detalle` y `ajuste_stock` según el [DDL de referencia](../especificacion/microservicios/inventory/base-de-datos.md#ddl-de-referencia), con checks de precio, cantidad, umbral, delta y subtotales, unicidades de sku, venta y par venta-producto, e índices por sede y fecha. Verificación: la migración aplica sobre una base vacía; pruebas SQL demuestran que sku duplicado, precio no positivo, cantidad negativa y delta 0 fallan, y que las tablas técnicas (`api_idempotency`, `outbox`, `inbox`) existen.
 - [x] 4. Sembrar los productos 1 `AGUA-500`, 2 `SNACK-01` y 3 `ASEO-01` activos en las sedes 1 a 3 con precios 3.50, 8.00 y 5.00, cantidades 20, 10 y 5, `umbral_bajo` 5 y versión 1 ([§Seeds](../especificacion/microservicios/inventory/base-de-datos.md#seeds)), con bootstrap idempotente de 9 `ProductoStockSnapshot`. Verificación: consultas a `inventory_db` coinciden con la tabla de la spec; reejecutar los seeds no duplica filas ni repone ventas realizadas.
 - [x] 5. Implementar el patrón de idempotencia y de versión del contrato común ([`03` §Respuestas](../especificacion/03-contrato-comun.md#respuestas)): `Idempotency-Key` en POST/PUT/DELETE de negocio (misma clave y cuerpo devuelven el mismo resultado; request distinto 409 `IDEMPOTENCY_CONFLICT`) y `If-Match` en PUT/DELETE con versión de `producto_sede` (sin header 428 `PRECONDITION_REQUIRED`; versión distinta 412 `PRECONDITION_FAILED`), con ETag en lecturas y mutaciones. Verificación: repetir un POST con la misma clave no crea otra fila; PUT sin `If-Match` 428; PUT con la versión anterior 412.
-- [ ] 6. CRUD REST de productos: `GET /api/producto/listar` y `GET /api/producto/buscar/{id}` (A/E con sede), `POST /api/producto/registrar` (A, con asignación inicial y validación de sede por Feign), `PUT /api/producto/actualizar/{id}` (A, V; nunca cantidad; `productoVersion` y V validados juntos en la transacción), `DELETE /api/producto/eliminar/{id}` (A, V; baja solo en la sede, conserva cantidad y movimientos) y `POST /api/producto/{id}/sedes` (A; alta en sede nueva). Verificación: 201/200 con fila persistida y versión incrementada; sku repetido 409 `DUPLICATE_RESOURCE`; DELETE deja `estado=false` y la sede inactiva admite restitución pero rechaza débito con `PRODUCT_INACTIVE`. **(Sin marcar: el alta (`POST /api/producto/registrar`) y `POST /api/producto/{id}/sedes` no se pudieron ejecutar porque `hotel-service` no arranca desde `main`; ver [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md). El resto de la verificación sí se ejecutó.)**
+- [x] 6. CRUD REST de productos: `GET /api/producto/listar` y `GET /api/producto/buscar/{id}` (A/E con sede), `POST /api/producto/registrar` (A, con asignación inicial y validación de sede por Feign), `PUT /api/producto/actualizar/{id}` (A, V; nunca cantidad; `productoVersion` y V validados juntos en la transacción), `DELETE /api/producto/eliminar/{id}` (A, V; baja solo en la sede, conserva cantidad y movimientos) y `POST /api/producto/{id}/sedes` (A; alta en sede nueva). Verificación: 201/200 con fila persistida y versión incrementada; sku repetido 409 `DUPLICATE_RESOURCE`; DELETE deja `estado=false` y la sede inactiva admite restitución pero rechaza débito con `PRODUCT_INACTIVE`. **(Ejecutado: alta 201 con fila persistida e idempotente, edición con versión incrementada, baja lógica, alta en sede nueva 201 y sede inexistente 404.)**
 - [x] 7. Ajustes y movimientos por producto: `POST /api/producto/{id}/ajustes` (A, V; delta distinto de 0, motivo 1..300, lock de stock, saldo nunca negativo, registro en `ajuste_stock`) y `GET /api/producto/{id}/movimientos` (A/E; unión `VENTA` con estado actual o `AJUSTE`; filtros de sede, paginación e intervalo opcional sobre `createdAt`). Verificación: 201 con `ajusteId`, cantidad resultante y versión; un ajuste que dejaría saldo negativo no mueve unidades; el listado muestra el movimiento `DESCONTADO` con su estado actual y ordena por `createdAt`.
 - [x] 8. Feign entrante y saliente: `GET /internal/productos` y `GET /internal/productos/{id}` (scope `stock:read`, siempre con `idHotel`), `POST /internal/stock/descontar` (scope `stock:debit`) y `GET /internal/stock/movimientos/{idVenta}` (scope `stock:read`; 404 sin registro), más `GET /internal/hoteles/{id}` con scope `hoteles:read` al crear asignaciones o activar sedes. Verificación: token máquina con scope correcto 200 con el payload exacto; token humano 403; consulta de venta inexistente 404. **(La llamada saliente `GET /internal/hoteles/{id}` sale con `aud=hotel` y `scope=hoteles:read` como fija el contrato; hotel la rechaza con 401 por el defecto de audiencia descrito en [`IA-back-inventory-stock-02`](../implementacion/decisiones/IA-back-inventory-stock-02.md).)**
 - [x] 9. Descuento atómico con `fn_stock_descontar`: lock del movimiento por `idVenta`, comparación de hash (mismo hash devuelve el resultado guardado aunque cambie el catálogo; otro hash 409), locks de stock en orden de `idProducto`, verificación de activo y cantidad, todo o nada con precios autoritativos y resultado inmutable, e ítems duplicados rechazados con 400 antes de SQL. Verificación: débito válido 200 `DESCONTADO` con total e ítems; venta multítem con una línea insuficiente 409 `STOCK_INSUFFICIENT` con stocks intactos (caso `STK02`); reintento mismo hash mismo resultado.
@@ -60,7 +60,7 @@ Al cerrar el plan, `inventory-service` es el único dueño del stock: expone pro
 - [x] 11. Emisión por outbox de `inventory.stock.v1` (`ProductoStockSnapshot`; key `idHotel:idProducto`; versión de `producto_sede`; estado efectivo) e `inventory.movimiento.v1` (`MovimientoStockResuelto`; key `idVenta`; versión del movimiento), en la misma transacción de cada mutación y decisión, sin adelantar versiones pendientes del mismo agregado. Verificación: cada mutación deja exactamente una fila en outbox por evento; los payloads validan contra sus JSON Schemas; un cambio de precio deja snapshots con versión incrementada por sede.
 - [x] 12. Consumo de `stock.restituir` (payload `idVenta`, `idRecepcion`, `motivo` e `idHotel` del envelope; sin cantidades del emisor) con inbox, efecto sobre el stock y evento de resolución en la misma transacción antes del ack, con reintentos con TTL y DLQ final en `stock.restituir.dlq`. Verificación: comando duplicado aplicado una sola vez; payload inválido permanente termina en la DLQ y el stock no se da por restituido.
 - [x] 13. Concurrencia y serialización: sin `SELECT` de cantidad seguido de `UPDATE` sin lock; baja y cambio de precio concurrentes se serializan con el débito y la respuesta conserva el precio usado ([§Verificación](../especificacion/microservicios/inventory/base-de-datos.md#verificación)). Verificación: 20 unidades y dos débitos simultáneos de 15 con claves distintas — solo uno descuenta y el stock final es 5 con un único movimiento `DESCONTADO` (caso `STK01`); una baja concurrente no vende desde la sede dada de baja.
-- [ ] 14. Casos de aceptación con PostgreSQL y brokers reales sobre DB efímera: `SEC05` (token humano A directo al puerto interno → 403 o 404 sin ruta por Gateway, stock intacto), `CRUD01` en su parte de producto (alta, edición con versión incrementada, DELETE con `estado=false`, PUT sin `If-Match` 428), `STK01`, `STK02` y `STK04` en su parte de inventory (la anulación la emite sales; aquí se verifica lápida, 409 tardío y stock). Verificación: respuestas, `producto_sede.cantidad` y `movimiento_venta` (estado, resultado y versión) guardados como evidencia por caso. **(Sin marcar: el alta de `CRUD01` comparte el mismo bloqueo de `hotel-service`; `SEC05`, `STK01`, `STK02` y `STK04` sí están evidenciados.)**
+- [x] 14. Casos de aceptación con PostgreSQL y brokers reales sobre DB efímera: `SEC05` (token humano A directo al puerto interno → 403 o 404 sin ruta por Gateway, stock intacto), `CRUD01` en su parte de producto (alta, edición con versión incrementada, DELETE con `estado=false`, PUT sin `If-Match` 428), `STK01`, `STK02` y `STK04` en su parte de inventory (la anulación la emite sales; aquí se verifica lápida, 409 tardío y stock). Verificación: respuestas, `producto_sede.cantidad` y `movimiento_venta` (estado, resultado y versión) guardados como evidencia por caso. **(Ejecutado: `SEC05`, `CRUD01` —incluido el alta—, `STK01`, `STK02` y la parte de inventory de `STK04`, todos con PostgreSQL y los brokers reales.)**
 - [x] 15. Cierre: correr los comandos canónicos de la sección «Verificación» del `README.md` raíz (build, pruebas y Compose con PostgreSQL y brokers) y adjuntar al PR la evidencia de los casos; `python scripts/validar-planes.py` desde la raíz. Verificación: build y pruebas en verde; las respuestas y counts de los pasos 6 a 14 quedan adjuntos como evidencia de `SEC05`, `CRUD01`, `STK01–STK02` y `STK04`; 0 errores del validador.
 
 ## 5. Contratos afectados
@@ -95,10 +95,21 @@ Cada caso anota el comando o endpoint exacto, el resultado literal y dónde vive
 
   Además, `SecurityConventionTests` (9 pruebas en `mvn verify`) cubre token máquina **sin** `stock:debit` → 403, que no se puede pedir a identity con los clientes sembrados. Salida: `services/inventory-service/target/surefire-reports/pe.hotel.inventory.platform.SecurityConventionTests.txt` y la sesión de ejecución (mismos `correlationId` que el log del servicio en `/tmp/inventory.log`).
 
-- Caso `CRUD01` (parte de este plan) — evidenciado en edición, versión, baja e idempotencia:
+- Caso `CRUD01` (parte de este plan) — evidenciado en alta, edición, versión, baja e idempotencia:
 
   ```text
-  GET /api/producto/listar?idHotel=1                  -> 200, 3 productos de la sede
+  GET  /internal/hoteles/{id} (token de inventory: aud=hotel, scope=hoteles:read)
+                                                      -> 200 {idHotel:1, nombre, estado:true}
+  POST /api/producto/registrar (ALTA-01, idHotel 1)   -> 201 {idProducto:4, precio:2.00, cantidad:3, version:1, productoVersion:1}
+  POST /api/producto/registrar (misma Idempotency-Key)-> 201 mismo cuerpo y correlationId; una sola fila COMPLETADA
+  consulta: producto id=4 sku=ALTA-01 version=1 ; producto_sede(4,1) precio=2.00 cantidad=3 umbral=1 version=1
+  GET  /api/producto/buscar/{id}?idHotel=1            -> 200, ETag: "1"
+  PUT  /api/producto/actualizar/{id} (If-Match: "1")  -> 200, version 1 -> 2
+  POST /api/producto/{id}/sedes (idHotel 2)           -> 201 {idHotel:2, precio:2.75, cantidad:4, version:1}
+  consulta: producto_sede(4,1) version=2 ; producto_sede(4,2) precio=2.75 cantidad=4 version=1
+  POST /api/producto/{id}/sedes (idHotel 999)         -> 404 RESOURCE_NOT_FOUND; siguen 2 filas de producto_sede
+  outbox: ProductoStockSnapshot key=1:4 v1 y v2 ; key=2:4 v1
+  GET /api/producto/listar?idHotel=1                  -> 200, productos de la sede
   GET /api/producto/buscar/1?idHotel=1                -> 200, ETag: "2"
   PUT /api/producto/actualizar/1 (sin If-Match)       -> 428 PRECONDITION_REQUIRED
   PUT ... (If-Match: "99")                            -> 412 PRECONDITION_FAILED
@@ -117,16 +128,7 @@ Cada caso anota el comando o endpoint exacto, el resultado literal y dónde vive
   GET /api/producto/2/movimientos?idHotel=1          -> 200 AJUSTE delta=5 motivo=...
   ```
 
-  **No ejecutado:** los dos endpoints que validan la sede por Feign responden 503 porque hotel rechaza el token máquina:
-
-  ```text
-  POST /api/producto/registrar                              -> 503 {"error":{"code":"DEPENDENCY_UNAVAILABLE"}}
-  POST /api/producto/{id}/sedes                             -> 503 {"error":{"code":"DEPENDENCY_UNAVAILABLE"}}
-  GET  /internal/hoteles/{id} con el token de identity
-       (aud=hotel, scope=hoteles:read)                      -> 401 {"error":{"code":"UNAUTHENTICATED"}}
-  ```
-
-  El arranque de `hotel-service` ya está resuelto (PR #76), pero valida `aud` contra `spring.application.name` (`hotel-service`) mientras identity emite el destino del contrato (`aud=hotel`). Reproducción exacta en [`IA-back-inventory-stock-02`](../implementacion/decisiones/IA-back-inventory-stock-02.md). No se fabricó el entorno ni se sustituyó el Feign por un stub.
+  Al ejecutar el alta aparecieron y se corrigieron dos defectos propios: la secuencia de `producto` no se ajustaba tras los seeds con id explícito (migración `V5__ajusta_secuencia_producto.sql`; el alta obtiene `id=4` y `StockDbIT.laSecuenciaDeProductoContinuaTrasLosSeedsConIdExplicito` lo cubre) y `MachineTokenProvider` exigía el client id completo mientras `HotelClient` pasa el destino corto `inventory` y autenticaba con él (ahora acepta corto y completo y usa las credenciales configuradas). El bloqueo de audiencia quedó resuelto por `back-arreglo-audiencia-maquina` (PR #79): el mismo token con `aud=hotel` responde 200 en `GET /internal/hoteles/{id}`.
 
 - Caso `STK01` — concurrencia sobre 20 unidades:
 
@@ -187,30 +189,26 @@ Cada caso anota el comando o endpoint exacto, el resultado literal y dónde vive
 
 ## 7. Preguntas abiertas
 
-- **Bloqueo de dependencia (no es una duda de la spec).** `back-arreglo-hotel-arranque` (PR #76) ya
-  resolvió el arranque y el catálogo, pero `hotel-service` sigue rechazando el token máquina de
-  inventory: contra `GET /internal/hoteles/{id}` responde 401 `UNAUTHENTICATED` al token que identity
-  emite con `aud=hotel` y `scope=hoteles:read` (su allowlist sembrada es `{"hotel": ["hoteles:read"]}`),
-  porque el validador de hotel acepta `Set.of("hotel-api", spring.application.name)` y
-  `spring.application.name` vale `hotel-service`. Pedir `audience=hotel-service` a identity devuelve
-  400 `VALIDATION_ERROR` porque ese destino no está en la allowlist del cliente. Sin ese 200,
-  `ProductoService.validarSede` (Feign saliente) responde 503 `DEPENDENCY_UNAVAILABLE` y no se pueden
-  ejecutar el alta ni `POST /api/producto/{id}/sedes`: quedan sin marcar los pasos 6 y 14. Es zona
-  ajena (hotel/identity) y no se toca ni se reconfigura el servicio para esquivarlo. Reproducción y
-  alternativas en [`IA-back-inventory-stock-02`](../implementacion/decisiones/IA-back-inventory-stock-02.md);
-  el bloqueo anterior de arranque queda cerrado por [`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md).
+Ninguna. Los dos bloqueos de dependencia quedaron resueltos en `main` y en esta rama: el de arranque
+por `back-arreglo-hotel-arranque` (PR #76) y el de audiencia máquina por
+`back-arreglo-audiencia-maquina` (PR #79); su traza queda en
+[`IA-back-inventory-stock-01`](../implementacion/decisiones/IA-back-inventory-stock-01.md) y
+[`IA-back-inventory-stock-02`](../implementacion/decisiones/IA-back-inventory-stock-02.md).
+
 - **Resuelto por IA (nivel 1, sin bitácora).** Migraciones numeradas V3/V4 porque V1 (`api_idempotency`)
   y V2 (`outbox`/`inbox`) son de los planes de plataforma (el propio §3 lo prevé); audiencia máquina
   `inventory` (la allowlist sembrada por `back-identity-personas` publica `{"inventory": [...]}` para el
   cliente `sales-service`); `-parameters` en el compilador de `inventory-service` igual que en
-  `hotel-service`; `aggregateId` del snapshot `idHotel:idProducto` como exige su JSON Schema.
+  `hotel-service`; `aggregateId` del snapshot `idHotel:idProducto` como exige su JSON Schema; `V5`
+  ajusta la secuencia de `producto` tras los seeds con id explícito, igual que hacen los seeds de
+  identity.
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación. _(Pendiente: pasos 6 y 14, ver §7.)_
-- [ ] Productos y existencias por sede operativos con ajustes, movimientos, versión/ETag e idempotencia (`CRUD01` en su parte de producto) y rutas internas solo con token máquina (`SEC05`). _(Edición, versión, ETag, baja lógica e idempotencia evidenciados; el alta queda pendiente por el bloqueo de `hotel-service`.)_
+- [x] Todos los pasos marcados con su verificación.
+- [x] Productos y existencias por sede operativos con ajustes, movimientos, versión/ETag e idempotencia (`CRUD01` en su parte de producto) y rutas internas solo con token máquina (`SEC05`). _(Alta, edición, versión, ETag, baja lógica e idempotencia evidenciados.)_
 - [x] Descuento todo o nada y restitución idempotente con lápida verificados bajo concurrencia (`STK01–STK02` y `STK04` en su parte de inventory): sin descuento parcial ni doble devolución.
 - [x] `inventory.stock.v1` e `inventory.movimiento.v1` emitidos por outbox contra los JSON Schemas, con bootstrap idempotente, y `stock.restituir` consumido con inbox y DLQ.
 - [x] Evidencia de la sección 6 adjunta al PR de ejecución y `python scripts/validar-planes.py` sin errores.
-- [ ] El plan pasa a `cerrado` en el último PR del plan ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
-- [ ] Sin preguntas abiertas.
+- [x] El plan pasa a `cerrado` en el último PR del plan ([norma §6.9](README.md#6-contrato-con-la-ejecutora)).
+- [x] Sin preguntas abiertas.
