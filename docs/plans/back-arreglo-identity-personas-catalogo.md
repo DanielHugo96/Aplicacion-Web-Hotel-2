@@ -7,7 +7,7 @@
 | Componente | `identity-service` |
 | Fase | `F2` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-identity-personas` |
 | Repara | `back-identity-personas` |
 | Spec | [`identity/api.md` § REST](../especificacion/microservicios/identity/api.md#rest), [§ DTO de entrada](../especificacion/microservicios/identity/api.md#dto-de-entrada), [`identity/base-de-datos.md` § Tablas](../especificacion/microservicios/identity/base-de-datos.md#tablas), [§ DDL de referencia](../especificacion/microservicios/identity/base-de-datos.md#ddl-de-referencia), [`03-contrato-comun.md` § Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes), [§ Respuestas](../especificacion/03-contrato-comun.md#respuestas), [§ Transporte, notación y tipos](../especificacion/03-contrato-comun.md#transporte-notación-y-tipos), [`identity.yaml`](../contracts/openapi/identity.yaml) y [`errors.md` § Genéricos](../contracts/errors.md) |
