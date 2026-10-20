@@ -14,6 +14,18 @@
 
   <app-error-banner [error]="error()" [actionLabel]="'Reintentar'" (action)="accionError()"></app-error-banner>
 
+  <app-pending-banner
+    [visible]="!!pendiente()"
+    [detalle]="pendiente()?.detalle ?? ''"
+    [actualizadoEn]="pendiente()?.actualizadoEn ?? null"
+  ></app-pending-banner>
+
+  <app-error-banner
+    [error]="operacionError()"
+    [actionLabel]="operationActionLabel()"
+    (action)="accionOperacionError()"
+  ></app-error-banner>
+
   <div class="toolbar">
     <div class="field">
       <label for="sede-habitaciones">Sede</label>
@@ -95,7 +107,42 @@
                 <div class="row-actions">
                   @if (esAdmin()) {
                     <button class="btn btn-secondary" type="button" (click)="editar(habitacion)">Editar</button>
-                  } @else {
+                  }
+                  @if (puedeIniciarMantenimiento(habitacion)) {
+                    <button class="btn btn-secondary" type="button" (click)="abrirMantenimiento(habitacion)">
+                      Iniciar mantenimiento
+                    </button>
+                  }
+                  @if (puedeDarDeBaja(habitacion)) {
+                    <button class="btn btn-danger" type="button" (click)="abrirBaja(habitacion)">Dar de baja</button>
+                  }
+                  @if (puedeCompletarMantenimiento(habitacion)) {
+                    <button
+                      class="btn btn-primary"
+                      type="button"
+                      [disabled]="guardandoOperacion() === habitacion.idHabitacion"
+                      (click)="completarMantenimiento(habitacion)"
+                    >
+                      @if (guardandoOperacion() === habitacion.idHabitacion) {
+                        <span class="spinner" aria-hidden="true"></span>
+                      }
+                      Completar mantenimiento
+                    </button>
+                  }
+                  @if (puedeReactivar(habitacion)) {
+                    <button
+                      class="btn btn-primary"
+                      type="button"
+                      [disabled]="guardandoOperacion() === habitacion.idHabitacion"
+                      (click)="reactivar(habitacion)"
+                    >
+                      @if (guardandoOperacion() === habitacion.idHabitacion) {
+                        <span class="spinner" aria-hidden="true"></span>
+                      }
+                      Reactivar
+                    </button>
+                  }
+                  @if (!esAdmin()) {
                     <span class="text-small muted">Solo lectura</span>
                   }
                 </div>
@@ -167,4 +214,61 @@
       </div>
     </div>
   </div>
+}
+
+@if (dialogo() === 'MANTENIMIENTO' && habitacionOperando(); as h) {
+  <div class="modal-backdrop" (click)="cerrarDialogo()">
+    <div
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="mantenimiento-title"
+      (click)="$event.stopPropagation()"
+    >
+      <h3 id="mantenimiento-title">Iniciar mantenimiento</h3>
+      <p class="modal-message">
+        La habitación {{ h.numero }} quedará bloqueada en recepción mientras dure el mantenimiento.
+        Nadie podrá hacer check-in en ella hasta completarlo.
+      </p>
+
+      <div class="field">
+        <label for="motivo-mantenimiento" class="required">Motivo</label>
+        <textarea
+          id="motivo-mantenimiento"
+          name="motivo"
+          rows="3"
+          maxlength="300"
+          [ngModel]="motivo()"
+          (ngModelChange)="motivo.set($event); motivoError.set(null)"
+          [class.error]="motivoError()"
+          [attr.aria-invalid]="motivoError() ? 'true' : null"
+          aria-describedby="motivo-msg motivo-contador"
+        ></textarea>
+        @if (motivoError()) {
+          <p id="motivo-msg" class="field-msg" role="alert">{{ motivoError() }}</p>
+        }
+        <p id="motivo-contador" class="field-help">{{ motivo().length }}/300 caracteres</p>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" type="button" [disabled]="confirmando()" (click)="cerrarDialogo()">Cancelar</button>
+        <button class="btn btn-primary" type="button" [disabled]="confirmando()" (click)="confirmarMantenimiento()">
+          @if (confirmando()) { <span class="spinner" aria-hidden="true"></span> }
+          {{ confirmando() ? 'Iniciando…' : 'Iniciar mantenimiento' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+@if (dialogo() === 'BAJA') {
+  <app-confirm-dialog
+    [open]="true"
+    title="Dar de baja la habitación"
+    [message]="'La habitación ' + (habitacionOperando()?.numero ?? '') + ' quedará fuera del catálogo activo y bloqueada en recepción. Podrás reactivarla después.'"
+    confirmLabel="Dar de baja"
+    [busy]="confirmando()"
+    (confirm)="confirmarBaja()"
+    (cancel)="cerrarDialogo()"
+  ></app-confirm-dialog>
 }

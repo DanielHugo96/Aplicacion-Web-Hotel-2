@@ -1,25 +1,41 @@
-import { Component, computed, effect, HostListener, inject, signal } from '@angular/core';
+import { Component, computed, effect, HostListener, inject, OnDestroy, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ApiUiError, parseApiError } from '../../../core/api-error';
 import { CatalogoService } from '../../../core/services/catalogo.service';
+import { RecepcionService } from '../../../core/services/recepcion.service';
 import { SedeContextService } from '../../../core/services/sede-context.service';
 import { SessionService } from '../../../core/services/session.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Categoria, EstadoFisico, Habitacion } from '../../../core/models/catalogo.models';
+import {
+  OperacionHabitacion,
+  ResultadoOperacionHabitacion,
+  TipoOperacionHabitacion,
+} from '../../../core/models/recepcion.models';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 import { PaginationComponent } from '../../../ui/pagination/pagination.component';
+import { ConfirmDialogComponent } from '../../../ui/confirm-dialog/confirm-dialog.component';
+import { PendingBannerComponent } from '../../../ui/pending-banner/pending-banner.component';
 import { MoneyPipe } from '../../../core/pipes/money.pipe';
 
 @Component({
   selector: 'app-habitaciones-list',
   standalone: true,
-  imports: [FormsModule, ErrorBannerComponent, PaginationComponent, MoneyPipe],
+  imports: [
+    FormsModule,
+    ErrorBannerComponent,
+    PaginationComponent,
+    ConfirmDialogComponent,
+    PendingBannerComponent,
+    MoneyPipe,
+  ],
   templateUrl: './habitaciones-list.component.html',
   styleUrl: './habitaciones-list.component.css',
 })
-export class HabitacionesListComponent {
+export class HabitacionesListComponent implements OnDestroy {
   private readonly catalogo = inject(CatalogoService);
+  private readonly recepcion = inject(RecepcionService);
   private readonly session = inject(SessionService);
   private readonly router = inject(Router);
   private readonly toast = inject(ToastService);
@@ -45,15 +61,32 @@ export class HabitacionesListComponent {
   readonly etiquetaGuardando = signal(false);
   readonly etiquetaError = signal<ApiUiError | null>(null);
 
+  // Operaciones administrativas de habitación (pasos 11 a 13).
+  readonly operacionError = signal<ApiUiError | null>(null);
+  readonly dialogo = signal<TipoOperacionHabitacion | null>(null);
+  readonly habitacionOperando = signal<Habitacion | null>(null);
+  readonly motivo = signal('');
+  readonly motivoError = signal<string | null>(null);
+  readonly confirmando = signal(false);
+  readonly guardandoOperacion = signal<number | null>(null);
+  readonly pendiente = signal<{
+    tipo: TipoOperacionHabitacion;
+    detalle: string;
+    actualizadoEn: Date | null;
+  } | null>(null);
+  private pollAbort: AbortController | null = null;
+
   constructor() {
     effect(() => {
       const idHotel = this.sedeSeleccionada();
-      if (!idHotel) {
-        this.habitaciones.set([]);
-        this.loading.set(false);
-        return;
-      }
-      void this.cargar(0, idHotel);
+      untracked(() => {
+        if (!idHotel) {
+          this.habitaciones.set([]);
+          this.loading.set(false);
+          return;
+        }
+        void this.cargar(0, idHotel);
+      });
     });
     void this.cargarCategorias();
   }
@@ -208,11 +241,242 @@ export class HabitacionesListComponent {
     }
   }
 
+  // ------------------------------------------------ operaciones (pasos 11-13)
+
+  puedeIniciarMantenimiento(h: Habitacion): boolean {
+    return (
+      this.esAdmin() &&
+      !this.pendiente() &&
+      h.estado &&
+      !h.blockId &&
+      h.estadoFisico?.codigo !== 'MANTENIMIENTO'
+    );
+  }
+
+  puedeDarDeBaja(h: Habitacion): boolean {
+    return this.esAdmin() && !this.pendiente() && h.estado && !h.blockId;
+  }
+
+  puedeCompletarMantenimiento(h: Habitacion): boolean {
+    return (
+      this.esAdmin() &&
+      !this.pendiente() &&
+      !!h.blockId &&
+      h.estadoFisico?.codigo === 'MANTENIMIENTO'
+    );
+  }
+
+  puedeReactivar(h: Habitacion): boolean {
+    return this.esAdmin() && !this.pendiente() && !!h.blockId && !h.estado;
+  }
+
+  abrirMantenimiento(h: Habitacion): void {
+    if (!this.puedeIniciarMantenimiento(h)) return;
+    this.operacionError.set(null);
+    this.habitacionOperando.set(h);
+    this.motivo.set('');
+    this.motivoError.set(null);
+    this.dialogo.set('MANTENIMIENTO');
+  }
+
+  abrirBaja(h: Habitacion): void {
+    if (!this.puedeDarDeBaja(h)) return;
+    this.operacionError.set(null);
+    this.habitacionOperando.set(h);
+    this.motivo.set('');
+    this.motivoError.set(null);
+    this.dialogo.set('BAJA');
+  }
+
+  cerrarDialogo(): void {
+    if (this.confirmando()) return;
+    this.dialogo.set(null);
+    this.habitacionOperando.set(null);
+    this.motivoError.set(null);
+  }
+
+  async confirmarMantenimiento(): Promise<void> {
+    const h = this.habitacionOperando();
+    if (!h || this.confirmando()) return;
+    const motivo = this.motivo().trim();
+    if (!motivo || motivo.length > 300) {
+      this.motivoError.set('Indica el motivo');
+      return;
+    }
+    this.confirmando.set(true);
+    this.operacionError.set(null);
+    try {
+      const res = await this.recepcion.iniciarMantenimiento(h.idHabitacion, motivo, h.version);
+      this.procesarResultado(res, 'MANTENIMIENTO', 'Mantenimiento iniciado');
+    } catch (err) {
+      this.manejarErrorOperacion(err);
+    } finally {
+      this.confirmando.set(false);
+    }
+  }
+
+  async confirmarBaja(): Promise<void> {
+    const h = this.habitacionOperando();
+    if (!h || this.confirmando()) return;
+    this.confirmando.set(true);
+    this.operacionError.set(null);
+    try {
+      const res = await this.recepcion.darDeBaja(h.idHabitacion, h.version);
+      this.procesarResultado(res, 'BAJA', 'Habitación dada de baja');
+    } catch (err) {
+      this.manejarErrorOperacion(err);
+    } finally {
+      this.confirmando.set(false);
+    }
+  }
+
+  async completarMantenimiento(h: Habitacion): Promise<void> {
+    if (!h.blockId || this.guardandoOperacion() !== null) return;
+    this.guardandoOperacion.set(h.idHabitacion);
+    this.operacionError.set(null);
+    try {
+      const res = await this.recepcion.completarMantenimiento(
+        h.idHabitacion,
+        h.blockId,
+        h.version
+      );
+      this.reemplazarFila(res.data);
+      this.toast.show('Mantenimiento completado');
+    } catch (err) {
+      this.manejarErrorOperacion(err);
+    } finally {
+      this.guardandoOperacion.set(null);
+    }
+  }
+
+  async reactivar(h: Habitacion): Promise<void> {
+    if (!h.blockId || this.guardandoOperacion() !== null) return;
+    this.guardandoOperacion.set(h.idHabitacion);
+    this.operacionError.set(null);
+    try {
+      const res = await this.recepcion.reactivar(h.idHabitacion, h.blockId, h.version);
+      this.reemplazarFila(res.data);
+      this.toast.show('Habitación reactivada');
+    } catch (err) {
+      this.manejarErrorOperacion(err);
+    } finally {
+      this.guardandoOperacion.set(null);
+    }
+  }
+
+  operationActionLabel(): string {
+    return this.operacionError()?.relogin ? 'Iniciar sesión de nuevo' : 'Recargar';
+  }
+
+  accionOperacionError(): void {
+    const err = this.operacionError();
+    if (err?.relogin) {
+      this.session.logout();
+      return;
+    }
+    void this.cargar();
+  }
+
+  ngOnDestroy(): void {
+    this.pollAbort?.abort();
+  }
+
+  private procesarResultado(
+    res: ResultadoOperacionHabitacion,
+    tipo: TipoOperacionHabitacion,
+    ok: string
+  ): void {
+    this.dialogo.set(null);
+    this.habitacionOperando.set(null);
+    if (res.kind === 'confirmada') {
+      this.reemplazarFila(res.habitacion);
+      this.toast.show(ok);
+      return;
+    }
+    void this.iniciarPolling(res.location, res.retryAfterMs, tipo);
+  }
+
+  private async iniciarPolling(
+    location: string,
+    retryAfterMs: number,
+    tipo: TipoOperacionHabitacion
+  ): Promise<void> {
+    this.pollAbort?.abort();
+    const controller = new AbortController();
+    this.pollAbort = controller;
+    this.pendiente.set({
+      tipo,
+      detalle:
+        tipo === 'MANTENIMIENTO'
+          ? 'El mantenimiento se está aplicando en la habitación.'
+          : 'La baja de la habitación se está aplicando.',
+      actualizadoEn: null,
+    });
+    try {
+      const fin = await this.recepcion.seguirOperacion(
+        location,
+        retryAfterMs,
+        (avance) =>
+          this.pendiente.update((p) =>
+            p ? { ...p, actualizadoEn: avance.actualizadoEn } : p
+          ),
+        controller.signal
+      );
+      if (!fin || controller.signal.aborted) return;
+      this.pendiente.set(null);
+      if (fin.operacion.estado === 'RECHAZADA') {
+        this.operacionError.set(this.errorDeCodigo('GATE_NOT_AVAILABLE'));
+      } else {
+        this.toast.show(
+          tipo === 'MANTENIMIENTO' ? 'Mantenimiento aplicado' : 'Baja aplicada'
+        );
+      }
+      await this.cargar();
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      this.pendiente.set(null);
+      this.operacionError.set(parseApiError(err));
+      await this.cargar();
+    }
+  }
+
+  private manejarErrorOperacion(err: unknown): void {
+    const apiError = parseApiError(err);
+    this.operacionError.set(apiError);
+    this.dialogo.set(null);
+    this.habitacionOperando.set(null);
+    if (apiError.code === 'PRECONDITION_FAILED' || apiError.code === 'PRECONDITION_REQUIRED') {
+      void this.cargar();
+    }
+  }
+
+  private reemplazarFila(actualizada: Habitacion): void {
+    this.habitaciones.update((lista) =>
+      lista.map((h) => (h.idHabitacion === actualizada.idHabitacion ? actualizada : h))
+    );
+  }
+
+  private errorDeCodigo(code: string): ApiUiError {
+    return parseApiError({
+      error: {
+        message: '',
+        error: { code, fields: {} },
+        meta: { correlationId: '' },
+      },
+    });
+  }
+
   @HostListener('document:keydown', ['$event'])
   onKeydown(event: KeyboardEvent): void {
-    if (this.etiquetasOpen() && event.key === 'Escape') {
+    if (event.key !== 'Escape') return;
+    if (this.etiquetasOpen()) {
       event.preventDefault();
       this.cerrarEtiquetas();
+      return;
+    }
+    if (this.dialogo()) {
+      event.preventDefault();
+      this.cerrarDialogo();
     }
   }
 }

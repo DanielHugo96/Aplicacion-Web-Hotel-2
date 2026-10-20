@@ -256,6 +256,13 @@ label, .label {
   color: var(--color-ok);
 }
 
+.banner-pendiente {
+  background: var(--color-proceso-bg);
+  border: 1px solid var(--color-proceso);
+  border-left: 3px solid var(--color-proceso);
+  color: var(--color-proceso);
+}
+
 .banner-actions {
   margin-left: auto;
   display: flex;
