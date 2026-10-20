@@ -198,15 +198,15 @@ def _recover(ctx: dict[str, Any]) -> None:
 def _rejection() -> None:
     sim = "rb3-operacion"
     token = f.admin_token()
-    f.free_room(202, 2)
-    check, stay = f.checkin(room_id=202, hotel_id=2, cliente=101, adelanto=0.0, token=token)
+    f.free_room(201, 2)
+    check, stay = f.checkin(room_id=201, hotel_id=2, cliente=101, adelanto=0.0, token=token)
     if check.status != 201:
         raise c.RunbookError(f"F6 check-in devolvió {check.status}: {check.body[:400]}")
     id_recepcion = int(stay["idRecepcion"])
     key = str(uuid.uuid4())
-    blocked = f.maintenance(202, "F6 rechazo durable", key=key, token=token)
+    blocked = f.maintenance(201, "F6 rechazo durable", key=key, token=token)
     block_id = ""
-    rows = c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion where id_habitacion=202 order by block_id desc limit 1")
+    rows = c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion where id_habitacion=201 order by block_id desc limit 1")
     if rows:
         block_id = rows[0][0]
     rechazo = {
@@ -216,15 +216,15 @@ def _rejection() -> None:
         "bloqueo": _bloqueo(block_id) if block_id else {},
     }
 
-    out = f.checkout(id_recepcion=id_recepcion, room_id=202, monto=120.0, token=token)
+    out = f.checkout(id_recepcion=id_recepcion, room_id=201, monto=80.0, token=token)
     if out.status != 200:
         raise c.RunbookError(f"cierre F6 devolvió {out.status}: {out.body[:400]}")
-    f.free_room(202, 2)
-    same = f.maintenance(202, "F6 rechazo durable", key=key, token=token)
-    ops = c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion where id_habitacion=202")
+    f.free_room(201, 2)
+    same = f.maintenance(201, "F6 rechazo durable", key=key, token=token)
+    ops = c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion where id_habitacion=201")
     new_key = str(uuid.uuid4())
-    nueva = f.maintenance(202, "Nueva intención F6", key=new_key, token=token)
-    new_ops = c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion where id_habitacion=202")
+    nueva = f.maintenance(201, "Nueva intención F6", key=new_key, token=token)
+    new_ops = c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion where id_habitacion=201")
     c.write_json(
         sim,
         "05-f6-rechazo-durable.json",
@@ -236,8 +236,8 @@ def _rejection() -> None:
             "operacionesTrasReintento": ops,
             "nuevaIntencion": {"status": nueva.status, "body": nueva.json},
             "operacionesTrasNueva": new_ops,
-            "gate": _gate(202),
-            "fisico": _fisico(202),
+            "gate": _gate(201),
+            "fisico": _fisico(201),
         },
     )
     if rechazo["status"] != 409 or same.status != 409 or nueva.status != 200:
