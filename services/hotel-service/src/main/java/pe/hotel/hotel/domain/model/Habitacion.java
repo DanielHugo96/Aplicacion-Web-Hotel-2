@@ -6,7 +6,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinColumns;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
@@ -33,10 +32,7 @@ public class Habitacion {
   private Categoria categoria;
 
   @ManyToOne(optional = false)
-  @JoinColumns({
-    @JoinColumn(name = "id_piso", referencedColumnName = "id", insertable = false, updatable = false),
-    @JoinColumn(name = "id_hotel", referencedColumnName = "id_hotel", insertable = false, updatable = false)
-  })
+  @JoinColumn(name = "id_piso", referencedColumnName = "id", insertable = false, updatable = false)
   private Piso piso;
 
   @Column(name = "numero", nullable = false, length = 10)

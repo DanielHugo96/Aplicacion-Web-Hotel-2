@@ -50,7 +50,7 @@ public class Hotel {
   @Column(name = "version", nullable = false)
   private Long version = 1L;
 
-  @Column(name = "created_at", nullable = false)
+  @Column(name = "created_at", nullable = false, insertable = false, updatable = false)
   private OffsetDateTime createdAt;
 
   public Hotel() {}

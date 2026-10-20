@@ -13,6 +13,8 @@ import pe.hotel.hotel.domain.model.Categoria;
 import pe.hotel.hotel.domain.repository.CategoriaRepository;
 import pe.hotel.hotel.domain.repository.HabitacionRepository;
 import pe.hotel.hotel.domain.security.CurrentUser;
+import pe.hotel.hotel.platform.ApiException;
+import pe.hotel.hotel.platform.ErrorCode;
 import static org.springframework.http.HttpStatus.*;
 
 /** Casos de uso de categorías globales. */
@@ -46,7 +48,7 @@ public class CategoriaService {
   @Transactional
   public CategoriaView registrar(CategoriaInput input) {
     if (repository.existsByDescripcion(input.descripcion())) {
-      throw new ResponseStatusException(CONFLICT, "descripcion duplicada");
+      throw new ApiException(ErrorCode.DUPLICATE_RESOURCE);
     }
     Categoria categoria = new Categoria(input.descripcion(), input.detalle(), input.capacidad());
     categoria.setEstado(input.estado());
@@ -67,11 +69,11 @@ public class CategoriaService {
     }
     if (Boolean.FALSE.equals(input.estado())
         && habitacionRepository.countByIdCategoriaEstadoTrue(categoria.getId())) {
-      throw new ResponseStatusException(CONFLICT, "aún tiene habitaciones activas");
+      throw new ApiException(ErrorCode.ACTIVE_DEPENDENCIES);
     }
     if (!input.descripcion().equals(categoria.getDescripcion())
         && repository.existsByDescripcion(input.descripcion())) {
-      throw new ResponseStatusException(CONFLICT, "descripcion duplicada");
+      throw new ApiException(ErrorCode.DUPLICATE_RESOURCE);
     }
     categoria.setDescripcion(input.descripcion());
     categoria.setDetalle(input.detalle());
@@ -98,7 +100,7 @@ public class CategoriaService {
       throw new ResponseStatusException(PRECONDITION_FAILED, "version distinta a la vigente");
     }
     if (habitacionRepository.countByIdCategoriaEstadoTrue(categoria.getId())) {
-      throw new ResponseStatusException(CONFLICT, "aún tiene habitaciones activas");
+      throw new ApiException(ErrorCode.ACTIVE_DEPENDENCIES);
     }
     categoria.setEstado(false);
     try {

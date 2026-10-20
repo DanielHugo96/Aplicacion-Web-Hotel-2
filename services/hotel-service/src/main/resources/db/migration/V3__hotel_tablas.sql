@@ -107,13 +107,13 @@ RETURNS TABLE (
        FROM imagen_habitacion i
        JOIN habitacion h2 ON h2.id = i.id_habitacion
        WHERE h2.id_hotel = h.id AND h2.id_categoria = c.id
-         AND h2.estado AND h2.publica
+         AND h2.estado AND h2.publicada
        LIMIT 10),
       '[]'::jsonb) AS imagenes
   FROM hotel h
   JOIN categoria c ON true
   JOIN habitacion hab ON hab.id_hotel = h.id AND hab.id_categoria = c.id
-    AND hab.estado AND hab.publica AND hab.id_estado_habitacion = 1
+    AND hab.estado AND hab.publicada AND hab.id_estado_habitacion = 1
   WHERE h.estado AND h.publicado
     AND (p_slug IS NULL OR h.slug = p_slug)
     AND (p_categoria IS NULL OR c.id = p_categoria)

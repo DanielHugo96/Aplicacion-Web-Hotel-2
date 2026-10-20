@@ -15,6 +15,8 @@ import pe.hotel.hotel.domain.repository.HabitacionRepository;
 import pe.hotel.hotel.domain.repository.HotelRepository;
 import pe.hotel.hotel.domain.repository.PisoRepository;
 import pe.hotel.hotel.domain.security.CurrentUser;
+import pe.hotel.hotel.platform.ApiException;
+import pe.hotel.hotel.platform.ErrorCode;
 import static org.springframework.http.HttpStatus.*;
 
 /** Casos de uso de pisos por sede. */
@@ -62,7 +64,7 @@ public class PisoService {
     }
     Hotel hotel = requerirSede(input.idHotel());
     if (repository.findByHotelIdAndDescripcion(input.idHotel(), input.descripcion()).isPresent()) {
-      throw new ResponseStatusException(CONFLICT, "descripcion duplicada en la sede");
+      throw new ApiException(ErrorCode.DUPLICATE_RESOURCE);
     }
     Piso piso = new Piso(hotel, input.descripcion());
     piso.setEstado(input.estado() == null ? true : input.estado());
@@ -86,11 +88,11 @@ public class PisoService {
     }
     if (Boolean.FALSE.equals(input.estado())
         && habitacionRepository.countByIdHotelAndEstadoTrue(piso.getIdHotel()) > 0) {
-      throw new ResponseStatusException(CONFLICT, "aún tiene habitaciones activas");
+      throw new ApiException(ErrorCode.ACTIVE_DEPENDENCIES);
     }
     if (!input.descripcion().equals(piso.getDescripcion())
         && repository.findByHotelIdAndDescripcion(input.idHotel(), input.descripcion()).isPresent()) {
-      throw new ResponseStatusException(CONFLICT, "descripcion duplicada en la sede");
+      throw new ApiException(ErrorCode.DUPLICATE_RESOURCE);
     }
     piso.setDescripcion(input.descripcion());
     piso.setEstado(input.estado());
@@ -115,7 +117,7 @@ public class PisoService {
       throw new ResponseStatusException(PRECONDITION_FAILED, "version distinta a la vigente");
     }
     if (habitacionRepository.existsActiveByIdPisoAndIdHotel(piso.getId(), piso.getIdHotel())) {
-      throw new ResponseStatusException(CONFLICT, "aún tiene habitaciones activas");
+      throw new ApiException(ErrorCode.ACTIVE_DEPENDENCIES);
     }
     piso.setEstado(false);
     try {

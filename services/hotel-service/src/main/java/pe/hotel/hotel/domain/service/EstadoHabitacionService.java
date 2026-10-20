@@ -9,6 +9,8 @@ import org.springframework.web.server.ResponseStatusException;
 import pe.hotel.hotel.domain.dto.EstadoFisicoView;
 import pe.hotel.hotel.domain.model.EstadoHabitacion;
 import pe.hotel.hotel.domain.repository.EstadoHabitacionRepository;
+import pe.hotel.hotel.platform.ApiException;
+import pe.hotel.hotel.platform.ErrorCode;
 import static org.springframework.http.HttpStatus.*;
 
 /** Catalogo fijo de estados fisicos: solo lectura de etiqueta; alta/baja retiradas (409). */
@@ -51,11 +53,11 @@ public class EstadoHabitacionService {
   }
 
   public void registrar() {
-    throw new ResponseStatusException(CONFLICT, "los estados fisicos del sistema no se crean");
+    throw new ApiException(ErrorCode.FIXED_STATE_CATALOG);
   }
 
   public void eliminar(Integer id) {
-    throw new ResponseStatusException(CONFLICT, "los estados fisicos del sistema no se eliminan");
+    throw new ApiException(ErrorCode.FIXED_STATE_CATALOG);
   }
 
   private EstadoHabitacion requerirEstado(Integer id) {
