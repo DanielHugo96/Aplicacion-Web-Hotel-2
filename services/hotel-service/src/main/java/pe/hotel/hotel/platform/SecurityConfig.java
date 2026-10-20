@@ -130,7 +130,9 @@ public class SecurityConfig {
         serviceName.endsWith("-service")
             ? serviceName.substring(0, serviceName.length() - "-service".length())
             : serviceName;
-    Set<String> audiences = new HashSet<>(Set.of(HUMAN_AUDIENCE, serviceName));
+    Set<String> audiences = new HashSet<>();
+    audiences.add(HUMAN_AUDIENCE);
+    audiences.add(serviceName);
     audiences.add(destino);
     return new DelegatingOAuth2TokenValidator<>(
         JwtValidators.createDefaultWithIssuer(issuer),
