@@ -7,7 +7,7 @@
 | Componente | `services/*-service` |
 | Fase | `F1` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-plataforma-comunes` |
 | Repara | `back-plataforma-comunes` |
 | Spec | [`03-contrato-comun.md` § Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio), [`identity/api.md` § REST](../especificacion/microservicios/identity/api.md#rest), [`hotel/api.md` § Feign interno](../especificacion/microservicios/hotel/api.md#feign-interno), [`configuracion.md` § Por servicio](../especificacion/infraestructura/configuracion.md#por-servicio) y [`06-migracion-y-pruebas.md` §5](../especificacion/06-migracion-y-pruebas.md#5-matriz-de-aceptación) |
