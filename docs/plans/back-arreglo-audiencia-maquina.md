@@ -132,7 +132,7 @@ La corrección es una sola: añadir el destino corto al conjunto de audiencias a
 grep -R "Set.of(HUMAN_AUDIENCE, serviceName)" services/*/src/main/java
 # sin coincidencias
 ```
-- [ ] 6. Actualizar las siete clases `JwtValidatorTests` para cubrir: `hotel-api` aceptado, destino corto aceptado, nombre largo aceptado (compatibilidad), `otro-servicio` rechazado e issuer distinto rechazado. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl identity-service,hotel-service,reception-service,inventory-service,sales-service,reporting-service,notification-service test` termina en `BUILD SUCCESS`.
+- [x] 6. Actualizar las siete clases `JwtValidatorTests` para cubrir: `hotel-api` aceptado, destino corto aceptado, nombre largo aceptado (compatibilidad), `otro-servicio` rechazado e issuer distinto rechazado. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl identity-service,hotel-service,reception-service,inventory-service,sales-service,reporting-service,notification-service test` termina en `BUILD SUCCESS`.
 - [ ] 7. Ejecutar el build completo: `bash scripts/mvn.sh -f services/pom.xml verify`. Verificación: `BUILD SUCCESS` de los nueve módulos.
 - [ ] 8. Repetir la reproducción: token de `inventory-service` con `audience=hotel` → `GET /internal/hoteles/{id}` responde 200; token de `identity-service` con `audience=hotel` → 200; token de `reception-service` con `audience=identity` → `GET /internal/clientes/{id}` responde 200. Verificación: códigos HTTP y cuerpos guardados en la evidencia.
 - [ ] 9. Comprobar que no se relaja la seguridad: `audience=hotel-service` sigue devolviendo 400 en identity (la allowlist no cambia) y un token con `aud` ajena sigue devolviendo 401 en hotel e identity, incluido el caso `SEC06`. Verificación: respuestas 400/401 guardadas y `JwtValidatorTests` en verde.
@@ -182,6 +182,31 @@ HTTP 401
 
 Salida completa guardada en `/tmp/repro-before.txt` de la sesión de ejecución; reproducida
 literalmente arriba.
+
+### Pruebas unitarias de los siete validadores (paso 6)
+
+```text
+$ bash scripts/mvn.sh -f services/pom.xml -pl identity-service,hotel-service,reception-service,inventory-service,sales-service,reporting-service,notification-service test
+...
+[INFO] Reactor Summary for identity-service 0.0.1-SNAPSHOT:
+[INFO] identity-service ................................... SUCCESS [ 34.485 s]
+[INFO] hotel-service ...................................... SUCCESS [  9.288 s]
+[INFO] reception-service .................................. SUCCESS [  7.984 s]
+[INFO] inventory-service .................................. SUCCESS [  7.639 s]
+[INFO] sales-service ...................................... SUCCESS [  7.518 s]
+[INFO] reporting-service .................................. SUCCESS [  6.549 s]
+[INFO] notification-service ............................... SUCCESS [ 13.630 s]
+[INFO] BUILD SUCCESS
+
+# JwtValidatorTests de cada módulo (5 casos: hotel-api, destino corto, nombre largo, otro-servicio, issuer distinto)
+identity        Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+hotel           Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+reception       Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+inventory       Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+sales           Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+reporting       Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+notification    Tests run: 5, Failures: 0, Errors: 0, Skipped: 0
+```
 
 - **Reproducción antes del arreglo:** los comandos de §3; resultado esperado `401 UNAUTHENTICATED` en hotel e identity y `400 VALIDATION_ERROR` al pedir `audience=hotel-service`. Evidencia: salidas literales en esta sección y en la bitácora.
 - **Reproducción después del arreglo:** mismos comandos; resultado esperado `200` en `GET /internal/hoteles/{id}` con `aud=hotel`, `200` en `GET /internal/clientes/{id}` con `aud=identity`, y `400`/`401` en los controles negativos. Evidencia: códigos y cuerpos guardados por la ejecutora.
