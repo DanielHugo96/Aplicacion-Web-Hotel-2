@@ -81,9 +81,19 @@ export function mapHttpError(error: unknown): UiError {
     return fromBody(body, error);
   }
 
-  const fallback = CATALOG['INTERNAL_ERROR'];
+  const byStatus: Record<number, string> = {
+    400: 'VALIDATION_ERROR',
+    401: 'UNAUTHENTICATED',
+    403: 'FORBIDDEN',
+    404: 'RESOURCE_NOT_FOUND',
+    429: 'RATE_LIMITED',
+    503: 'DEPENDENCY_UNAVAILABLE',
+    500: 'INTERNAL_ERROR',
+  };
+  const code = byStatus[error.status] ?? 'INTERNAL_ERROR';
+  const fallback = CATALOG[code] ?? CATALOG['INTERNAL_ERROR'];
   return {
-    code: 'INTERNAL_ERROR',
+    code,
     message: fallback.message,
     action: fallback.action,
     correlationId: error.headers.get('X-Correlation-Id') ?? '',

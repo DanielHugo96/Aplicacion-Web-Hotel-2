@@ -1,0 +1,224 @@
+.migas {
+  margin-bottom: var(--space-6);
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.cabecera-sede {
+  padding-bottom: var(--space-8);
+  border-bottom: 1px solid var(--color-junta);
+}
+
+.cabecera-sede__ciudad {
+  margin-bottom: var(--space-2);
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.cabecera-sede h1 {
+  max-width: 24ch;
+}
+
+.datos-sede {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  margin: var(--space-6) 0 0;
+}
+
+.datos-sede div {
+  min-width: 180px;
+}
+
+.datos-sede dt {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.datos-sede dd {
+  margin: var(--space-1) 0 0;
+}
+
+.cabecera-seccion {
+  margin-bottom: var(--space-6);
+}
+
+.filtro {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
+  padding: var(--space-4);
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: var(--color-sillar-piedra);
+}
+
+.filtro__campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-width: 240px;
+}
+
+.filtro label {
+  font-size: var(--text-ui);
+  font-weight: 500;
+}
+
+.filtro input {
+  min-height: 48px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-control);
+  background: var(--color-sillar-blanco);
+  color: var(--color-tinta);
+  font: inherit;
+}
+
+.filtro input[aria-invalid='true'] {
+  border-color: var(--color-error);
+  box-shadow: 0 0 0 3px var(--color-error-bg);
+}
+
+.filtro__ayuda {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.filtro__error {
+  color: var(--color-error);
+  font-size: var(--text-small);
+  font-weight: 500;
+}
+
+.filtro__acciones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-6);
+}
+
+.rejilla-categorias {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tarjeta-categoria {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: var(--color-sillar-blanco);
+}
+
+.tarjeta-categoria__imagen {
+  aspect-ratio: 4 / 3;
+}
+
+.tarjeta-categoria__cuerpo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-6);
+}
+
+.tarjeta-categoria__capacidad {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.tarjeta-categoria__detalle {
+  color: var(--color-garua);
+}
+
+.tarifa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-junta);
+}
+
+.tarifa__importe {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.tarifa__aviso {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.tarjeta-categoria__enlace {
+  margin-top: auto;
+  padding-top: var(--space-3);
+  font-size: var(--text-ui);
+}
+
+.vacio {
+  padding: var(--space-8);
+  border: 1px dashed var(--color-junta);
+  border-radius: var(--radius-card);
+  color: var(--color-garua);
+  text-align: center;
+}
+
+.paginacion {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  border-top: 1px solid var(--color-junta);
+}
+
+.paginacion__estado {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+
+.paginacion .boton {
+  min-height: 44px;
+}
+
+.paginacion .boton:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.titulo-skeleton {
+  width: 60%;
+  height: 48px;
+}
+
+.linea-skeleton {
+  height: 18px;
+  margin-top: var(--space-4);
+}
+
+.linea-skeleton--corta {
+  width: 40%;
+}
+
+@media (min-width: 768px) {
+  .rejilla-categorias {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .rejilla-categorias {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}

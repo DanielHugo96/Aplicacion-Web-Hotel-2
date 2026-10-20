@@ -1,0 +1,158 @@
+<div class="contenedor pagina">
+  <p class="migas"><a routerLink="/sedes">Sedes</a> / Detalle de sede</p>
+
+  @if (errorHotel(); as fallo) {
+    <app-error-state
+      [error]="fallo"
+      backLink="/sedes"
+      backLinkLabel="Volver al listado de sedes"
+      (reintentar)="cargarHotel()"
+    />
+  } @else if (cargandoHotel()) {
+    <div aria-busy="true" aria-label="Cargando la sede">
+      <div class="skeleton titulo-skeleton"></div>
+      <div class="skeleton linea-skeleton"></div>
+      <div class="skeleton linea-skeleton linea-skeleton--corta"></div>
+    </div>
+  } @else if (hotel(); as sede) {
+    <header class="cabecera-sede">
+      <p class="cabecera-sede__ciudad">{{ sede.ciudad }}</p>
+      <h1>{{ sede.nombre }}</h1>
+      <p class="entradilla">{{ sede.descripcion }}</p>
+      <dl class="datos-sede">
+        <div>
+          <dt>Dirección</dt>
+          <dd>{{ sede.direccion }}</dd>
+        </div>
+        <div>
+          <dt>Ciudad</dt>
+          <dd>{{ sede.ciudad }}</dd>
+        </div>
+      </dl>
+    </header>
+
+    <section class="seccion" aria-labelledby="categorias-titulo">
+      <div class="cabecera-seccion">
+        <h2 id="categorias-titulo">Tipos de habitación</h2>
+        <p class="entradilla">
+          Solo se muestran categorías con habitaciones publicadas en esta sede.
+        </p>
+      </div>
+
+      <form class="filtro" (submit)="aplicarFiltro($event)" novalidate>
+        <div class="filtro__campo">
+          <label for="capacidad">Capacidad</label>
+          <input
+            id="capacidad"
+            name="capacidad"
+            type="number"
+            inputmode="numeric"
+            min="1"
+            max="10"
+            step="1"
+            [value]="capacidadTexto()"
+            (input)="capacidadTexto.set($any($event.target).value)"
+            [attr.aria-invalid]="errorCapacidad() ? 'true' : 'false'"
+            aria-describedby="capacidad-ayuda capacidad-error"
+          />
+          <p id="capacidad-ayuda" class="filtro__ayuda">
+            Opcional, de 1 a 10 personas.
+          </p>
+          @if (errorCapacidad(); as fallo) {
+            <p id="capacidad-error" class="filtro__error" role="alert">
+              {{ fallo.message }} {{ fallo.fields['capacidad'] }}
+            </p>
+          }
+        </div>
+        <div class="filtro__acciones">
+          <button type="submit" class="boton">Filtrar</button>
+          <button
+            type="button"
+            class="boton boton--secundario"
+            (click)="limpiarFiltro()"
+          >
+            Quitar filtro
+          </button>
+        </div>
+      </form>
+
+      @if (errorCategorias(); as fallo) {
+        <app-error-state [error]="fallo" (reintentar)="cargarCategorias(pagina())" />
+      }
+
+      @if (cargandoCategorias()) {
+        <div class="rejilla-categorias" aria-busy="true" aria-label="Cargando categorías">
+          @for (item of [1, 2]; track item) {
+            <div class="tarjeta-categoria skeleton" aria-hidden="true"></div>
+          }
+        </div>
+      } @else if (!errorCategorias()) {
+        @if (categorias().length === 0) {
+          <p class="vacio">El catálogo está vacío para este filtro.</p>
+        } @else {
+          <ul class="rejilla-categorias" role="list">
+            @for (categoria of categorias(); track categoria.idCategoria) {
+              <li class="tarjeta-categoria">
+                <app-demo-image
+                  class="tarjeta-categoria__imagen"
+                  [src]="imagenPrincipal(categoria)"
+                  [alt]="altPrincipal(categoria)"
+                />
+                <div class="tarjeta-categoria__cuerpo">
+                  <h3>{{ categoria.descripcion }}</h3>
+                  <p class="tarjeta-categoria__capacidad">
+                    {{ personas(categoria.capacidad) }}
+                  </p>
+                  <p class="tarjeta-categoria__detalle">{{ categoria.detalle }}</p>
+                  <p class="tarifa">
+                    <span class="tarifa__importe">
+                      Desde
+                      {{ categoria.precioDesde | currency: 'PEN' : 'symbol-narrow' : '1.2-2' }}
+                      por noche.
+                    </span>
+                    <span class="tarifa__aviso">
+                      Consulta disponibilidad con recepción. No constituye una
+                      reserva.
+                    </span>
+                  </p>
+                  <a
+                    class="tarjeta-categoria__enlace"
+                    [routerLink]="['/sedes', sede.slug, 'habitaciones', categoria.idCategoria]"
+                    [attr.aria-label]="'Ver ' + categoria.descripcion + ' en ' + sede.nombre"
+                  >
+                    Ver tipo de habitación
+                  </a>
+                </div>
+              </li>
+            }
+          </ul>
+        }
+      }
+
+      @if (meta(); as paginacion) {
+        <nav class="paginacion" aria-label="Paginación de categorías">
+          <button
+            type="button"
+            class="boton boton--secundario"
+            [disabled]="pagina() === 0"
+            (click)="anterior()"
+          >
+            Anterior
+          </button>
+          <p class="paginacion__estado">
+            Página {{ pagina() + 1 }} de {{ paginas() }} ·
+            {{ paginacion.totalElements }} registros
+          </p>
+          <button
+            type="button"
+            class="boton boton--secundario"
+            [disabled]="pagina() + 1 >= paginas()"
+            (click)="siguiente()"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
+    </section>
+  }
+</div>
