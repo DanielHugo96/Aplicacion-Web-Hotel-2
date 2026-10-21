@@ -85,7 +85,7 @@ Se envió el cuerpo cerrado del contrato `{"idHotel":1,"delta":2,"motivo":"Repro
 
 ## 4. Pasos
 
-- [ ] 1. Reproducir los dos fallos desde `main` con el JWT de ADMIN y el Gateway: crear un producto, darlo de baja con `DELETE /api/producto/eliminar/{id}?idHotel=1`, listar con `estado=false`, `estado=true` y sin `estado`; y enviar `POST /api/producto/{id}/ajustes` solo con el cuerpo del contrato. Verificación: `estado=false` devuelve 0 filas, el producto solo aparece sin filtro, y el ajuste sin query responde `500 INTERNAL_ERROR` mientras con `?idHotel=1` responde `201`.
+- [x] 1. Reproducir los dos fallos desde `main` con el JWT de ADMIN y el Gateway: crear un producto, darlo de baja con `DELETE /api/producto/eliminar/{id}?idHotel=1`, listar con `estado=false`, `estado=true` y sin `estado`; y enviar `POST /api/producto/{id}/ajustes` solo con el cuerpo del contrato. Verificación: `estado=false` devuelve 0 filas, el producto solo aparece sin filtro, y el ajuste sin query responde `500 INTERNAL_ERROR` mientras con `?idHotel=1` responde `201`.
 - [ ] 2. Añadir pruebas de regresión que fallan en `main`: `ProductoService.listar` con `estado=false` devuelve la fila de `producto_sede.estado=false`; con `estado=true` no la devuelve; sin `estado` devuelve las dos con su estado efectivo; y `ProductoController.ajustar` responde `201` con el cuerpo del contrato y sin query. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test` falla en esas pruebas antes del cambio.
 - [ ] 3. Corregir `ProductoService.listar`: cuando `estado` no es nulo, filtrar solo por `producto_sede.estado` (`AND ps.estado = ?`), manteniendo el `JOIN`, el orden por id ascendente y el `estado` devuelto como `ps_estado && estado`. No cambiar el comportamiento sin `estado` (sin filtro) ni añadir paginación. Verificación: la prueba de `estado=false` devuelve el producto 9 con `estado=false`; `estado=true` devuelve solo los activos; sin `estado` devuelve ambos.
 - [ ] 4. Corregir `ProductoController.ajustar`: retirar `@RequestParam Integer idHotel`; usar `request.idHotel()` para `verificarSede(...)` y para el servicio. Mantener `@Valid`, `If-Match` obligatorio, `Idempotency-Key`, y las respuestas `201`/`400`/`403`/`404`/`412`/`428`. Verificación: una petición solo con `{"idHotel":1,"delta":2,"motivo":"..."}` y `If-Match` responde `201`; sin `If-Match` sigue en `428`; con versión vieja, `412`; con `idHotel` ausente del cuerpo, `400 VALIDATION_ERROR` y no `500`.
@@ -111,6 +111,42 @@ Se envió el cuerpo cerrado del contrato `{"idHotel":1,"delta":2,"motivo":"Repro
 
 Ejecutada el 2026-10-20 sobre `main` (`803a9f1`), con `inventory-service` en `8084` y el JWT de `admin@hotel.test`. Salida literal de §3: el producto 9 se crea (`201`), se da de baja (`200`, `estado=false`, `version=2`), `GET /api/producto/listar?idHotel=1&estado=false&page=0&size=20` devuelve `{"data":[],...}` con 0 filas, `estado=true` devuelve 8 filas sin el producto 9, y sin `estado` devuelve 9 filas con el producto 9. `POST /api/producto/{id}/ajustes` solo con el cuerpo responde `500 INTERNAL_ERROR`; con `?idHotel=1` responde `201` con `{ajusteId,cantidad:5,version:3}`. Evidencia: esta salida y la transcripción del front; sin tokens.
 
+### Reproducción repetida por la ejecutora (antes del arreglo)
+
+Repetida el 2026-10-21 sobre la rama `back-arreglo-inventory-baja-y-ajuste` (sin cambios de código todavía: el árbol es el de `main`), contra el Gateway `http://localhost:8080` con el JWT de `admin@hotel.test` y los siete servicios de `infra/compose.yaml` arriba. Script de reproducción en el directorio temporal de la ejecutora (`%TEMP%/opencode/inv-evid/repro.sh`, salida completa en `%TEMP%/opencode/inv-evid/antes.txt`): login, alta, baja, tres listados y los dos ajustes. Salida literal (sin tokens), con `{id}` en lugar del id creado:
+
+```text
+### [registrar] POST /api/producto/registrar
+{"success":true,"message":"Producto registrado","data":{"idProducto":12,"sku":"REP-F5A5D570",...,"idHotel":1,"precio":4.50,"cantidad":3,"umbralBajo":1,"estado":true,...,"version":1,"productoVersion":1},...}
+HTTP 201
+
+### [eliminar] DELETE /api/producto/eliminar/{id}?idHotel=1 (If-Match: "1")
+{"success":true,"message":"OK","data":{"idProducto":12,"sku":"REP-F5A5D570",...,"idHotel":1,"cantidad":3,"estado":false,...,"version":2,"productoVersion":1},...}
+HTTP 200
+
+### [listar] GET /api/producto/listar?idHotel=1&estado=false&page=0&size=20
+{"success":true,"message":"OK","data":[],"meta":{"correlationId":"6600ccb8-5b01-453c-a32f-c57b90752dab"}}
+HTTP 200                                  <-- 0 filas: el producto dado de baja no aparece
+
+### [listar] GET /api/producto/listar?idHotel=1&estado=true&page=0&size=20
+filas=9 ids=[1, 2, 3, 4, 5, 6, 7, 8, 11] estados=[true x 9]
+
+### [listar] GET /api/producto/listar?idHotel=1&page=0&size=20 (sin estado)
+filas=12 ids=[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+estados=[true, true, true, true, true, true, true, true, false, false, true, false]
+                                          <-- 9, 10 y 12 están dados de baja y solo salen sin filtro
+
+### [ajuste sin query] POST /api/producto/{id}/ajustes  (solo el cuerpo del contrato)
+{"success":false,"message":"Ocurrió un error inesperado.","error":{"code":"INTERNAL_ERROR","fields":{}},"meta":{"correlationId":"b4a1af0c-7b77-4607-a7a1-a94ea2fb8cc3"}}
+HTTP 500
+
+### [ajuste con query] POST /api/producto/{id}/ajustes?idHotel=1  (mismo cuerpo)
+{"success":true,"message":"Ajuste registrado","data":{"ajusteId":"e1e734bf-0ee4-4f28-a73f-cbd6b5899321","cantidad":5,"version":3},...}
+HTTP 201
+```
+
+Los dos fallos quedan reproducidos: el filtro `estado=false` devuelve 0 filas con 3 productos dados de baja en la sede, y el ajuste sin `idHotel` en la query responde `500 INTERNAL_ERROR` mientras que con `?idHotel=1` responde `201`.
+
 ### Verificación después del arreglo
 
 ```bash
@@ -121,7 +157,7 @@ curl -s -X POST http://localhost:8080/api/producto/registrar \
   -H "Idempotency-Key: $(python -c 'import uuid;print(uuid.uuid4())')" \
   -d '{"sku":"REP-<sufijo>","nombre":"Producto reproduce","detalle":"Reproduccion","imagenUrl":"/assets/demo/producto-agua.png","idHotel":1,"precio":4.50,"cantidadInicial":3,"umbralBajo":1}'
 
-curl -s -X DELETE "http://localhost:8080/api/producto/<id>?idHotel=1" \
+curl -s -X DELETE "http://localhost:8080/api/producto/eliminar/{id}?idHotel=1" \
   -H "Authorization: Bearer $ADMIN" \
   -H "Idempotency-Key: $(python -c 'import uuid;print(uuid.uuid4())')" -H 'If-Match: "1"'
 
@@ -133,7 +169,7 @@ curl -s "http://localhost:8080/api/producto/listar?idHotel=1&page=0&size=20" \
   -H "Authorization: Bearer $ADMIN"
 
 # Ajuste solo con el cuerpo del contrato, sin query idHotel
-curl -s -i -X POST "http://localhost:8080/api/producto/<id>/ajustes" \
+curl -s -i -X POST "http://localhost:8080/api/producto/{id}/ajustes" \
   -H "Authorization: Bearer $ADMIN" -H 'Content-Type: application/json' \
   -H "Idempotency-Key: $(python -c 'import uuid;print(uuid.uuid4())')" -H 'If-Match: "2"' \
   -d '{"idHotel":1,"delta":2,"motivo":"Verificacion del arreglo"}'
