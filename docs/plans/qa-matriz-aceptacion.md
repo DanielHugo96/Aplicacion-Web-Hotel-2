@@ -195,7 +195,7 @@ ocupación) y el de `reporting-service` (reset del flag) los corrijan.
 
 - [x] Todos los pasos marcados con su verificación.
 - [x] Los 41 casos de §6 con evidencia (comando o endpoint, resultado y salida guardada): 41/41 con evidencia y 41/41 cumpliendo el criterio (`tests/evidencia/qa-matriz-aceptacion/INFORME.md`).
-- [x] `python scripts/validar-planes.py` desde la raíz con 0 errores; 0 avisos.
+- [x] `python scripts/validar-planes.py` desde la raíz con 0 errores; 0 avisos. Salida de los comandos canónicos en `tests/evidencia/qa-matriz-aceptacion/COMANDOS.md`.
 - [x] Cambios solo en tests/, scripts/ y el propio plan; sin tocar docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md.
 - [x] Sin preguntas abiertas bloqueantes: §7 registra los tres hallazgos revalidados de `qa-runbooks` y las decisiones de nivel 2 en `docs/implementacion/decisiones/IA-qa-matriz-aceptacion-0{1,2,3}.md`.
 - [x] El plan pasa a `cerrado` en el último PR; lo revisa una persona y la ejecutora no lo mergea.
