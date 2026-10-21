@@ -7,7 +7,7 @@
 | Componente | `inventory-service` |
 | Fase | `F3` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-inventory-stock` |
 | Repara | `back-inventory-stock` |
 | Spec | [`inventory/api.md` §REST](../especificacion/microservicios/inventory/api.md#rest), [`inventory/base-de-datos.md` §Tablas](../especificacion/microservicios/inventory/base-de-datos.md#tablas) y [§Funciones/procedimientos](../especificacion/microservicios/inventory/base-de-datos.md#funcionesprocedimientos), [`03-contrato-comun.md` §Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes) y [§Respuestas](../especificacion/03-contrato-comun.md#respuestas), [`inventory.yaml`](../contracts/openapi/inventory.yaml), [`admin-web.yaml`](../contracts/openapi/admin-web.yaml) y [`errors.md` §Inventory y Sales](../contracts/errors.md#inventory-y-sales) |
