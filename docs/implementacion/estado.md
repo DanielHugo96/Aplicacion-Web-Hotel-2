@@ -34,7 +34,7 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F5 | [`qa-runbooks`](../plans/qa-runbooks.md) | T11 | `cerrado` | `qa-runbooks` | [#111](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/111) |
 | F3 | [`front-admin-web-ventas`](../plans/front-admin-web-ventas.md) | T11 | `cerrado` | `front-admin-web-ventas` | [#119](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/119) |
 | F4 | [`front-admin-web-cierre`](../plans/front-admin-web-cierre.md) | T12 | `cerrado` | `front-admin-web-cierre` | [#121](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/121) |
-| F4 | [`front-admin-web-reportes`](../plans/front-admin-web-reportes.md) | T13 | `propuesto` | — | — |
+| F4 | [`front-admin-web-reportes`](../plans/front-admin-web-reportes.md) | T13 | `cerrado` | `front-admin-web-reportes` | [#123](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/123) |
 | F5 | [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md) | T14 | `propuesto` | — | — |
 | F2 | [`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) | — | `cerrado` | `back-arreglo-hotel-arranque` | [#76](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/76) |
 | F1 | [`back-arreglo-audiencia-maquina`](../plans/back-arreglo-audiencia-maquina.md) | — | `cerrado` | `back-arreglo-audiencia-maquina` | [#79](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/79) |
