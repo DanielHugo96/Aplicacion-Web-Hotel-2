@@ -8,13 +8,13 @@ Los tasks corresponden a los pasos de `docs/plans/back-arreglo-sales-pago-202.md
 
 ## 2. Tratamiento del fallo de admisión
 
-- [ ] 2.1 En `SalesService.pagar`, terminar la operación solo ante 409, 403 o 404; en timeout, 503 o error de red dejarla en PREPARANDO y responder 202. Verificación: una prueba con la admisión simulada como 503 devuelve 202 y la operación sigue PREPARANDO; un 409 sigue devolviendo `STAY_NOT_ACTIVE`.
-- [ ] 2.2 Aplicar el mismo tratamiento en `SalesService.anular`. Verificación: una prueba con 503 devuelve 202 y la operación ANULACION sigue PREPARANDO; un 409 de estadía no activa sigue devolviendo su error.
+- [x] 2.1 En `SalesService.pagar`, terminar la operación solo ante 409, 403 o 404; en timeout, 503 o error de red dejarla en PREPARANDO y responder 202. Verificación: una prueba con la admisión simulada como 503 devuelve 202 y la operación sigue PREPARANDO; un 409 sigue devolviendo `STAY_NOT_ACTIVE`.
+- [x] 2.2 Aplicar el mismo tratamiento en `SalesService.anular`. Verificación: una prueba con 503 devuelve 202 y la operación ANULACION sigue PREPARANDO; un 409 de estadía no activa sigue devolviendo su error.
 
 ## 3. Recuperación de PAGO y ANULACION
 
-- [ ] 3.1 Separar en `SalesRepository` la selección de operaciones PREPARANDO: VENTA mantiene `v.estado_operacion='PENDIENTE'` y `created_at` mayor a 120 s; PAGO se selecciona con la venta impaga y `next_attempt_at <= now()`; ANULACION con la venta en PENDIENTE o CONFIRMADA y `next_attempt_at <= now()`. Verificación: pruebas de repositorio con una operación PAGO PREPARANDO sobre venta CONFIRMADA y una VENTA vieja; la primera aparece y la segunda conserva el rechazo.
-- [ ] 3.2 En `RecuperadorVentas`, enrutar PAGO y ANULACION en PREPARANDO a `reintentarAdmision`, sin rechazar la venta; si la venta ya está PAGADO o CANCELADA, terminar la operación y asegurar el finalizar sin nueva admisión. Verificación: el recuperador paga la venta en el primer ciclo; una venta ya pagada termina la operación sin emitir un segundo `recepcion.operacion-finalizar`.
+- [x] 3.1 Separar en `SalesRepository` la selección de operaciones PREPARANDO: VENTA mantiene `v.estado_operacion='PENDIENTE'` y `created_at` mayor a 120 s; PAGO se selecciona con la venta impaga y `next_attempt_at <= now()`; ANULACION con la venta en PENDIENTE o CONFIRMADA y `next_attempt_at <= now()`. Verificación: pruebas de repositorio con una operación PAGO PREPARANDO sobre venta CONFIRMADA y una VENTA vieja; la primera aparece y la segunda conserva el rechazo.
+- [x] 3.2 En `RecuperadorVentas`, enrutar PAGO y ANULACION en PREPARANDO a `reintentarAdmision`, sin rechazar la venta; si la venta ya está PAGADO o CANCELADA, terminar la operación y asegurar el finalizar sin nueva admisión. Verificación: el recuperador paga la venta en el primer ciclo; una venta ya pagada termina la operación sin emitir un segundo `recepcion.operacion-finalizar`.
 
 ## 4. Evidencia e integración
 

@@ -19,8 +19,9 @@ import pe.hotel.sales.platform.ApiException;
 
 /**
  * Recuperador cada 30 s de operaciones y ventas atascadas. Usa el mismo CAS que la respuesta HTTP:
- * PREPARANDO viejo se rechaza sin stock; DEBITO_SOLICITADO viejo se compensa con restitución y
- * nunca se confirma por antigüedad; PAGO y ANULACION se reintentan sin tocar inventario de más.
+ * la venta alta PREPARANDO vencida se rechaza sin stock; DEBITO_SOLICITADO viejo se compensa con
+ * restitución y nunca se confirma por antigüedad; el PAGO o la ANULACION en PREPARANDO reintentan
+ * su misma admisión y su mismo CAS sin tocar inventario de más.
  */
 @Component
 @ConditionalOnProperty(
@@ -55,7 +56,7 @@ public class RecuperadorVentas {
   @Scheduled(fixedDelayString = "${hotel.recuperacion.interval-ms:30000}")
   public void recuperar() {
     try {
-      rechazarPreparandoVencidas();
+      recuperarPreparando();
       compensarDebitosVencidos();
       reenviarRestitucionesPendientes();
       reintentarPagos();
@@ -65,7 +66,11 @@ public class RecuperadorVentas {
     }
   }
 
-  private void rechazarPreparandoVencidas() {
+  /**
+   * Operaciones en PREPARANDO, por tipo: la venta alta vencida se rechaza sin stock y las
+   * operaciones PAGO y ANULACION reanudan su admision y su CAS (docs/especificacion/04-flujos.md §2).
+   */
+  private void recuperarPreparando() {
     for (SalesRepository.Recuperable rec : repo.preparandoVencidas(staleSeconds)) {
       OperacionRow operacion = repo.operacion(rec.operationId()).orElse(null);
       if (operacion == null) {
@@ -97,6 +102,23 @@ public class RecuperadorVentas {
     VentaRow venta = repo.venta(operacion.idVenta()).orElse(null);
     if (venta == null) {
       return;
+    }
+    if ("PAGO".equals(operacion.tipo()) && "PAGADO".equals(venta.estado())) {
+      // Ya pago (por ejemplo, el cierre): solo se asegura el finalizar, sin admitir ni cobrar.
+      finalizarSinAdmitir(operacion, venta, "PAGO", "PAGO_REGISTRADO");
+      return;
+    }
+    if ("ANULACION".equals(operacion.tipo())) {
+      if ("CANCELADA".equals(venta.estadoOperacion())) {
+        finalizarSinAdmitir(operacion, venta, "ANULACION", "CANCELADA");
+        return;
+      }
+      if ("CANCELACION_PENDIENTE".equals(venta.estadoOperacion())) {
+        // La restitucion ya esta en curso: no se vuelve a admitir y cancelacionesPendientes la
+        // republica si hace falta.
+        repo.posponerOperacion(operacion.operationId(), 60);
+        return;
+      }
     }
     try {
       reception.admitir(
@@ -131,6 +153,27 @@ public class RecuperadorVentas {
             }
           });
     }
+  }
+
+  /**
+   * Termina la operacion y asegura el comando de finalizar. La operacion sigue no terminal, asi
+   * que todavia no tiene comando de finalizar: se emite uno solo.
+   */
+  private void finalizarSinAdmitir(
+      OperacionRow operacion, VentaRow venta, String tipo, String resultado) {
+    tx.executeWithoutResult(
+        status -> {
+          repo.terminarOperacionSiCoincide(operacion.operationId(), venta.id());
+          outbox.emitirFinalizar(
+              operacion.operationId(),
+              venta.idHotel(),
+              venta.idRecepcion(),
+              venta.id(),
+              tipo,
+              resultado,
+              venta.version());
+        });
+    log.info("recuperacion_finalizada_sin_admision idVenta={} tipo={}", venta.id(), tipo);
   }
 
   private void compensarDebitosVencidos() {
