@@ -4,7 +4,7 @@ Los tasks corresponden a los pasos de `docs/plans/back-arreglo-sales-pago-202.md
 
 ## 1. Reproducción
 
-- [ ] 1.1 Reproducir el fallo desde `main` con `reception-service` detenido: `PUT /api/venta/{id}` responde 202 con `Location` y `Retry-After: 2`, 30 sondeos de 3 s dejan la venta PENDIENTE/CONFIRMADA y la operación PAGO queda TERMINAL. Verificación: la salida literal y la consulta a `sales_db` quedan en §6 del plan.
+- [x] 1.1 Reproducir el fallo desde `main` con `reception-service` detenido: `PUT /api/venta/{id}` responde 202 con `Location` y `Retry-After: 2`, 30 sondeos de 3 s dejan la venta PENDIENTE/CONFIRMADA y la operación PAGO queda TERMINAL. Verificación: la salida literal y la consulta a `sales_db` quedan en §6 del plan.
 
 ## 2. Tratamiento del fallo de admisión
 
