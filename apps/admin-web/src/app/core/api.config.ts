@@ -64,6 +64,16 @@ export const API_PATHS = {
   estadoHabitacionBuscar: (id: number | string) => `/api/estadohabitacion/buscar/${id}`,
   estadoHabitacionActualizar: (id: number | string) => `/api/estadohabitacion/actualizar/${id}`,
 
+  // Productos y stock (inventory) — panel A/E
+  productoListar: '/api/producto/listar',
+  productoBuscar: (id: number | string) => `/api/producto/buscar/${id}`,
+  productoRegistrar: '/api/producto/registrar',
+  productoActualizar: (id: number | string) => `/api/producto/actualizar/${id}`,
+  productoEliminar: (id: number | string) => `/api/producto/eliminar/${id}`,
+  productoAsignarSede: (id: number | string) => `/api/producto/${id}/sedes`,
+  productoAjustes: (id: number | string) => `/api/producto/${id}/ajustes`,
+  productoMovimientos: (id: number | string) => `/api/producto/${id}/movimientos`,
+
   // Área de cliente (C)
   recepcionCliente: (idCliente: number | string) => `/api/recepcion/cliente/${idCliente}`,
   recepcionBuscar: (id: number | string) => `/api/recepcion/${id}`,
@@ -75,6 +85,8 @@ export const API_PATHS = {
   carritoListar: (idRecepcion: number | string) => `/api/carrito/listar/${idRecepcion}`,
   carritoEliminar: '/api/carrito/eliminar',
   ventaCrear: '/api/venta',
+  ventaListar: '/api/venta',
+  ventaPorId: (id: number | string) => `/api/venta/${id}`,
   ventaBuscar: (id: number | string) => `/api/venta/buscar/${id}`,
   ventaRecepcion: (idRecepcion: number | string) => `/api/venta/recepcion/${idRecepcion}`,
   ventaOperacion: (operationId: string) => `/api/venta/operaciones/${operationId}`,

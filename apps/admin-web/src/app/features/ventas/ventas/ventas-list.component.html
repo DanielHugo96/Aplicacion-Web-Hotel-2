@@ -1,0 +1,104 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Ventas</h1>
+      <p class="sub">Ventas de la sede seleccionada, con su estado de pago y su operación por separado.</p>
+    </div>
+    <a class="btn btn-primary" routerLink="/app/ventas/nueva">Nueva venta</a>
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="error() ? (error()!.reloadable ? 'Recargar' : 'Reintentar') : null"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else {
+    <div class="toolbar">
+      <div class="field">
+        <label for="filtro-pago">Pago</label>
+        <select id="filtro-pago" name="filtro-pago" [(ngModel)]="estado" (change)="filtrar()">
+          <option value="">Todos</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="PAGADO">Pagado</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="filtro-operacion">Operación</label>
+        <select
+          id="filtro-operacion"
+          name="filtro-operacion"
+          [(ngModel)]="estadoOperacion"
+          (change)="filtrar()"
+        >
+          <option value="">Todas</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="CONFIRMADA">Confirmada</option>
+          <option value="RECHAZADA">Rechazada</option>
+          <option value="CANCELACION_PENDIENTE">Anulación en proceso</option>
+          <option value="CANCELADA">Cancelada</option>
+        </select>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="skeleton-table" role="status" aria-label="Cargando ventas">
+        @for (fila of [1, 2, 3, 4, 5]; track fila) {
+          <div class="skeleton skeleton-row"></div>
+        }
+      </div>
+    } @else if (ventas().length === 0 && !error()) {
+      <div class="empty" role="status">No hay ventas</div>
+    } @else if (ventas().length > 0) {
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption class="sr-only">Ventas de la sede seleccionada</caption>
+          <thead>
+            <tr>
+              <th scope="col">Venta</th>
+              <th scope="col">Estadía</th>
+              <th scope="col">Fecha</th>
+              <th scope="col">Pago</th>
+              <th scope="col">Operación</th>
+              <th scope="col" class="num">Total</th>
+              <th scope="col" class="text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (v of ventas(); track v.idVenta) {
+              <tr>
+                <td class="monospace">#{{ v.idVenta }}</td>
+                <td class="monospace">#{{ v.idRecepcion }}</td>
+                <td>{{ v.fechaCreacion | peTimestamp }}</td>
+                <td><span [class]="clasePago(v)">{{ v.estado === 'PAGADO' ? 'Pagado' : 'Pendiente' }}</span></td>
+                <td>
+                  <span [class]="claseOperacion(v)">
+                    @switch (v.estadoOperacion) {
+                      @case ('PENDIENTE') { En proceso }
+                      @case ('CONFIRMADA') { Confirmada }
+                      @case ('RECHAZADA') { Rechazada }
+                      @case ('CANCELACION_PENDIENTE') { Anulación en proceso }
+                      @case ('CANCELADA') { Cancelada }
+                    }
+                  </span>
+                </td>
+                <td class="num">{{ v.total | money }}</td>
+                <td class="text-right">
+                  <a class="btn btn-secondary" [routerLink]="['/app/ventas', v.idVenta]">Ver detalle</a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination
+        [page]="page()"
+        [size]="size()"
+        [total]="total()"
+        (pageChange)="cambiarPagina($event)"
+      ></app-pagination>
+    }
+  }
+</div>

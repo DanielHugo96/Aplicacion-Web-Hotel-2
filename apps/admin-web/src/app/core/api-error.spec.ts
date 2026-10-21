@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { CATALOGO_ERRORS, ERROR_CATALOG, parseApiError } from './api-error';
 
 describe('catálogo de errores', () => {
-  it('cubre los veintiocho códigos del alcance del panel, recepción y área de cliente', () => {
-    expect(CATALOGO_ERRORS).toHaveLength(28);
-    expect(new Set(CATALOGO_ERRORS).size).toBe(28);
+  it('cubre los treinta códigos del alcance del panel, recepción, área de cliente y ventas', () => {
+    expect(CATALOGO_ERRORS).toHaveLength(30);
+    expect(new Set(CATALOGO_ERRORS).size).toBe(30);
   });
 
   it('usa el mensaje para UI y la acción esperada de errors.md', () => {
@@ -29,6 +29,12 @@ describe('catálogo de errores', () => {
     );
     expect(ERROR_CATALOG['STOCK_INSUFFICIENT'].message).toBe(
       'No hay stock suficiente de uno o más productos.'
+    );
+    expect(ERROR_CATALOG['SALE_ALREADY_PAID'].message).toBe(
+      'Una venta pagada no se anula; requiere devolución (fuera del MVP).'
+    );
+    expect(ERROR_CATALOG['LEGACY_MOVEMENT_UNVERIFIED'].message).toBe(
+      'Esta venta antigua no puede anularse automáticamente.'
     );
     expect(ERROR_CATALOG['PASSWORD_POLICY'].message).toBe(
       'La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8).'

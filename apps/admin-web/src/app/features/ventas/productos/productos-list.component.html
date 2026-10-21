@@ -1,0 +1,310 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Productos</h1>
+      <p class="sub">Productos de la sede seleccionada, con su stock y su umbral de bajo stock.</p>
+    </div>
+    @if (esAdmin()) {
+      <button class="btn btn-primary" type="button" [disabled]="!sedeSeleccionada()" (click)="nuevo()">
+        Nuevo producto
+      </button>
+    }
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="error() ? 'Reintentar' : null"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="sede-productos">Sede</label>
+      <select id="sede-productos" [value]="sedeSeleccionada() ?? ''" (change)="cambiarSede($event)">
+        @if (sedes().length === 0) {
+          <option value="">Sin sede asignada</option>
+        }
+        @for (sede of sedes(); track sede.idHotel) {
+          <option [value]="sede.idHotel">{{ sede.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filtro-estado-producto">Estado</label>
+      <select
+        id="filtro-estado-producto"
+        [value]="filtroEstado()"
+        (change)="cambiarFiltro($any($event.target).value)"
+      >
+        <option value="activos">Activos</option>
+        <option value="inactivos">Dados de baja</option>
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+  </div>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando productos">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (productos().length === 0 && !error()) {
+    <div class="empty" role="status">
+      <p>Aún no hay registros</p>
+      @if (esAdmin()) {
+        <button class="btn btn-primary" type="button" (click)="nuevo()">Crear</button>
+      }
+    </div>
+  } @else if (productos().length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">Productos de la sede seleccionada</caption>
+        <thead>
+          <tr>
+            <th scope="col">SKU</th>
+            <th scope="col">Nombre</th>
+            <th scope="col" class="num">Precio</th>
+            <th scope="col" class="num">Cantidad</th>
+            <th scope="col" class="num">Umbral bajo</th>
+            <th scope="col">Stock</th>
+            <th scope="col">Estado</th>
+            <th scope="col" class="text-right">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of productos(); track p.idProducto) {
+            <tr>
+              <td class="monospace">{{ p.sku }}</td>
+              <td>{{ p.nombre }}</td>
+              <td class="num">{{ p.precio | money }}</td>
+              <td class="num">{{ p.cantidad }}</td>
+              <td class="num">{{ p.umbralBajo }}</td>
+              <td>
+                @if (bajoStock(p)) {
+                  <span class="pill pill-atencion">Bajo stock</span>
+                } @else {
+                  <span class="pill pill-ok">Con stock</span>
+                }
+              </td>
+              <td>
+                <span [class]="'pill ' + (p.estado ? 'pill-ok' : 'pill-archivado')">
+                  {{ p.estado ? 'Activo' : 'Dado de baja' }}
+                </span>
+              </td>
+              <td>
+                <div class="row-actions">
+                  @if (esAdmin()) {
+                    <button class="btn btn-secondary" type="button" (click)="editar(p)">Editar</button>
+                    <button class="btn btn-secondary" type="button" (click)="abrirAjuste(p)">
+                      Ajustar stock
+                    </button>
+                    <button class="btn btn-secondary" type="button" (click)="abrirAsignacion(p)">
+                      Asignar a sede
+                    </button>
+                    @if (p.estado) {
+                      <button class="btn btn-secondary" type="button" (click)="pedirBaja(p)">
+                        Dar de baja
+                      </button>
+                    } @else {
+                      <button class="btn btn-secondary" type="button" (click)="reactivar(p)">
+                        Reactivar
+                      </button>
+                    }
+                  }
+                  <button class="btn btn-secondary" type="button" (click)="movimientos(p)">
+                    Movimientos
+                  </button>
+                </div>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [page]="page()"
+      [size]="size()"
+      [total]="total()"
+      (pageChange)="cambiarPagina($event)"
+    ></app-pagination>
+  }
+
+  <app-confirm-dialog
+    [open]="baja() !== null"
+    title="Dar de baja el producto"
+    [message]="
+      'La baja quita ' +
+      (baja()?.nombre ?? 'el producto') +
+      ' de esta sede. El historial de movimientos se conserva y puede reactivarse después.'
+    "
+    confirmLabel="Dar de baja"
+    [busy]="procesando()"
+    (confirm)="confirmarBaja()"
+    (cancel)="cancelarBaja()"
+  ></app-confirm-dialog>
+
+  @if (ajuste(); as p) {
+    <div class="modal-backdrop" (click)="cancelarAjuste()">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ajuste-title"
+        (click)="$event.stopPropagation()"
+      >
+        <h3 id="ajuste-title">Ajustar stock de {{ p.nombre }}</h3>
+        <p class="modal-message">
+          El ajuste cambia la cantidad de la sede con su motivo. La cantidad actual es
+          {{ p.cantidad }}.
+        </p>
+        <form (ngSubmit)="guardarAjuste($event)" novalidate>
+          <div class="field">
+            <label for="ajuste-delta" class="required">Delta</label>
+            <input
+              id="ajuste-delta"
+              name="ajuste-delta"
+              type="number"
+              step="1"
+              [(ngModel)]="ajusteDelta"
+              [class.error]="campoAjusteInvalido('delta')"
+              required
+            />
+            <span class="field-help">Entero distinto de 0; puede ser negativo.</span>
+            @if (campoAjusteInvalido('delta')) {
+              <span class="field-msg" role="alert">{{ mensajeAjuste('delta') }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="ajuste-motivo" class="required">Motivo</label>
+            <textarea
+              id="ajuste-motivo"
+              name="ajuste-motivo"
+              rows="2"
+              maxlength="300"
+              [(ngModel)]="ajusteMotivo"
+              [class.error]="campoAjusteInvalido('motivo')"
+              required
+            ></textarea>
+            <span class="field-help">{{ ajusteMotivo.length }}/300</span>
+            @if (campoAjusteInvalido('motivo')) {
+              <span class="field-msg" role="alert">{{ mensajeAjuste('motivo') }}</span>
+            }
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-secondary" type="button" [disabled]="procesando()" (click)="cancelarAjuste()">
+              Cancelar
+            </button>
+            <button class="btn btn-primary" type="submit" [disabled]="procesando()">
+              @if (procesando()) {
+                <span class="spinner" aria-hidden="true"></span>
+              }
+              Ajustar stock
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (asignacion(); as p) {
+    <div class="modal-backdrop" (click)="cancelarAsignacion()">
+      <div
+        class="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="asignacion-title"
+        (click)="$event.stopPropagation()"
+      >
+        <h3 id="asignacion-title">Asignar {{ p.nombre }} a otra sede</h3>
+        <p class="modal-message">Se crea la asignación del SKU {{ p.sku }} en la sede elegida.</p>
+        <form (ngSubmit)="guardarAsignacion($event)" novalidate>
+          <div class="field">
+            <label for="asignacion-sede" class="required">Sede</label>
+            <select
+              id="asignacion-sede"
+              name="asignacion-sede"
+              [(ngModel)]="asignacionIdHotel"
+              [class.error]="campoAsignacionInvalido('idHotel')"
+              required
+            >
+              <option [ngValue]="null">Selecciona la sede</option>
+              @for (sede of sedesAsignables(p); track sede.idHotel) {
+                <option [ngValue]="sede.idHotel">{{ sede.nombre }}</option>
+              }
+            </select>
+            @if (campoAsignacionInvalido('idHotel')) {
+              <span class="field-msg" role="alert">{{ mensajeAsignacion('idHotel') }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="asignacion-precio" class="required">Precio</label>
+            <input
+              id="asignacion-precio"
+              name="asignacion-precio"
+              type="number"
+              min="0.01"
+              step="0.01"
+              [(ngModel)]="asignacionPrecio"
+              [class.error]="campoAsignacionInvalido('precio')"
+              required
+            />
+            @if (campoAsignacionInvalido('precio')) {
+              <span class="field-msg" role="alert">{{ mensajeAsignacion('precio') }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="asignacion-cantidad" class="required">Cantidad inicial</label>
+            <input
+              id="asignacion-cantidad"
+              name="asignacion-cantidad"
+              type="number"
+              min="0"
+              step="1"
+              [(ngModel)]="asignacionCantidad"
+              [class.error]="campoAsignacionInvalido('cantidadInicial')"
+              required
+            />
+            @if (campoAsignacionInvalido('cantidadInicial')) {
+              <span class="field-msg" role="alert">{{ mensajeAsignacion('cantidadInicial') }}</span>
+            }
+          </div>
+          <div class="field">
+            <label for="asignacion-umbral" class="required">Umbral de bajo stock</label>
+            <input
+              id="asignacion-umbral"
+              name="asignacion-umbral"
+              type="number"
+              min="0"
+              step="1"
+              [(ngModel)]="asignacionUmbral"
+              [class.error]="campoAsignacionInvalido('umbralBajo')"
+              required
+            />
+            @if (campoAsignacionInvalido('umbralBajo')) {
+              <span class="field-msg" role="alert">{{ mensajeAsignacion('umbralBajo') }}</span>
+            }
+          </div>
+          <div class="modal-actions">
+            <button
+              class="btn btn-secondary"
+              type="button"
+              [disabled]="procesando()"
+              (click)="cancelarAsignacion()"
+            >
+              Cancelar
+            </button>
+            <button class="btn btn-primary" type="submit" [disabled]="procesando()">
+              @if (procesando()) {
+                <span class="spinner" aria-hidden="true"></span>
+              }
+              Asignar a sede
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+</div>

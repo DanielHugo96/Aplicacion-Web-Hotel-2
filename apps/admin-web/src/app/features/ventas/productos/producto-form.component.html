@@ -1,0 +1,201 @@
+@if (cargando()) {
+  <div class="page" role="status" aria-label="Cargando producto">
+    <div class="skeleton skeleton-row" style="max-width: 420px; height: 36px;"></div>
+    <div class="skeleton skeleton-row" style="max-width: 720px; height: 320px; margin-top: 24px;"></div>
+  </div>
+} @else {
+  <div class="page">
+    <div class="page-head">
+      <div>
+        <h1>{{ esEdicion() ? 'Editar producto' : 'Nuevo producto' }}</h1>
+        <p class="sub">
+          {{
+            esEdicion()
+              ? 'La cantidad solo cambia con ventas o ajustes de stock; no se edita aquí.'
+              : 'Alta del producto y su asignación inicial a la sede seleccionada.'
+          }}
+        </p>
+      </div>
+      <a class="btn btn-secondary" routerLink="/app/productos">Volver al listado</a>
+    </div>
+
+    <app-error-banner [error]="error()" [actionLabel]="actionLabel()" (action)="accionError()"></app-error-banner>
+
+    <form class="form-card form-grid two" (ngSubmit)="onSubmit($event)" novalidate>
+      <div class="field">
+        <label for="sku" class="required">SKU</label>
+        <input
+          id="sku"
+          name="sku"
+          [(ngModel)]="sku"
+          maxlength="40"
+          [readonly]="esEdicion()"
+          [class.error]="campoInvalido('sku')"
+          required
+        />
+        <span class="field-help">
+          {{ esEdicion() ? 'El SKU no se puede cambiar.' : 'Único global, hasta 40 caracteres.' }}
+        </span>
+        @if (campoInvalido('sku')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('sku') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="nombre" class="required">Nombre</label>
+        <input
+          id="nombre"
+          name="nombre"
+          [(ngModel)]="nombre"
+          maxlength="120"
+          [class.error]="campoInvalido('nombre')"
+          required
+        />
+        @if (campoInvalido('nombre')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('nombre') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="sedeProducto" class="required">Sede</label>
+        @if (esEdicion()) {
+          <input id="sedeProducto" name="sedeProducto" [value]="idHotel" readonly />
+          <span class="field-help">La sede del producto no se cambia desde esta pantalla.</span>
+        } @else {
+          <select
+            id="sedeProducto"
+            name="sedeProducto"
+            [(ngModel)]="idHotel"
+            [class.error]="campoInvalido('idHotel')"
+            required
+          >
+            <option [ngValue]="null">Selecciona la sede</option>
+            @for (sede of sedes(); track sede.idHotel) {
+              <option [ngValue]="sede.idHotel">{{ sede.nombre }}</option>
+            }
+          </select>
+        }
+        @if (campoInvalido('idHotel')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('idHotel') }}</span>
+        }
+      </div>
+
+      <div class="field">
+        <label for="precio" class="required">Precio</label>
+        <input
+          id="precio"
+          name="precio"
+          type="number"
+          min="0.01"
+          step="0.01"
+          [(ngModel)]="precio"
+          [class.error]="campoInvalido('precio')"
+          required
+        />
+        @if (campoInvalido('precio')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('precio') }}</span>
+        }
+      </div>
+
+      @if (!esEdicion()) {
+        <div class="field">
+          <label for="cantidadInicial" class="required">Cantidad inicial</label>
+          <input
+            id="cantidadInicial"
+            name="cantidadInicial"
+            type="number"
+            min="0"
+            step="1"
+            [(ngModel)]="cantidadInicial"
+            [class.error]="campoInvalido('cantidadInicial')"
+            required
+          />
+          @if (campoInvalido('cantidadInicial')) {
+            <span class="field-msg" role="alert">{{ mensajeCampo('cantidadInicial') }}</span>
+          }
+        </div>
+      } @else {
+        <div class="field">
+          <label for="cantidadActual">Cantidad actual</label>
+          <input id="cantidadActual" name="cantidadActual" [value]="producto()?.cantidad ?? 0" readonly />
+          <span class="field-help">Solo cambia con ventas o ajustes de stock.</span>
+        </div>
+      }
+
+      <div class="field">
+        <label for="umbralBajo" class="required">Umbral de bajo stock</label>
+        <input
+          id="umbralBajo"
+          name="umbralBajo"
+          type="number"
+          min="0"
+          step="1"
+          [(ngModel)]="umbralBajo"
+          [class.error]="campoInvalido('umbralBajo')"
+          required
+        />
+        @if (campoInvalido('umbralBajo')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('umbralBajo') }}</span>
+        }
+      </div>
+
+      @if (esEdicion()) {
+        <div class="field">
+          <label class="field-check">
+            <input id="estadoProducto" name="estadoProducto" type="checkbox" [(ngModel)]="estado" />
+            Activo en esta sede
+          </label>
+          <span class="field-help">Desmarcarlo da de baja el producto en la sede.</span>
+        </div>
+      }
+
+      <div class="field" style="grid-column: 1 / -1;">
+        <label for="imagenUrl">URL de la imagen</label>
+        <input
+          id="imagenUrl"
+          name="imagenUrl"
+          [(ngModel)]="imagenUrl"
+          maxlength="500"
+          placeholder="https://... o /assets/..."
+          [class.error]="campoInvalido('imagenUrl')"
+        />
+        <span class="field-help">https o /assets/, hasta 500 caracteres.</span>
+        @if (campoInvalido('imagenUrl')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('imagenUrl') }}</span>
+        }
+      </div>
+
+      <div class="field" style="grid-column: 1 / -1;">
+        <label for="detalle">Detalle</label>
+        <textarea
+          id="detalle"
+          name="detalle"
+          rows="3"
+          [(ngModel)]="detalle"
+          maxlength="500"
+          [class.error]="campoInvalido('detalle')"
+        ></textarea>
+        <span class="field-help">{{ detalle.length }}/500</span>
+        @if (campoInvalido('detalle')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('detalle') }}</span>
+        }
+      </div>
+
+      <div class="form-actions" style="grid-column: 1 / -1;">
+        @if (esAdmin()) {
+          <button class="btn btn-primary" type="submit" [disabled]="guardando()">
+            @if (guardando()) {
+              <span class="spinner" aria-hidden="true"></span>
+            }
+            {{ esEdicion() ? 'Guardar cambios' : 'Registrar producto' }}
+          </button>
+        } @else {
+          <span class="text-small muted">
+            Solo lectura: {{ esEdicion() ? 'la edición' : 'el alta' }} de productos es de ADMIN.
+          </span>
+        }
+        <a class="btn btn-secondary" routerLink="/app/productos">Cancelar</a>
+      </div>
+    </form>
+  </div>
+}

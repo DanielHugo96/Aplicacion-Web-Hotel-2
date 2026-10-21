@@ -1,0 +1,95 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Movimientos{{ producto() ? ' de ' + producto()!.nombre : '' }}</h1>
+      <p class="sub">Ventas y ajustes de stock del producto en la sede seleccionada.</p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/app/productos">Volver al listado</a>
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="error() ? 'Reintentar' : null"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else {
+    <div class="toolbar">
+      <div class="field">
+        <label for="mov-inicio">Desde</label>
+        <input id="mov-inicio" name="mov-inicio" type="date" [(ngModel)]="inicio" />
+      </div>
+      <div class="field">
+        <label for="mov-fin">Hasta</label>
+        <input id="mov-fin" name="mov-fin" type="date" [(ngModel)]="fin" />
+      </div>
+      <div class="toolbar-actions">
+        <button class="btn btn-primary" type="button" (click)="filtrar()">Filtrar</button>
+        <button class="btn btn-secondary" type="button" (click)="limpiar()">Limpiar</button>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="skeleton-table" role="status" aria-label="Cargando movimientos">
+        @for (fila of [1, 2, 3, 4, 5]; track fila) {
+          <div class="skeleton skeleton-row"></div>
+        }
+      </div>
+    } @else if (movimientos().length === 0 && !error()) {
+      <div class="empty" role="status">Sin movimientos en el rango</div>
+    } @else if (movimientos().length > 0) {
+      <div class="table-wrap">
+        <table class="data-table">
+          <caption class="sr-only">Movimientos del producto</caption>
+          <thead>
+            <tr>
+              <th scope="col">Tipo</th>
+              <th scope="col">Referencia</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="num">Cantidad</th>
+              <th scope="col" class="num">Precio</th>
+              <th scope="col">Motivo</th>
+              <th scope="col">Fecha</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of movimientos(); track $index) {
+              <tr>
+                <td>{{ etiquetaTipo(m) }}</td>
+                @if (m.tipo === 'VENTA') {
+                  <td>
+                    <a [routerLink]="['/app/ventas', m.idVenta]" class="monospace">#{{ m.idVenta }}</a>
+                  </td>
+                  <td>
+                    <span class="pill pill-archivado">{{ m.estado }}</span>
+                  </td>
+                  <td class="num">{{ m.cantidad }}</td>
+                  <td class="num">{{ m.precioUnitario | money }}</td>
+                  <td class="muted">—</td>
+                  <td>{{ m.updatedAt | peTimestamp }}</td>
+                } @else {
+                  <td class="monospace text-small">{{ m.ajusteId }}</td>
+                  <td>
+                    <span class="pill pill-archivado">{{ m.delta > 0 ? 'Entrada' : 'Salida' }}</span>
+                  </td>
+                  <td class="num">{{ deltaConSigno(m.delta) }}</td>
+                  <td class="num muted">—</td>
+                  <td>{{ m.motivo }}</td>
+                  <td>{{ m.createdAt | peTimestamp }}</td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <app-pagination
+        [page]="page()"
+        [size]="size()"
+        [total]="total()"
+        (pageChange)="cambiarPagina($event)"
+      ></app-pagination>
+    }
+  }
+</div>

@@ -31,14 +31,17 @@ function requestKey(req: HttpRequest<unknown>): string {
 }
 
 /**
- * `POST /api/venta` en el área de cliente necesita ver el 202 para mostrar el
- * banner y el polling con "Actualizado …" en cada reintento. El interceptor
- * deja pasar ese 202; el resto de mutaciones conserva el modo pendiente
- * automático del panel.
+ * `POST /api/venta` (alta), `PUT /api/venta/{id}` (pago) y
+ * `DELETE /api/venta/{id}` (anulación) necesitan ver el 202 para mostrar el
+ * banner y el polling con "Actualizado …" en cada reintento, tanto en el área
+ * de cliente como en el panel. El interceptor deja pasar ese 202; el resto de
+ * mutaciones conserva el modo pendiente automático del panel.
  */
 function esVentaPendienteManual(req: HttpRequest<unknown>): boolean {
   const url = (req.urlWithParams ?? req.url).split('?')[0];
-  return req.method === 'POST' && /\/api\/venta$/.test(url);
+  if (req.method === 'POST') return /\/api\/venta$/.test(url);
+  if (req.method === 'PUT' || req.method === 'DELETE') return /\/api\/venta\/\d+$/.test(url);
+  return false;
 }
 
 /**

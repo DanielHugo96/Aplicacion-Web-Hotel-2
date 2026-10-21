@@ -1,0 +1,215 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Nueva venta</h1>
+      <p class="sub">Toma el carrito o el catálogo de una estadía activa y confirma la venta.</p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/app/ventas">Volver al listado</a>
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="error() ? (error()!.relogin ? 'Iniciar sesión de nuevo' : 'Reintentar') : null"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  <app-pending-banner
+    [visible]="pendiente()"
+    [detalle]="detallePendiente()"
+    [actualizadoEn]="actualizadoEn()"
+  ></app-pending-banner>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">Sin sede asignada</div>
+  } @else if (cargandoEstadias()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando estadías">
+      @for (fila of [1, 2, 3]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (estadias().length === 0) {
+    <div class="empty" role="status">No hay una estadía activa en esta sede</div>
+  } @else {
+    <div class="toolbar">
+      <div class="field" style="min-width: 320px;">
+        <label for="estadia-venta">Estadía activa</label>
+        <select
+          id="estadia-venta"
+          name="estadia-venta"
+          [value]="idRecepcion() ?? ''"
+          (change)="cambiarEstadia($event)"
+        >
+          @for (e of estadias(); track e.idRecepcion) {
+            <option [value]="e.idRecepcion">
+              #{{ e.idRecepcion }} · {{ e.nombre }} {{ e.apellido }} · {{ e.numero }} ·
+              {{ e.fechaSalida }}
+            </option>
+          }
+        </select>
+      </div>
+    </div>
+
+    @if (!idRecepcion()) {
+      <div class="empty" role="status">Selecciona una estadía para cargar el carrito y el catálogo</div>
+    } @else {
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: var(--space-4);">
+        <section class="form-card">
+          <h2 class="text-h3">Carrito de la estadía</h2>
+          @if (cargandoCarrito()) {
+            <div class="skeleton-table" role="status" aria-label="Cargando carrito">
+              @for (fila of [1, 2, 3]; track fila) {
+                <div class="skeleton skeleton-row"></div>
+              }
+            </div>
+          } @else if (carrito().length === 0) {
+            <div class="empty" role="status">El carrito está vacío</div>
+          } @else {
+            <div class="table-wrap">
+              <table class="data-table">
+                <caption class="sr-only">Líneas del carrito</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col" class="num">Precio</th>
+                    <th scope="col" class="num">Cantidad</th>
+                    <th scope="col" class="text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (item of carrito(); track item.idProducto) {
+                    <tr>
+                      <td>
+                        {{ item.nombreProducto }}
+                        @if (erroresLinea()[item.idProducto]) {
+                          <div class="field-msg" role="alert">
+                            {{ erroresLinea()[item.idProducto] }}
+                          </div>
+                        }
+                      </td>
+                      <td class="num">{{ item.precioUnitario | money }}</td>
+                      <td class="num">
+                        <input
+                          type="number"
+                          min="1"
+                          max="9999"
+                          step="1"
+                          [value]="item.cantidad"
+                          (change)="cambiarCantidad(item, $any($event.target).value)"
+                          [attr.aria-label]="'Cantidad de ' + item.nombreProducto"
+                        />
+                      </td>
+                      <td class="text-right">
+                        <button class="btn btn-secondary" type="button" (click)="quitar(item)">
+                          Quitar
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+          @if (campoInvalido('carrito')) {
+            <span class="field-msg" role="alert">{{ mensajeCampo('carrito') }}</span>
+          }
+        </section>
+
+        <section class="form-card">
+          <h2 class="text-h3">Catálogo de la sede</h2>
+          <app-error-banner
+            [error]="errorCatalogo()"
+            [actionLabel]="errorCatalogo() ? 'Reintentar' : null"
+            (action)="accionErrorCatalogo()"
+          ></app-error-banner>
+          @if (cargandoCatalogo()) {
+            <div class="skeleton-table" role="status" aria-label="Cargando catálogo">
+              @for (fila of [1, 2, 3]; track fila) {
+                <div class="skeleton skeleton-row"></div>
+              }
+            </div>
+          } @else if (catalogo().length === 0 && !errorCatalogo()) {
+            <div class="empty" role="status">El catálogo está vacío</div>
+          } @else if (catalogo().length > 0) {
+            <div class="table-wrap">
+              <table class="data-table">
+                <caption class="sr-only">Catálogo de la sede</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col" class="num">Precio</th>
+                    <th scope="col" class="text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (p of catalogo(); track p.idProducto) {
+                    <tr>
+                      <td>
+                        {{ p.nombre }}
+                        <div class="monospace text-micro muted">{{ p.sku }}</div>
+                      </td>
+                      <td class="num">{{ p.precio | money }}</td>
+                      <td class="text-right">
+                        <button
+                          class="btn btn-secondary"
+                          type="button"
+                          [disabled]="pendiente()"
+                          (click)="agregar(p)"
+                        >
+                          Agregar
+                        </button>
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      </div>
+
+      <form class="form-card" style="margin-top: var(--space-4);" (ngSubmit)="confirmar($event)" novalidate>
+        <div class="form-grid two">
+          <div class="field">
+            <label for="venta-estado" class="required">Estado</label>
+            <select id="venta-estado" name="venta-estado" [(ngModel)]="estado">
+              <option value="PENDIENTE">Pendiente de pago</option>
+              <option value="PAGADO">Pagado (cobro manual)</option>
+            </select>
+          </div>
+          @if (estado === 'PAGADO') {
+            <div class="field">
+              <label for="venta-medio" class="required">Medio de pago</label>
+              <select
+                id="venta-medio"
+                name="venta-medio"
+                [(ngModel)]="medioPago"
+                [class.error]="campoInvalido('medioPago')"
+                required
+              >
+                <option value="">Selecciona el medio de pago</option>
+                <option value="EFECTIVO">Efectivo</option>
+                <option value="TARJETA">Tarjeta</option>
+                <option value="OTRO">Otro</option>
+              </select>
+              @if (campoInvalido('medioPago')) {
+                <span class="field-msg" role="alert">{{ mensajeCampo('medioPago') }}</span>
+              }
+            </div>
+          }
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" type="submit" [disabled]="!puedeConfirmar()">
+            @if (guardando()) {
+              <span class="spinner" aria-hidden="true"></span>
+            }
+            Confirmar venta
+          </button>
+          <a class="btn btn-secondary" routerLink="/app/ventas">Cancelar</a>
+          <span class="text-small muted">
+            El backend calcula precios, subtotales y total; aquí solo viajan productos y cantidades.
+          </span>
+        </div>
+      </form>
+    }
+  }
+</div>
