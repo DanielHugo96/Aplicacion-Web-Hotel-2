@@ -37,6 +37,7 @@ export class ClienteContextService {
         retryable: false,
         reloadable: false,
         relogin: true,
+        retryAfterMs: null,
       });
       return;
     }

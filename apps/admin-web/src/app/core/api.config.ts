@@ -95,4 +95,11 @@ export const API_PATHS = {
   ventaBuscar: (id: number | string) => `/api/venta/buscar/${id}`,
   ventaRecepcion: (idRecepcion: number | string) => `/api/venta/recepcion/${idRecepcion}`,
   ventaOperacion: (operationId: string) => `/api/venta/operaciones/${operationId}`,
+
+  // Reportes (reporting) — panel A/E, solo GET
+  reporteDashboard: '/api/reportes/dashboard',
+  reporteVentas: '/api/reportes/ventas',
+  reporteOcupacion: '/api/reportes/ocupacion',
+  reporteCobros: '/api/reportes/cobros',
+  reporteBajoStock: '/api/reportes/productos-bajo-stock',
 } as const;

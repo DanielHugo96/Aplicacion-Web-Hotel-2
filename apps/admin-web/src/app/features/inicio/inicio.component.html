@@ -1,5 +1,80 @@
 <div class="page">
-  <h1>Inicio</h1>
-  <p class="sub">Panel de gestión hotelera.</p>
-  <div class="empty" role="status">Sin datos para tu sede todavía.</div>
+  <div class="page-head">
+    <div>
+      <h1>Inicio</h1>
+      <p class="sub">
+        KPIs de reportes de tu alcance. Las cifras llegan de las proyecciones y pueden tardar en
+        reflejar el último movimiento.
+      </p>
+    </div>
+    <a class="btn btn-secondary" routerLink="/app/reportes">Ver reportes</a>
+  </div>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="dashboard-sede">Sede</label>
+      <select
+        id="dashboard-sede"
+        name="dashboard-sede"
+        [ngModel]="sedeSeleccionada() ?? ''"
+        (ngModelChange)="cambiarSedeValor($event)"
+      >
+        @if (esAdmin()) {
+          <option value="">Consolidado de todas las sedes</option>
+        }
+        @if (sedes().length === 0) {
+          <option value="">Sin sede asignada</option>
+        }
+        @for (sede of sedes(); track sede.idHotel) {
+          <option [value]="sede.idHotel">{{ sede.nombre }}</option>
+        }
+      </select>
+      <span class="field-help">
+        {{ esAdmin() ? 'Puedes consultar el consolidado o una sede concreta.' : 'Solo tu sede asignada.' }}
+      </span>
+    </div>
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="error() ? 'Reintentar' : null"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  @if (loading()) {
+    <div class="kpi-grid" role="status" aria-label="Cargando indicadores">
+      @for (fila of [1, 2, 3, 4]; track fila) {
+        <div class="kpi-card">
+          <div class="skeleton skeleton-linea"></div>
+          <div class="skeleton skeleton-cifra"></div>
+        </div>
+      }
+    </div>
+  } @else if (vacio) {
+    <div class="empty" role="status">Sin datos para tu sede todavía</div>
+  } @else if (dashboard(); as kpis) {
+    <div class="kpi-grid">
+      <article class="kpi-card">
+        <h2 class="kpi-titulo">Habitaciones ocupadas</h2>
+        <p class="kpi-cifra">{{ kpis.habitacionesOcupadas }}</p>
+      </article>
+      <article class="kpi-card">
+        <h2 class="kpi-titulo">Habitaciones libres</h2>
+        <p class="kpi-cifra">{{ kpis.habitacionesDisponibles }}</p>
+      </article>
+      <article class="kpi-card">
+        <h2 class="kpi-titulo">Productos bajo stock</h2>
+        <p class="kpi-cifra">{{ kpis.productosBajoStock }}</p>
+        <a class="kpi-enlace" routerLink="/app/reportes" [queryParams]="{ reporte: 'bajoStock' }">
+          Ver bajo stock
+        </a>
+      </article>
+      <article class="kpi-card">
+        <h2 class="kpi-titulo">Ingresos de hoy</h2>
+        <p class="kpi-cifra">{{ kpis.ingresosHoy | money }}</p>
+        <span class="text-micro muted">Moneda {{ kpis.moneda }}</span>
+      </article>
+    </div>
+    <app-meta-reporte [meta]="meta()"></app-meta-reporte>
+  }
 </div>

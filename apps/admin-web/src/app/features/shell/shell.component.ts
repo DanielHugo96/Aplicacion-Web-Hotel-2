@@ -39,6 +39,7 @@ export class ShellComponent {
     { label: 'Recepción', path: '/app/recepcion', roles: ['ADMIN', 'EMPLEADO'] },
     { label: 'Productos', path: '/app/productos', roles: ['ADMIN', 'EMPLEADO'] },
     { label: 'Ventas', path: '/app/ventas', roles: ['ADMIN', 'EMPLEADO'] },
+    { label: 'Reportes', path: '/app/reportes', roles: ['ADMIN', 'EMPLEADO'] },
     { label: 'Mi perfil', path: '/app/perfil', roles: ['ADMIN', 'EMPLEADO', 'CLIENTE'] },
   ];
 

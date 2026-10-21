@@ -2,9 +2,24 @@ import { describe, expect, it } from 'vitest';
 import { CATALOGO_ERRORS, ERROR_CATALOG, parseApiError } from './api-error';
 
 describe('catálogo de errores', () => {
-  it('cubre los treinta y dos códigos del alcance del panel, recepción, área de cliente y ventas', () => {
-    expect(CATALOGO_ERRORS).toHaveLength(32);
-    expect(new Set(CATALOGO_ERRORS).size).toBe(32);
+  it('cubre los treinta y cuatro códigos del alcance del panel, recepción, área de cliente, ventas y reportes', () => {
+    expect(CATALOGO_ERRORS).toHaveLength(34);
+    expect(new Set(CATALOGO_ERRORS).size).toBe(34);
+  });
+
+  it('los códigos de reportes copian el catálogo de errors.md', () => {
+    expect(ERROR_CATALOG['REPORTING_NOT_READY'].message).toBe(
+      'Los reportes aún se están preparando.'
+    );
+    expect(ERROR_CATALOG['REPORTING_NOT_READY'].action).toBe(
+      'Esperar bootstrapComplete; reintentar.'
+    );
+    expect(ERROR_CATALOG['REPORTING_UNAVAILABLE'].message).toBe(
+      'Los reportes no están disponibles en este momento.'
+    );
+    expect(ERROR_CATALOG['REPORTING_UNAVAILABLE'].action).toBe(
+      'Contactar soporte; revisar DLT con el runbook.'
+    );
   });
 
   it('usa el mensaje para UI y la acción esperada de errors.md', () => {
