@@ -41,6 +41,7 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F2 | [`back-arreglo-hotel-catalogo-admin`](../plans/back-arreglo-hotel-catalogo-admin.md) | — | `cerrado` | `back-arreglo-hotel-catalogo-admin` | [#92](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/92) |
 | F2 | [`back-arreglo-identity-personas-catalogo`](../plans/back-arreglo-identity-personas-catalogo.md) | — | `cerrado` | `back-arreglo-identity-personas-catalogo` | [#94](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/94) |
 | F3 | [`back-arreglo-inventory-baja-y-ajuste`](../plans/back-arreglo-inventory-baja-y-ajuste.md) | — | `cerrado` | `back-arreglo-inventory-baja-y-ajuste` | [#115](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/115) |
+| F3 | [`back-arreglo-sales-pago-202`](../plans/back-arreglo-sales-pago-202.md) | — | `cerrado` | `back-arreglo-sales-pago-202` | [#117](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/117) |
 | F2 | [`back-arreglo-ruta-interna-clientes`](../plans/back-arreglo-ruta-interna-clientes.md) | — | `cerrado` | `back-arreglo-ruta-interna-clientes` | [#86](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/86) |
 
 Valores de `Estado` (norma §8): `propuesto`, `en curso`, `cerrado`. Las tandas y colas están en [`orden.md`](orden.md).
