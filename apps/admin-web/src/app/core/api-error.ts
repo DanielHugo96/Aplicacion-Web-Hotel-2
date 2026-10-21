@@ -14,6 +14,8 @@ export interface ApiUiError {
   retryable: boolean;
   reloadable: boolean;
   relogin: boolean;
+  /** Espera pedida por `Retry-After` en ms, cuando el 503/429 la trae. */
+  retryAfterMs: number | null;
 }
 
 interface CatalogEntry {
@@ -89,6 +91,16 @@ export const ERROR_CATALOG: Record<string, CatalogEntry> = {
     message: 'El servicio no está disponible. Reintenta en unos segundos.',
     action: 'Reintentar con la misma clave.',
     retryable: true,
+  },
+  // Reportes (F4) — códigos de `contracts/errors.md` § Reporting y Gateway
+  REPORTING_NOT_READY: {
+    message: 'Los reportes aún se están preparando.',
+    action: 'Esperar bootstrapComplete; reintentar.',
+    retryable: true,
+  },
+  REPORTING_UNAVAILABLE: {
+    message: 'Los reportes no están disponibles en este momento.',
+    action: 'Contactar soporte; revisar DLT con el runbook.',
   },
   ROOM_NOT_READY: {
     message: 'La habitación no admite ingreso todavía (limpieza o mantenimiento).',
@@ -184,5 +196,15 @@ export function parseApiError(err: unknown): ApiUiError {
     retryable: !!entry?.retryable,
     reloadable: !!entry?.reloadable,
     relogin: !!entry?.relogin,
+    retryAfterMs: parseRetryAfterMs(anyErr?.headers?.get?.('Retry-After') ?? null),
   };
+}
+
+/** `Retry-After` en segundos o fecha HTTP; se convierte a milisegundos. */
+function parseRetryAfterMs(value: string | null): number | null {
+  if (!value) return null;
+  const segundos = Number(value);
+  if (Number.isFinite(segundos)) return Math.max(0, segundos * 1000);
+  const fecha = Date.parse(value);
+  return Number.isFinite(fecha) ? Math.max(fecha - Date.now(), 0) : null;
 }
