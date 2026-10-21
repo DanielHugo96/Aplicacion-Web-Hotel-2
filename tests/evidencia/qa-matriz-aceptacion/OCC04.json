@@ -4,7 +4,7 @@
     "status": 201,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "dfceafc2-806b-4896-97a1-f8a86ff55d85",
+      "x-correlation-id": "2e6dc930-bf4c-4c1c-a300-cee4629cb238",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -13,7 +13,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "589",
-      "date": "Wed, 21 Oct 2026 06:18:32 GMT",
+      "date": "Wed, 21 Oct 2026 08:22:29 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -21,13 +21,13 @@
       "success": true,
       "message": "OK",
       "data": {
-        "idHabitacion": 309,
+        "idHabitacion": 305,
         "idHotel": 1,
-        "numero": "OADBA",
-        "idPiso": 39,
-        "pisoNombre": "Piso OCC04 ADBA17",
-        "idCategoria": 9,
-        "categoriaNombre": "Categoria OCC04 ADBA17",
+        "numero": "O99C2",
+        "idPiso": 34,
+        "pisoNombre": "Piso OCC04 99C29F",
+        "idCategoria": 5,
+        "categoriaNombre": "Categoria OCC04 99C29F",
         "detalle": "OCC04",
         "precio": 50.0,
         "publicada": false,
@@ -51,7 +51,7 @@
         "version": 1
       },
       "meta": {
-        "correlationId": "dfceafc2-806b-4896-97a1-f8a86ff55d85"
+        "correlationId": "2e6dc930-bf4c-4c1c-a300-cee4629cb238"
       }
     }
   },
@@ -59,7 +59,7 @@
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "a80f932c-5179-4333-8bb5-dab203128154",
+      "x-correlation-id": "59289f20-7c01-4676-aafb-191154b3678d",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -68,7 +68,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "202",
-      "date": "Wed, 21 Oct 2026 06:18:32 GMT",
+      "date": "Wed, 21 Oct 2026 08:22:29 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -80,7 +80,7 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "a80f932c-5179-4333-8bb5-dab203128154"
+        "correlationId": "59289f20-7c01-4676-aafb-191154b3678d"
       }
     }
   },
@@ -88,7 +88,7 @@
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "8b1f7af1-7067-4904-a0bb-e860e289603e",
+      "x-correlation-id": "87356a7b-d0e2-47fa-baa6-d340d391ea18",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -97,7 +97,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "202",
-      "date": "Wed, 21 Oct 2026 06:18:32 GMT",
+      "date": "Wed, 21 Oct 2026 08:22:29 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -109,13 +109,13 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "8b1f7af1-7067-4904-a0bb-e860e289603e"
+        "correlationId": "87356a7b-d0e2-47fa-baa6-d340d391ea18"
       }
     }
   },
   "filas": [
     {
-      "idHabitacion": "309",
+      "idHabitacion": "305",
       "piso": "t",
       "categoria": "t",
       "habitacion": "t"
@@ -124,5 +124,5 @@
   "activaBajoPadreInactivo": [],
   "exigido": "uno 409 ACTIVE_DEPENDENCIES; nunca habitación activa bajo padre inactivo",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:18:33.028815Z"
+  "ejecutadoEn": "2026-10-21T08:22:29.220299Z"
 }

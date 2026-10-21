@@ -3,7 +3,7 @@
     "sede": {
       "alta": {
         "status": 201,
-        "idHotel": 7
+        "idHotel": 5
       },
       "edicion": {
         "status": 200,
@@ -18,7 +18,7 @@
       },
       "db": [
         [
-          "7",
+          "5",
           "f",
           "3"
         ]
@@ -27,7 +27,7 @@
     "piso": {
       "alta": {
         "status": 201,
-        "idPiso": 36
+        "idPiso": 33
       },
       "edicion": {
         "status": 200,
@@ -44,20 +44,20 @@
           "success": true,
           "message": "OK",
           "data": {
-            "idPiso": 36,
+            "idPiso": 33,
             "idHotel": 1,
-            "descripcion": "Piso Matriz D291A181 editado",
+            "descripcion": "Piso Matriz 40AB72A7 editado",
             "estado": false,
             "version": 3
           },
           "meta": {
-            "correlationId": "6201aa20-ab5f-4f34-9bac-1ad2e01c304e"
+            "correlationId": "b374f5d8-a784-40ef-918e-e5e6b3ed5edd"
           }
         }
       },
       "db": [
         [
-          "36",
+          "33",
           "f",
           "3"
         ]
@@ -66,7 +66,7 @@
     "categoria": {
       "alta": {
         "status": 201,
-        "idCategoria": 6
+        "idCategoria": 4
       },
       "edicion": {
         "status": 200,
@@ -83,21 +83,21 @@
           "success": true,
           "message": "OK",
           "data": {
-            "idCategoria": 6,
-            "descripcion": "Categoria Matriz D291A181 editada",
+            "idCategoria": 4,
+            "descripcion": "Categoria Matriz 40AB72A7 editada",
             "detalle": "Categoria de la matriz editada",
             "capacidad": 2,
             "estado": false,
             "version": 3
           },
           "meta": {
-            "correlationId": "d5b1c246-785d-45d0-80be-53ab8177f248"
+            "correlationId": "2bb3477d-b9c9-4c3c-8578-071961fd317f"
           }
         }
       },
       "db": [
         [
-          "6",
+          "4",
           "f",
           "3"
         ]
@@ -106,7 +106,7 @@
     "habitacion": {
       "alta": {
         "status": 201,
-        "idHabitacion": 306
+        "idHabitacion": 304
       },
       "edicion": {
         "status": 200,
@@ -123,13 +123,13 @@
           "success": true,
           "message": "OK",
           "data": {
-            "idHabitacion": 306,
+            "idHabitacion": 304,
             "idHotel": 1,
-            "numero": "MD291",
-            "idPiso": 36,
-            "pisoNombre": "Piso Matriz D291A181 editado",
-            "idCategoria": 6,
-            "categoriaNombre": "Categoria Matriz D291A181 editada",
+            "numero": "M40AB",
+            "idPiso": 33,
+            "pisoNombre": "Piso Matriz 40AB72A7 editado",
+            "idCategoria": 4,
+            "categoriaNombre": "Categoria Matriz 40AB72A7 editada",
             "detalle": "Habitacion de la matriz editada",
             "precio": 60.0,
             "publicada": false,
@@ -148,25 +148,25 @@
               "idRecepcion": null,
               "updatedAt": null
             },
-            "blockId": "ef1672b9-0ddd-4a41-922e-414c7f718140",
-            "endpoint": "/api/habitacion/operaciones/ef1672b9-0ddd-4a41-922e-414c7f718140",
+            "blockId": "3903d9d9-82a7-49ca-be17-cfc6dd690fea",
+            "endpoint": "/api/habitacion/operaciones/3903d9d9-82a7-49ca-be17-cfc6dd690fea",
             "version": 3
           },
           "meta": {
-            "correlationId": "8bcfe1bd-d504-4490-88e6-b16a854cb72e"
+            "correlationId": "aab717d7-29c6-466b-80a0-61bd17577e57"
           }
         }
       },
       "db": [
         [
-          "306",
+          "304",
           "f",
           "3"
         ]
       ],
       "operacionBaja": [
         [
-          "ef1672b9-0ddd-4a41-922e-414c7f718140",
+          "3903d9d9-82a7-49ca-be17-cfc6dd690fea",
           "APLICADA"
         ]
       ]
@@ -174,7 +174,7 @@
     "producto": {
       "alta": {
         "status": 201,
-        "idProducto": 7
+        "idProducto": 5
       },
       "edicion": {
         "status": 200,
@@ -189,7 +189,7 @@
       },
       "db": [
         [
-          "7",
+          "5",
           "f",
           "3"
         ]
@@ -226,5 +226,5 @@
   "exigido": "filas persistidas, version incrementada, DELETE estado=false, PUT sin If-Match 428",
   "cumple": true,
   "caso": "CRUD01",
-  "ejecutadoEn": "2026-10-21T06:04:16.476965Z"
+  "ejecutadoEn": "2026-10-21T08:16:01.905146Z"
 }

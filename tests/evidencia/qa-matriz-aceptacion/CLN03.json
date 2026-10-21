@@ -1,15 +1,15 @@
 {
   "caso": "CLN03",
   "eventoEntregado": {
-    "eventId": "46599c4d-6506-44a7-b5c9-c8fa17c628b9",
+    "eventId": "e7de338f-e99b-49a5-a5bd-2a1e0539ad4c",
     "type": "HabitacionLista",
     "schemaVersion": 1,
     "aggregateType": "habitacion",
     "aggregateId": "101",
     "aggregateVersion": 99,
     "idHotel": 1,
-    "occurredAt": "2026-10-21T06:18:01.226929Z",
-    "correlationId": "b7c2e511-afc3-40f3-ac2b-cfeec9fb0800",
+    "occurredAt": "2026-10-21T08:21:56.559170Z",
+    "correlationId": "5b357332-6ee8-4fe3-912d-418c3e0d1bc6",
     "payload": {
       "idHabitacion": 101,
       "idHotel": 1,
@@ -21,7 +21,7 @@
       "estado": true,
       "estadoFisico": "LISTA",
       "version": 99,
-      "cleaningCycleId": "d51f46fa-7bcc-42a3-a1b3-35189fd97e3c",
+      "cleaningCycleId": "501dc07c-778d-469f-9de9-312f8f756863",
       "cleaningRoomVersion": 1,
       "blockId": null
     }
@@ -38,7 +38,7 @@
   ],
   "limpiezaCompletadaProjection": [
     [
-      "d51f46fa-7bcc-42a3-a1b3-35189fd97e3c",
+      "501dc07c-778d-469f-9de9-312f8f756863",
       "101",
       "1"
     ]
@@ -47,9 +47,9 @@
     "estado": "OCUPADA",
     "blockId": null,
     "cleaningCycleId": null,
-    "roomVersion": 58
+    "roomVersion": 10
   },
   "exigido": "C1 conciliado sin liberar la ocupación posterior; projection no eterna",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:18:13.431928Z"
+  "ejecutadoEn": "2026-10-21T08:22:09.306825Z"
 }

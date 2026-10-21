@@ -1,11 +1,11 @@
 {
   "caso": "OCC03",
-  "blockIdR": "76bf253e-1fe0-4b7a-9011-d06f2c80177c",
+  "blockIdR": "8dca30e8-6a04-46ac-af23-77271e1ec30b",
   "cierreEstadia": {
     "status": 200,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "4097bb62-d54c-4cdd-8e02-d790acf45ec2",
+      "x-correlation-id": "89a2f151-a12a-40c0-825c-87850534dda1",
       "etag": "\"3\"",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -14,18 +14,18 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json",
-      "content-length": "1279",
-      "date": "Wed, 21 Oct 2026 06:18:13 GMT",
+      "content-length": "1278",
+      "date": "Wed, 21 Oct 2026 08:22:09 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
-    "body": "{\"success\":true,\"message\":\"Salida registrada\",\"data\":{\"idRecepcion\":33,\"idHotel\":2,\"idCliente\":101,\"idHabitacion\":201,\"numero\":\"101\",\"categoriaNombre\":\"Individual\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion individual de demostracion\",\"precioHabitacion\":80.00,\"nombre\":\"Cliente\",\"apellido\":\"Dos\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000101\",\"correo\":\"cliente.dos@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":\"2026-10-21T06:18:13.482116Z\",\"precioInicial\":80.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":0.00,\"totalPagado\":80.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":false,\"estadoEstadia\":\"CERRADA\",\"archivada\":false,\"vencida\":false,\"version\":3,\"closureId\":\"d0c0d56b-7c34-4220-aefa-812dfcac7c4f\",\"cleaningCycleId\":\"f7fe2960-0b80-4f33-a144-8a97f98885f8\",\"cierre\":{\"closureId\":\"d0c0d56b-7c34-4220-aefa-812dfcac7c4f\",\"estado\":\"COMPLETADO\",\"lastErrorCode\":null,\"calculo\":{\"cobroAhora\":80.0,\"totalGeneral\":80.0,\"consumosTotal\":0.0,\"alojamientoTotal\":80.0,\"saldoAlojamiento\":80.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":0.0,\"expectedPendingTotal\":0.0},\"medioPago\":\"EFECTIVO\"}},\"meta\":{\"correlationId\":\"4097bb62-d54c-4cdd-8e02-d790acf45ec2\"}}"
+    "body": "{\"success\":true,\"message\":\"Salida registrada\",\"data\":{\"idRecepcion\":3,\"idHotel\":2,\"idCliente\":101,\"idHabitacion\":201,\"numero\":\"101\",\"categoriaNombre\":\"Individual\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion individual de demostracion\",\"precioHabitacion\":80.00,\"nombre\":\"Cliente\",\"apellido\":\"Dos\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000101\",\"correo\":\"cliente.dos@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":\"2026-10-21T08:22:09.359353Z\",\"precioInicial\":80.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":0.00,\"totalPagado\":80.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":false,\"estadoEstadia\":\"CERRADA\",\"archivada\":false,\"vencida\":false,\"version\":3,\"closureId\":\"558fb4e9-304d-43f2-bd92-cb9e7d3823a1\",\"cleaningCycleId\":\"9908c0a7-33dc-4f9d-91cc-ae32a93b85ff\",\"cierre\":{\"closureId\":\"558fb4e9-304d-43f2-bd92-cb9e7d3823a1\",\"estado\":\"COMPLETADO\",\"lastErrorCode\":null,\"calculo\":{\"cobroAhora\":80.0,\"totalGeneral\":80.0,\"consumosTotal\":0.0,\"alojamientoTotal\":80.0,\"saldoAlojamiento\":80.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":0.0,\"expectedPendingTotal\":0.0},\"medioPago\":\"EFECTIVO\"}},\"meta\":{\"correlationId\":\"89a2f151-a12a-40c0-825c-87850534dda1\"}}"
   },
   "reintentoMismoBlockId": {
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "93c14589-9031-46b2-bf3f-bd38eb4006e8",
+      "x-correlation-id": "14bf4e34-96e9-45d7-88a3-7e7e31109fdc",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -34,13 +34,13 @@
       "x-frame-options": "DENY",
       "content-type": "application/json;charset=UTF-8",
       "content-length": "241",
-      "date": "Wed, 21 Oct 2026 06:18:13 GMT",
+      "date": "Wed, 21 Oct 2026 08:22:09 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
     "body": {
       "meta": {
-        "correlationId": "e00ddc74-e85a-41e2-8ec4-eb462b7ee8f7"
+        "correlationId": "0b54ed5f-9818-434a-b114-4c32cdebdb0f"
       },
       "error": {
         "code": "GATE_NOT_AVAILABLE",
@@ -56,8 +56,8 @@
     "status": 200,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "70aaf53c-4f11-4615-ad86-6cf7b90b7c3a",
-      "etag": "\"7\"",
+      "x-correlation-id": "89770817-c00a-4832-98b0-d953645808e0",
+      "etag": "\"3\"",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -66,7 +66,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "713",
-      "date": "Wed, 21 Oct 2026 06:18:29 GMT",
+      "date": "Wed, 21 Oct 2026 08:22:21 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -99,74 +99,38 @@
           "idRecepcion": null,
           "updatedAt": null
         },
-        "blockId": "15b2790f-95ed-4c83-9ab5-7e839b8c1c2d",
-        "endpoint": "/api/habitacion/operaciones/15b2790f-95ed-4c83-9ab5-7e839b8c1c2d",
-        "version": 7
+        "blockId": "921f3ec5-28dc-4d40-88a4-e402c2e1bc16",
+        "endpoint": "/api/habitacion/operaciones/921f3ec5-28dc-4d40-88a4-e402c2e1bc16",
+        "version": 3
       },
       "meta": {
-        "correlationId": "70aaf53c-4f11-4615-ad86-6cf7b90b7c3a"
+        "correlationId": "89770817-c00a-4832-98b0-d953645808e0"
       }
     }
   },
   "bloqueos": [
     {
-      "blockId": "e89c0806-d501-4abc-9f13-b0188348cb34",
+      "blockId": "8dca30e8-6a04-46ac-af23-77271e1ec30b",
       "estado": "RECHAZADO",
       "errorCode": "GATE_NOT_AVAILABLE"
     },
     {
-      "blockId": "a54c9428-a660-4bf5-bf2f-2a776b968068",
-      "estado": "RECHAZADO",
-      "errorCode": "GATE_NOT_AVAILABLE"
-    },
-    {
-      "blockId": "96b587fc-dba1-4585-a33a-259b991deb68",
-      "estado": "RECHAZADO",
-      "errorCode": "GATE_NOT_AVAILABLE"
-    },
-    {
-      "blockId": "f82a9cbc-ceb0-407d-b599-b39468ccacc6",
-      "estado": "LIBERADO",
-      "errorCode": ""
-    },
-    {
-      "blockId": "76bf253e-1fe0-4b7a-9011-d06f2c80177c",
-      "estado": "RECHAZADO",
-      "errorCode": "GATE_NOT_AVAILABLE"
-    },
-    {
-      "blockId": "15b2790f-95ed-4c83-9ab5-7e839b8c1c2d",
+      "blockId": "921f3ec5-28dc-4d40-88a4-e402c2e1bc16",
       "estado": "ACTIVO",
       "errorCode": ""
     }
   ],
   "operaciones": [
     {
-      "blockId": "15b2790f-95ed-4c83-9ab5-7e839b8c1c2d",
+      "blockId": "8dca30e8-6a04-46ac-af23-77271e1ec30b",
+      "estado": "RECHAZADA"
+    },
+    {
+      "blockId": "921f3ec5-28dc-4d40-88a4-e402c2e1bc16",
       "estado": "APLICADA"
-    },
-    {
-      "blockId": "76bf253e-1fe0-4b7a-9011-d06f2c80177c",
-      "estado": "RECHAZADA"
-    },
-    {
-      "blockId": "96b587fc-dba1-4585-a33a-259b991deb68",
-      "estado": "RECHAZADA"
-    },
-    {
-      "blockId": "a54c9428-a660-4bf5-bf2f-2a776b968068",
-      "estado": "RECHAZADA"
-    },
-    {
-      "blockId": "e89c0806-d501-4abc-9f13-b0188348cb34",
-      "estado": "RECHAZADA"
-    },
-    {
-      "blockId": "f82a9cbc-ceb0-407d-b599-b39468ccacc6",
-      "estado": "LIBERADA"
     }
   ],
   "exigido": "R sigue 409 GATE_NOT_AVAILABLE (rechazo durable); el nuevo 200",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:18:29.305607Z"
+  "ejecutadoEn": "2026-10-21T08:22:22.152062Z"
 }

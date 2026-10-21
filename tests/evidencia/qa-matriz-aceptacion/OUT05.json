@@ -18,7 +18,7 @@
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "459f6c8a-c10d-422c-8699-8f0c46c01b1a",
+      "x-correlation-id": "06820f7d-6c75-4a2a-bb61-1558679de0d2",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -27,7 +27,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "201",
-      "date": "Wed, 21 Oct 2026 07:15:38 GMT",
+      "date": "Wed, 21 Oct 2026 08:31:04 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -40,25 +40,25 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "459f6c8a-c10d-422c-8699-8f0c46c01b1a"
+        "correlationId": "06820f7d-6c75-4a2a-bb61-1558679de0d2"
       }
     }
   },
   "receipts": [
-    "e9e03eb9-b3ad-41ae-9e76-01df2b2a8756",
-    "d9b3ffd2-2071-4dd4-852b-ac6d16915e3c"
+    "cf25de85-563b-4a96-afcf-ba82509a892f",
+    "da029690-0d14-49a9-b1d7-458650ee4d54"
   ],
   "salidas": [
     {
-      "idRecepcion": "67",
+      "idRecepcion": "13",
       "estadoEstadia": "CERRADA"
     },
     {
-      "idRecepcion": "68",
+      "idRecepcion": "14",
       "estadoEstadia": "CERRADA"
     }
   ],
   "exigido": "VALIDANDO recalcula, CONFIRMANDO reenvía congelado, un cobro y una salida",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:15:39.241134Z"
+  "ejecutadoEn": "2026-10-21T08:31:05.119499Z"
 }

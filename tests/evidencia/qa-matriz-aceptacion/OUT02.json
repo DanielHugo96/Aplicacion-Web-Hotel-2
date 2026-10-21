@@ -1,11 +1,11 @@
 {
   "caso": "OUT02",
-  "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
+  "closureId": "f15cf144-eaa8-41a5-b00b-f6833eb4e4a5",
   "reintento": {
     "status": 202,
     "headers": {
-      "x-correlation-id": "1513ba3c-0b14-4f2d-afa4-68f0da0f3a78",
-      "location": "/api/recepcion/61",
+      "x-correlation-id": "019ab4a4-a26b-40aa-8238-44c9f7a9df08",
+      "location": "/api/recepcion/2",
       "retry-after": "2",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -14,8 +14,8 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json;charset=UTF-8",
-      "content-length": "1308",
-      "date": "Wed, 21 Oct 2026 07:13:18 GMT",
+      "content-length": "1307",
+      "date": "Wed, 21 Oct 2026 08:29:14 GMT",
       "connection": "close"
     },
     "body": {
@@ -32,7 +32,7 @@
             "consumosPagadosAntes": 7.0,
             "expectedPendingTotal": 0.0
           },
-          "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
+          "closureId": "f15cf144-eaa8-41a5-b00b-f6833eb4e4a5",
           "lastErrorCode": "DEPENDENCY_UNAVAILABLE"
         },
         "correo": "cliente.uno@hotel.test",
@@ -45,12 +45,12 @@
         "adelanto": 0.0,
         "apellido": "Uno",
         "archivada": false,
-        "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
+        "closureId": "f15cf144-eaa8-41a5-b00b-f6833eb4e4a5",
         "documento": "90000100",
         "idCliente": 100,
         "pisoNombre": "Primer piso",
         "fechaSalida": "2026-10-22",
-        "idRecepcion": 61,
+        "idRecepcion": 2,
         "observacion": "Fixture qa-runbooks",
         "totalPagado": 0.0,
         "fechaEntrada": "2026-10-21",
@@ -69,7 +69,7 @@
         "fechaSalidaConfirmacion": null
       },
       "meta": {
-        "correlationId": "38333edb-9a74-43c6-8eef-7176599acc5c"
+        "correlationId": "3f2512df-47c2-4295-bf3a-d8a98ef121d2"
       },
       "message": "Cierre en curso",
       "success": true
@@ -81,17 +81,17 @@
   },
   "receipts": [
     {
-      "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
+      "closureId": "f15cf144-eaa8-41a5-b00b-f6833eb4e4a5",
       "totalPendiente": "0.00"
     }
   ],
   "ventas": [
     {
-      "idVenta": "30",
+      "idVenta": "2",
       "estado": "PAGADO"
     }
   ],
   "exigido": "un receipt y una salida; ventas una sola vez",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:13:18.742050Z"
+  "ejecutadoEn": "2026-10-21T08:29:14.515613Z"
 }

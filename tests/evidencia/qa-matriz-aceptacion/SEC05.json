@@ -7,7 +7,7 @@
   "directoPost": {
     "status": 403,
     "headers": {
-      "x-correlation-id": "8d09fe40-491b-4dc0-ae22-e543f4c15a3b",
+      "x-correlation-id": "1a9d3f7b-7d4e-4b2f-9485-43b24c6e7f7d",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -16,7 +16,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json;charset=UTF-8",
       "content-length": "183",
-      "date": "Wed, 21 Oct 2026 06:00:47 GMT",
+      "date": "Wed, 21 Oct 2026 08:10:24 GMT",
       "connection": "close"
     },
     "body": {
@@ -28,14 +28,14 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "8d09fe40-491b-4dc0-ae22-e543f4c15a3b"
+        "correlationId": "1a9d3f7b-7d4e-4b2f-9485-43b24c6e7f7d"
       }
     }
   },
   "directoGet": {
     "status": 403,
     "headers": {
-      "x-correlation-id": "fc68918e-0f55-48a7-a14c-fb98c4e315e8",
+      "x-correlation-id": "22e65622-50b6-406d-bfd4-7e8ed2132c44",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -44,7 +44,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json;charset=UTF-8",
       "content-length": "183",
-      "date": "Wed, 21 Oct 2026 06:00:47 GMT",
+      "date": "Wed, 21 Oct 2026 08:10:24 GMT",
       "connection": "close"
     },
     "body": {
@@ -56,7 +56,7 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "fc68918e-0f55-48a7-a14c-fb98c4e315e8"
+        "correlationId": "22e65622-50b6-406d-bfd4-7e8ed2132c44"
       }
     }
   },
@@ -64,7 +64,7 @@
     "status": 404,
     "headers": {
       "content-type": "application/json",
-      "content-length": "135",
+      "content-length": "134",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
       "pragma": "no-cache",
       "expires": "0",
@@ -75,17 +75,17 @@
       "connection": "close"
     },
     "body": {
-      "timestamp": "2026-10-21T06:00:48.005Z",
+      "timestamp": "2026-10-21T08:10:24.449Z",
       "path": "/internal/stock/descontar",
       "status": 404,
       "error": "Not Found",
-      "requestId": "468cceef-136"
+      "requestId": "e8336e5d-46"
     }
   },
-  "stockAntes": 18,
-  "stockDespues": 18,
+  "stockAntes": 16,
+  "stockDespues": 16,
   "exigido": "403 FORBIDDEN (o 404 sin ruta por Gateway) con stock intacto",
   "cumple": true,
   "caso": "SEC05",
-  "ejecutadoEn": "2026-10-21T06:00:48.171383Z"
+  "ejecutadoEn": "2026-10-21T08:10:24.571433Z"
 }

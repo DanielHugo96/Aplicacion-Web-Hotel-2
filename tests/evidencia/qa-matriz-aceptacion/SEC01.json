@@ -4,7 +4,7 @@
     "status": 401,
     "headers": {
       "content-type": "application/json",
-      "x-correlation-id": "00193f2e-68a0-4432-b7d5-fa96835ec135",
+      "x-correlation-id": "e229d3b1-bc57-4920-b27d-6f378811c1a3",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
       "pragma": "no-cache",
       "expires": "0",
@@ -24,12 +24,12 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "00193f2e-68a0-4432-b7d5-fa96835ec135"
+        "correlationId": "e229d3b1-bc57-4920-b27d-6f378811c1a3"
       }
     }
   },
   "exigido": "401 UNAUTHENTICATED sin datos",
   "cumple": true,
   "caso": "SEC01",
-  "ejecutadoEn": "2026-10-21T06:00:31.108187Z"
+  "ejecutadoEn": "2026-10-21T08:10:23.245570Z"
 }

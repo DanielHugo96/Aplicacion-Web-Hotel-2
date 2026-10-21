@@ -4,8 +4,8 @@
   "venta202": {
     "status": 202,
     "headers": {
-      "x-correlation-id": "402ea72b-f00c-489f-8051-29ba6bff3fef",
-      "location": "/api/venta/buscar/23",
+      "x-correlation-id": "bf55d0a1-672d-4298-ac86-52698c17edfc",
+      "location": "/api/venta/buscar/9",
       "retry-after": "2",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -14,42 +14,42 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json",
-      "content-length": "394",
-      "date": "Wed, 21 Oct 2026 06:48:21 GMT",
+      "content-length": "392",
+      "date": "Wed, 21 Oct 2026 08:26:03 GMT",
       "connection": "close"
     },
     "body": {
       "success": true,
       "message": "OK",
       "data": {
-        "idVenta": 23,
-        "idRecepcion": 37,
+        "idVenta": 9,
+        "idRecepcion": 8,
         "idCliente": 101,
         "idHotel": 1,
         "total": 0.0,
         "estado": "PENDIENTE",
         "estadoOperacion": "CANCELACION_PENDIENTE",
-        "operationId": "3028c471-0657-4698-a10b-f78958574be6",
+        "operationId": "633d55c3-14fb-472d-a084-4dfe187dfe9b",
         "medioPago": null,
         "version": 2,
-        "fechaCreacion": "2026-10-21T06:48:16.150165Z",
+        "fechaCreacion": "2026-10-21T08:25:58.662006Z",
         "paidAt": null,
         "detalles": []
       },
       "meta": {
-        "correlationId": "402ea72b-f00c-489f-8051-29ba6bff3fef"
+        "correlationId": "bf55d0a1-672d-4298-ac86-52698c17edfc"
       }
     }
   },
   "operacionEnDebito": [
     {
-      "operationId": "3028c471-0657-4698-a10b-f78958574be6",
+      "operationId": "633d55c3-14fb-472d-a084-4dfe187dfe9b",
       "estado": "DEBITO_SOLICITADO",
       "attempts": 2
     }
   ],
   "estadoFinal": {
-    "idVenta": 23,
+    "idVenta": 9,
     "estado": "PENDIENTE",
     "estadoOperacion": "CANCELADA",
     "total": "0.00",
@@ -61,11 +61,11 @@
   },
   "movimientos": [
     {
-      "idVenta": 23,
+      "idVenta": 9,
       "idHotel": 1,
       "estado": "RESTITUIDO",
-      "resultado": "{\"estado\": \"RESTITUIDO\", \"motivo\": \"resultado incierto del débito\", \"version\": 1, \"restituidoAt\": \"2026-10-21T01:48:38.545886-05:00\"}",
-      "createdAt": "2026-10-21 06:48:38.545886+00"
+      "resultado": "{\"estado\": \"RESTITUIDO\", \"motivo\": \"resultado incierto del débito\", \"version\": 1, \"restituidoAt\": \"2026-10-21T03:26:19.986487-05:00\"}",
+      "createdAt": "2026-10-21 08:26:19.986487+00"
     }
   ],
   "stockAntes": 20,
@@ -73,5 +73,5 @@
   "operacionNoTerminal": false,
   "exigido": "misma compensación segura sin liberar antes de RESTITUIDO",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:48:50.373807Z"
+  "ejecutadoEn": "2026-10-21T08:27:12.846451Z"
 }

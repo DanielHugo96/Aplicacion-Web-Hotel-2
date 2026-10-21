@@ -38,7 +38,7 @@
           }
         ],
         "meta": {
-          "correlationId": "3f999583-b655-49d6-b1d0-1f9857cfbad2",
+          "correlationId": "aa91647a-fa2d-4dec-8836-1f91cf2839a8",
           "page": 0,
           "size": 20,
           "totalElements": 3
@@ -61,7 +61,7 @@
           "correoContacto": "contacto@hotel.test"
         },
         "meta": {
-          "correlationId": "d1741733-b935-4f3a-9c3d-ca31c666649a"
+          "correlationId": "1f2815b9-094b-45d9-b6d5-cd74526503ec"
         }
       }
     }
@@ -88,5 +88,5 @@
   "exigido": "parámetro ignorado o 400; sin dato privado ni endpoint nuevo",
   "cumple": true,
   "caso": "LP02",
-  "ejecutadoEn": "2026-10-21T06:04:12.609645Z"
+  "ejecutadoEn": "2026-10-21T08:15:55.522633Z"
 }

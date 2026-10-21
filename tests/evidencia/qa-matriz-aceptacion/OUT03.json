@@ -1,7 +1,7 @@
 {
   "caso": "OUT03",
   "cotizacion": {
-    "idRecepcion": 65,
+    "idRecepcion": 11,
     "alojamiento": 60.0,
     "adelanto": 20.0,
     "penalidad": 0.0,
@@ -10,13 +10,13 @@
     "consumosPendientes": 0.0,
     "cobroAhora": 40.0,
     "moneda": "PEN",
-    "calculadoEn": "2026-10-21T07:13:32.016568Z"
+    "calculadoEn": "2026-10-21T08:29:15.115101500Z"
   },
   "montoInexacto": {
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "3eeaa7c3-1848-4eb1-9f40-f4bea46a4d2e",
+      "x-correlation-id": "e0307a07-10a2-4ec1-a620-98229f529426",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -25,7 +25,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "532",
-      "date": "Wed, 21 Oct 2026 07:13:32 GMT",
+      "date": "Wed, 21 Oct 2026 08:29:15 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -34,7 +34,7 @@
       "message": "El monto no coincide con el calculado. Revisa la nueva cotización.",
       "data": {
         "cotizacion": {
-          "idRecepcion": 65,
+          "idRecepcion": 11,
           "alojamiento": 60.0,
           "adelanto": 20.0,
           "penalidad": 0.0,
@@ -43,9 +43,9 @@
           "consumosPendientes": 0.0,
           "cobroAhora": 40.0,
           "moneda": "PEN",
-          "calculadoEn": "2026-10-21T07:13:32.049016100Z"
+          "calculadoEn": "2026-10-21T08:29:15.166259800Z"
         },
-        "closureId": "01f6b382-eb65-4bfc-a4df-120d74b216c0"
+        "closureId": "7abffb1e-7d00-4179-bb1e-51c9e3e49cef"
       },
       "error": {
         "code": "AMOUNT_MISMATCH",
@@ -54,12 +54,12 @@
         }
       },
       "meta": {
-        "correlationId": "3eeaa7c3-1848-4eb1-9f40-f4bea46a4d2e"
+        "correlationId": "e0307a07-10a2-4ec1-a620-98229f529426"
       }
     }
   },
   "cierreRechazado": {
-    "closureId": "01f6b382-eb65-4bfc-a4df-120d74b216c0",
+    "closureId": "7abffb1e-7d00-4179-bb1e-51c9e3e49cef",
     "estado": "RECHAZADO",
     "lastErrorCode": "AMOUNT_MISMATCH"
   },
@@ -67,7 +67,7 @@
     "status": 400,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "db3f5637-31ce-4c73-a264-92940b7f1251",
+      "x-correlation-id": "43159e7b-00ca-4e8d-8f66-8c619a1db755",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -76,7 +76,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "230",
-      "date": "Wed, 21 Oct 2026 07:13:32 GMT",
+      "date": "Wed, 21 Oct 2026 08:29:15 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -91,12 +91,12 @@
         }
       },
       "meta": {
-        "correlationId": "db3f5637-31ce-4c73-a264-92940b7f1251"
+        "correlationId": "43159e7b-00ca-4e8d-8f66-8c619a1db755"
       }
     }
   },
   "cierresVigentes": 0,
   "exigido": "409 AMOUNT_MISMATCH con cierre RECHAZADO; penalidad > precioInicial rechazada sin cierre",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:13:32.305635Z"
+  "ejecutadoEn": "2026-10-21T08:29:15.454106Z"
 }

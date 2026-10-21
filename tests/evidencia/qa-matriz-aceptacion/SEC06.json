@@ -10,7 +10,7 @@
         "status": 401,
         "headers": {
           "content-type": "application/json",
-          "x-correlation-id": "f442a841-ca96-494c-9f8f-8fe2628de976",
+          "x-correlation-id": "18e4a881-0efa-4587-9c18-e287f2ad0256",
           "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
           "pragma": "no-cache",
           "expires": "0",
@@ -30,7 +30,7 @@
             "fields": {}
           },
           "meta": {
-            "correlationId": "f442a841-ca96-494c-9f8f-8fe2628de976"
+            "correlationId": "18e4a881-0efa-4587-9c18-e287f2ad0256"
           }
         }
       },
@@ -38,7 +38,7 @@
         "status": 401,
         "headers": {
           "content-type": "application/json",
-          "x-correlation-id": "c97e9d54-df93-4b58-b016-f4084d30125f",
+          "x-correlation-id": "e15ea3b9-7517-4524-9687-76abf0b54c46",
           "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
           "pragma": "no-cache",
           "expires": "0",
@@ -58,7 +58,7 @@
             "fields": {}
           },
           "meta": {
-            "correlationId": "c97e9d54-df93-4b58-b016-f4084d30125f"
+            "correlationId": "e15ea3b9-7517-4524-9687-76abf0b54c46"
           }
         }
       }
@@ -68,7 +68,7 @@
         "status": 401,
         "headers": {
           "content-type": "application/json",
-          "x-correlation-id": "e71e7ee2-6dea-4b52-b91c-4d2199c989b9",
+          "x-correlation-id": "d9f6bddc-770c-4dce-9cea-48ba63333547",
           "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
           "pragma": "no-cache",
           "expires": "0",
@@ -88,7 +88,7 @@
             "fields": {}
           },
           "meta": {
-            "correlationId": "e71e7ee2-6dea-4b52-b91c-4d2199c989b9"
+            "correlationId": "d9f6bddc-770c-4dce-9cea-48ba63333547"
           }
         }
       },
@@ -96,7 +96,7 @@
         "status": 401,
         "headers": {
           "content-type": "application/json",
-          "x-correlation-id": "3aff845c-9d51-4a81-addf-3c0507b952e6",
+          "x-correlation-id": "9c1fcf47-ca3a-4683-8694-53a6691fe5f3",
           "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
           "pragma": "no-cache",
           "expires": "0",
@@ -116,7 +116,7 @@
             "fields": {}
           },
           "meta": {
-            "correlationId": "3aff845c-9d51-4a81-addf-3c0507b952e6"
+            "correlationId": "9c1fcf47-ca3a-4683-8694-53a6691fe5f3"
           }
         }
       },
@@ -124,7 +124,7 @@
         "status": 401,
         "headers": {
           "content-type": "application/json",
-          "x-correlation-id": "ebf83095-e0d3-4363-ba15-c8f54104cc91",
+          "x-correlation-id": "e9c3512c-6b10-4150-9e38-efd4d6a4afa2",
           "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
           "pragma": "no-cache",
           "expires": "0",
@@ -144,7 +144,7 @@
             "fields": {}
           },
           "meta": {
-            "correlationId": "ebf83095-e0d3-4363-ba15-c8f54104cc91"
+            "correlationId": "e9c3512c-6b10-4150-9e38-efd4d6a4afa2"
           }
         }
       }
@@ -153,5 +153,5 @@
   "exigido": "401 en cada servicio",
   "cumple": true,
   "caso": "SEC06",
-  "ejecutadoEn": "2026-10-21T06:00:48.301714Z"
+  "ejecutadoEn": "2026-10-21T08:10:24.689121Z"
 }

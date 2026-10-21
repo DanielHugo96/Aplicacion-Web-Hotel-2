@@ -1,0 +1,2506 @@
+{
+  "caso": "NOT01",
+  "mailpit": "detenido antes del cierre y levantado al terminar la observación",
+  "salida": {
+    "status": 200,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "f7068982-964c-47c6-82b4-bc56dfaabb7e",
+      "etag": "\"3\"",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "1269",
+      "date": "Wed, 21 Oct 2026 08:44:29 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "Salida registrada",
+      "data": {
+        "idRecepcion": 19,
+        "idHotel": 3,
+        "idCliente": 100,
+        "idHabitacion": 302,
+        "numero": "102",
+        "categoriaNombre": "Doble",
+        "pisoNombre": "Primer piso",
+        "detalleHabitacion": "Habitacion doble de demostracion",
+        "precioHabitacion": 90.0,
+        "nombre": "Cliente",
+        "apellido": "Uno",
+        "tipoDocumento": "DNI",
+        "documento": "90000100",
+        "correo": "cliente.uno@hotel.test",
+        "fechaEntrada": "2026-10-21",
+        "fechaSalida": "2026-10-22",
+        "fechaSalidaConfirmacion": "2026-10-21T08:44:29.951356Z",
+        "precioInicial": 90.0,
+        "adelanto": 0.0,
+        "medioPagoAdelanto": "EFECTIVO",
+        "precioRestante": 0.0,
+        "totalPagado": 90.0,
+        "costoPenalidad": 0.0,
+        "motivoPenalidad": null,
+        "observacion": "Fixture qa-runbooks",
+        "estado": false,
+        "estadoEstadia": "CERRADA",
+        "archivada": false,
+        "vencida": false,
+        "version": 3,
+        "closureId": "5bbc7b13-ea41-460b-bc87-1130005b9c17",
+        "cleaningCycleId": "9cbe9d86-2e46-4328-a9ee-2c35fcf834ca",
+        "cierre": {
+          "closureId": "5bbc7b13-ea41-460b-bc87-1130005b9c17",
+          "estado": "COMPLETADO",
+          "lastErrorCode": null,
+          "calculo": {
+            "cobroAhora": 90.0,
+            "totalGeneral": 90.0,
+            "consumosTotal": 0.0,
+            "alojamientoTotal": 90.0,
+            "saldoAlojamiento": 90.0,
+            "consumosPendientes": 0.0,
+            "consumosPagadosAntes": 0.0,
+            "expectedPendingTotal": 0.0
+          },
+          "medioPago": "EFECTIVO"
+        }
+      },
+      "meta": {
+        "correlationId": "f7068982-964c-47c6-82b4-bc56dfaabb7e"
+      }
+    }
+  },
+  "jobPrimero": {
+    "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+    "tipo": "CHECKOUT",
+    "estado": "PENDIENTE",
+    "attempts": 0,
+    "lastErrorCode": null,
+    "sentAt": null,
+    "destinatario": "cliente.uno@hotel.test",
+    "idRecepcion": 19,
+    "leaseToken": null,
+    "leaseUntil": null
+  },
+  "payloadRedelivery": {
+    "type": "NotificacionCheckout",
+    "idHotel": 3,
+    "payload": {
+      "hotel": "Hotel Demo Arequipa",
+      "nombre": "Cliente Uno",
+      "idPersona": 100,
+      "idRecepcion": 19,
+      "destinatario": "cliente.uno@hotel.test",
+      "totalConsumos": 0.0,
+      "templateVersion": 1,
+      "totalAlojamiento": 90.0
+    },
+    "issuedAt": "2026-10-21T08:44:29.955353700Z",
+    "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+    "correlationId": "f7068982-964c-47c6-82b4-bc56dfaabb7e",
+    "schemaVersion": 1
+  },
+  "redelivery": {
+    "status": 200,
+    "headers": {
+      "allow": "POST, OPTIONS",
+      "cache-control": "no-cache",
+      "connection": "close",
+      "content-length": "15",
+      "content-security-policy": "script-src 'self'; object-src 'self'",
+      "content-type": "application/json",
+      "date": "Wed, 21 Oct 2026 08:44:35 GMT",
+      "server": "Cowboy",
+      "vary": "accept, accept-encoding, origin"
+    },
+    "body": {
+      "routed": true
+    }
+  },
+  "jobsTrasRedelivery": [
+    {
+      "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+      "tipo": "CHECKOUT",
+      "estado": "PENDIENTE",
+      "attempts": 1,
+      "lastErrorCode": "SMTP_ERROR",
+      "sentAt": null,
+      "destinatario": "cliente.uno@hotel.test",
+      "idRecepcion": 19,
+      "leaseToken": null,
+      "leaseUntil": null
+    }
+  ],
+  "timeline": [
+    {
+      "ts": "2026-10-21T08:44:44.726870Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:45:04.835956Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:45:24.940658Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:45:45.062618Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 1,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:46:05.167925Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:46:25.282269Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:46:45.403447Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:47:05.522999Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:47:25.669909Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:47:45.781127Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:48:05.887275Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:48:26.297029Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:48:46.401008Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:49:06.504191Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:49:26.608011Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:49:46.713664Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:50:06.815152Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:50:26.919664Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:50:47.026903Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 2,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:51:07.144597Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:51:27.255699Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:51:47.374084Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:52:07.478663Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:52:27.586535Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:52:47.691486Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:53:07.801888Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:53:27.947467Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:53:48.060196Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:54:08.159439Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:54:28.275494Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:54:48.394423Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:55:08.515926Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:55:28.666522Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:55:48.765106Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:56:08.866481Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:56:28.986480Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:56:49.092528Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:57:09.200363Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:57:29.326064Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:57:49.433378Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:58:09.534625Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:58:29.634255Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:58:49.754519Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:59:09.873611Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:59:29.984680Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T08:59:50.087402Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:00:10.207634Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:00:30.342522Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:00:50.464520Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:01:10.572698Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:01:30.689756Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:01:50.810193Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:02:10.913412Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:02:31.018928Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:02:51.123386Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:03:11.240664Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:03:31.347336Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:03:51.449985Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:04:11.557791Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:04:31.662955Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:04:51.767269Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:05:11.997918Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:05:32.106292Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:05:52.211393Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:06:12.319251Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:06:32.425761Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:06:52.542884Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:07:12.652467Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:07:32.793794Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:07:52.899351Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:08:13.025008Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:08:33.165538Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:08:53.270439Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:09:13.372806Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:09:33.497276Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:09:53.598377Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:10:13.699919Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:10:33.817662Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:10:53.954964Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:11:14.062972Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:11:34.200189Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:11:54.302433Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:12:14.423199Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:12:34.540857Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:12:54.638892Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:13:14.742363Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:13:34.844513Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:13:54.955873Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:14:15.077447Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:14:35.206801Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:14:55.337502Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:15:15.439345Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:15:35.543603Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:15:55.640704Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:16:15.748309Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:16:35.849476Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:16:55.951482Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:17:16.056580Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:17:36.162724Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:17:56.509229Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:18:16.639903Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:18:36.744236Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:18:56.849342Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:19:16.966196Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:19:37.071175Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:19:57.179982Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:20:17.291349Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:20:37.397611Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:20:57.505569Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "PENDIENTE",
+          "attempts": 3,
+          "lastErrorCode": "SMTP_ERROR",
+          "sentAt": null,
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:21:17.631711Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:21:37.760774Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:21:57.865848Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:22:17.971975Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:22:38.106735Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:22:58.212073Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:23:18.335579Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:23:38.445131Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:23:58.547318Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:24:18.649816Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:24:38.768651Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:24:58.892531Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:25:18.991708Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:25:39.108355Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:25:59.210056Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:26:19.318106Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:26:39.448230Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:26:59.551155Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:27:19.664415Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:27:39.774045Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:27:59.906073Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:28:20.010079Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:28:40.112095Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:29:00.218626Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:29:20.320130Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:29:40.431647Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:30:00.540100Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:30:20.657706Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    },
+    {
+      "ts": "2026-10-21T09:30:40.766927Z",
+      "jobs": [
+        {
+          "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+          "tipo": "CHECKOUT",
+          "estado": "ENVIADA",
+          "attempts": 4,
+          "lastErrorCode": null,
+          "sentAt": "2026-10-21 09:21:02.293835+00",
+          "destinatario": "cliente.uno@hotel.test",
+          "idRecepcion": 19,
+          "leaseToken": null,
+          "leaseUntil": null
+        }
+      ]
+    }
+  ],
+  "jobsFinales": [
+    {
+      "commandId": "e18bed11-6e1c-4a29-84a1-b9f4d9e8a4bb",
+      "tipo": "CHECKOUT",
+      "estado": "ENVIADA",
+      "attempts": 4,
+      "lastErrorCode": null,
+      "sentAt": "2026-10-21 09:21:02.293835+00",
+      "destinatario": "cliente.uno@hotel.test",
+      "idRecepcion": 19,
+      "leaseToken": null,
+      "leaseUntil": null
+    }
+  ],
+  "exigido": "salida 200 sin bloquear el negocio; un job por commandId; ERROR tras agotar",
+  "cumple": false,
+  "ejecutadoEn": "2026-10-21T09:31:00.865813Z"
+}

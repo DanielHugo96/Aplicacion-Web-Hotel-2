@@ -1,11 +1,11 @@
 {
   "caso": "F6",
-  "idRecepcion": 62,
+  "idRecepcion": 3,
   "maintenance": {
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "f112d945-1eee-41a5-9b69-b9bf98f87d36",
+      "x-correlation-id": "0b54ed5f-9818-434a-b114-4c32cdebdb0f",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -14,14 +14,14 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "229",
-      "date": "Wed, 21 Oct 2026 07:11:03 GMT",
+      "date": "Wed, 21 Oct 2026 08:10:22 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
-    "body": "{\"success\":false,\"message\":\"No se puede bloquear la habitación: está ocupada o en limpieza.\",\"error\":{\"code\":\"GATE_NOT_AVAILABLE\",\"fields\":{\"idHabitacion\":\"201\"}},\"meta\":{\"correlationId\":\"f112d945-1eee-41a5-9b69-b9bf98f87d36\"}}"
+    "body": "{\"success\":false,\"message\":\"No se puede bloquear la habitación: está ocupada o en limpieza.\",\"error\":{\"code\":\"GATE_NOT_AVAILABLE\",\"fields\":{\"idHabitacion\":\"201\"}},\"meta\":{\"correlationId\":\"0b54ed5f-9818-434a-b114-4c32cdebdb0f\"}}"
   },
   "bloqueo": {
-    "blockId": "f4dee56b-b715-4a3e-bab7-bdcef7ecd940",
+    "blockId": "8dca30e8-6a04-46ac-af23-77271e1ec30b",
     "estado": "RECHAZADO",
     "errorCode": "GATE_NOT_AVAILABLE"
   },
@@ -29,9 +29,9 @@
     "estado": "OCUPADA",
     "blockId": null,
     "cleaningCycleId": null,
-    "roomVersion": 14
+    "roomVersion": 1
   },
   "exigido": "409 GATE_NOT_AVAILABLE con bloqueo RECHAZADO durable y gate OCUPADA",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:11:03.752774Z"
+  "ejecutadoEn": "2026-10-21T08:10:22.729045Z"
 }

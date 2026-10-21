@@ -3,7 +3,7 @@
   "admitir": {
     "status": 200,
     "headers": {
-      "x-correlation-id": "3fd11d27-17ad-4eef-b06e-f58ffa8f2af1",
+      "x-correlation-id": "fd753149-125e-48e3-a623-b5e91ddb0aaa",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -12,19 +12,19 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "transfer-encoding": "chunked",
-      "date": "Wed, 21 Oct 2026 06:47:54 GMT",
+      "date": "Wed, 21 Oct 2026 08:25:37 GMT",
       "connection": "close"
     },
     "body": {
       "success": true,
       "message": "OK",
       "data": {
-        "operationId": "69afae1c-e67a-4eda-a2b4-40c9c9a0e6f7",
+        "operationId": "8a8bc784-51bb-4f4d-b7c0-60ded525e191",
         "tipo": "VENTA",
         "estado": "ABIERTA"
       },
       "meta": {
-        "correlationId": "3fd11d27-17ad-4eef-b06e-f58ffa8f2af1"
+        "correlationId": "fd753149-125e-48e3-a623-b5e91ddb0aaa"
       }
     }
   },
@@ -37,14 +37,14 @@
       "content-length": "15",
       "content-security-policy": "script-src 'self'; object-src 'self'",
       "content-type": "application/json",
-      "date": "Wed, 21 Oct 2026 06:47:56 GMT",
+      "date": "Wed, 21 Oct 2026 08:25:38 GMT",
       "server": "Cowboy",
       "vary": "accept, accept-encoding, origin"
     },
     "body": "{\"routed\":true}"
   },
   "lapida": {
-    "operationId": "69afae1c-e67a-4eda-a2b4-40c9c9a0e6f7",
+    "operationId": "8a8bc784-51bb-4f4d-b7c0-60ded525e191",
     "tipo": "VENTA",
     "estado": "FINALIZADA",
     "resultado": "RECHAZADA"
@@ -52,7 +52,7 @@
   "admitirTardio": {
     "status": 409,
     "headers": {
-      "x-correlation-id": "e3ccba3b-f632-47d2-b7bf-188b98119d8d",
+      "x-correlation-id": "2c442a27-2030-4f44-b317-cc6aaa9b4506",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -61,7 +61,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "transfer-encoding": "chunked",
-      "date": "Wed, 21 Oct 2026 06:47:56 GMT",
+      "date": "Wed, 21 Oct 2026 08:25:39 GMT",
       "connection": "close"
     },
     "body": {
@@ -73,12 +73,12 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "e3ccba3b-f632-47d2-b7bf-188b98119d8d"
+        "correlationId": "2c442a27-2030-4f44-b317-cc6aaa9b4506"
       }
     }
   },
   "movimientos": 0,
   "exigido": "lápida FINALIZADA con tipo completo; admitir tardío 409; sin débito",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:47:56.915745Z"
+  "ejecutadoEn": "2026-10-21T08:25:39.423976Z"
 }

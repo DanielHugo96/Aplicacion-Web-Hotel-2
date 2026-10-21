@@ -5,8 +5,8 @@
     "status": 202,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "e2abc2a3-ffa7-4777-8918-5f13dfbce2a1",
-      "location": "/api/habitacion/operaciones/8c406b9c-2137-41f5-ad0c-ee2920b9d0d2",
+      "x-correlation-id": "5d5db08f-504d-4477-bb74-1a2efc1d355b",
+      "location": "/api/habitacion/operaciones/6d7b02b0-1d53-416c-9a0d-a62e081bbd56",
       "retry-after": "2",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -16,14 +16,14 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "234",
-      "date": "Wed, 21 Oct 2026 07:10:20 GMT",
+      "date": "Wed, 21 Oct 2026 08:09:40 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
-    "body": "{\"success\":true,\"message\":\"Operación en curso\",\"data\":{\"blockId\":\"8c406b9c-2137-41f5-ad0c-ee2920b9d0d2\",\"idHabitacion\":102,\"tipo\":\"MANTENIMIENTO\",\"estado\":\"PREPARANDO\"},\"meta\":{\"correlationId\":\"e2abc2a3-ffa7-4777-8918-5f13dfbce2a1\"}}"
+    "body": "{\"success\":true,\"message\":\"Operación en curso\",\"data\":{\"blockId\":\"6d7b02b0-1d53-416c-9a0d-a62e081bbd56\",\"idHabitacion\":102,\"tipo\":\"MANTENIMIENTO\",\"estado\":\"PREPARANDO\"},\"meta\":{\"correlationId\":\"5d5db08f-504d-4477-bb74-1a2efc1d355b\"}}"
   },
   "operacion": {
-    "blockId": "8c406b9c-2137-41f5-ad0c-ee2920b9d0d2",
+    "blockId": "6d7b02b0-1d53-416c-9a0d-a62e081bbd56",
     "estado": "PREPARANDO",
     "tipo": "MANTENIMIENTO",
     "attempts": 0
@@ -35,13 +35,13 @@
       "success": true,
       "message": "OK",
       "data": {
-        "blockId": "8c406b9c-2137-41f5-ad0c-ee2920b9d0d2",
+        "blockId": "6d7b02b0-1d53-416c-9a0d-a62e081bbd56",
         "idHabitacion": 102,
         "tipo": "MANTENIMIENTO",
         "estado": "PREPARANDO"
       },
       "meta": {
-        "correlationId": "89974f2c-eb2a-42a9-8350-8ede8e9fbb79"
+        "correlationId": "2a030597-d9f1-4002-9994-3b70d23f78b8"
       }
     }
   },
@@ -49,9 +49,9 @@
     "estado": "LIBRE",
     "blockId": null,
     "cleaningCycleId": null,
-    "roomVersion": 76
+    "roomVersion": 3
   },
   "exigido": "blockId guardado y fase PREPARANDO visible en GET /api/habitacion/operaciones/{blockId}",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:11:03.752774Z"
+  "ejecutadoEn": "2026-10-21T08:10:22.728519Z"
 }

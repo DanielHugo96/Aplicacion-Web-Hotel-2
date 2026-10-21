@@ -4,7 +4,7 @@
     "status": 201,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "1c6db5a5-c01a-4bd6-9999-909019eec4d7",
+      "x-correlation-id": "10f240fa-f7cb-4751-8319-9cedbb372389",
       "etag": "\"1\"",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -13,8 +13,8 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json",
-      "content-length": "875",
-      "date": "Wed, 21 Oct 2026 06:16:52 GMT",
+      "content-length": "874",
+      "date": "Wed, 21 Oct 2026 08:20:27 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -22,7 +22,7 @@
       "success": true,
       "message": "Check-in registrado",
       "data": {
-        "idRecepcion": 34,
+        "idRecepcion": 5,
         "idHotel": 1,
         "idCliente": 100,
         "idHabitacion": 101,
@@ -57,7 +57,7 @@
         "cierre": null
       },
       "meta": {
-        "correlationId": "1c6db5a5-c01a-4bd6-9999-909019eec4d7"
+        "correlationId": "10f240fa-f7cb-4751-8319-9cedbb372389"
       }
     }
   },
@@ -65,7 +65,7 @@
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "89a79677-ef6e-49ef-8daf-8a4fee35d887",
+      "x-correlation-id": "d6940ace-6e87-457d-b3e7-db7ec70c191e",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -74,7 +74,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "183",
-      "date": "Wed, 21 Oct 2026 06:16:52 GMT",
+      "date": "Wed, 21 Oct 2026 08:20:27 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -87,7 +87,7 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "89a79677-ef6e-49ef-8daf-8a4fee35d887"
+        "correlationId": "d6940ace-6e87-457d-b3e7-db7ec70c191e"
       }
     }
   },
@@ -103,5 +103,5 @@
   "indiceUnico": "uq_recepcion_habitacion_activa",
   "exigido": "uno 201, otro 409 ROOM_OCCUPIED, una sola fila ACTIVA",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:16:52.234425Z"
+  "ejecutadoEn": "2026-10-21T08:20:27.564756Z"
 }

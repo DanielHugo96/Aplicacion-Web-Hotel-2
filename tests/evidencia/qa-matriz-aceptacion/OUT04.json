@@ -1,8 +1,8 @@
 {
   "caso": "OUT04",
-  "estadia": 66,
+  "estadia": 12,
   "cotizacion": {
-    "idRecepcion": 66,
+    "idRecepcion": 12,
     "alojamiento": 90.0,
     "adelanto": 0.0,
     "penalidad": 0.0,
@@ -11,13 +11,13 @@
     "consumosPendientes": 0.0,
     "cobroAhora": 90.0,
     "moneda": "PEN",
-    "calculadoEn": "2026-10-21T07:13:48.642761Z"
+    "calculadoEn": "2026-10-21T08:29:15.903421800Z"
   },
   "salida": {
     "status": 200,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "90b5447d-7319-4838-abc1-f65809cf7964",
+      "x-correlation-id": "74509349-2ee5-42c7-95e6-23f66e205590",
       "etag": "\"3\"",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -27,7 +27,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "1269",
-      "date": "Wed, 21 Oct 2026 07:13:48 GMT",
+      "date": "Wed, 21 Oct 2026 08:29:15 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -35,7 +35,7 @@
       "success": true,
       "message": "Salida registrada",
       "data": {
-        "idRecepcion": 66,
+        "idRecepcion": 12,
         "idHotel": 3,
         "idCliente": 101,
         "idHabitacion": 302,
@@ -51,7 +51,7 @@
         "correo": "cliente.dos@hotel.test",
         "fechaEntrada": "2026-10-21",
         "fechaSalida": "2026-10-22",
-        "fechaSalidaConfirmacion": "2026-10-21T07:13:48.701827Z",
+        "fechaSalidaConfirmacion": "2026-10-21T08:29:15.943745Z",
         "precioInicial": 90.0,
         "adelanto": 0.0,
         "medioPagoAdelanto": "EFECTIVO",
@@ -65,10 +65,10 @@
         "archivada": false,
         "vencida": false,
         "version": 3,
-        "closureId": "ad86a012-3e0f-49e5-9310-0755fbabdb82",
-        "cleaningCycleId": "1025fb96-64a0-4e30-a962-2b1a857de79f",
+        "closureId": "12495a80-7b0e-4e03-8579-b9fd9c111c2c",
+        "cleaningCycleId": "630626b4-76ca-4cf6-a91d-2cf884ff0b88",
         "cierre": {
-          "closureId": "ad86a012-3e0f-49e5-9310-0755fbabdb82",
+          "closureId": "12495a80-7b0e-4e03-8579-b9fd9c111c2c",
           "estado": "COMPLETADO",
           "lastErrorCode": null,
           "calculo": {
@@ -85,18 +85,18 @@
         }
       },
       "meta": {
-        "correlationId": "90b5447d-7319-4838-abc1-f65809cf7964"
+        "correlationId": "74509349-2ee5-42c7-95e6-23f66e205590"
       }
     }
   },
   "receipt": [
     {
-      "closureId": "ad86a012-3e0f-49e5-9310-0755fbabdb82",
+      "closureId": "12495a80-7b0e-4e03-8579-b9fd9c111c2c",
       "totalPendiente": "0.00",
       "totalPagadoPrevio": "0.00"
     }
   ],
   "exigido": "receipt con totalConsumos 0.00, sede 3 y cobroAhora",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:13:48.819845Z"
+  "ejecutadoEn": "2026-10-21T08:29:16.055503Z"
 }

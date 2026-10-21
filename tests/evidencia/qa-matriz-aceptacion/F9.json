@@ -1,7 +1,7 @@
 {
   "caso": "F9",
   "filaImportada": {
-    "idVenta": 31,
+    "idVenta": 3,
     "origen": "LEGACY",
     "estado": "PENDIENTE",
     "estadoOperacion": "CONFIRMADA"
@@ -10,5 +10,5 @@
   "porSql": "fila de importación/migración: no existe endpoint que cree origen=LEGACY",
   "exigido": "venta LEGACY sin movimiento conciliado visible solo en DB",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:11:03.753283Z"
+  "ejecutadoEn": "2026-10-21T08:10:22.729563Z"
 }

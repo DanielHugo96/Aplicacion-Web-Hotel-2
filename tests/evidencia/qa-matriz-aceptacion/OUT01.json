@@ -3,8 +3,8 @@
   "ventaEnVuelo": {
     "status": 202,
     "headers": {
-      "x-correlation-id": "3dc1ab2d-63f4-440f-a435-b247d97f04aa",
-      "location": "/api/venta/buscar/32",
+      "x-correlation-id": "01f15b85-331d-4642-a9d1-930f226b3c50",
+      "location": "/api/venta/buscar/10",
       "retry-after": "2",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -14,29 +14,29 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "394",
-      "date": "Wed, 21 Oct 2026 07:11:54 GMT",
+      "date": "Wed, 21 Oct 2026 08:27:53 GMT",
       "connection": "close"
     },
     "body": {
       "success": true,
       "message": "OK",
       "data": {
-        "idVenta": 32,
-        "idRecepcion": 64,
+        "idVenta": 10,
+        "idRecepcion": 10,
         "idCliente": 100,
         "idHotel": 1,
         "total": 0.0,
         "estado": "PENDIENTE",
         "estadoOperacion": "CANCELACION_PENDIENTE",
-        "operationId": "4a2984c4-5b94-4673-9d5f-97c09be70f60",
+        "operationId": "56a98df7-56e3-460e-8f1f-19bd5a5cf663",
         "medioPago": null,
         "version": 2,
-        "fechaCreacion": "2026-10-21T07:11:49.373151Z",
+        "fechaCreacion": "2026-10-21T08:27:48.056641Z",
         "paidAt": null,
         "detalles": []
       },
       "meta": {
-        "correlationId": "3dc1ab2d-63f4-440f-a435-b247d97f04aa"
+        "correlationId": "01f15b85-331d-4642-a9d1-930f226b3c50"
       }
     }
   },
@@ -44,7 +44,7 @@
   "cierre": {
     "status": 409,
     "headers": {
-      "x-correlation-id": "6832bd5b-a3de-40e0-bb2f-7dbdeb8f7ad9",
+      "x-correlation-id": "da6300b7-0565-42f8-bfbb-ca1c255c7ae7",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -53,7 +53,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "225",
-      "date": "Wed, 21 Oct 2026 07:11:54 GMT",
+      "date": "Wed, 21 Oct 2026 08:27:53 GMT",
       "connection": "close"
     },
     "body": {
@@ -63,22 +63,22 @@
       "error": {
         "code": "OPERATIONS_IN_PROGRESS",
         "fields": {
-          "idRecepcion": "64"
+          "idRecepcion": "10"
         }
       },
       "meta": {
-        "correlationId": "6832bd5b-a3de-40e0-bb2f-7dbdeb8f7ad9"
+        "correlationId": "da6300b7-0565-42f8-bfbb-ca1c255c7ae7"
       }
     }
   },
   "ventasTrasCierre": [
     {
-      "idVenta": "32",
+      "idVenta": "10",
       "estado": "PENDIENTE",
       "estadoOperacion": "CANCELACION_PENDIENTE"
     }
   ],
   "exigido": "409 OPERATIONS_IN_PROGRESS; ninguna venta admitida después del cierre",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:12:11.595161Z"
+  "ejecutadoEn": "2026-10-21T08:28:10.270388Z"
 }

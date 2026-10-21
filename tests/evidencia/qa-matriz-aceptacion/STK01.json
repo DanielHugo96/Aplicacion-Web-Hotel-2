@@ -6,8 +6,8 @@
     "status": 201,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "6a82a989-d115-4279-bc16-b871d3ef27e2",
-      "location": "/api/venta/buscar/19",
+      "x-correlation-id": "c18c08e6-7969-4a33-9510-1de4ea5113eb",
+      "location": "/api/venta/buscar/4",
       "retry-after": "2",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -16,8 +16,8 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json",
-      "content-length": "502",
-      "date": "Wed, 21 Oct 2026 06:44:41 GMT",
+      "content-length": "500",
+      "date": "Wed, 21 Oct 2026 08:22:30 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -25,21 +25,21 @@
       "success": true,
       "message": "OK",
       "data": {
-        "idVenta": 19,
-        "idRecepcion": 37,
+        "idVenta": 4,
+        "idRecepcion": 8,
         "idCliente": 101,
         "idHotel": 1,
         "total": 52.5,
         "estado": "PENDIENTE",
         "estadoOperacion": "CONFIRMADA",
-        "operationId": "589995cf-085f-429a-bf43-112be2a0d9c6",
+        "operationId": "04431c7d-98b9-4f44-80d2-a852f6a9620a",
         "medioPago": null,
         "version": 2,
-        "fechaCreacion": "2026-10-21T06:44:41.645623Z",
+        "fechaCreacion": "2026-10-21T08:22:30.282267Z",
         "paidAt": null,
         "detalles": [
           {
-            "idDetalleVenta": 5,
+            "idDetalleVenta": 3,
             "idProducto": 1,
             "nombreProducto": "Agua 500ml",
             "cantidad": 15,
@@ -49,7 +49,7 @@
         ]
       },
       "meta": {
-        "correlationId": "6a82a989-d115-4279-bc16-b871d3ef27e2"
+        "correlationId": "c18c08e6-7969-4a33-9510-1de4ea5113eb"
       }
     }
   },
@@ -57,7 +57,7 @@
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "192e6f3c-1f5a-4e97-b193-8984445f499c",
+      "x-correlation-id": "6207e3fb-3df7-492c-b296-63f686a96968",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -66,7 +66,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "223",
-      "date": "Wed, 21 Oct 2026 06:44:41 GMT",
+      "date": "Wed, 21 Oct 2026 08:22:30 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -80,7 +80,7 @@
         }
       },
       "meta": {
-        "correlationId": "192e6f3c-1f5a-4e97-b193-8984445f499c"
+        "correlationId": "6207e3fb-3df7-492c-b296-63f686a96968"
       }
     }
   },
@@ -94,11 +94,11 @@
   ],
   "movimientos": [
     {
-      "idVenta": "19",
+      "idVenta": "4",
       "estado": "DESCONTADO"
     }
   ],
   "exigido": "una 201, otra 409 STOCK_INSUFFICIENT, stock final 5, un solo movimiento",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:44:42.100285Z"
+  "ejecutadoEn": "2026-10-21T08:22:30.817977Z"
 }

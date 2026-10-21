@@ -3,7 +3,7 @@
     "/api/public/hoteles",
     "/api/public/hoteles/lima-centro",
     "/api/public/hoteles/lima-centro/categorias",
-    "/api/public/hoteles/lima-centro/categorias/1"
+    "/api/public/hoteles/lima-centro/categorias/2"
   ],
   "sinToken": true,
   "respuestas": {
@@ -49,9 +49,9 @@
         "precioDesde"
       ],
       "cumpleEsquema": true,
-      "bodyResumen": "[{'idCategoria': 1, 'descripcion': 'Individual', 'detalle': 'Habitacion individual de demostracion', 'capacidad': 1, 'precioDesde': 70.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-101-1.jpg', 'alt': 'Habitacion de demostracion'}]}, {'idCategoria': 2, 'descripcion': 'Doble', 'detalle': 'Habitacion doble de demostracion', 'capacidad': 2, 'precioDesde': 100.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-102-1.jpg', 'alt': 'Habitacion de demostracion'}]}]"
+      "bodyResumen": "[{'idCategoria': 2, 'descripcion': 'Doble', 'detalle': 'Habitacion doble de demostracion', 'capacidad': 2, 'precioDesde': 100.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-102-1.jpg', 'alt': 'Habitacion de demostracion'}]}]"
     },
-    "/api/public/hoteles/lima-centro/categorias/1": {
+    "/api/public/hoteles/lima-centro/categorias/2": {
       "status": 200,
       "claves": [
         "capacidad",
@@ -63,12 +63,12 @@
         "precioDesde"
       ],
       "cumpleEsquema": true,
-      "bodyResumen": "{'idCategoria': 1, 'descripcion': 'Individual', 'detalle': 'Habitacion individual de demostracion', 'capacidad': 1, 'precioDesde': 70.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-101-1.jpg', 'alt': 'Habitacion de demostracion'}]}"
+      "bodyResumen": "{'idCategoria': 2, 'descripcion': 'Doble', 'detalle': 'Habitacion doble de demostracion', 'capacidad': 2, 'precioDesde': 100.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-102-1.jpg', 'alt': 'Habitacion de demostracion'}]}"
     }
   },
   "clavesSobrantes": {},
   "exigido": "200 en los 4 con solo claves de HotelPublico/CategoriaPublica",
   "cumple": true,
   "caso": "LP01",
-  "ejecutadoEn": "2026-10-21T06:04:12.571760Z"
+  "ejecutadoEn": "2026-10-21T08:15:55.447375Z"
 }

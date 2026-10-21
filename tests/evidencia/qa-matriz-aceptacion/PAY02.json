@@ -5,7 +5,7 @@
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "2fb6e2a2-2d13-49dd-8fa9-8a589a9271c6",
+      "x-correlation-id": "ce0e0cb8-3abd-4cce-ad14-58fd670be8ec",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -14,7 +14,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "223",
-      "date": "Wed, 21 Oct 2026 07:11:29 GMT",
+      "date": "Wed, 21 Oct 2026 08:27:27 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -28,20 +28,20 @@
         }
       },
       "meta": {
-        "correlationId": "2fb6e2a2-2d13-49dd-8fa9-8a589a9271c6"
+        "correlationId": "ce0e0cb8-3abd-4cce-ad14-58fd670be8ec"
       }
     }
   },
   "filaAntes": [
     "PAGADO",
     "CONFIRMADA",
-    "2026-10-21 05:47:55.594527+00",
+    "2026-10-21 08:08:09.721577+00",
     "7.00"
   ],
   "filaDespues": [
     "PAGADO",
     "CONFIRMADA",
-    "2026-10-21 05:47:55.594527+00",
+    "2026-10-21 08:08:09.721577+00",
     "7.00"
   ],
   "lineasAntes": [
@@ -68,5 +68,5 @@
   ],
   "exigido": "409 SALE_ALREADY_PAID con líneas, receipt y paid_at intactos",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T07:11:29.750966Z"
+  "ejecutadoEn": "2026-10-21T08:27:28.102063Z"
 }

@@ -9,7 +9,7 @@
       "content-length": "15",
       "content-security-policy": "script-src 'self'; object-src 'self'",
       "content-type": "application/json",
-      "date": "Wed, 21 Oct 2026 06:17:44 GMT",
+      "date": "Wed, 21 Oct 2026 08:21:39 GMT",
       "server": "Cowboy",
       "vary": "accept, accept-encoding, origin"
     },
@@ -24,7 +24,7 @@
     "estado": "OCUPADA",
     "blockId": null,
     "cleaningCycleId": null,
-    "roomVersion": 58
+    "roomVersion": 10
   },
   "eventoViejo": {
     "publicado": true,
@@ -34,10 +34,10 @@
     "estado": "OCUPADA",
     "blockId": null,
     "cleaningCycleId": null,
-    "roomVersion": 58
+    "roomVersion": 10
   },
   "tareasPorCiclo": "1",
   "exigido": "no reabre C1 ni libera el ciclo actual; un solo registro por ciclo",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:18:01.086421Z"
+  "ejecutadoEn": "2026-10-21T08:21:56.374375Z"
 }

@@ -1,17 +1,17 @@
 {
   "caso": "FIXTURES-AVANZADOS",
   "F4": {
-    "idRecepcion": 61,
+    "idRecepcion": 2,
     "idHabitacion": 102,
-    "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
-    "idempotencyKey": "1b9b765f-98a5-4a32-a337-981829fea204",
-    "idVenta": 30,
+    "closureId": "f15cf144-eaa8-41a5-b00b-f6833eb4e4a5",
+    "idempotencyKey": "f15cf144-eaa8-41a5-b00b-f6833eb4e4a5",
+    "idVenta": 2,
     "monto": 100.0,
     "checkout": {
       "status": 202,
       "headers": {
-        "x-correlation-id": "38333edb-9a74-43c6-8eef-7176599acc5c",
-        "location": "/api/recepcion/61",
+        "x-correlation-id": "3f2512df-47c2-4295-bf3a-d8a98ef121d2",
+        "location": "/api/recepcion/2",
         "retry-after": "2",
         "x-content-type-options": "nosniff",
         "x-xss-protection": "0",
@@ -20,11 +20,11 @@
         "expires": "0",
         "x-frame-options": "DENY",
         "content-type": "application/json",
-        "content-length": "1213",
-        "date": "Wed, 21 Oct 2026 07:09:11 GMT",
+        "content-length": "1212",
+        "date": "Wed, 21 Oct 2026 08:08:45 GMT",
         "connection": "close"
       },
-      "body": "{\"success\":true,\"message\":\"Cierre en curso\",\"data\":{\"idRecepcion\":61,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":102,\"numero\":\"102\",\"categoriaNombre\":\"Doble\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion doble de demostracion\",\"precioHabitacion\":100.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":null,\"precioInicial\":100.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":100.00,\"totalPagado\":0.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":true,\"estadoEstadia\":\"CERRANDO\",\"archivada\":false,\"vencida\":false,\"version\":2,\"closureId\":\"1b9b765f-98a5-4a32-a337-981829fea204\",\"cleaningCycleId\":null,\"cierre\":{\"closureId\":\"1b9b765f-98a5-4a32-a337-981829fea204\",\"estado\":\"CONFIRMANDO\",\"lastErrorCode\":\"DEPENDENCY_UNAVAILABLE\",\"calculo\":{\"cobroAhora\":100.0,\"totalGeneral\":107.0,\"consumosTotal\":7.0,\"alojamientoTotal\":100.0,\"saldoAlojamiento\":100.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":7.0,\"expectedPendingTotal\":0.0}}},\"meta\":{\"correlationId\":\"38333edb-9a74-43c6-8eef-7176599acc5c\"}}"
+      "body": "{\"success\":true,\"message\":\"Cierre en curso\",\"data\":{\"idRecepcion\":2,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":102,\"numero\":\"102\",\"categoriaNombre\":\"Doble\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion doble de demostracion\",\"precioHabitacion\":100.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":null,\"precioInicial\":100.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":100.00,\"totalPagado\":0.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":true,\"estadoEstadia\":\"CERRANDO\",\"archivada\":false,\"vencida\":false,\"version\":2,\"closureId\":\"f15cf144-eaa8-41a5-b00b-f6833eb4e4a5\",\"cleaningCycleId\":null,\"cierre\":{\"closureId\":\"f15cf144-eaa8-41a5-b00b-f6833eb4e4a5\",\"estado\":\"CONFIRMANDO\",\"lastErrorCode\":\"DEPENDENCY_UNAVAILABLE\",\"calculo\":{\"cobroAhora\":100.0,\"totalGeneral\":107.0,\"consumosTotal\":7.0,\"alojamientoTotal\":100.0,\"saldoAlojamiento\":100.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":7.0,\"expectedPendingTotal\":0.0}}},\"meta\":{\"correlationId\":\"3f2512df-47c2-4295-bf3a-d8a98ef121d2\"}}"
     },
     "fase": {
       "estado": "CONFIRMANDO",
@@ -35,14 +35,14 @@
     "consumidoPor": "el cierre se completó al liberar el lock (se reinduce en OUT02)"
   },
   "F5": {
-    "blockId": "8c406b9c-2137-41f5-ad0c-ee2920b9d0d2",
+    "blockId": "6d7b02b0-1d53-416c-9a0d-a62e081bbd56",
     "idHabitacion": 102,
     "maintenance": {
       "status": 202,
       "headers": {
         "vary": "Access-Control-Request-Headers",
-        "x-correlation-id": "e2abc2a3-ffa7-4777-8918-5f13dfbce2a1",
-        "location": "/api/habitacion/operaciones/8c406b9c-2137-41f5-ad0c-ee2920b9d0d2",
+        "x-correlation-id": "5d5db08f-504d-4477-bb74-1a2efc1d355b",
+        "location": "/api/habitacion/operaciones/6d7b02b0-1d53-416c-9a0d-a62e081bbd56",
         "retry-after": "2",
         "x-content-type-options": "nosniff",
         "x-xss-protection": "0",
@@ -52,25 +52,25 @@
         "x-frame-options": "DENY",
         "content-type": "application/json",
         "content-length": "234",
-        "date": "Wed, 21 Oct 2026 07:10:20 GMT",
+        "date": "Wed, 21 Oct 2026 08:09:40 GMT",
         "referrer-policy": "no-referrer",
         "connection": "close"
       },
-      "body": "{\"success\":true,\"message\":\"Operación en curso\",\"data\":{\"blockId\":\"8c406b9c-2137-41f5-ad0c-ee2920b9d0d2\",\"idHabitacion\":102,\"tipo\":\"MANTENIMIENTO\",\"estado\":\"PREPARANDO\"},\"meta\":{\"correlationId\":\"e2abc2a3-ffa7-4777-8918-5f13dfbce2a1\"}}"
+      "body": "{\"success\":true,\"message\":\"Operación en curso\",\"data\":{\"blockId\":\"6d7b02b0-1d53-416c-9a0d-a62e081bbd56\",\"idHabitacion\":102,\"tipo\":\"MANTENIMIENTO\",\"estado\":\"PREPARANDO\"},\"meta\":{\"correlationId\":\"5d5db08f-504d-4477-bb74-1a2efc1d355b\"}}"
     }
   },
   "F6": {
-    "idRecepcion": 62,
+    "idRecepcion": 3,
     "idHabitacion": 201,
     "idHotel": 2,
-    "blockIdR": "f4dee56b-b715-4a3e-bab7-bdcef7ecd940",
-    "idempotencyKey": "69288432-a98c-47f5-b522-a26e63f750d4",
-    "ifMatch": 8,
+    "blockIdR": "8dca30e8-6a04-46ac-af23-77271e1ec30b",
+    "idempotencyKey": "541da1fc-3f24-4c41-9c5b-684fb8bc2884",
+    "ifMatch": 1,
     "maintenance": {
       "status": 409,
       "headers": {
         "vary": "Access-Control-Request-Headers",
-        "x-correlation-id": "f112d945-1eee-41a5-9b69-b9bf98f87d36",
+        "x-correlation-id": "0b54ed5f-9818-434a-b114-4c32cdebdb0f",
         "x-content-type-options": "nosniff",
         "x-xss-protection": "0",
         "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -79,17 +79,17 @@
         "x-frame-options": "DENY",
         "content-type": "application/json",
         "content-length": "229",
-        "date": "Wed, 21 Oct 2026 07:11:03 GMT",
+        "date": "Wed, 21 Oct 2026 08:10:22 GMT",
         "referrer-policy": "no-referrer",
         "connection": "close"
       },
-      "body": "{\"success\":false,\"message\":\"No se puede bloquear la habitación: está ocupada o en limpieza.\",\"error\":{\"code\":\"GATE_NOT_AVAILABLE\",\"fields\":{\"idHabitacion\":\"201\"}},\"meta\":{\"correlationId\":\"f112d945-1eee-41a5-9b69-b9bf98f87d36\"}}"
+      "body": "{\"success\":false,\"message\":\"No se puede bloquear la habitación: está ocupada o en limpieza.\",\"error\":{\"code\":\"GATE_NOT_AVAILABLE\",\"fields\":{\"idHabitacion\":\"201\"}},\"meta\":{\"correlationId\":\"0b54ed5f-9818-434a-b114-4c32cdebdb0f\"}}"
     }
   },
   "F9": {
-    "idVenta": 31,
+    "idVenta": 3,
     "origen": "LEGACY",
     "estado": "PENDIENTE"
   },
-  "ejecutadoEn": "2026-10-21T07:11:03.751748Z"
+  "ejecutadoEn": "2026-10-21T08:10:22.727468Z"
 }

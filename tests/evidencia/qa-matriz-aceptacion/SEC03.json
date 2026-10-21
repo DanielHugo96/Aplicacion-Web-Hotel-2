@@ -9,7 +9,7 @@
     "headers": {
       "transfer-encoding": "chunked",
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "5a34755c-77c4-4973-a91f-21d650e9506f",
+      "x-correlation-id": "007bb9c9-3c65-4286-b75a-eed49a3e564f",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -17,7 +17,7 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json",
-      "date": "Wed, 21 Oct 2026 06:00:31 GMT",
+      "date": "Wed, 21 Oct 2026 08:10:23 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -29,7 +29,7 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "5a34755c-77c4-4973-a91f-21d650e9506f"
+        "correlationId": "007bb9c9-3c65-4286-b75a-eed49a3e564f"
       }
     }
   },
@@ -38,7 +38,7 @@
     "headers": {
       "transfer-encoding": "chunked",
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "18ecf59a-5fb4-4a93-b1aa-9d78c05a0646",
+      "x-correlation-id": "1be45785-96d6-4782-9f9f-6d84ba0c95b7",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -46,7 +46,7 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json",
-      "date": "Wed, 21 Oct 2026 06:00:31 GMT",
+      "date": "Wed, 21 Oct 2026 08:10:23 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -59,7 +59,7 @@
         "fields": {}
       },
       "meta": {
-        "correlationId": "18ecf59a-5fb4-4a93-b1aa-9d78c05a0646",
+        "correlationId": "1be45785-96d6-4782-9f9f-6d84ba0c95b7",
         "updatedAt": null
       }
     }
@@ -67,5 +67,5 @@
   "exigido": "404 RESOURCE_NOT_FOUND en ambos",
   "cumple": true,
   "caso": "SEC03",
-  "ejecutadoEn": "2026-10-21T06:00:31.251227Z"
+  "ejecutadoEn": "2026-10-21T08:10:23.458215Z"
 }

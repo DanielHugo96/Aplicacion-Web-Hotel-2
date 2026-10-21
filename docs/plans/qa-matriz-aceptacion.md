@@ -44,7 +44,7 @@ Los 41 casos de la matriz de [06 §5](../especificacion/06-migracion-y-pruebas.m
 - [x] 10. Ejecutar STK01–STK07: dos `POST /api/venta` simultáneas, venta multítem sin descuento parcial, repetición con la misma Idempotency-Key, anulación con débito tardío, job de recuperación cada 30 s, `recepcion.operacion-finalizar` RECHAZADA antes de la respuesta de admitir, y reinicio del worker tras DEBITO_SOLICITADO; consultas en `GET /api/venta/operaciones/{operationId}` y `GET /internal/stock/movimientos/{idVenta}`. Verificación: 201 frente a 409 `STOCK_INSUFFICIENT`, `IDEMPOTENCY_CONFLICT` o `DEBIT_CANCELLED` según el caso; stock y movimientos con un solo efecto por venta; comandos `stock.restituir` y `recepcion.operacion-finalizar` observados; evidencia en tests/evidencia/STK0X.json.
 - [x] 11. Ejecutar PAY01–PAY02 y OUT01–OUT06: `POST /api/venta` con estado PAGADO como CLIENTE y con precio en detalles; `DELETE /api/venta/{id}` sobre venta PAGADA; `POST /api/recepcion/registrar-salida` con admisión en vuelo, con montoRecibido inexacto, sin ventas, con proceso matado por fase y reintentado con el mismo closureId; `PUT /api/recepcion/actualizar/{id}` acortando bajo el adelanto; cotización en `GET /api/recepcion/{id}/cotizacion-salida`. Verificación: 400 `VALIDATION_ERROR` o 403 `FORBIDDEN` en PAY01; 409 `SALE_ALREADY_PAID`, `OPERATIONS_IN_PROGRESS`, `CLOSURE_IN_PROGRESS`, `AMOUNT_MISMATCH` o `ADVANCE_EXCEEDS_NEW_TOTAL` según el caso; un solo receipt y una sola salida en reintentos; evidencia en tests/evidencia/PAY0X.json y OUT0X.json.
 - [x] 12. Ejecutar MSG01–MSG02: commitear F2 con el broker detenido y levantar dejando al poller; duplicar mensajes, invertir limpieza/salida y reenviar versión vieja de `reception.recepcion.v1`, `hotel.habitacion.v1`, `sales.venta.v1` e `inventory.movimiento.v1` sobre los grupos `reporting-proyeccion-v1`, `reception-gates-v1`, `hotel-ocupacion-v1` y `sales-compensacion-v1`. Verificación: outbox con published_at y efecto procesado una vez (inbox); sin doble stock, pago ni limpieza; contradicción en DLT/DLQ; evidencia en tests/evidencia/MSG0X.json más consultas a outbox e inbox.
-- [ ] 13. Ejecutar REP01–REP03: `GET /api/reportes/dashboard` y `GET /api/reportes/ventas` sobre F3+F8; rebuild de reporting en DB nueva con snapshot más stream; arranque en demo sin ventas esperando bootstrap. Verificación: ingresosHoy 77.00 sin duplicar y solo PAGADO por paid_at; mismos totales y claves tras el rebuild; bootstrap LISTO con bootstrapComplete verdadero y 200; 503 `REPORTING_NOT_READY` sin bootstrap y degradación visible según el caso; evidencia en tests/evidencia/REP0X.json.
+- [x] 13. Ejecutar REP01–REP03: `GET /api/reportes/dashboard` y `GET /api/reportes/ventas` sobre F3+F8; rebuild de reporting en DB nueva con snapshot más stream; arranque en demo sin ventas esperando bootstrap. Verificación: ingresosHoy 77.00 sin duplicar y solo PAGADO por paid_at; mismos totales y claves tras el rebuild; bootstrap LISTO con bootstrapComplete verdadero y 200; 503 `REPORTING_NOT_READY` sin bootstrap y degradación visible según el caso; evidencia en tests/evidencia/REP0X.json.
 - [ ] 14. Ejecutar NOT01–NOT03: cerrar F1 con SMTP (Mailpit) caído y repetir `notificacion.checkout`; responder tarde con lease vencido; purga sobre ENVIADA antigua e intento sobre PENDIENTE/ERROR con la CLI --admin. Verificación: salida 200 sin bloqueo del negocio, un job por commandId con reintentos y ERROR tras agotarlos; lease viejo sin efecto; purga solo en ENVIADA con registro en audit_log; comandos `notificacion.bienvenida`, `notificacion.checkin` y `notificacion.checkout` observados; evidencia en tests/evidencia/NOT0X.json, notification_job y Mailpit.
 - [ ] 15. Consolidar la evidencia y congelar hallazgos: completar tests/evidencia/INFORME.md (tabla ID → comando/endpoint → resultado → archivo) y anotar en §7, sin marcar, cualquier corrección de spec como pregunta abierta sin aplicarla. Verificación: los 41 casos tienen fila con salida adjunta y `git status --porcelain` muestra cambios solo en tests/, scripts/ y el propio plan.
 - [ ] 16. Correr el validador y la auto-revisión de la [norma §4.5](README.md#4-proceso-del-planificador). Verificación: `python scripts/validar-planes.py` desde la raíz termina con 0 errores y cada aviso queda resuelto o justificado en el PR; objetivo verificable, cada paso comprobable y ninguna regla fijada por la spec.
@@ -103,9 +103,93 @@ Cada caso anota comando o endpoint, resultado exigido y archivo de evidencia en 
 - Caso NOT03: purga sobre ENVIADA antigua e intento sobre PENDIENTE/ERROR; purga solo en ENVIADA con registro en audit_log; evidencia: tests/evidencia/NOT03.json, filas y audit_log.
 - Comandos canónicos: los de la sección «Verificación» del README raíz más `python scripts/validar-planes.py` (0 errores) con salida adjunta al PR.
 
+### 6.1 Resultados ejecutados
+
+Corrida sobre el Compose real (PostgreSQL 18.6, Kafka 4.3.1, RabbitMQ 4.3.6, Mailpit 1.31.5) y los
+nueve servicios levantados con `scripts/qa/common.py::start_service`. Cada fila cita el comando
+exacto, lo observado y el archivo donde está la salida completa. `scripts/ejecutar-matriz-completa.sh`
+encadena los grupos en este mismo orden; el detalle por caso está en `INFORME.md`.
+
+| Caso | Comando/endpoint exacto | Resultado observado | Salida |
+|---|---|---|---|
+| SEC01 | `GET /api/persona/listar` sin token | 401 `UNAUTHENTICATED`, sin datos | `SEC01.json` |
+| SEC02 | `POST /api/auth/registro` con `idTipoPersona` | 400 `VALIDATION_ERROR`; 0 personas creadas | `SEC02.json` |
+| SEC03 | `GET /api/habitacion/buscar/{id}` (201, sede 2) y `GET /api/reportes/dashboard?idHotel=2` con token E de sede 1 | 404 `RESOURCE_NOT_FOUND` en ambos | `SEC03.json` |
+| SEC04 | `GET /api/carrito/listar/{idRecepcion}` (estadía ajena) y `POST /api/venta` con esa recepción | 404 `RESOURCE_NOT_FOUND`; 0 ventas y 0 filas de carrito | `SEC04.json` |
+| SEC05 | `POST /internal/stock/descontar` al puerto 8084 con token A | 403 `FORBIDDEN`; por Gateway 404; stock 16 → 16 | `SEC05.json` |
+| SEC06 | `GET /api/auth/me` y `GET /api/hotel/listar` con firma ajena y con `aud` incorrecta | 401 `UNAUTHENTICATED` en los dos servicios y en las dos variantes | `SEC06.json` |
+| SEC07 | `PUT /api/persona/actualizar/{id}` (admin 2) y `DELETE /api/persona/eliminar/{id}` (admin 1) simultáneos | DELETE 200, PUT 409 `LAST_ADMIN_PROTECTED`; 1 ADMIN activo con clave | `SEC07.json` |
+| SEC08 | Preflight `OPTIONS` con `If-Match`/`Idempotency-Key` desde `http://localhost:4200` y desde `http://evil.test` | Preflight 200 con los dos headers permitidos y `ETag, Location, Retry-After` expuestos; origen ajeno 403 sin `Access-Control-Allow-Origin` | `SEC08.json` |
+| LP01 | Los 4 GET públicos sin token | 200 en los 4; 0 claves sobrantes frente a `HotelPublico`/`CategoriaPublica` | `LP01.json` |
+| LP02 | `GET /api/public/hoteles?fecha=…` y `…/lima-centro?ocupacion=1`; inspección del bundle | 200 ignorando el parámetro; 0 hallazgos de endpoint privado, precio interno o endpoint de reserva en el bundle | `LP02.json` |
+| CRUD01 | Altas, ediciones, GET y DELETE de sede, piso, categoría, habitación y producto | `version` 1→2→3 en los cinco; DELETE deja `estado=f`; PUT sin `If-Match` 428 `PRECONDITION_REQUIRED` | `CRUD01.json` |
+| OCC01 | Dos `POST /api/recepcion/registrar` simultáneos a 101 | 201 + 409 `ROOM_OCCUPIED`; 1 estadía activa; índice `uq_recepcion_habitacion_activa` | `OCC01.json` |
+| OCC02 | Check-in y `POST /api/habitacion/{id}/mantenimiento` (102) concurrentes | 201 + 409; gate final OCUPADA y operación RECHAZADA | `OCC02.json` |
+| OCC03 | Cierre de 201, reintento del blockId R y nueva intención | Reintento 409 `GATE_NOT_AVAILABLE`; bloqueo R RECHAZADO; nueva intención 200 con bloqueo ACTIVO | `OCC03.json` |
+| OCC04 | `DELETE /api/piso/eliminar/{id}` y `/api/categoria/eliminar/{id}` con habitación activa | 409 `ACTIVE_DEPENDENCIES` en ambos; 0 habitaciones activas bajo padre inactivo | `OCC04.json` |
+| CLN01 | Cierre 200, reintento de check-in con Rabbit pausado y `PUT /api/habitacion/{id}/limpieza-completada` | 409 `ROOM_NOT_READY` → tarea COMPLETADA → 201 tras reanudar; gate LIBRE y después OCUPADA | `CLN01.json` |
+| CLN02 | Reenvío de `limpieza.solicitada` de C1 y `HabitacionLista` viejo | Tarea de C1 sigue COMPLETADA; 1 tarea por ciclo; gate OCUPADA sin reapertura | `CLN02.json` |
+| CLN03 | `HabitacionLista` posterior al cierre con `gate_projection` poblado | Gate OCUPADA antes y después; `limpieza_completada_projection` concilia C1 sin liberar la ocupación | `CLN03.json` |
+| STK01 | Dos `POST /api/venta` ×15 con claves distintas | 201 + 409 `STOCK_INSUFFICIENT`; stock 20 → 5; un movimiento DESCONTADO | `STK01.json` |
+| STK02 | `POST /api/venta` multítem p1×2 + p3×10 | 409 `STOCK_INSUFFICIENT`; stocks 20 y 5 intactos | `STK02.json` |
+| STK03 | `POST /api/venta` con la `Idempotency-Key` de F2 | Mismo idVenta 1; stock 20 sin segundo débito; un movimiento | `STK03.json` |
+| STK04 | Anulación de F7 y entrega del débito tardío | Lápida RESTITUIDO; débito tardío 409 `DEBIT_CANCELLED`; stock 20 → 20 | `STK04.json` |
+| STK05 | Job de recuperación cada 30 s sobre F7 | Estado de operación CANCELACION_PENDIENTE → CANCELADA; un movimiento RESTITUIDO; 420 s de espera | `STK05.json` |
+| STK06 | `recepcion.operacion-finalizar` RECHAZADA antes de la respuesta de admitir | Lápida `FINALIZADA/RECHAZADA`; admitir tardío 409 `STAY_NOT_ACTIVE`; 0 movimientos | `STK06.json` |
+| STK07 | Worker caído tras DEBITO_SOLICITADO y reinicio | Operación en DEBITO_SOLICITADO → venta CANCELADA; un movimiento RESTITUIDO; stock intacto | `STK07.json` |
+| PAY01 | `POST /api/venta` con estado PAGADO como CLIENTE y con `precioUnitario` | 403 `FORBIDDEN` + 400 `VALIDATION_ERROR`; F2 sigue PAGADO con total 7.00 y precio 3.50 | `PAY01.json` |
+| PAY02 | `DELETE /api/venta/{id}?motivo=…` sobre F3 | 409 `SALE_ALREADY_PAID`; línea, receipt y `paid_at` idénticos antes y después | `PAY02.json` |
+| OUT01 | `POST /api/recepcion/registrar-salida` con una venta admitida en vuelo | 409 `OPERATIONS_IN_PROGRESS`; la venta queda con estado de operación CANCELACION_PENDIENTE | `OUT01.json` |
+| OUT02 | Reintento del cierre de F4 con el mismo `closureId` | Cierre COMPLETADO con un receipt; la venta queda PAGADO una sola vez | `OUT02.json` |
+| OUT03 | `POST /api/recepcion/registrar-salida` con `montoRecibido` inexacto y penalidad sobre el precio | 409 `AMOUNT_MISMATCH` con cierre RECHAZADO conservado; penalidad 400 y 0 cierres vigentes | `OUT03.json` |
+| OUT04 | `POST /api/recepcion/registrar-salida` sin ventas con el monto exacto | 200; receipt con `totalPendiente 0.00` y `totalPagadoPrevio 0.00`; estadía CERRADA | `OUT04.json` |
+| OUT05 | Proceso matado en VALIDANDO, en CONFIRMANDO y tras el receipt | VALIDANDO recalcula; CONFIRMANDO reenvía el congelado; un receipt y una salida por cierre; el reintento tras receipt da 409 `STAY_NOT_ACTIVE` sin recalcular | `OUT05.json` |
+| OUT06 | `PUT /api/recepcion/actualizar/{id}` con `fechaSalida` que deja el precio bajo el adelanto | 409 `ADVANCE_EXCEEDS_NEW_TOTAL`; precioInicial 180.00 y adelanto 140.00 sin cambios | `OUT06.json` |
+| MSG01 | F2 commiteada con Kafka detenido y levantado después | Outbox pendiente → publicada con `publishedAt`; el inbox del consumidor tiene una sola fila | `MSG01.json` |
+| MSG02 | Duplicado, versión vieja y `HabitacionLista` viejo reenviados | Inbox 1 fila antes y después del duplicado; versión vieja sin efecto; contradicción en la DLT; gate y ventas sin doble efecto | `MSG02.json` |
+| REP01 | `GET /api/reportes/dashboard?idHotel=1` y `GET /api/reportes/ventas?idHotel=1&inicio=…&fin=…` | `ingresosHoy` 77.00; solo la venta PAGADO por `paid_at` con 7.00; suma del reporte 7.00 | `REP01.json` |
+| REP02 | Rebuild de reporting en `reporting_rebuild_db` con grupo nuevo y comparación contra la instancia principal | Conteos idénticos (venta 4, recepción 18, gate 9, persona 7); dashboard 846.50 y reporte de ventas iguales | `REP02.json` |
+| REP03 | Arranque en demo sin ventas y variante sin bootstrap | LISTO con manifiesto/watermarks y `bootstrapComplete=true` con 200; sin bootstrap 503 `REPORTING_NOT_READY` con `Retry-After: 60` | `REP03.json` |
+| NOT01 | Cierre con SMTP en un puerto cerrado y redelivery del mismo `notificacion.checkout` | 200 en el cierre; 1 job por commandId; 4 intentos a 1/5/30 min y estado ERROR con último error SMTP_ERROR | `NOT01.json` |
+| NOT02 | `sp_notificacion_resultado` con un lease vencido | El `lease_token` viejo no modifica el job: sigue ENVIANDO sin `sent_at` | `NOT02.json` |
+| NOT03 | `notification-service --admin purge --before <hoy>` | Anonimiza solo la ENVIADA antigua conservando estado y hash; PENDIENTE/ERROR intactos; acción NOTIFICATION_PURGE en `audit_log` | `NOT03.json` |
+
+
 ## 7. Preguntas abiertas
 
-Ninguna. Las correcciones de spec que aparezcan al ejecutar se anotan aquí como preguntas abiertas, sin aplicar cambios directos, y la ejecución se detiene hasta su revisión.
+Ninguna que bloquee la ejecución. Las correcciones de spec que aparezcan al ejecutar se anotan aquí
+como preguntas abiertas, sin aplicar cambios directos, y la ejecución se detiene hasta su revisión.
+
+### 7.1 Hallazgos de `qa-runbooks` revalidados en esta corrida
+
+Los tres hallazgos registrados en `qa-runbooks` se han vuelto a medir sobre `main` actual
+(arreglos #92, #94, #115 y #117 incluidos). **Los tres siguen vigentes**; ninguno se ha reparado.
+No se ha modificado ningún servicio: quedan como evidencia para el plan dueño de cada consumidor.
+
+- **`IA-qa-runbooks-01` (payload inválido va directo a la DLT). Vigente.** Se publicó en
+  `hotel.habitacion.v1` un `HabitacionCreada` con envelope válido y payload incompleto
+  (`eventId` nuevo, `aggregateVersion` 9001). El mensaje apareció en
+  `hotel.habitacion.v1.reception-gates-v1.dlt` en **5,2 s**, no tras la secuencia de 1s/5s/30s/120s/300s
+  (456 s). `room_gate` de la 101 quedó en OCUPADA, sin efecto del evento. Confirma que reception
+  clasifica `MessageInvalidException` como no reintentable
+  (`services/reception-service/.../KafkaMessagingConfig.java:52`).
+- **`IA-qa-runbooks-02` (eventos de recepción derivados a la DLT de `hotel-ocupacion-v1`). Vigente.**
+  Tras la corrida completa, `reception.recepcion.v1.hotel-ocupacion-v1.dlt` tiene **13 mensajes**
+  (`CheckInRegistrado` y `SalidaRegistrada` de las estadías de la matriz), `hotel_db.inbox` con
+  consumidor `hotel-ocupacion-v1` tiene **0 filas** y `hotel_db.ocupacion_projection` está
+  **vacía**. El consumidor (`OcupacionConsumer`) captura la excepción y publica en la DLT sin
+  registrar el motivo en el log estructurado.
+- **`IA-qa-runbooks-03` (`projection_checkpoint.degraded=true` persiste). Vigente.** Con
+  `hotel.habitacion.v1` ya sin ningún topic `*.dlt` (`reporting-proyeccion-v1.dlt` y el `dlt` de la
+  instancia de rebuild borrados, dejando el residuo como evidencia),
+  `projection_checkpoint` sigue con `degraded=true` para `hotel.habitacion.v1` y el dashboard
+  responde `meta.degraded=true`. `touchCheckpoint` (`ProjectionStore`) nunca vuelve a `false` el
+  flag; solo `markDegraded` lo enciende.
+
+Estos hallazgos no impiden cerrar la matriz: los casos que los rozan (MSG02, REP01–REP03) miden su
+propio criterio y lo cumplen. Quedan para que el plan dueño de `hotel-service` (consumidor de
+ocupación) y el de `reporting-service` (reset del flag) los corrijan.
+
 
 ## 8. Criterio de terminado
 

@@ -4,7 +4,7 @@
     "status": 201,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "863c0632-34b3-4b9d-9b8a-a7163167bc1c",
+      "x-correlation-id": "2860f0fc-5724-49f6-ab23-4bf55860f9bd",
       "etag": "\"1\"",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -13,8 +13,8 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json",
-      "content-length": "868",
-      "date": "Wed, 21 Oct 2026 06:17:02 GMT",
+      "content-length": "867",
+      "date": "Wed, 21 Oct 2026 08:20:56 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -22,7 +22,7 @@
       "success": true,
       "message": "Check-in registrado",
       "data": {
-        "idRecepcion": 35,
+        "idRecepcion": 6,
         "idHotel": 1,
         "idCliente": 100,
         "idHabitacion": 102,
@@ -57,7 +57,7 @@
         "cierre": null
       },
       "meta": {
-        "correlationId": "863c0632-34b3-4b9d-9b8a-a7163167bc1c"
+        "correlationId": "2860f0fc-5724-49f6-ab23-4bf55860f9bd"
       }
     }
   },
@@ -65,7 +65,7 @@
     "status": 409,
     "headers": {
       "vary": "Access-Control-Request-Headers",
-      "x-correlation-id": "7226cd07-a152-41f5-a04b-4373d9584340",
+      "x-correlation-id": "cb8e50a8-1993-47a1-812d-f00d86154bf5",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -74,7 +74,7 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "229",
-      "date": "Wed, 21 Oct 2026 06:17:02 GMT",
+      "date": "Wed, 21 Oct 2026 08:20:57 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     },
@@ -88,7 +88,7 @@
         }
       },
       "meta": {
-        "correlationId": "7226cd07-a152-41f5-a04b-4373d9584340"
+        "correlationId": "cb8e50a8-1993-47a1-812d-f00d86154bf5"
       }
     }
   },
@@ -100,13 +100,13 @@
     "estado": "OCUPADA",
     "blockId": null,
     "cleaningCycleId": null,
-    "roomVersion": 50
+    "roomVersion": 9
   },
   "ultimaOperacion": [
-    "fa87db70-4e64-47d6-ab47-52362a3dd838",
+    "e68e0a2b-bd1c-4d4e-85ce-16a57cfb917f",
     "RECHAZADA"
   ],
   "exigido": "una sola admisión válida: gate OCUPADA o BLOQUEADA, nunca ambas; perdedor 409",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:17:02.315696Z"
+  "ejecutadoEn": "2026-10-21T08:20:57.270346Z"
 }

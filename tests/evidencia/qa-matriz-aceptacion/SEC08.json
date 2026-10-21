@@ -20,7 +20,7 @@
       "vary": "Access-Control-Request-Headers",
       "access-control-allow-origin": "http://localhost:4200",
       "access-control-expose-headers": "ETag, Location, Retry-After, X-Correlation-Id",
-      "x-correlation-id": "486e9a87-4f36-453c-976e-67b27450744e",
+      "x-correlation-id": "a24b3cae-5638-46a4-805a-fd14d05e523a",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
       "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
@@ -28,7 +28,7 @@
       "expires": "0",
       "x-frame-options": "DENY",
       "content-type": "application/json",
-      "date": "Wed, 21 Oct 2026 06:00:49 GMT",
+      "date": "Wed, 21 Oct 2026 08:10:26 GMT",
       "referrer-policy": "no-referrer",
       "connection": "close"
     }
@@ -36,5 +36,5 @@
   "exigido": "preflight permitido con headers legibles; origen ajeno sin Allow-Origin",
   "cumple": true,
   "caso": "SEC08",
-  "ejecutadoEn": "2026-10-21T06:00:49.327405Z"
+  "ejecutadoEn": "2026-10-21T08:10:26.115779Z"
 }

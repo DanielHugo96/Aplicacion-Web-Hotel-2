@@ -170,6 +170,18 @@ def operaciones_consumo(id_recepcion: int) -> list[dict[str, Any]]:
     ]
 
 
+def esperar_sin_abiertas(id_recepcion: int, timeout: int = 90) -> None:
+    """El cierre exige cero operaciones ABIERTAS en reception (incluye PAGO y ANULACION)."""
+    esperar(
+        f"sin operaciones abiertas en {id_recepcion}",
+        lambda: c.psql_one(
+            "reception_db",
+            f"select count(*) from operacion_consumo where id_recepcion={id_recepcion} and estado='ABIERTA'",
+        ) == "0",
+        timeout=timeout,
+    )
+
+
 def esperar_operacion_terminal(id_recepcion: int, timeout: int = 90) -> None:
     """Espera a que las operaciones vigentes tengan su lápida TERMINAL en sales.
 
@@ -279,6 +291,7 @@ def fixtures() -> int:
     if pago.status != 200:
         raise c.RunbookError(f"F3 devolvió {pago.status}: {pago.body[:400]}")
     esperar_operacion_terminal(id_recepcion)
+    esperar_sin_abiertas(id_recepcion)
     estado["F3"] = {"idVenta": id_venta, "pago": pago.summary(), "venta": venta_row(id_venta)}
     verificación["F3_pagada"] = venta_row(id_venta)["estado"] == "PAGADO"
 
@@ -1786,6 +1799,716 @@ def msg() -> int:
 
 
 # ---------------------------------------------------------------------------
+# Paso 13 — REP01–REP03
+# ---------------------------------------------------------------------------
+
+
+def _rango_hoy() -> tuple[str, str]:
+    hoy = date.today()
+    return (f"{hoy.isoformat()}T00:00:00-05:00",
+            f"{(hoy + timedelta(days=1)).isoformat()}T00:00:00-05:00")
+
+
+def rep03() -> int:
+    """Arranque en demo sin ventas ni estadías: bootstrap LISTO por manifiesto/watermarks."""
+    token = f.admin_token()
+    bootstrap = c.psql("reporting_db", "select estado, manifest::text, completed_at::text from projection_bootstrap where id=1")
+    manifiesto = json.loads(bootstrap[0][1]) if bootstrap and bootstrap[0][1] else {}
+    watermarks = {w["topic"]: w["lastOffset"] for w in manifiesto.get("watermarks", [])}
+    checkpoints = c.psql("reporting_db", "select topic, last_offset, degraded from projection_checkpoint order by topic")
+    dash = c.http("GET", "/api/reportes/dashboard", token=token)
+    ventas = c.psql_one("sales_db", "select count(*) from venta")
+    recepciones = c.psql_one("reception_db", "select count(*) from recepcion")
+    cumple = (
+        bootstrap and bootstrap[0][0] == "LISTO"
+        and bool(manifiesto.get("dominios")) and bool(watermarks)
+        and dash.status == 200
+        and dash.field("meta", "bootstrapComplete") is True
+        and ventas == "0" and recepciones == "0"
+        and all(int(r[1]) >= watermarks.get(r[0], -1) for r in checkpoints if r[0] in watermarks)
+    )
+    save("REP03", {"caso": "REP03",
+                   "bootstrap": {"estado": bootstrap[0][0] if bootstrap else None,
+                                 "completedAt": bootstrap[0][2] if bootstrap else None,
+                                 "dominios": manifiesto.get("dominios"),
+                                 "watermarks": watermarks},
+                   "checkpoints": [{"topic": r[0], "lastOffset": int(r[1]), "degraded": r[2] == "t"} for r in checkpoints],
+                   "dashboard": resumen(dash),
+                   "ventasSembradas": int(ventas), "recepcionesSembradas": int(recepciones),
+                   "exigido": "LISTO por manifiesto/watermarks con 200 y bootstrapComplete=true",
+                   "cumple": cumple})
+    return 0 if cumple else 1
+
+
+def rep03_sin_bootstrap() -> int:
+    """Variante exigida por el paso 13: sin bootstrap, la API responde 503 REPORTING_NOT_READY."""
+    import subprocess
+
+    token = f.admin_token()
+    c.docker("exec", c.POSTGRES, "psql", "-U", "postgres", "-c",
+             "drop database if exists reporting_sin_bootstrap_db", check=False)
+    c.docker("exec", c.POSTGRES, "psql", "-U", "postgres", "-c",
+             "create database reporting_sin_bootstrap_db owner reporting_migrator", check=True)
+    c.docker("exec", c.POSTGRES, "psql", "-U", "postgres", "-d", "reporting_sin_bootstrap_db", "-c",
+             "REVOKE ALL ON SCHEMA public FROM PUBLIC;"
+             "GRANT USAGE, CREATE ON SCHEMA public TO reporting_migrator;"
+             "GRANT USAGE ON SCHEMA public TO reporting_app;"
+             "ALTER DEFAULT PRIVILEGES FOR ROLE reporting_migrator IN SCHEMA public "
+             "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO reporting_app;"
+             "ALTER DEFAULT PRIVILEGES FOR ROLE reporting_migrator IN SCHEMA public "
+             "GRANT USAGE, SELECT ON SEQUENCES TO reporting_app;"
+             "ALTER DEFAULT PRIVILEGES FOR ROLE reporting_migrator IN SCHEMA public "
+             "GRANT EXECUTE ON FUNCTIONS TO reporting_app;", check=True)
+    log = ROOT / "tests" / "evidencia" / "qa-matriz-aceptacion" / "_runtime" / "reporting-sin-bootstrap.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("ab") as handle:
+        proc = subprocess.Popen(
+            [c.bash_executable(), "scripts/mvn.sh", "-f", "services/pom.xml", "-pl",
+             "reporting-service", "spring-boot:run", "-q"],
+            cwd=str(ROOT),
+            env={**os.environ, **c.service_env("reporting-service"),
+                 "SERVER_PORT": "8097",
+                 "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:55432/reporting_sin_bootstrap_db",
+                 # Sin bootstrap: la base queda migrada y vacía, nunca LISTO.
+                 "REPORTING_BOOTSTRAP_ENABLED": "false",
+                 "EUREKA_ENABLED": "false"},
+            stdout=handle, stderr=subprocess.STDOUT, start_new_session=True,
+        )
+    try:
+        def arriba() -> bool:
+            return c.http("GET", "/actuator/health/readiness", base="http://localhost:8097",
+                          timeout=5).status == 200
+
+        esperar("reporting sin bootstrap arriba", arriba, timeout=300, interval=5)
+        estado = c.psql_one("reporting_sin_bootstrap_db",
+                            "select COALESCE(estado,'') from projection_bootstrap where id=1")
+        # Sin idHotel: el dashboard consolidado de ADMIN no valida sede contra la proyección
+        # vacía (hacerlo daría 404 antes de llegar a la guardia de bootstrap).
+        dash = c.http("GET", "/api/reportes/dashboard", token=token,
+                      base="http://localhost:8097", timeout=60)
+        code = dash.field("error", "code")
+        cumple = (
+            estado != "LISTO"
+            and dash.status == 503
+            and code == "REPORTING_NOT_READY"
+            and bool(dash.headers.get("retry-after"))
+        )
+        previo = json.loads((EVIDENCE / "REP03.json").read_text(encoding="utf-8"))
+        previo["sinBootstrap"] = {
+            "dbNueva": "reporting_sin_bootstrap_db",
+            "bootstrapEstado": estado,
+            "dashboard": resumen(dash),
+            "exigido": "503 REPORTING_NOT_READY mientras el bootstrap no está LISTO",
+            "cumple": cumple,
+        }
+        # El arranque en limpio se midió sobre la demo recién reseteada (campo `cumple` del
+        # registro); se recalcula aquí para no arrastrar el valor del intento anterior.
+        previo["cumple"] = _rep03_base_cumple(previo) and cumple
+        save("REP03", previo)
+    finally:
+        try:
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                           capture_output=True, check=False)
+        except Exception:
+            proc.kill()
+        c.docker("exec", c.POSTGRES, "psql", "-U", "postgres", "-c",
+                 "drop database if exists reporting_sin_bootstrap_db", check=False)
+    return 0 if cumple else 1
+
+
+def _rep03_base_cumple(datos: dict[str, Any]) -> bool:
+    """Recalcula el criterio del arranque en limpio a partir de la evidencia guardada."""
+    bootstrap = datos.get("bootstrap") or {}
+    watermarks = bootstrap.get("watermarks") or {}
+    dash = datos.get("dashboard") or {}
+    cuerpo = dash.get("body") or {}
+    meta = cuerpo.get("meta") or {}
+    checkpoints = datos.get("checkpoints") or []
+    return bool(
+        bootstrap.get("estado") == "LISTO"
+        and bootstrap.get("dominios")
+        and watermarks
+        and dash.get("status") == 200
+        and meta.get("bootstrapComplete") is True
+        and datos.get("ventasSembradas") == 0
+        and datos.get("recepcionesSembradas") == 0
+        and all(c["lastOffset"] >= watermarks.get(c["topic"], -1)
+                for c in checkpoints if c["topic"] in watermarks)
+    )
+
+
+def rep01() -> int:
+    """Dashboard y ventas sobre F3 (7.00) + F8 (adelanto 20 + final 50)."""
+    token = f.admin_token()
+    estado = leer_estado()
+    f3, f8 = estado.get("F3"), estado.get("F8")
+    dash = c.http("GET", "/api/reportes/dashboard?idHotel=1", token=token)
+    inicio, fin = _rango_hoy()
+    ventas = c.http("GET", f"/api/reportes/ventas?idHotel=1&inicio={inicio}&fin={fin}", token=token)
+    ventas_hoy = c.psql(
+        "sales_db",
+        "select id, total::text, COALESCE(paid_at::text,'') from venta "
+        "where id_hotel=1 and estado='PAGADO' and paid_at::date = current_date order by id",
+    )
+    esperado = 77.00
+    ingresos = float(dash.field("data", "ingresosHoy") or -1)
+    detalle = ventas.field("data") or []
+    suma_reportada = round(sum(float(d.get("totalIngresado") or 0) for d in detalle), 2)
+    cumple = (
+        bool(f3) and bool(f8)
+        and dash.status == 200 and ingresos == esperado
+        and ventas.status == 200
+        and all(d.get("cantidadTotal", 0) > 0 for d in detalle)
+        and suma_reportada == 7.00
+    )
+    save("REP01", {"caso": "REP01",
+                   "ingresosHoy": ingresos, "esperado": esperado,
+                   "dashboard": resumen(dash),
+                   "rango": {"inicio": inicio, "fin": fin},
+                   "reporteVentas": resumen(ventas),
+                   "sumaReporteVentas": suma_reportada,
+                   "ventasPagadasHoy": [{"idVenta": int(r[0]), "total": r[1], "paidAt": r[2]} for r in ventas_hoy],
+                   "exigido": "ingresosHoy 77.00 sin duplicar y solo PAGADO por paid_at",
+                   "cumple": cumple})
+    return 0 if cumple else 1
+
+
+def _get_con_reintento(ruta: str, token: str, base: str = c.GATEWAY, intentos: int = 5) -> c.Resp:
+    """GET con reintento ante 503/DEPENDENCY_UNAVAILABLE de la primera consulta (caché en frío)."""
+    resp = c.http("GET", ruta, token=token, base=base, timeout=60)
+    for _ in range(intentos - 1):
+        if resp.status == 200:
+            return resp
+        time.sleep(5)
+        resp = c.http("GET", ruta, token=token, base=base, timeout=60)
+    return resp
+
+
+def rep02() -> int:
+    """Rebuild de reporting en DB nueva con snapshot + stream y comparación de totales."""
+    token = f.admin_token()
+    inicio, fin = _rango_hoy()
+    base_dash = _get_con_reintento("/api/reportes/dashboard?idHotel=1", token)
+    base_ventas = _get_con_reintento(f"/api/reportes/ventas?idHotel=1&inicio={inicio}&fin={fin}", token)
+    base_counts = c.psql(
+        "reporting_db",
+        "select 'venta_projection' as t, count(*) from venta_projection union all "
+        "select 'recepcion_projection', count(*) from recepcion_projection union all "
+        "select 'gate_projection', count(*) from gate_projection union all "
+        "select 'persona_projection', count(*) from persona_projection order by 1",
+    )
+
+    # DB nueva y una instancia de reporting aparte con otro grupo de consumo y bootstrap.
+    c.docker("exec", c.POSTGRES, "psql", "-U", "postgres", "-c",
+             "drop database if exists reporting_rebuild_db", check=False)
+    c.docker("exec", c.POSTGRES, "psql", "-U", "postgres", "-c",
+             "create database reporting_rebuild_db owner reporting_migrator", check=True)
+    # La base nueva no la crea el init del volumen, así que hay que repetir los privilegios
+    # que `infra/postgres/init/01-bases-y-roles.sh` deja en cada base del Compose.
+    c.docker("exec", c.POSTGRES, "psql", "-U", "postgres", "-d", "reporting_rebuild_db", "-c",
+             "REVOKE ALL ON SCHEMA public FROM PUBLIC;"
+             "GRANT USAGE, CREATE ON SCHEMA public TO reporting_migrator;"
+             "GRANT USAGE ON SCHEMA public TO reporting_app;"
+             "ALTER DEFAULT PRIVILEGES FOR ROLE reporting_migrator IN SCHEMA public "
+             "GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO reporting_app;"
+             "ALTER DEFAULT PRIVILEGES FOR ROLE reporting_migrator IN SCHEMA public "
+             "GRANT USAGE, SELECT ON SEQUENCES TO reporting_app;"
+             "ALTER DEFAULT PRIVILEGES FOR ROLE reporting_migrator IN SCHEMA public "
+             "GRANT EXECUTE ON FUNCTIONS TO reporting_app;", check=True)
+    grupo = f"reporting-rebuild-{uuid.uuid4().hex[:8]}"
+    overrides = {
+        "SERVER_PORT": "8096",
+        "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:55432/reporting_rebuild_db",
+        "MESSAGING_KAFKA_CONSUMER_GROUP": grupo,
+        "REPORTING_BOOTSTRAP_ENABLED": "true",
+        "KAFKA_BOOTSTRAP_SERVERS": "127.0.0.1:29092",
+        "OUTBOX_POLL_INTERVAL_MS": "2000",
+        # Sin Eureka: si se registra, el Gateway reparte entre las dos instancias y durante el
+        # arranque de la de rebuild responde DEPENDENCY_UNAVAILABLE a la instancia principal.
+        # El rebuild se consulta directo en su puerto.
+        "EUREKA_ENABLED": "false",
+    }
+    entorno = {**c.service_env("reporting-service"), **overrides}
+    import subprocess
+
+    log = ROOT / "tests" / "evidencia" / "qa-matriz-aceptacion" / "_runtime" / "reporting-rebuild.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    with log.open("ab") as handle:
+        proc = subprocess.Popen(
+            [c.bash_executable(), "scripts/mvn.sh", "-f", "services/pom.xml", "-pl",
+             "reporting-service", "spring-boot:run", "-q"],
+            cwd=str(ROOT), env={**os.environ, **entorno},
+            stdout=handle, stderr=subprocess.STDOUT, start_new_session=True,
+        )
+    try:
+        def listo() -> bool:
+            return c.psql_one(
+                "reporting_db",
+                "select 1",
+            ) == "1" and c.psql_one(
+                "reporting_db", "select 1 from information_schema.tables where table_name='projection_bootstrap'"
+            ) == "1"
+
+        # La base nueva la crea Flyway al arrancar; se espera a sus proyecciones.
+        deadline = time.time() + 300
+        while time.time() < deadline:
+            try:
+                estado_b = c.psql_one("reporting_db", "select 1")
+                tablas = c.psql(
+                    "reporting_rebuild_db",
+                    "select table_name from information_schema.tables where table_schema='public'",
+                )
+                if any(t[0] == "projection_bootstrap" for t in tablas):
+                    break
+            except c.RunbookError:
+                pass
+            time.sleep(5)
+        esperar("bootstrap del rebuild LISTO",
+                lambda: c.psql_one("reporting_rebuild_db",
+                                   "select estado from projection_bootstrap where id=1") == "LISTO",
+                timeout=420, interval=10)
+        # El stream se consume desde el inicio con un grupo nuevo: se espera a que las
+        # proyecciones alcancen los mismos conteos que la instancia principal.
+        objetivo = {r[0]: int(r[1]) for r in base_counts}
+        esperar("proyecciones del rebuild al día",
+                lambda: all(int(c.psql_one("reporting_rebuild_db", f"select count(*) from {t}") or 0) >= n
+                            for t, n in objetivo.items()),
+                timeout=600, interval=10)
+        counts = c.psql(
+            "reporting_rebuild_db",
+            "select 'venta_projection' as t, count(*) from venta_projection union all "
+            "select 'recepcion_projection', count(*) from recepcion_projection union all "
+            "select 'gate_projection', count(*) from gate_projection union all "
+            "select 'persona_projection', count(*) from persona_projection order by 1",
+        )
+        rebuilt_dash = _get_con_reintento("/api/reportes/dashboard?idHotel=1", token,
+                                          base="http://localhost:8096")
+        rebuilt_ventas = _get_con_reintento(
+            f"/api/reportes/ventas?idHotel=1&inicio={inicio}&fin={fin}", token,
+            base="http://localhost:8096",
+        )
+        iguales = (
+            base_counts == counts
+            and rebuilt_dash.status == 200
+            and rebuilt_ventas.status == 200
+            and float(rebuilt_dash.field("data", "ingresosHoy") or -1)
+            == float(base_dash.field("data", "ingresosHoy") or -2)
+            and (rebuilt_ventas.field("data") or []) == (base_ventas.field("data") or [])
+        )
+    finally:
+        try:
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                           capture_output=True, check=False)
+        except Exception:
+            proc.kill()
+        # La base de la corrida es efímera: se retira al terminar para no dejar residuo.
+        if os.environ.get("QA_MATRIZ_CONSERVAR_REBUILD") != "1":
+            c.docker("exec", c.POSTGRES, "psql", "-U", "postgres", "-c",
+                     "drop database if exists reporting_rebuild_db", check=False)
+    save("REP02", {"caso": "REP02",
+                   "dbNueva": "reporting_rebuild_db",
+                   "grupoConsumo": grupo,
+                   "principal": {"counts": base_counts,
+                                 "dashboard": base_dash.json, "ventas": base_ventas.json},
+                   "rebuild": {"counts": counts,
+                               "dashboard": rebuilt_dash.json, "ventas": rebuilt_ventas.json},
+                   "exigido": "mismos totales y claves tras el rebuild",
+                   "cumple": iguales})
+    return 0 if iguales else 1
+
+
+def rep() -> int:
+    fallos: list[str] = []
+    if rep03() != 0:
+        fallos.append("REP03")
+    # REP01 y REP02 requieren la corrida de F3+F8: si no está sembrada, se avisa.
+    if leer_estado().get("F3") and leer_estado().get("F8"):
+        if rep01() != 0:
+            fallos.append("REP01")
+        if rep02() != 0:
+            fallos.append("REP02")
+    else:
+        fallos.extend(["REP01", "REP02"])
+    print(json.dumps({"fallos": fallos}, indent=2))
+    return 0 if not fallos else 1
+
+
+# ---------------------------------------------------------------------------
+# Paso 14 — NOT01–NOT03
+# ---------------------------------------------------------------------------
+
+
+def _notification_cli(*args: str, timeout: int = 300) -> tuple[int, str]:
+    argumentos = "--admin " + " ".join(args)
+    proc = c.run(
+        [c.bash_executable(), "scripts/mvn.sh", "-f", "services/pom.xml", "-pl",
+         "notification-service", "spring-boot:run", "-q",
+         f"-Dspring-boot.run.arguments={argumentos}"],
+        env_extra=c.service_env("notification-service"), timeout=timeout, check=False,
+    )
+    lineas = [line for line in proc.stdout.splitlines() if line and not line.startswith("{")]
+    return proc.returncode, "\n".join(lineas)
+
+
+def _job(command_id: str | None = None) -> list[dict[str, Any]]:
+    where = f"where command_id='{command_id}'" if command_id else ""
+    filas = c.psql(
+        "notification_db",
+        "select command_id::text, tipo, estado, attempts, COALESCE(last_error_code,''), "
+        "COALESCE(sent_at::text,''), COALESCE(destinatario,''), id_recepcion, "
+        f"COALESCE(lease_token::text,''), COALESCE(lease_until::text,'') from notification_job {where} "
+        "order by created_at",
+    )
+    return [
+        {"commandId": r[0], "tipo": r[1], "estado": r[2], "attempts": int(r[3]),
+         "lastErrorCode": r[4] or None, "sentAt": r[5] or None, "destinatario": r[6],
+         "idRecepcion": int(r[7]) if r[7] else None, "leaseToken": r[8] or None,
+         "leaseUntil": r[9] or None}
+        for r in filas
+    ]
+
+
+def _outbox_payload(aggregate: str, command_id: str) -> dict[str, Any] | None:
+    """Payload exacto con el que reception encoló el comando: redelivery idéntico."""
+    filas = c.psql(
+        "reception_db",
+        "select payload::text from outbox where payload->>'commandId' = "
+        f"'{command_id}' order by created_at desc limit 1",
+    )
+    return json.loads(filas[0][0]) if filas else None
+
+
+def not01() -> int:
+    """Cierre con SMTP caído: salida 200, un job por commandId, reintentos 1/5/30 min y ERROR."""
+    token = f.admin_token()
+    # SMTP «caído» de forma determinista: el worker se levanta apuntando a un puerto cerrado
+    # (127.0.0.1:1026) en vez de depender de que el contenedor de Mailpit siga detenido.
+    log = ROOT / "tests" / "evidencia" / "qa-matriz-aceptacion" / "_runtime" / "notification-smtp-caido.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    c.stop_service("notification-service")
+    with log.open("ab") as handle:
+        proc = subprocess.Popen(
+            [c.bash_executable(), "scripts/mvn.sh", "-f", "services/pom.xml", "-pl",
+             "notification-service", "spring-boot:run", "-q"],
+            cwd=str(ROOT),
+            env={**os.environ, **c.service_env("notification-service"),
+                 "SMTP_PORT": "1026", "EUREKA_ENABLED": "false"},
+            stdout=handle, stderr=subprocess.STDOUT, start_new_session=True,
+        )
+    try:
+        c.wait_ready("notification-service", timeout=240)
+        idr = _estadia_nueva(302, 3, 100, 0.0, token)
+        esperar_operacion_terminal(idr)
+        cot = _cotizacion(idr, token)
+        salida = f.checkout(id_recepcion=idr, room_id=302, monto=float(cot["cobroAhora"]), token=token)
+
+        # Un job por commandId del comando notificacion.checkout de esa salida.
+        def jobs_checkout() -> list[dict[str, Any]]:
+            return [j for j in _job() if j["tipo"] == "CHECKOUT" and j["idRecepcion"] == idr]
+
+        esperar("job CHECKOUT creado", lambda: len(jobs_checkout()) == 1, timeout=120)
+        primero = jobs_checkout()[0]
+        # Redelivery del mismo comando: mismo payload y mismo commandId, un solo job (inbox/hash).
+        original = _outbox_payload("reception", primero["commandId"])
+        repeticion = (
+            c.rabbit_publish("hotel.commands.v1", "notificacion.checkout", original,
+                             command_id=primero["commandId"])
+            if original else None
+        )
+        time.sleep(8)
+        tras_repeticion = jobs_checkout()
+        # Timeline de reintentos (1 min, 5 min y 30 min) hasta ERROR.
+        linea = []
+        deadline = time.time() + 60 * 50
+        while time.time() < deadline:
+            actuales = jobs_checkout()
+            linea.append({"ts": c.iso(), "jobs": actuales})
+            if actuales and all(j["estado"] == "ERROR" for j in actuales):
+                break
+            time.sleep(20)
+        finales = jobs_checkout()
+        errores = [j for j in finales if j["estado"] == "ERROR"]
+        un_job = len(finales) == 1
+        cumple = (
+            salida.status == 200 and bool(primero) and un_job
+            and repeticion is not None and repeticion.status == 200
+            and bool(errores) and errores[0]["attempts"] >= 4
+            and errores[0]["lastErrorCode"] == "SMTP_ERROR"
+        )
+        save("NOT01", {"caso": "NOT01",
+                       "smtpCaido": "worker levantado con SMTP_PORT=1026 (puerto cerrado) en lugar "
+                                    "de Mailpit; el cierre del negocio no se bloquea",
+                       "salida": resumen(salida),
+                       "jobPrimero": primero,
+                       "payloadRedelivery": original,
+                       "redelivery": resumen(repeticion) if repeticion else None,
+                       "jobsTrasRedelivery": tras_repeticion,
+                       "timeline": linea,
+                       "jobsFinales": finales,
+                       "exigido": "salida 200 sin bloquear el negocio; un job por commandId; ERROR tras agotar",
+                       "cumple": cumple})
+    finally:
+        try:
+            subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"],
+                           capture_output=True, check=False)
+        except Exception:
+            proc.kill()
+        c.start_service("notification-service", timeout=240)
+    return 0 if cumple else 1
+
+
+def not02() -> int:
+    """Respuesta tardía con lease vencido: el token viejo no modifica el job nuevo."""
+    job = next((j for j in _job() if j["estado"] == "ERROR"), None)
+    if not job:
+        raise c.RunbookError("NOT02 necesita un job en ERROR; ejecuta antes NOT01")
+    # El worker se detiene para que no recupere el lease vencido mientras se mide el CAS.
+    c.stop_service("notification-service")
+    try:
+        token_viejo = str(uuid.uuid4())
+        # Estado inducido por SQL: el job queda ENVIANDO con un lease ya vencido de un worker
+        # anterior. El desenlace lo decide el procedimiento real, no el UPDATE.
+        c.psql(
+            "notification_db",
+            f"update notification_job set estado='ENVIANDO', lease_token='{token_viejo}', "
+            f"lease_until=now() - interval '5 minutes' where command_id='{job['commandId']}'",
+        )
+        antes = _job(job["commandId"])[0]
+        c.psql(
+            "notification_db",
+            f"call sp_notificacion_resultado('{job['commandId']}','{token_viejo}',true,null)",
+        )
+        tras_tardio = _job(job["commandId"])[0]
+        cumple = (
+            antes["estado"] == "ENVIANDO" and antes["leaseToken"] == token_viejo
+            and tras_tardio["estado"] == "ENVIANDO"
+            and tras_tardio["leaseToken"] == token_viejo
+            and tras_tardio["sentAt"] is None
+        )
+        save("NOT02", {"caso": "NOT02",
+                       "inducido": "lease_until forzado al pasado por SQL con el worker detenido; el "
+                                   "resultado tardío se aplica por el procedimiento real "
+                                   "sp_notificacion_resultado",
+                       "jobOriginal": job,
+                       "jobAntesDelTardio": antes,
+                       "leaseViejo": {"token": token_viejo, "leaseUntil": antes["leaseUntil"]},
+                       "respuestaTardia": "sp_notificacion_resultado(commandId, lease viejo, exito=true)",
+                       "jobTrasTardio": tras_tardio,
+                       "exigido": "el lease_token viejo no modifica el job nuevo",
+                       "cumple": cumple})
+    finally:
+        c.start_service("notification-service", timeout=180)
+    return 0 if cumple else 1
+
+
+def not03() -> int:
+    """Purga solo sobre ENVIADA; PENDIENTE y ERROR intactos, con registro en audit_log."""
+    jobs_antes = _job()
+    pendientes = [j for j in jobs_antes if j["estado"] in ("PENDIENTE", "ERROR")]
+    # Se crea un job ENVIADA antiguo (destinatario y variables) para poder purgar; es un estado
+    # inducido por SQL para no esperar 30 días.
+    command_id = str(uuid.uuid4())
+    c.psql(
+        "notification_db",
+        "insert into notification_job (command_id, tipo, id_hotel, id_persona, id_recepcion, "
+        "destinatario, template_version, variables, payload_hash, estado, attempts, "
+        "message_id, created_at, sent_at) values "
+        f"('{command_id}', 'BIENVENIDA', 1, 100, null, 'matriz-antigua@hotel.test', 1, "
+        "'{\"nombre\": \"x\"}'::jsonb, repeat('b', 64), 'ENVIADA', 1, "
+        f"'matriz-{command_id}', now() - interval '40 days', now() - interval '40 days')",
+    )
+    antes_purga = _job(command_id)[0]
+    exit_purge, out_purge = _notification_cli("purge", "--before", date.today().isoformat())
+    tras_purga = _job(command_id)[0]
+    pendientes_tras = [j for j in _job() if j["estado"] in ("PENDIENTE", "ERROR")]
+    audit = c.psql(
+        "notification_db",
+        "select action, resource_id, actor, occurred_at::text from audit_log "
+        f"where action='NOTIFICATION_PURGE' order by occurred_at desc limit 3",
+    )
+    cumple = (
+        exit_purge == 0 and antes_purga["destinatario"] == "matriz-antigua@hotel.test"
+        and tras_purga["destinatario"] == "" and tras_purga["estado"] == "ENVIADA"
+        and len(pendientes) == len(pendientes_tras) and bool(audit)
+    )
+    save("NOT03", {"caso": "NOT03",
+                   "inducido": "job ENVIADA con sent_at de hace 40 días insertado por SQL",
+                   "jobAntes": antes_purga,
+                   "comandoPurge": {"exit": exit_purge, "salida": out_purge},
+                   "jobDespues": tras_purga,
+                   "pendientesAntes": len(pendientes), "pendientesDespues": len(pendientes_tras),
+                   "auditLog": [{"accion": a[0], "entidad": a[1], "actor": a[2], "ocurridoEn": a[3]} for a in audit],
+                   "exigido": "purga solo en ENVIADA conservando estado; PENDIENTE/ERROR intactos; audit_log",
+                   "cumple": cumple})
+    return 0 if cumple else 1
+
+
+def not_() -> int:
+    fallos: list[str] = []
+    if not01() != 0:
+        fallos.append("NOT01")
+    if not02() != 0:
+        fallos.append("NOT02")
+    if not03() != 0:
+        fallos.append("NOT03")
+    print(json.dumps({"fallos": fallos}, indent=2))
+    return 0 if not fallos else 1
+
+
+# ---------------------------------------------------------------------------
+# Paso 15 — informe consolidado
+# ---------------------------------------------------------------------------
+
+CASOS = [
+    ("SEC01", "plataforma"), ("SEC02", "plataforma"), ("SEC03", "plataforma"),
+    ("SEC04", "plataforma"), ("SEC05", "plataforma"), ("SEC06", "plataforma"),
+    ("SEC07", "plataforma"), ("SEC08", "plataforma"),
+    ("LP01", "catálogo público"), ("LP02", "catálogo público"), ("CRUD01", "catálogo público"),
+    ("OCC01", "concurrencia"), ("OCC02", "concurrencia"), ("OCC03", "concurrencia"),
+    ("OCC04", "concurrencia"), ("CLN01", "limpieza"), ("CLN02", "limpieza"), ("CLN03", "limpieza"),
+    ("STK01", "stock y venta"), ("STK02", "stock y venta"), ("STK03", "stock y venta"),
+    ("STK04", "stock y venta"), ("STK05", "stock y venta"), ("STK06", "stock y venta"),
+    ("STK07", "stock y venta"),
+    ("PAY01", "pagos y cierre"), ("PAY02", "pagos y cierre"),
+    ("OUT01", "pagos y cierre"), ("OUT02", "pagos y cierre"), ("OUT03", "pagos y cierre"),
+    ("OUT04", "pagos y cierre"), ("OUT05", "pagos y cierre"), ("OUT06", "pagos y cierre"),
+    ("MSG01", "mensajería"), ("MSG02", "mensajería"),
+    ("REP01", "reportes"), ("REP02", "reportes"), ("REP03", "reportes"),
+    ("NOT01", "notificaciones"), ("NOT02", "notificaciones"), ("NOT03", "notificaciones"),
+]
+
+COMANDO = {
+    "SEC": "python scripts/qa/matriz.py sec",
+    "LP": "python scripts/qa/matriz.py lp-crud",
+    "CRUD": "python scripts/qa/matriz.py lp-crud",
+    "OCC": "python scripts/qa/matriz.py occ-cln",
+    "CLN": "python scripts/qa/matriz.py occ-cln",
+    "STK": "python scripts/qa/matriz.py stk",
+    "PAY": "python scripts/qa/matriz.py pay-out",
+    "OUT": "python scripts/qa/matriz.py pay-out",
+    "MSG": "python scripts/qa/matriz.py msg",
+    "REP": "python scripts/qa/matriz.py rep / rep03_sin_bootstrap",
+    "NOT": "python scripts/qa/matriz.py not",
+}
+
+ENDPOINT = {
+    "SEC01": "GET /api/persona/listar sin token",
+    "SEC02": "POST /api/auth/registro con idTipoPersona",
+    "SEC03": "GET /api/habitacion/buscar/{id} y GET /api/reportes/dashboard de sede ajena",
+    "SEC04": "GET /api/carrito/listar/{idRecepcion} y POST /api/venta con estadía ajena",
+    "SEC05": "POST /internal/stock/descontar directo al puerto interno",
+    "SEC06": "GET /api/auth/me y GET /api/hotel/listar con JWT inválido",
+    "SEC07": "PUT /api/persona/actualizar/{id} y DELETE /api/persona/eliminar/{id}",
+    "SEC08": "OPTIONS preflight CORS permitido y ajeno",
+    "LP01": "GET /api/public/hoteles, /hoteles/{slug}, /categorias y /categorias/{idCategoria}",
+    "LP02": "GET público con ?fecha= / ?ocupacion= + bundle de public-web",
+    "CRUD01": "POST/PUT/GET/DELETE de hotel, piso, categoría, habitación y producto",
+    "OCC01": "dos POST /api/recepcion/registrar simultáneos",
+    "OCC02": "POST /api/recepcion/registrar y POST /api/habitacion/{id}/mantenimiento",
+    "OCC03": "reintento del blockId R y nueva intención de mantenimiento",
+    "OCC04": "DELETE /api/piso/eliminar/{id} y /api/categoria/eliminar/{id} con habitación activa",
+    "CLN01": "PUT /api/habitacion/{id}/limpieza-completada con Rabbit pausado",
+    "CLN02": "comando limpieza.solicitada C1 y HabitacionLista viejo",
+    "CLN03": "HabitacionLista posterior al cierre + proyecciones de reporting",
+    "STK01": "dos POST /api/venta ×15 sobre stock 20",
+    "STK02": "POST /api/venta multítem que excede un ítem",
+    "STK03": "POST /api/venta con la Idempotency-Key de F2",
+    "STK04": "DELETE /api/venta/{id} con débito en vuelo y débito tardío",
+    "STK05": "job de recuperación cada 30 s sobre F7",
+    "STK06": "comando recepcion.operacion-finalizar RECHAZADA antes de admitir",
+    "STK07": "worker caído tras DEBITO_SOLICITADO y reinicio",
+    "PAY01": "POST /api/venta como CLIENTE con estado PAGADO y con precio",
+    "PAY02": "DELETE /api/venta/{id} sobre F3 pagada",
+    "OUT01": "POST /api/recepcion/registrar-salida con venta en vuelo",
+    "OUT02": "reintento del cierre de F4 con el mismo closureId",
+    "OUT03": "POST /api/recepcion/registrar-salida con monto inexacto y penalidad",
+    "OUT04": "POST /api/recepcion/registrar-salida sin ventas",
+    "OUT05": "matar reception en VALIDANDO y en CONFIRMANDO",
+    "OUT06": "PUT /api/recepcion/actualizar/{id} que deja precioInicial < adelanto",
+    "MSG01": "F2 commiteada con Kafka detenido y reanudación",
+    "MSG02": "duplicados, versión vieja y orden invertido",
+    "REP01": "GET /api/reportes/dashboard y GET /api/reportes/ventas",
+    "REP02": "rebuild de reporting en DB nueva",
+    "REP03": "arranque en demo sin ventas",
+    "NOT01": "cierre de F1 con Mailpit caído y repetición de notificacion.checkout",
+    "NOT02": "respuesta tardía con lease vencido",
+    "NOT03": "CLI notification-service --admin purge --before sobre ENVIADA antigua y PENDIENTE/ERROR",
+}
+
+
+def _comando_de(caso: str) -> str:
+    prefijo = "".join(ch for ch in caso if ch.isalpha())
+    return COMANDO.get(prefijo, "—")
+
+
+def _ejecutado(caso: str) -> bool:
+    """Un caso está ejecutado si deja evidencia propia; `SEC07-restauracion` no es un caso."""
+    ruta = EVIDENCE / f"{caso}.json"
+    if not ruta.exists():
+        return False
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    return "cumple" in datos or "caso" in datos
+
+
+def informe() -> int:
+    filas = []
+    faltan = []
+    for caso, grupo in CASOS:
+        ruta = EVIDENCE / f"{caso}.json"
+        if not ruta.exists():
+            faltan.append(caso)
+            filas.append((caso, grupo, ENDPOINT.get(caso, "—"), "sin evidencia", "—", "❌"))
+            continue
+        datos = json.loads(ruta.read_text(encoding="utf-8"))
+        cumple = datos.get("cumple") is True
+        filas.append((caso, grupo, ENDPOINT.get(caso, "—"),
+                      _comando_de(caso),
+                      f"tests/evidencia/qa-matriz-aceptacion/{caso}.json",
+                      "✅" if cumple else "❌"))
+    ejecutados = sum(1 for c, _ in CASOS if _ejecutado(c))
+    verdes = sum(1 for c, _ in CASOS if _ejecutado(c)
+                 and json.loads((EVIDENCE / f"{c}.json").read_text(encoding="utf-8")).get("cumple") is True)
+    lineas = [
+        "# Informe de la matriz de aceptación (F5)",
+        "",
+        "Generado por `python scripts/qa/matriz.py informe` a partir de los archivos de",
+        "`tests/evidencia/qa-matriz-aceptacion/`. Cada fila se ejecutó contra el Compose real y los",
+        "servicios reales; el archivo citado contiene el comando/endpoint, la respuesta y el criterio.",
+        "",
+        f"- Casos con evidencia ejecutada: **{ejecutados}/41**",
+        f"- Casos que cumplen el criterio: **{verdes}/41**",
+        "",
+        "| Caso | Grupo | Comando o endpoint | Invocación | Resultado | Evidencia |",
+        "|---|---|---|---|---|---|",
+    ]
+    for caso, grupo, endpoint, comando, archivo, marca in filas:
+        lineas.append(f"| {caso} | {grupo} | `{endpoint}` | `{comando}` | {marca} | `{archivo}` |")
+    lineas += [
+        "",
+        "## Estados inducidos",
+        "",
+        "Los casos que necesitan un estado difícil de reproducir lo dicen en su archivo de",
+        "evidencia, en el campo `inducido`: F4 (advisory lock de Sales), F5 (reception detenido),",
+        "F7/STK04/STK05/STK07 (proxy TCP que cuelga el débito), OUT01/OUT05 (lock + proceso",
+        "matado), NOT02 y NOT03 (lease vencido y job ENVIADA antiguo por SQL). Ninguno se presenta",
+        "como natural.",
+        "",
+        "## Configuración",
+        "",
+        "```bash",
+        "bash scripts/ejecutar-matriz.sh --help",
+        "python scripts/qa/matriz.py <grupo>",
+        "bash scripts/ejecutar-matriz-completa.sh   # corrida completa en orden",
+        "```",
+        "",
+    ]
+    (EVIDENCE / "INFORME.md").write_text("\n".join(lineas), encoding="utf-8")
+    print(json.dumps({"casos": len(CASOS), "conEvidencia": ejecutados, "verdes": verdes,
+                      "faltan": faltan}, indent=2, ensure_ascii=False))
+    return 0 if verdes == len(CASOS) else 1
+
+
+# ---------------------------------------------------------------------------
 # Paso 7 — SEC01–SEC08
 # ---------------------------------------------------------------------------
 
@@ -2180,11 +2903,15 @@ def lp_crud() -> int:
     fallos: list[str] = []
 
     # LP01 — los cuatro GET públicos sin token.
+    # El detalle de categoría se pide con un id que el propio listado público devuelve: el
+    # catálogo solo publica categorías con habitación publicada, y ese conjunto cambia con la demo.
+    listado_categorias = c.http("GET", "/api/public/hoteles/lima-centro/categorias")
+    primera = (listado_categorias.field("data") or [{}])[0].get("idCategoria")
     rutas = [
         ("/api/public/hoteles", "lista"),
         ("/api/public/hoteles/lima-centro", "hotel"),
         ("/api/public/hoteles/lima-centro/categorias", "lista"),
-        ("/api/public/hoteles/lima-centro/categorias/1", "categoria"),
+        (f"/api/public/hoteles/lima-centro/categorias/{primera}", "categoria"),
     ]
     respuestas: dict[str, Any] = {}
     privadas: dict[str, list[str]] = {}
@@ -2464,6 +3191,16 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("stk", help="STK01-STK07")
     sub.add_parser("pay-out", help="PAY01-PAY02 y OUT01-OUT06")
     sub.add_parser("msg", help="MSG01-MSG02")
+    sub.add_parser("rep03", help="REP03 (exige demo recién sembrada, sin ventas)")
+    sub.add_parser("rep03-sin-bootstrap", help="REP03 variante 503 REPORTING_NOT_READY sin bootstrap")
+    sub.add_parser("rep01", help="REP01 (exige F3+F8 sembradas)")
+    sub.add_parser("rep02", help="REP02 (rebuild de reporting en DB nueva)")
+    sub.add_parser("rep", help="REP01-REP03")
+    sub.add_parser("not", help="NOT01-NOT03")
+    sub.add_parser("not01", help="NOT01 (cierre con SMTP caído, ~40 min de reintentos)")
+    sub.add_parser("not02", help="NOT02 (lease vencido)")
+    sub.add_parser("not03", help="NOT03 (purga de ENVIADA antigua)")
+    sub.add_parser("informe", help="consolida tests/evidencia/qa-matriz-aceptacion/INFORME.md")
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
@@ -2487,6 +3224,26 @@ def main(argv: list[str] | None = None) -> int:
             return pay_out()
         if args.command == "msg":
             return msg()
+        if args.command == "rep03":
+            return rep03()
+        if args.command == "rep03-sin-bootstrap":
+            return rep03_sin_bootstrap()
+        if args.command == "rep01":
+            return rep01()
+        if args.command == "rep02":
+            return rep02()
+        if args.command == "rep":
+            return rep()
+        if args.command == "not":
+            return not_()
+        if args.command == "not01":
+            return not01()
+        if args.command == "not02":
+            return not02()
+        if args.command == "not03":
+            return not03()
+        if args.command == "informe":
+            return informe()
         parser.print_help()
         return 2
     except c.RunbookError as err:
