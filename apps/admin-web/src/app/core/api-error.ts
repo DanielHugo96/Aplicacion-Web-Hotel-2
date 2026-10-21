@@ -119,6 +119,15 @@ export const ERROR_CATALOG: Record<string, CatalogEntry> = {
     message: 'La nueva fecha deja el alojamiento por debajo del adelanto registrado.',
     action: 'Mantener la fecha o cerrar la estadía; no hay reembolso en el MVP.',
   },
+  // Cierre de estadía (F4) — códigos de `contracts/errors.md`
+  AMOUNT_MISMATCH: {
+    message: 'El monto no coincide con el calculado. Revisa la nueva cotización.',
+    action: 'Mostrar la nueva cotización y confirmar con ella.',
+  },
+  CLOSURE_IN_PROGRESS: {
+    message: 'Ya hay un cierre en curso; no vuelvas a cobrar.',
+    action: 'Consultar la estadía; reintentar solo con el mismo closureId.',
+  },
   // Área de cliente (C) — códigos de `contracts/errors.md`
   STAY_NOT_ACTIVE: {
     message: 'La estadía no está activa para esa operación.',

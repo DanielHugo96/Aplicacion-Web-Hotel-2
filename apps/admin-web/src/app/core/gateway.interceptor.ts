@@ -59,6 +59,17 @@ function esOperacionHabitacionManual(req: HttpRequest<unknown>): boolean {
 }
 
 /**
+ * El cierre de estadía (`POST /api/recepcion/registrar-salida`) necesita el 202
+ * en crudo: la pantalla muestra el banner «cierre pendiente, no volver a
+ * cobrar», sondea `Location` según `Retry-After` y refresca la estadía al llegar
+ * al estado terminal. Ver decisión `IA-front-admin-web-cierre-01`.
+ */
+function esCierreManual(req: HttpRequest<unknown>): boolean {
+  const url = (req.urlWithParams ?? req.url).split('?')[0];
+  return req.method === 'POST' && /\/api\/recepcion\/registrar-salida$/.test(url);
+}
+
+/**
  * Una clave de idempotencia por intención (método + URL + query).
  * Se conserva al reintentar; ante una intención nueva se genera otra clave.
  */
@@ -158,7 +169,8 @@ export const gatewayInterceptor: HttpInterceptorFn = (req, next) => {
         event.status === 202 &&
         !isPoll &&
         !esVentaPendienteManual(req) &&
-        !esOperacionHabitacionManual(req)
+        !esOperacionHabitacionManual(req) &&
+        !esCierreManual(req)
       ) {
         const location = event.headers.get('Location');
         // La operación durable ya se aceptó: un reenvío desde cero es una

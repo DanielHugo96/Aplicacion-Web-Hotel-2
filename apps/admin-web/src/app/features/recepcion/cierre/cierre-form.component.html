@@ -1,0 +1,272 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <p class="text-small muted">
+        <a routerLink="/app/recepcion">Recepción</a> /
+        <a [routerLink]="['/app/recepcion', id]">Estadía {{ id }}</a> / Cierre
+      </p>
+      <h1>Cierre de estadía</h1>
+    </div>
+    <a class="btn btn-secondary" [routerLink]="['/app/recepcion', id]">Volver al detalle</a>
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="actionLabel()"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  <app-pending-banner
+    [visible]="pendiente()"
+    [detalle]="detallePendiente()"
+    [actualizadoEn]="actualizadoEn()"
+  ></app-pending-banner>
+
+  @if (cotizacionRechazada(); as nueva) {
+    <section class="banner-nueva-cotizacion" role="alert">
+      <h2>Nueva cotización del backend</h2>
+      <dl class="datos">
+        <div>
+          <dt>Alojamiento</dt>
+          <dd class="num">{{ nueva.alojamiento | money }}</dd>
+        </div>
+        <div>
+          <dt>Adelanto</dt>
+          <dd class="num">{{ nueva.adelanto | money }}</dd>
+        </div>
+        <div>
+          <dt>Penalidad</dt>
+          <dd class="num">{{ nueva.penalidad | money }}</dd>
+        </div>
+        <div>
+          <dt>Saldo de alojamiento</dt>
+          <dd class="num">{{ nueva.saldoAlojamiento | money }}</dd>
+        </div>
+        <div>
+          <dt>Consumos pagados</dt>
+          <dd class="num">{{ nueva.consumosPagados | money }}</dd>
+        </div>
+        <div>
+          <dt>Consumos pendientes</dt>
+          <dd class="num">{{ nueva.consumosPendientes | money }}</dd>
+        </div>
+        <div class="destacado">
+          <dt>Cobro ahora</dt>
+          <dd class="num">{{ nueva.cobroAhora | money }}</dd>
+        </div>
+      </dl>
+      <p class="text-small muted">
+        Calculada el {{ nueva.calculadoEn | peTimestamp }} · {{ nueva.moneda }}
+      </p>
+      <div class="form-actions">
+        <button class="btn btn-primary" type="button" [disabled]="guardando()" (click)="confirmarConNuevaCotizacion()">
+          Confirmar con la nueva cotización
+        </button>
+      </div>
+    </section>
+  }
+
+  @if (loading()) {
+    <div class="skeleton-card" role="status" aria-label="Cargando cierre">
+      <div class="skeleton skeleton-line w40"></div>
+      <div class="skeleton skeleton-line w70"></div>
+      <div class="skeleton skeleton-line w55"></div>
+    </div>
+  } @else if (estadia(); as e) {
+    <div class="cierre-grid">
+      <section class="panel" aria-labelledby="resumenCierreTitulo">
+        <h2 id="resumenCierreTitulo">Resumen</h2>
+        <dl class="datos">
+          <div>
+            <dt>Habitación</dt>
+            <dd class="monospace">{{ e.numero }}</dd>
+          </div>
+          <div>
+            <dt>Huésped</dt>
+            <dd>{{ e.nombre }} {{ e.apellido }}</dd>
+          </div>
+          <div>
+            <dt>Entrada</dt>
+            <dd class="table-nums">{{ e.fechaEntrada | peDate }}</dd>
+          </div>
+          <div>
+            <dt>Salida</dt>
+            <dd class="table-nums">{{ e.fechaSalida | peDate }}</dd>
+          </div>
+          <div>
+            <dt>Total histórico del alojamiento</dt>
+            <dd class="num">{{ e.totalPagado | money }}</dd>
+          </div>
+          <div>
+            <dt>Adelanto</dt>
+            <dd class="num">{{ e.adelanto | money }}</dd>
+          </div>
+        </dl>
+        @if (e.vencida) {
+          <p class="pill pill-error">Estadía vencida sin cierre</p>
+        }
+      </section>
+
+      <section class="panel" aria-labelledby="cotizacionTitulo">
+        <header class="panel-head">
+          <h2 id="cotizacionTitulo">Cotización</h2>
+          @if (recotizando()) {
+            <span class="text-small muted" role="status">
+              <span class="spinner" aria-hidden="true"></span> Recotizando…
+            </span>
+          }
+        </header>
+
+        @if (cotizacion(); as c) {
+          <dl class="datos">
+            <div>
+              <dt>Alojamiento</dt>
+              <dd class="num">{{ c.alojamiento | money }}</dd>
+            </div>
+            <div>
+              <dt>Adelanto</dt>
+              <dd class="num">{{ c.adelanto | money }}</dd>
+            </div>
+            <div>
+              <dt>Penalidad</dt>
+              <dd class="num">{{ c.penalidad | money }}</dd>
+            </div>
+            <div>
+              <dt>Saldo de alojamiento</dt>
+              <dd class="num">{{ c.saldoAlojamiento | money }}</dd>
+            </div>
+            <div>
+              <dt>Consumos pagados</dt>
+              <dd class="num">{{ c.consumosPagados | money }}</dd>
+            </div>
+            <div>
+              <dt>Consumos pendientes</dt>
+              <dd class="num">{{ c.consumosPendientes | money }}</dd>
+            </div>
+            <div class="destacado">
+              <dt>Cobro ahora</dt>
+              <dd class="num">{{ c.cobroAhora | money }}</dd>
+            </div>
+          </dl>
+          <p class="text-small muted">
+            Calculada el {{ c.calculadoEn | peTimestamp }} · {{ c.moneda }}
+          </p>
+        } @else {
+          <p class="text-small muted">Sin cotización todavía.</p>
+        }
+      </section>
+    </div>
+
+    <section class="form-card" aria-labelledby="formCierreTitulo">
+      <h2 id="formCierreTitulo">Registrar salida</h2>
+
+      @if (!puedeCerrar()) {
+        <p class="banner banner-pendiente" role="status">
+          La estadía no está activa: no se puede cerrar ni volver a cobrar desde aquí.
+        </p>
+      }
+
+      <form (ngSubmit)="cerrar()" novalidate>
+        <div class="form-grid two">
+          <div class="field">
+            <label for="costo-penalidad">Costo de penalidad</label>
+            <input
+              id="costo-penalidad"
+              name="costoPenalidad"
+              type="number"
+              min="0"
+              step="0.01"
+              [ngModel]="costoPenalidad()"
+              (ngModelChange)="cambiarPenalidad($event)"
+              [class.error]="errores().costoPenalidad"
+              [attr.aria-invalid]="errores().costoPenalidad ? 'true' : null"
+              aria-describedby="costo-penalidad-msg"
+            />
+            @if (errores().costoPenalidad) {
+              <p id="costo-penalidad-msg" class="field-msg" role="alert">{{ errores().costoPenalidad }}</p>
+            } @else {
+              <p class="field-help">Entre 0 y {{ e.precioInicial | money }}.</p>
+            }
+          </div>
+
+          <div class="field">
+            <label for="medio-pago" class="required">Medio de pago</label>
+            <select
+              id="medio-pago"
+              name="medioPago"
+              [ngModel]="medioPago()"
+              (ngModelChange)="medioPago.set($event)"
+              [class.error]="errores().medioPago"
+              [attr.aria-invalid]="errores().medioPago ? 'true' : null"
+              aria-describedby="medio-pago-msg"
+            >
+              <option value="">Selecciona…</option>
+              <option value="EFECTIVO">Efectivo</option>
+              <option value="TARJETA">Tarjeta</option>
+              <option value="OTRO">Otro</option>
+            </select>
+            @if (errores().medioPago) {
+              <p id="medio-pago-msg" class="field-msg" role="alert">{{ errores().medioPago }}</p>
+            }
+          </div>
+        </div>
+
+        @if (costoPenalidad() > 0) {
+          <div class="field">
+            <label for="motivo-penalidad" class="required">Motivo de la penalidad</label>
+            <textarea
+              id="motivo-penalidad"
+              name="motivoPenalidad"
+              rows="3"
+              maxlength="300"
+              [ngModel]="motivoPenalidad()"
+              (ngModelChange)="motivoPenalidad.set($event)"
+              [class.error]="errores().motivoPenalidad"
+              [attr.aria-invalid]="errores().motivoPenalidad ? 'true' : null"
+              aria-describedby="motivo-penalidad-msg"
+            ></textarea>
+            @if (errores().motivoPenalidad) {
+              <p id="motivo-penalidad-msg" class="field-msg" role="alert">{{ errores().motivoPenalidad }}</p>
+            }
+            <p class="field-help">{{ contadorMotivo() }} caracteres</p>
+          </div>
+        }
+
+        <div class="field">
+          <label for="monto-recibido" class="required">Monto recibido ahora</label>
+          <input
+            id="monto-recibido"
+            name="montoRecibido"
+            type="number"
+            min="0"
+            step="0.01"
+            [ngModel]="montoRecibido()"
+            (ngModelChange)="cambiarMonto($event)"
+            [class.error]="errores().montoRecibido"
+            [attr.aria-invalid]="errores().montoRecibido ? 'true' : null"
+            aria-describedby="monto-recibido-msg"
+          />
+          @if (errores().montoRecibido) {
+            <p id="monto-recibido-msg" class="field-msg" role="alert">{{ errores().montoRecibido }}</p>
+          }
+          <p class="field-help">
+            Incluye el consumo pendiente; no es el total histórico.
+            @if (cotizacion()) {
+              <button class="btn btn-link" type="button" (click)="usarMontoCalculado()">
+                Usar {{ cotizacion()!.cobroAhora | money }} calculado
+              </button>
+            }
+          </p>
+        </div>
+
+        <div class="form-actions">
+          <a class="btn btn-secondary" [routerLink]="['/app/recepcion', id]">Cancelar</a>
+          <button class="btn btn-primary" type="submit" [disabled]="guardando() || pendiente()">
+            @if (guardando()) { <span class="spinner" aria-hidden="true"></span> }
+            {{ guardando() ? 'Cerrando…' : 'Cerrar estadía' }}
+          </button>
+        </div>
+      </form>
+    </section>
+  }
+</div>

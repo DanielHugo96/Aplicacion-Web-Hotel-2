@@ -1,0 +1,94 @@
+/* Pantalla de cierre: reutiliza tokens de DESIGN.md §10 y las clases globales
+   de panel/formulario. Solo añade la disposición de dos columnas. */
+
+.cierre-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.panel {
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: #fff;
+  padding: var(--space-4);
+}
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.datos {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.datos > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-junta);
+  padding-bottom: var(--space-2);
+}
+
+.datos > div:last-child {
+  border-bottom: none;
+}
+
+.datos dt {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.datos dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.destacado {
+  background: var(--color-cochinilla-wash);
+  border-bottom: none;
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  font-weight: 600;
+}
+
+.destacado dt {
+  color: var(--color-tinta);
+}
+
+.banner-nueva-cotizacion {
+  border: 1px solid var(--color-atencion);
+  background: var(--color-atencion-bg);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.banner-nueva-cotizacion h2 {
+  font-size: var(--text-h3);
+  margin-bottom: var(--space-3);
+}
+
+.skeleton-card {
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-card);
+  background: #fff;
+  padding: var(--space-4);
+}
+
+.skeleton-line {
+  height: 16px;
+  margin-bottom: var(--space-3);
+}
+
+.w40 { width: 40%; }
+.w55 { width: 55%; }
+.w70 { width: 70%; }

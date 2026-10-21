@@ -4,14 +4,18 @@ import { firstValueFrom } from 'rxjs';
 import { API_BASE_URL, API_PATHS } from '../api.config';
 import {
   ActualizarSalidaInput,
+  AvanceCierre,
   AvanceOperacionHabitacion,
   CheckInInput,
+  Cotizacion,
   EstadoLimpieza,
   Limpieza,
   LimpiezaResultado,
   OperacionHabitacion,
   Recepcion,
+  ResultadoCierre,
   ResultadoOperacionHabitacion,
+  SalidaInput,
 } from '../models/recepcion.models';
 import {
   ApiMetaPage,
@@ -288,6 +292,129 @@ export class RecepcionService {
       if (['APLICADA', 'LIBERADA', 'RECHAZADA'].includes(operacion.estado)) {
         return ultimo;
       }
+    }
+    return ultimo;
+  }
+
+  // --------------------------------------------------------------- cierre
+
+  /**
+   * `GET /api/recepcion/{id}/cotizacion-salida`: cotización informativa con el
+   * desglose que calcula el backend. `costoPenalidad` viaja como query y solo
+   * dispara un recálculo; el resto del detalle no se toca.
+   */
+  async cotizarSalida(id: number, costoPenalidad = 0): Promise<Cotizacion> {
+    const params = new HttpParams().set('costoPenalidad', costoPenalidad);
+    const res = await firstValueFrom(
+      this.http.get<Envelope<Cotizacion>>(`${API_BASE_URL}${API_PATHS.recepcionCotizacion(id)}`, {
+        headers: { Accept: 'application/json' },
+        params,
+      })
+    );
+    return res.data;
+  }
+
+  /**
+   * `POST /api/recepcion/registrar-salida`: 200 con la estadía `CERRADA` y su
+   * nuevo ETag, o 202 `CERRANDO` con `Location`/`Retry-After` para el banner y
+   * el polling. La `Idempotency-Key` la pone el interceptor: una por intención.
+   */
+  async registrarSalida(body: SalidaInput): Promise<ResultadoCierre> {
+    const res = await firstValueFrom(
+      this.http.post<Envelope<Recepcion>>(
+        `${API_BASE_URL}${API_PATHS.recepcionRegistrarSalida}`,
+        body,
+        {
+          headers: { Accept: 'application/json', 'Content-Type': 'application/json' },
+          observe: 'response',
+        }
+      )
+    );
+    const recepcion = res.body!.data;
+    if (res.status === 202) {
+      const location = res.headers.get('Location');
+      if (!location) throw new Error('La operación pendiente no trae Location');
+      return {
+        kind: 'pendiente',
+        recepcion,
+        location: resolverLocation(location),
+        retryAfterMs: parseRetryAfter(res.headers.get('Retry-After')) ?? RETRY_AFTER_POR_DEFECTO_MS,
+      };
+    }
+    return { kind: 'confirmada', recepcion };
+  }
+
+  /** `POST /api/recepcion/{id}/anular-checkin` (solo A, `If-Match` del detalle). */
+  async anularCheckin(id: number, motivo: string, ifMatch: string): Promise<ETagged<Recepcion>> {
+    const res = await firstValueFrom(
+      this.http.post<Envelope<Recepcion>>(
+        `${API_BASE_URL}${API_PATHS.recepcionAnularCheckin(id)}`,
+        { motivo },
+        {
+          headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'If-Match': ifMatch,
+          },
+          observe: 'response',
+        }
+      )
+    );
+    return {
+      data: res.body!.data,
+      etag: res.headers.get('ETag'),
+      correlationId: res.body!.meta.correlationId,
+    };
+  }
+
+  /** `DELETE /api/recepcion/eliminar/{id}` (solo A, solo `CERRADA`). */
+  async archivarRecepcion(id: number, ifMatch: string): Promise<ETagged<Recepcion>> {
+    const res = await firstValueFrom(
+      this.http.delete<Envelope<Recepcion>>(`${API_BASE_URL}${API_PATHS.recepcionArchivar(id)}`, {
+        headers: { Accept: 'application/json', 'If-Match': ifMatch },
+        observe: 'response',
+      })
+    );
+    return {
+      data: res.body!.data,
+      etag: res.headers.get('ETag'),
+      correlationId: res.body!.meta.correlationId,
+    };
+  }
+
+  /**
+   * Sondea el `Location` del cierre respetando `Retry-After` hasta que la
+   * estadía deja de estar `CERRANDO`. Invoca `onAvance` en cada sondeo para que
+   * la pantalla muestre la hora de actualización. Devuelve `null` si se cancela.
+   */
+  async seguirCierre(
+    location: string,
+    retryAfterMs: number,
+    onAvance: (avance: AvanceCierre) => void,
+    signal?: AbortSignal
+  ): Promise<AvanceCierre | null> {
+    let espera = retryAfterMs > 0 ? retryAfterMs : RETRY_AFTER_POR_DEFECTO_MS;
+    let ultimo: AvanceCierre | null = null;
+
+    while (!signal?.aborted) {
+      await esperar(espera);
+      if (signal?.aborted) return null;
+
+      const res = await firstValueFrom(
+        this.http.get<Envelope<Recepcion>>(location, {
+          headers: { Accept: 'application/json' },
+          observe: 'response',
+        })
+      );
+      const recepcion = res.body?.data;
+      if (!recepcion) throw new Error('El cierre pendiente no devolvió datos');
+      const retry = parseRetryAfter(res.headers.get('Retry-After'));
+      if (retry !== null) espera = retry > 0 ? retry : RETRY_AFTER_POR_DEFECTO_MS;
+
+      ultimo = { recepcion, etag: res.headers.get('ETag'), actualizadoEn: new Date() };
+      onAvance(ultimo);
+
+      if (recepcion.estadoEstadia !== 'CERRANDO') return ultimo;
     }
     return ultimo;
   }

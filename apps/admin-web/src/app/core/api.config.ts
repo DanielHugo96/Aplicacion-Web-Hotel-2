@@ -80,6 +80,11 @@ export const API_PATHS = {
   recepcionListar: '/api/recepcion/listar',
   recepcionRegistrar: '/api/recepcion/registrar',
   recepcionActualizar: (id: number | string) => `/api/recepcion/actualizar/${id}`,
+  // Cierre de estadía (F4): A/E cotizan y cierran; A anula check-in y archiva.
+  recepcionCotizacion: (id: number | string) => `/api/recepcion/${id}/cotizacion-salida`,
+  recepcionRegistrarSalida: '/api/recepcion/registrar-salida',
+  recepcionAnularCheckin: (id: number | string) => `/api/recepcion/${id}/anular-checkin`,
+  recepcionArchivar: (id: number | string) => `/api/recepcion/eliminar/${id}`,
   ventaCatalogo: '/api/venta/catalogo',
   carritoAgregar: '/api/carrito/agregar',
   carritoListar: (idRecepcion: number | string) => `/api/carrito/listar/${idRecepcion}`,

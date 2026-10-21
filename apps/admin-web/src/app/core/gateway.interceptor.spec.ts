@@ -240,4 +240,33 @@ describe('gatewayInterceptor', () => {
       { status: 202, location: '/api/habitacion/operaciones/33333333-3333-4333-8333-333333333333' },
     ]);
   });
+
+  it('deja pasar el 202 de cierre de estadía para el banner «no volver a cobrar»', () => {
+    let status: number | null = null;
+    let location: string | null = null;
+    TestBed.runInInjectionContext(() => {
+      gatewayInterceptor(
+        new HttpRequest('POST', '/api/recepcion/registrar-salida', { idRecepcion: 1001 }),
+        () =>
+          of(
+            new HttpResponse({
+              status: 202,
+              statusText: 'Accepted',
+              headers: new HttpHeaders({
+                Location: '/api/recepcion/1001',
+                'Retry-After': '2',
+              }),
+              body: { ok: true },
+            })
+          )
+      ).subscribe((event) => {
+        if (event instanceof HttpResponse) {
+          status = event.status;
+          location = event.headers.get('Location');
+        }
+      });
+    });
+    expect(status).toBe(202);
+    expect(location).toBe('/api/recepcion/1001');
+  });
 });

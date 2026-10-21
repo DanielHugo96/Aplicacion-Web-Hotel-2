@@ -10,6 +10,7 @@ import { RecepcionService } from '../../../core/services/recepcion.service';
 import { SessionService } from '../../../core/services/session.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
+import { CierrePanelComponent } from '../cierre/cierre-panel.component';
 
 interface ErroresSalida {
   fechaSalida?: string;
@@ -24,7 +25,15 @@ interface ErroresSalida {
 @Component({
   selector: 'app-estadia-detalle',
   standalone: true,
-  imports: [FormsModule, RouterLink, ErrorBannerComponent, MoneyPipe, PeDatePipe, PeTimestampPipe],
+  imports: [
+    FormsModule,
+    RouterLink,
+    ErrorBannerComponent,
+    CierrePanelComponent,
+    MoneyPipe,
+    PeDatePipe,
+    PeTimestampPipe,
+  ],
   templateUrl: './estadia-detalle.component.html',
   styleUrl: './estadia-detalle.component.css',
 })

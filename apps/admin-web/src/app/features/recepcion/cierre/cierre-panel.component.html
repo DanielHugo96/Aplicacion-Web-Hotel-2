@@ -1,0 +1,165 @@
+<section class="panel" aria-labelledby="cierrePanelTitulo">
+  <header class="panel-head">
+    <div>
+      <h2 id="cierrePanelTitulo">Cierre de estadía</h2>
+      <p class="text-small muted">
+        Importes calculados por el backend. No se recalculan en el panel.
+      </p>
+    </div>
+    <div class="toolbar-actions">
+      @if (recepcion.estadoEstadia === 'ACTIVA') {
+        <a class="btn btn-primary" [routerLink]="['/app/recepcion', recepcion.idRecepcion, 'cierre']">
+          Cotizar y cerrar
+        </a>
+      } @else if (recepcion.estadoEstadia === 'CERRANDO') {
+        <a class="btn btn-secondary" [routerLink]="['/app/recepcion', recepcion.idRecepcion, 'cierre']">
+          Ver cierre en curso
+        </a>
+      }
+    </div>
+  </header>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="actionLabel()"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  @if (recepcion.cierre; as c) {
+    <dl class="datos datos-columnas">
+      <div>
+        <dt>Estado del cierre</dt>
+        <dd><span [class]="claseCierre(c.estado)">{{ etiquetaCierre(c.estado) }}</span></dd>
+      </div>
+      <div>
+        <dt>closureId</dt>
+        <dd class="monospace text-small">{{ c.closureId }}</dd>
+      </div>
+      <div>
+        <dt>Último error</dt>
+        <dd class="monospace text-small">{{ c.lastErrorCode ?? '—' }}</dd>
+      </div>
+      <div>
+        <dt>Medio de pago del cobro</dt>
+        <dd>{{ c.medioPago ?? 'No registrado' }}</dd>
+      </div>
+    </dl>
+
+    @if (c.calculo; as cal) {
+      <div class="desglose">
+        <h3>Cálculo congelado</h3>
+        <dl class="datos">
+          <div>
+            <dt>Alojamiento total</dt>
+            <dd class="num">{{ cal.alojamientoTotal | money }}</dd>
+          </div>
+          <div>
+            <dt>Saldo de alojamiento</dt>
+            <dd class="num">{{ cal.saldoAlojamiento | money }}</dd>
+          </div>
+          <div>
+            <dt>Consumos pagados antes</dt>
+            <dd class="num">{{ cal.consumosPagadosAntes | money }}</dd>
+          </div>
+          <div>
+            <dt>Consumos pendientes</dt>
+            <dd class="num">{{ cal.consumosPendientes | money }}</dd>
+          </div>
+          <div>
+            <dt>Consumos total</dt>
+            <dd class="num">{{ cal.consumosTotal | money }}</dd>
+          </div>
+          <div class="destacado">
+            <dt>Cobro ahora</dt>
+            <dd class="num">{{ cal.cobroAhora | money }}</dd>
+          </div>
+          <div>
+            <dt>Total general</dt>
+            <dd class="num">{{ cal.totalGeneral | money }}</dd>
+          </div>
+        </dl>
+      </div>
+    }
+  } @else {
+    <p class="text-small muted">Todavía no hay un intento de cierre para esta estadía.</p>
+  }
+
+  @if (recepcion.costoPenalidad > 0 || recepcion.motivoPenalidad) {
+    <div class="penalidad">
+      <h3>Penalidad</h3>
+      <p class="num penalidad-importe">{{ recepcion.costoPenalidad | money }}</p>
+      <p class="text-small">{{ recepcion.motivoPenalidad ?? 'Sin motivo registrado' }}</p>
+    </div>
+  }
+
+  @if (puedeAnular || puedeArchivar) {
+    <div class="acciones-destructivas">
+      @if (puedeAnular) {
+        <button class="btn btn-secondary" type="button" (click)="abrirAnulacion()">
+          Anular check-in
+        </button>
+      }
+      @if (puedeArchivar) {
+        <button class="btn btn-secondary" type="button" (click)="abrirArchivar()">
+          Archivar
+        </button>
+      }
+    </div>
+  }
+</section>
+
+@if (anularAbierto()) {
+  <div class="dialogo-capa" role="presentation" (keydown.escape)="cerrarAnulacion()">
+    <div
+      class="dialogo"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="anular-titulo"
+      aria-describedby="anular-descripcion"
+    >
+      <h2 id="anular-titulo">Anular check-in</h2>
+      <p id="anular-descripcion" class="text-small">
+        La estadía queda cerrada y archivada sin cobro. No se genera limpieza ni notificación de
+        salida. Esta acción no se puede deshacer.
+      </p>
+      <div class="field">
+        <label for="motivo-anulacion" class="required">Motivo de la anulación</label>
+        <textarea
+          id="motivo-anulacion"
+          name="motivoAnulacion"
+          rows="3"
+          maxlength="300"
+          autofocus
+          [value]="motivoAnulacion()"
+          (input)="motivoAnulacion.set($any($event.target).value)"
+          [class.error]="errorMotivo()"
+          [attr.aria-invalid]="errorMotivo() ? 'true' : null"
+          aria-describedby="motivo-anulacion-msg"
+        ></textarea>
+        @if (errorMotivo()) {
+          <p id="motivo-anulacion-msg" class="field-msg" role="alert">{{ errorMotivo() }}</p>
+        }
+      </div>
+      <div class="form-actions">
+        <button class="btn btn-secondary" type="button" [disabled]="procesando()" (click)="cerrarAnulacion()">
+          Cancelar
+        </button>
+        <button class="btn btn-primary" type="button" [disabled]="procesando()" (click)="confirmarAnulacion()">
+          @if (procesando()) { <span class="spinner" aria-hidden="true"></span> }
+          {{ procesando() ? 'Anulando…' : 'Anular check-in' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<app-confirm-dialog
+  [open]="archivarAbierto()"
+  title="Archivar estadía"
+  message="La estadía cerrada deja de listarse; el historial no se borra."
+  confirmLabel="Archivar"
+  [busy]="procesando()"
+  (confirm)="confirmarArchivar()"
+  (cancel)="cerrarArchivar()"
+>
+</app-confirm-dialog>
