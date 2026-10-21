@@ -263,6 +263,20 @@ label, .label {
   color: var(--color-proceso);
 }
 
+/* Aviso de consistencia eventual de reportes (`DESIGN.md` §8). */
+.banner-aviso {
+  background: var(--color-atencion-bg);
+  border: 1px solid var(--color-atencion);
+  color: var(--color-atencion);
+}
+
+.banner-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
 .banner-actions {
   margin-left: auto;
   display: flex;

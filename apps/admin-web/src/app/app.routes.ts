@@ -3,7 +3,6 @@ import { LoginComponent } from './features/login/login.component';
 import { RegistroComponent } from './features/registro/registro.component';
 import { ShellComponent } from './features/shell/shell.component';
 import { HomeRedirectComponent } from './features/shell/home-redirect.component';
-import { InicioComponent } from './features/inicio/inicio.component';
 import { PerfilComponent } from './features/perfil/perfil.component';
 import { clienteRoutes } from './features/cliente/cliente.routes';
 import { PersonasListComponent } from './features/catalogo/personas/personas-list.component';
@@ -19,6 +18,7 @@ import { HabitacionesListComponent } from './features/catalogo/habitaciones/habi
 import { HabitacionFormComponent } from './features/catalogo/habitaciones/habitacion-form.component';
 import { recepcionRoutes } from './features/recepcion/recepcion.routes';
 import { ventasRoutes } from './features/ventas/ventas.routes';
+import { reportesRoutes } from './features/reportes/reportes.routes';
 import { authGuard } from './core/guards/auth.guard';
 import { rolGuard } from './core/guards/rol.guard';
 
@@ -33,7 +33,7 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       { path: '', component: HomeRedirectComponent, canActivate: [authGuard] },
-      { path: 'inicio', component: InicioComponent, canActivate: [panel] },
+      ...reportesRoutes,
       { path: 'perfil', component: PerfilComponent, canActivate: [authGuard] },
 
       { path: 'personas', component: PersonasListComponent, canActivate: [panel] },

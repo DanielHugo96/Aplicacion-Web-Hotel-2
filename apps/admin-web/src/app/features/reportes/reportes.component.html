@@ -1,0 +1,182 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <h1>Reportes</h1>
+      <p class="sub">
+        Ventas, ocupación, cobros y bajo stock de las proyecciones de reporting. Las cifras son
+        eventualmente consistentes.
+      </p>
+    </div>
+    <div class="export-actions">
+      <button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="!puedeExportar()"
+        (click)="exportar('pdf')"
+      >
+        Exportar PDF
+      </button>
+      <button
+        class="btn btn-secondary"
+        type="button"
+        [disabled]="!puedeExportar()"
+        (click)="exportar('excel')"
+      >
+        Exportar Excel
+      </button>
+    </div>
+  </div>
+
+  <div class="tabs" role="tablist" aria-label="Reportes">
+    @for (t of tabs; track t.modo) {
+      <button
+        class="tab"
+        type="button"
+        role="tab"
+        [id]="'tab-' + t.modo"
+        [attr.aria-selected]="tab() === t.modo"
+        [class.active]="tab() === t.modo"
+        (click)="cambiarTab(t.modo)"
+      >
+        {{ t.etiqueta }}
+      </button>
+    }
+  </div>
+
+  <div class="toolbar">
+    <div class="field">
+      <label for="reporte-sede">Sede</label>
+      <select
+        id="reporte-sede"
+        name="reporte-sede"
+        [ngModel]="sedeSeleccionada() ?? ''"
+        (ngModelChange)="cambiarSedeValor($event)"
+      >
+        @if (esAdmin()) {
+          <option value="">Consolidado de todas las sedes</option>
+        }
+        @if (sedes().length === 0) {
+          <option value="">Sin sede asignada</option>
+        }
+        @for (sede of sedes(); track sede.idHotel) {
+          <option [value]="sede.idHotel">{{ sede.nombre }}</option>
+        }
+      </select>
+      <span class="field-help">
+        {{ esAdmin() ? 'A puede consultar cualquier sede.' : 'Solo tu sede asignada.' }}
+      </span>
+    </div>
+
+    @if (conFechas()) {
+      <div class="field">
+        <label for="reporte-inicio" class="required">Desde</label>
+        <input
+          id="reporte-inicio"
+          name="reporte-inicio"
+          type="date"
+          [(ngModel)]="inicio"
+          [class.error]="erroresFiltro()['inicio']"
+          [attr.aria-invalid]="erroresFiltro()['inicio'] ? 'true' : null"
+          aria-describedby="reporte-inicio-msg"
+        />
+        @if (erroresFiltro()['inicio']) {
+          <span id="reporte-inicio-msg" class="field-msg" role="alert">
+            {{ erroresFiltro()['inicio'] }}
+          </span>
+        }
+      </div>
+      <div class="field">
+        <label for="reporte-fin" class="required">Hasta</label>
+        <input
+          id="reporte-fin"
+          name="reporte-fin"
+          type="date"
+          [(ngModel)]="hasta"
+          [class.error]="erroresFiltro()['fin']"
+          [attr.aria-invalid]="erroresFiltro()['fin'] ? 'true' : null"
+          aria-describedby="reporte-fin-msg"
+        />
+        @if (erroresFiltro()['fin']) {
+          <span id="reporte-fin-msg" class="field-msg" role="alert">
+            {{ erroresFiltro()['fin'] }}
+          </span>
+        }
+      </div>
+    } @else {
+      <div class="field">
+        <label for="reporte-limite">Límite de cantidad</label>
+        <input
+          id="reporte-limite"
+          name="reporte-limite"
+          type="number"
+          min="0"
+          step="1"
+          [(ngModel)]="limite"
+        />
+        <span class="field-help">Productos con cantidad menor o igual al límite.</span>
+      </div>
+    }
+
+    <div class="toolbar-actions">
+      <button class="btn btn-primary" type="button" (click)="aplicar()">Filtrar</button>
+    </div>
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="error() ? (esperandoReintento() ? 'Espera el reintento…' : 'Reintentar') : null"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  @if (!sedeSeleccionada()) {
+    <div class="empty" role="status">{{ mensajeSinSede() }}</div>
+  } @else if (loading()) {
+    <div class="skeleton-table" role="status" aria-label="Cargando reporte">
+      @for (fila of [1, 2, 3, 4, 5]; track fila) {
+        <div class="skeleton skeleton-row"></div>
+      }
+    </div>
+  } @else if (tabla().filas.length === 0 && !error() && !tieneErroresFiltro()) {
+    <div class="empty" role="status">Sin resultados</div>
+  } @else if (tabla().filas.length > 0) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <caption class="sr-only">{{ titulos[tab()] }}</caption>
+        <thead>
+          <tr>
+            @for (columna of tabla().columnas; track columna.clave) {
+              <th scope="col" [class.num]="columna.numerica">{{ columna.titulo }}</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of tabla().filas; track $index) {
+            <tr>
+              @for (columna of tabla().columnas; track columna.clave) {
+                @if (columna.clave === 'uso') {
+                  <td>
+                    <span [class]="claseOcupacion($any(fila['vecesAlquilada']))">
+                      {{ fila[columna.clave] }}
+                    </span>
+                  </td>
+                } @else if (columna.tipo === 'fecha') {
+                  <td>{{ $any(fila[columna.clave]) | peTimestamp }}</td>
+                } @else {
+                  <td [class.num]="columna.numerica">{{ fila[columna.clave] }}</td>
+                }
+              }
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination
+      [page]="page()"
+      [size]="size()"
+      [total]="total()"
+      (pageChange)="cambiarPagina($event)"
+    ></app-pagination>
+  }
+
+  <app-meta-reporte [meta]="meta()"></app-meta-reporte>
+</div>
