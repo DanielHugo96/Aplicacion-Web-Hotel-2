@@ -344,6 +344,33 @@ def _nueva_estadia(room_id: int, hotel_id: int, cliente: int, adelanto: float, t
     return int(stay["idRecepcion"])
 
 
+def _finalizar_sondas() -> list[str]:
+    """Finaliza las operaciones de sonda de STK06 (idVenta >= 900000) que quedaron ABIERTAS.
+
+    STK06 crea una admisión sin venta real; si el caso se interrumpe antes de publicar el
+    comando, esa operación queda ABIERTA y bloquea el cierre de la estadía. Se finaliza con el
+    comando real (`recepcion.operacion-finalizar`, resultado RECHAZADA), no por SQL.
+    """
+    abiertas = c.psql(
+        "reception_db",
+        "select operation_id::text, id_recepcion, id_venta, tipo from operacion_consumo "
+        "where estado='ABIERTA' and id_venta >= 900000",
+    )
+    finalizadas: list[str] = []
+    for operation_id, id_recepcion, id_venta, tipo in abiertas:
+        comando = str(uuid.uuid4())
+        c.rabbit_publish(
+            "hotel.commands.v1", "recepcion.operacion-finalizar",
+            {"commandId": comando, "type": "RecepcionOperacionFinalizar", "schemaVersion": 1,
+             "idHotel": 1, "correlationId": str(uuid.uuid4()), "issuedAt": c.iso(),
+             "payload": {"operationId": operation_id, "idRecepcion": int(id_recepcion),
+                         "idVenta": int(id_venta), "tipo": tipo, "resultado": "RECHAZADA"}},
+            command_id=comando,
+        )
+        finalizadas.append(operation_id)
+    return finalizadas
+
+
 def _cerrar_estadia_activa(room_id: int, token: str) -> None:
     """Cierra por la API cualquier estadía ACTIVA que quede de una corrida anterior."""
     filas = c.psql(
@@ -351,10 +378,31 @@ def _cerrar_estadia_activa(room_id: int, token: str) -> None:
         f"select id from recepcion where id_habitacion={room_id} and estado_estadia in ('ACTIVA','CERRANDO')",
     )
     for (id_recepcion,) in filas:
+        # Si queda una operación ABIERTA (venta en vuelo), el recuperador de 30 s la compensa;
+        # se espera a que no haya ninguna antes de cerrar y, si no termina, se finaliza la sonda.
+        try:
+            esperar(
+                f"sin operaciones abiertas en {id_recepcion}",
+                lambda: c.psql_one(
+                    "reception_db",
+                    f"select count(*) from operacion_consumo where id_recepcion={id_recepcion} and estado='ABIERTA'",
+                ) == "0",
+                timeout=200,
+                interval=10,
+            )
+        except c.RunbookError:
+            _finalizar_sondas()
         cot = c.http("GET", f"/api/recepcion/{id_recepcion}/cotizacion-salida", token=token)
         out = f.checkout(id_recepcion=int(id_recepcion), room_id=room_id,
                          monto=float(cot.field("data", "cobroAhora") or 0), token=token,
                          base="http://localhost:8083")
+        if out.status == 409 and codigo(out) == "OPERATIONS_IN_PROGRESS":
+            # Sondas de STK06 interrumpidas: se finalizan por el comando real y se reintenta.
+            _finalizar_sondas()
+            time.sleep(3)
+            out = f.checkout(id_recepcion=int(id_recepcion), room_id=room_id,
+                             monto=float(cot.field("data", "cobroAhora") or 0), token=token,
+                             base="http://localhost:8083")
         if out.status not in (200, 202):
             raise c.RunbookError(f"no se pudo cerrar la estadía {id_recepcion} de {room_id}: {out.status} {out.body[:200]}")
     if filas:
@@ -373,7 +421,27 @@ def fixtures_avanzados() -> int:
     # ---- F4: cierre en CONFIRMANDO. El «Sales detenido tras aceptar» se reproduce reteniendo el
     # advisory lock que serializa la confirmación de Sales (mismo recurso que usa RB2).
     idr = _nueva_estadia(102, 1, 100, 0.0, token)
+    # F4 se apoya en una venta ya pagada para que OUT02 pueda comprobar «ventas PAGADO una sola vez».
+    venta_f4, datos_f4 = f.create_sale(id_recepcion=idr, items=[{"idProducto": 1, "cantidad": 2}], token=token)
+    if venta_f4.status != 201:
+        raise c.RunbookError(f"F4 venta devolvió {venta_f4.status}: {venta_f4.body[:300]}")
     esperar_operacion_terminal(idr)
+    detalle_v4 = c.http("GET", f"/api/venta/buscar/{datos_f4['idVenta']}", token=token)
+    pago_f4 = c.http(
+        "PUT", f"/api/venta/{datos_f4['idVenta']}", token=token,
+        body={"estado": "PAGADO", "medioPago": "EFECTIVO"},
+        headers={"Idempotency-Key": str(uuid.uuid4()),
+                 "If-Match": str(detalle_v4.field("data", "version"))},
+    )
+    if pago_f4.status != 200:
+        raise c.RunbookError(f"F4 pago devolvió {pago_f4.status}: {pago_f4.body[:300]}")
+    esperar_operacion_terminal(idr)
+    # El PAGO crea su propia operación: la condición del cierre es cero ABIERTAS en reception.
+    esperar("sin operaciones abiertas en F4",
+            lambda: c.psql_one(
+                "reception_db",
+                f"select count(*) from operacion_consumo where id_recepcion={idr} and estado='ABIERTA'") == "0",
+            timeout=120)
     cot = c.http("GET", f"/api/recepcion/{idr}/cotizacion-salida", token=token)
     clave_f4 = str(uuid.uuid4())
     lock = c.AdvisoryLock("sales_db", idr)
@@ -394,6 +462,7 @@ def fixtures_avanzados() -> int:
             "idHabitacion": 102,
             "closureId": closure_id,
             "idempotencyKey": clave_f4,
+            "idVenta": int(datos_f4["idVenta"]),
             "monto": float(cot.field("data", "cobroAhora")),
             "checkout": out.summary(),
             "fase": fase,
@@ -1189,6 +1258,353 @@ def stk() -> int:
 
 
 # ---------------------------------------------------------------------------
+# Paso 11 — PAY01–PAY02 y OUT01–OUT06
+# ---------------------------------------------------------------------------
+
+
+def _estadia_nueva(room_id: int, hotel_id: int, cliente: int, adelanto: float, token: str,
+                   salida: str | None = None) -> int:
+    _finalizar_sondas()
+    _cerrar_estadia_activa(room_id, token)
+    f.free_room(room_id, hotel_id)
+    check, stay = f.checkin(room_id=room_id, hotel_id=hotel_id, cliente=cliente,
+                            adelanto=adelanto, salida=salida, token=token)
+    if check.status != 201:
+        raise c.RunbookError(f"check-in {room_id} devolvió {check.status}: {check.body[:400]}")
+    return int(stay["idRecepcion"])
+
+
+def _cotizacion(id_recepcion: int, token: str) -> dict[str, Any]:
+    resp = c.http("GET", f"/api/recepcion/{id_recepcion}/cotizacion-salida", token=token)
+    return resp.field("data") or {}
+
+
+def pay_out() -> int:
+    _asegurar_servicios()
+    token = f.admin_token()
+    cliente = token_cliente(100)
+    fallos: list[str] = []
+    idr = _estadia_nueva(103 if False else 101, 1, 100, 0.0, token)
+    esperar_operacion_terminal(idr)
+
+    # ---- PAY01: POST /api/venta como CLIENTE con estado PAGADO, y con precio en detalles.
+    f2 = leer_estado().get("F2", {})
+    vendedor = f2.get("idVenta")
+    fila_antes = venta_row(vendedor) if vendedor else {}
+    pagado = f.create_sale(id_recepcion=idr, items=[{"idProducto": 1, "cantidad": 1}],
+                           estado="PAGADO", medio_pago="EFECTIVO", token=cliente)
+    precio = c.http(
+        "POST", "/api/venta", token=cliente,
+        body={"idRecepcion": idr, "detalles": [{"idProducto": 1, "cantidad": 1, "precioUnitario": 99.99}]},
+        headers={"Idempotency-Key": str(uuid.uuid4())},
+    )
+    detalle = c.http("GET", f"/api/venta/buscar/{vendedor}", token=token) if vendedor else None
+    cumple = (
+        pagado[0].status == 403 and codigo(pagado[0]) == "FORBIDDEN"
+        and precio.status == 400 and codigo(precio) == "VALIDATION_ERROR"
+        and (detalle is None or (detalle.field("data", "total") == 7.0
+                                 and detalle.field("data", "detalles")[0]["precioUnitario"] == 3.5))
+        and fila_antes.get("estado") == "PAGADO"
+    )
+    save("PAY01", {"caso": "PAY01",
+                   "postPagadoComoCliente": resumen(pagado[0]),
+                   "postConPrecio": resumen(precio),
+                   "ventaF2": fila_antes,
+                   "detalleF2": (detalle.json if detalle else None),
+                   "exigido": "403 (rol) o 400 (campo calculado); venta PENDIENTE y precio autoritativo intacto",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("PAY01")
+
+    # ---- PAY02: DELETE sobre la venta PAGADA de F3.
+    if vendedor:
+        version = c.http("GET", f"/api/venta/buscar/{vendedor}", token=token).field("data", "version")
+        antes = c.psql(
+            "sales_db",
+            f"select estado, estado_operacion, COALESCE(paid_at::text,''), total::text from venta where id={vendedor}",
+        )[0]
+        lineas_antes = c.psql("sales_db", f"select count(*), COALESCE(sum(subtotal),0)::text from detalle_venta where id_venta={vendedor}")
+        receipt_antes = c.psql("sales_db", f"select count(*) from cierre_consumos where id_recepcion={f2['payload']['idRecepcion']}")
+        borrar = c.http("DELETE", f"/api/venta/{vendedor}?motivo=Matriz%20PAY02", token=token,
+                        headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(version)})
+        despues = c.psql(
+            "sales_db",
+            f"select estado, estado_operacion, COALESCE(paid_at::text,''), total::text from venta where id={vendedor}",
+        )[0]
+        lineas_despues = c.psql("sales_db", f"select count(*), COALESCE(sum(subtotal),0)::text from detalle_venta where id_venta={vendedor}")
+        receipt_despues = c.psql("sales_db", f"select count(*) from cierre_consumos where id_recepcion={f2['payload']['idRecepcion']}")
+        cumple = (
+            borrar.status == 409 and codigo(borrar) == "SALE_ALREADY_PAID"
+            and antes == despues and lineas_antes == lineas_despues and receipt_antes == receipt_despues
+        )
+        save("PAY02", {"caso": "PAY02", "venta": vendedor,
+                       "delete": resumen(borrar),
+                       "filaAntes": antes, "filaDespues": despues,
+                       "lineasAntes": lineas_antes, "lineasDespues": lineas_despues,
+                       "receiptAntes": receipt_antes, "receiptDespues": receipt_despues,
+                       "exigido": "409 SALE_ALREADY_PAID con líneas, receipt y paid_at intactos",
+                       "cumple": cumple})
+        if not cumple:
+            fallos.append("PAY02")
+    else:
+        save("PAY02", {"caso": "PAY02", "cumple": False, "motivo": "F2/F3 ausente"})
+        fallos.append("PAY02")
+
+    # ---- OUT01: cierre con una venta admitida en vuelo (débito colgado por proxy).
+    from scripts.qa import ventas as v
+
+    idr1 = _estadia_nueva(102, 1, 100, 0.0, token)
+    proxy = v.SelectiveProxy()
+    proxy.start()
+    try:
+        c.stop_service("sales-service")
+        c.start_service("sales-service", timeout=220,
+                        env_overrides={"FEIGN_URL_INVENTORY": f"http://127.0.0.1:{v.PROXY_PORT}"}, force=True)
+        c.start_service("inventory-service", timeout=220)
+        time.sleep(2)
+        en_vuelo = c.http(
+            "POST", "http://localhost:8085/api/venta", token=token,
+            body={"idRecepcion": idr1, "detalles": [{"idProducto": 1, "cantidad": 1}]},
+            headers={"Idempotency-Key": str(uuid.uuid4())}, timeout=60,
+        )
+        abiertas = c.psql_one("reception_db",
+                              f"select count(*) from operacion_consumo where id_recepcion={idr1} and estado='ABIERTA'")
+        cot = _cotizacion(idr1, token)
+        cierre = c.http(
+            "POST", "http://localhost:8083/api/recepcion/registrar-salida", token=token,
+            body={"idRecepcion": idr1, "idHabitacion": 102, "costoPenalidad": 0.0,
+                  "montoRecibido": float(cot.get("cobroAhora") or 0), "medioPago": "EFECTIVO"},
+            headers={"Idempotency-Key": str(uuid.uuid4())}, timeout=60,
+        )
+    finally:
+        proxy.stop()
+        c.stop_service("sales-service")
+        c.start_service("inventory-service", timeout=220)
+        c.start_service("sales-service", timeout=220, force=True)
+    ventas_tras = c.psql("sales_db", f"select id, estado, estado_operacion from venta where id_recepcion={idr1}")
+    cumple = (
+        en_vuelo.status == 202 and abiertas != "0"
+        and cierre.status == 409 and codigo(cierre) == "OPERATIONS_IN_PROGRESS"
+        and all(fila[1] != "PAGADO" for fila in ventas_tras)
+    )
+    save("OUT01", {"caso": "OUT01",
+                   "ventaEnVuelo": resumen(en_vuelo),
+                   "operacionesAbiertas": int(abiertas),
+                   "cierre": resumen(cierre),
+                   "ventasTrasCierre": [{"idVenta": f[0], "estado": f[1], "estadoOperacion": f[2]} for f in ventas_tras],
+                   "exigido": "409 OPERATIONS_IN_PROGRESS; ninguna venta admitida después del cierre",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("OUT01")
+    _finalizar_sondas()
+    _cerrar_estadia_activa(102, token)
+    f.free_room(102, 1)
+
+    # ---- OUT02: reintento con el mismo closureId sobre F4 (cierre ya confirmado por Sales).
+    f4 = leer_estado().get("F4")
+    if f4:
+        idr_f4 = int(f4["idRecepcion"])
+        salida = f.checkout(id_recepcion=idr_f4, room_id=102, monto=float(f4["monto"]),
+                            key=f4["idempotencyKey"], token=token, base="http://localhost:8083")
+        if salida.status == 202:
+            f.wait_cierre_state(f4["closureId"], "COMPLETADO", timeout=180)
+        cierre = c.psql("reception_db",
+                        "select estado, COALESCE(receipt_sales is not null,false) from cierre "
+                        f"where closure_id='{f4['closureId']}'")
+        receipts = c.psql("sales_db", "select closure_id::text, total_pendiente::text from cierre_consumos "
+                                      f"where id_recepcion={idr_f4}")
+        ventas = c.psql("sales_db", f"select id, estado from venta where id_recepcion={idr_f4}")
+        cumple = (
+            salida.status in (200, 202) and cierre and cierre[0][0] == "COMPLETADO"
+            and len(receipts) <= 1
+            and all(f[1] in ("PENDIENTE", "PAGADO") for f in ventas)
+        )
+        save("OUT02", {"caso": "OUT02",
+                       "closureId": f4["closureId"],
+                       "reintento": resumen(salida),
+                       "cierre": {"estado": cierre[0][0], "conReceipt": cierre[0][1]} if cierre else None,
+                       "receipts": [{"closureId": r[0], "totalPendiente": r[1]} for r in receipts],
+                       "ventas": [{"idVenta": f[0], "estado": f[1]} for f in ventas],
+                       "exigido": "un receipt y una salida; ventas una sola vez",
+                       "cumple": cumple})
+        if not cumple:
+            fallos.append("OUT02")
+    else:
+        save("OUT02", {"caso": "OUT02", "cumple": False, "motivo": "F4 ausente"})
+        fallos.append("OUT02")
+
+    # ---- OUT03: montoRecibido inexacto y penalidad sobre el precio inicial.
+    idr3 = _estadia_nueva(301, 3, 100, 20.0, token)
+    esperar_operacion_terminal(idr3)
+    cot = _cotizacion(idr3, token)
+    inexacto = f.checkout(id_recepcion=idr3, room_id=301,
+                          monto=round(float(cot["cobroAhora"]) - 0.01, 2), token=token)
+    cierre_rechazado = c.psql(
+        "reception_db",
+        "select closure_id::text, estado, COALESCE(last_error_code,'') from cierre "
+        f"where id_recepcion={idr3} and estado='RECHAZADO'",
+    )
+    penalidad = f.checkout(id_recepcion=idr3, room_id=301, monto=float(cot["cobroAhora"]),
+                           token=token, costo_penalidad=float(cot["alojamiento"]) + 1)
+    cierres_vigentes = c.psql_one(
+        "reception_db",
+        f"select count(*) from cierre where id_recepcion={idr3} and estado<>'RECHAZADO'",
+    )
+    cumple = (
+        inexacto.status == 409 and codigo(inexacto) == "AMOUNT_MISMATCH"
+        and bool(cierre_rechazado) and cierre_rechazado[0][2] == "AMOUNT_MISMATCH"
+        and penalidad.status == 400 and codigo(penalidad) == "VALIDATION_ERROR"
+        and cierres_vigentes == "0"
+    )
+    save("OUT03", {"caso": "OUT03",
+                   "cotizacion": cot,
+                   "montoInexacto": resumen(inexacto),
+                   "cierreRechazado": {"closureId": cierre_rechazado[0][0], "estado": cierre_rechazado[0][1],
+                                       "lastErrorCode": cierre_rechazado[0][2]} if cierre_rechazado else None,
+                   "penalidadSobrePrecio": resumen(penalidad),
+                   "cierresVigentes": int(cierres_vigentes),
+                   "exigido": "409 AMOUNT_MISMATCH con cierre RECHAZADO; penalidad > precioInicial rechazada sin cierre",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("OUT03")
+
+    # ---- OUT04: cierre sin ventas con el monto exacto (F1 limpia).
+    idr4 = _estadia_nueva(302, 3, 101, 0.0, token)
+    esperar_operacion_terminal(idr4)
+    cot4 = _cotizacion(idr4, token)
+    salida4 = f.checkout(id_recepcion=idr4, room_id=302, monto=float(cot4["cobroAhora"]), token=token)
+    receipt4 = c.psql(
+        "sales_db",
+        "select closure_id::text, total_pendiente::text, total_pagado_previo::text from cierre_consumos "
+        f"where id_recepcion={idr4}",
+    )
+    cumple = (
+        salida4.status == 200 and salida4.field("data", "idHotel") == 3
+        and float(salida4.field("data", "totalPagado")) == float(cot4["cobroAhora"]) + 0.0
+        and bool(receipt4)
+    )
+    save("OUT04", {"caso": "OUT04",
+                   "estadia": idr4,
+                   "cotizacion": cot4,
+                   "salida": resumen(salida4),
+                   "receipt": [{"closureId": r[0], "totalPendiente": r[1], "totalPagadoPrevio": r[2]} for r in receipt4],
+                   "exigido": "receipt con totalConsumos 0.00, sede 3 y cobroAhora",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("OUT04")
+
+    # ---- OUT05: proceso matado en VALIDANDO, en CONFIRMANDO y tras el receipt.
+    fases: dict[str, Any] = {}
+    # (a) VALIDANDO: se retiene el advisory lock de Sales antes de confirmar, se mata reception y
+    # se reinicia; el recuperador recalcula solo en VALIDANDO.
+    idr5 = _estadia_nueva(102, 1, 100, 0.0, token)
+    esperar_operacion_terminal(idr5)
+    cot5 = _cotizacion(idr5, token)
+    lock = c.AdvisoryLock("sales_db", idr5)
+    try:
+        parcial = f.checkout(id_recepcion=idr5, room_id=102,
+                             monto=float(cot5["cobroAhora"]), token=token, base="http://localhost:8083")
+        closure5 = str(parcial.field("data", "closureId") or "")
+        fase_actual = c.psql_one("reception_db",
+                                 f"select estado from cierre where closure_id='{closure5}'") if closure5 else ""
+        c.stop_service("reception-service")
+    finally:
+        lock.release()
+    c.start_service("reception-service", timeout=220)
+    recuperado = esperar("OUT05 cierre completado tras reinicio",
+                         lambda: c.psql_one("reception_db",
+                                            f"select estado from cierre where closure_id='{closure5}'") == "COMPLETADO",
+                         timeout=240, interval=5)
+    fases["validando"] = {
+        "inducido": "advisory lock de Sales retenido + reception matado",
+        "statusAlIniciar": parcial.status,
+        "faseAlMatar": fase_actual,
+        "estadoFinal": c.psql_one("reception_db", f"select estado from cierre where closure_id='{closure5}'"),
+        "attempts": int(c.psql_one("reception_db", f"select attempts from cierre where closure_id='{closure5}'",
+                                   default="0")),
+    }
+    # (b) CONFIRMANDO: se mata reception con el cierre ya en CONFIRMANDO (Sales confirmó).
+    idr5b = _estadia_nueva(202, 2, 100, 0.0, token)
+    esperar_operacion_terminal(idr5b)
+    cot5b = _cotizacion(idr5b, token)
+    lock2 = c.AdvisoryLock("sales_db", idr5b)
+    try:
+        parcial2 = f.checkout(id_recepcion=idr5b, room_id=202,
+                              monto=float(cot5b["cobroAhora"]), token=token, base="http://localhost:8083")
+        closure5b = str(parcial2.field("data", "closureId") or "")
+        f.wait_cierre_state(closure5b, "CONFIRMANDO", timeout=90)
+        c.stop_service("reception-service")
+    finally:
+        lock2.release()
+    c.start_service("reception-service", timeout=220)
+    esperar("OUT05 CONFIRMANDO completado",
+            lambda: c.psql_one("reception_db",
+                               f"select estado from cierre where closure_id='{closure5b}'") == "COMPLETADO",
+            timeout=240, interval=5)
+    fases["confirmando"] = {
+        "inducido": "reception matado en CONFIRMANDO antes de aplicar el receipt",
+        "statusAlIniciar": parcial2.status,
+        "estadoFinal": c.psql_one("reception_db", f"select estado from cierre where closure_id='{closure5b}'"),
+    }
+    # (c) Tras el receipt: repetir el mismo Idempotency-Key no recalcula ni vuelve a cobrar.
+    repetido = f.checkout(id_recepcion=idr5b, room_id=202,
+                          monto=float(cot5b["cobroAhora"]), key=str(uuid.uuid4()), token=token)
+    receipts5 = c.psql("sales_db", "select closure_id::text from cierre_consumos "
+                                   f"where id_recepcion in ({idr5},{idr5b})")
+    salidas = c.psql("reception_db", "select id, estado_estadia from recepcion "
+                                     f"where id in ({idr5},{idr5b})")
+    cumple = (
+        fases["validando"]["faseAlMatar"] in ("VALIDANDO", "CONFIRMANDO")
+        and fases["validando"]["estadoFinal"] == "COMPLETADO"
+        and fases["confirmando"]["estadoFinal"] == "COMPLETADO"
+        and repetido.status == 409 and codigo(repetido) in ("CLOSURE_IN_PROGRESS", "STAY_NOT_ACTIVE")
+        and len(receipts5) == 2
+        and all(s[1] == "CERRADA" for s in salidas)
+    )
+    save("OUT05", {"caso": "OUT05",
+                   "fases": fases,
+                   "reintentoTrasReceipt": resumen(repetido),
+                   "receipts": [r[0] for r in receipts5],
+                   "salidas": [{"idRecepcion": s[0], "estadoEstadia": s[1]} for s in salidas],
+                   "exigido": "VALIDANDO recalcula, CONFIRMANDO reenvía congelado, un cobro y una salida",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("OUT05")
+
+    # ---- OUT06: acortar fechaSalida deja precioInicial bajo el adelanto.
+    from datetime import date as _date, timedelta as _td
+
+    salida_lejana = (_date.today() + _td(days=2)).isoformat()
+    idr6 = _estadia_nueva(302, 3, 100, 140.0, token, salida=salida_lejana)
+    antes6 = c.http("GET", f"/api/recepcion/{idr6}", token=token)
+    acortar = c.http(
+        "PUT", f"/api/recepcion/actualizar/{idr6}", token=token,
+        body={"fechaSalida": (_date.today() + _td(days=1)).isoformat()},
+        headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(antes6.field("data", "version"))},
+    )
+    despues6 = c.http("GET", f"/api/recepcion/{idr6}", token=token)
+    cumple = (
+        acortar.status == 409 and codigo(acortar) == "ADVANCE_EXCEEDS_NEW_TOTAL"
+        and antes6.field("data", "precioInicial") == despues6.field("data", "precioInicial")
+        and antes6.field("data", "adelanto") == despues6.field("data", "adelanto")
+    )
+    save("OUT06", {"caso": "OUT06",
+                   "idRecepcion": idr6,
+                   "actualizar": resumen(acortar),
+                   "antes": {"precioInicial": antes6.field("data", "precioInicial"),
+                             "adelanto": antes6.field("data", "adelanto")},
+                   "despues": {"precioInicial": despues6.field("data", "precioInicial"),
+                               "adelanto": despues6.field("data", "adelanto")},
+                   "exigido": "409 ADVANCE_EXCEEDS_NEW_TOTAL; precioInicial y adelanto sin cambios",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("OUT06")
+
+    print(json.dumps({"fallos": fallos}, indent=2))
+    return 0 if not fallos else 1
+
+
+# ---------------------------------------------------------------------------
 # Paso 7 — SEC01–SEC08
 # ---------------------------------------------------------------------------
 
@@ -1865,6 +2281,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("lp-crud", help="LP01-LP02 y CRUD01")
     sub.add_parser("occ-cln", help="OCC01-OCC04 y CLN01-CLN03")
     sub.add_parser("stk", help="STK01-STK07")
+    sub.add_parser("pay-out", help="PAY01-PAY02 y OUT01-OUT06")
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
@@ -1884,6 +2301,8 @@ def main(argv: list[str] | None = None) -> int:
             return occ_cln()
         if args.command == "stk":
             return stk()
+        if args.command == "pay-out":
+            return pay_out()
         parser.print_help()
         return 2
     except c.RunbookError as err:

@@ -4,8 +4,8 @@
   "checkout": {
     "status": 202,
     "headers": {
-      "x-correlation-id": "6e232a85-ee81-407d-b34e-d91f13fce2ca",
-      "location": "/api/recepcion/32",
+      "x-correlation-id": "38333edb-9a74-43c6-8eef-7176599acc5c",
+      "location": "/api/recepcion/61",
       "retry-after": "2",
       "x-content-type-options": "nosniff",
       "x-xss-protection": "0",
@@ -15,10 +15,10 @@
       "x-frame-options": "DENY",
       "content-type": "application/json",
       "content-length": "1213",
-      "date": "Wed, 21 Oct 2026 06:14:46 GMT",
+      "date": "Wed, 21 Oct 2026 07:09:11 GMT",
       "connection": "close"
     },
-    "body": "{\"success\":true,\"message\":\"Cierre en curso\",\"data\":{\"idRecepcion\":32,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":102,\"numero\":\"102\",\"categoriaNombre\":\"Doble\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion doble de demostracion\",\"precioHabitacion\":100.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":null,\"precioInicial\":100.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":100.00,\"totalPagado\":0.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":true,\"estadoEstadia\":\"CERRANDO\",\"archivada\":false,\"vencida\":false,\"version\":2,\"closureId\":\"9a9bce0a-f0ee-42be-a0d5-85828a0657f9\",\"cleaningCycleId\":null,\"cierre\":{\"closureId\":\"9a9bce0a-f0ee-42be-a0d5-85828a0657f9\",\"estado\":\"CONFIRMANDO\",\"lastErrorCode\":\"DEPENDENCY_UNAVAILABLE\",\"calculo\":{\"cobroAhora\":100.0,\"totalGeneral\":100.0,\"consumosTotal\":0.0,\"alojamientoTotal\":100.0,\"saldoAlojamiento\":100.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":0.0,\"expectedPendingTotal\":0.0}}},\"meta\":{\"correlationId\":\"6e232a85-ee81-407d-b34e-d91f13fce2ca\"}}"
+    "body": "{\"success\":true,\"message\":\"Cierre en curso\",\"data\":{\"idRecepcion\":61,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":102,\"numero\":\"102\",\"categoriaNombre\":\"Doble\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion doble de demostracion\",\"precioHabitacion\":100.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":null,\"precioInicial\":100.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":100.00,\"totalPagado\":0.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":true,\"estadoEstadia\":\"CERRANDO\",\"archivada\":false,\"vencida\":false,\"version\":2,\"closureId\":\"1b9b765f-98a5-4a32-a337-981829fea204\",\"cleaningCycleId\":null,\"cierre\":{\"closureId\":\"1b9b765f-98a5-4a32-a337-981829fea204\",\"estado\":\"CONFIRMANDO\",\"lastErrorCode\":\"DEPENDENCY_UNAVAILABLE\",\"calculo\":{\"cobroAhora\":100.0,\"totalGeneral\":107.0,\"consumosTotal\":7.0,\"alojamientoTotal\":100.0,\"saldoAlojamiento\":100.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":7.0,\"expectedPendingTotal\":0.0}}},\"meta\":{\"correlationId\":\"38333edb-9a74-43c6-8eef-7176599acc5c\"}}"
   },
   "cierre": {
     "estado": "CONFIRMANDO",
@@ -29,5 +29,5 @@
   },
   "exigido": "estado CONFIRMANDO con cálculo y sin receipt",
   "cumple": true,
-  "ejecutadoEn": "2026-10-21T06:16:35.141584Z"
+  "ejecutadoEn": "2026-10-21T07:11:03.752259Z"
 }

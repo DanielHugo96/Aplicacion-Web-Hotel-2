@@ -1,0 +1,102 @@
+{
+  "caso": "OUT03",
+  "cotizacion": {
+    "idRecepcion": 65,
+    "alojamiento": 60.0,
+    "adelanto": 20.0,
+    "penalidad": 0.0,
+    "saldoAlojamiento": 40.0,
+    "consumosPagados": 0.0,
+    "consumosPendientes": 0.0,
+    "cobroAhora": 40.0,
+    "moneda": "PEN",
+    "calculadoEn": "2026-10-21T07:13:32.016568Z"
+  },
+  "montoInexacto": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "3eeaa7c3-1848-4eb1-9f40-f4bea46a4d2e",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "532",
+      "date": "Wed, 21 Oct 2026 07:13:32 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "El monto no coincide con el calculado. Revisa la nueva cotización.",
+      "data": {
+        "cotizacion": {
+          "idRecepcion": 65,
+          "alojamiento": 60.0,
+          "adelanto": 20.0,
+          "penalidad": 0.0,
+          "saldoAlojamiento": 40.0,
+          "consumosPagados": 0.0,
+          "consumosPendientes": 0.0,
+          "cobroAhora": 40.0,
+          "moneda": "PEN",
+          "calculadoEn": "2026-10-21T07:13:32.049016100Z"
+        },
+        "closureId": "01f6b382-eb65-4bfc-a4df-120d74b216c0"
+      },
+      "error": {
+        "code": "AMOUNT_MISMATCH",
+        "fields": {
+          "montoRecibido": "39.99"
+        }
+      },
+      "meta": {
+        "correlationId": "3eeaa7c3-1848-4eb1-9f40-f4bea46a4d2e"
+      }
+    }
+  },
+  "cierreRechazado": {
+    "closureId": "01f6b382-eb65-4bfc-a4df-120d74b216c0",
+    "estado": "RECHAZADO",
+    "lastErrorCode": "AMOUNT_MISMATCH"
+  },
+  "penalidadSobrePrecio": {
+    "status": 400,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "db3f5637-31ce-4c73-a264-92940b7f1251",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "230",
+      "date": "Wed, 21 Oct 2026 07:13:32 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "Revisa los datos marcados.",
+      "data": null,
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "fields": {
+          "costoPenalidad": "no puede superar el alojamiento"
+        }
+      },
+      "meta": {
+        "correlationId": "db3f5637-31ce-4c73-a264-92940b7f1251"
+      }
+    }
+  },
+  "cierresVigentes": 0,
+  "exigido": "409 AMOUNT_MISMATCH con cierre RECHAZADO; penalidad > precioInicial rechazada sin cierre",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T07:13:32.305635Z"
+}

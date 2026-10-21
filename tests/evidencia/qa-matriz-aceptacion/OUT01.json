@@ -1,0 +1,84 @@
+{
+  "caso": "OUT01",
+  "ventaEnVuelo": {
+    "status": 202,
+    "headers": {
+      "x-correlation-id": "3dc1ab2d-63f4-440f-a435-b247d97f04aa",
+      "location": "/api/venta/buscar/32",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "394",
+      "date": "Wed, 21 Oct 2026 07:11:54 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idVenta": 32,
+        "idRecepcion": 64,
+        "idCliente": 100,
+        "idHotel": 1,
+        "total": 0.0,
+        "estado": "PENDIENTE",
+        "estadoOperacion": "CANCELACION_PENDIENTE",
+        "operationId": "4a2984c4-5b94-4673-9d5f-97c09be70f60",
+        "medioPago": null,
+        "version": 2,
+        "fechaCreacion": "2026-10-21T07:11:49.373151Z",
+        "paidAt": null,
+        "detalles": []
+      },
+      "meta": {
+        "correlationId": "3dc1ab2d-63f4-440f-a435-b247d97f04aa"
+      }
+    }
+  },
+  "operacionesAbiertas": 1,
+  "cierre": {
+    "status": 409,
+    "headers": {
+      "x-correlation-id": "6832bd5b-a3de-40e0-bb2f-7dbdeb8f7ad9",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "225",
+      "date": "Wed, 21 Oct 2026 07:11:54 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "Hay consumos en proceso. Espera a que terminen.",
+      "data": null,
+      "error": {
+        "code": "OPERATIONS_IN_PROGRESS",
+        "fields": {
+          "idRecepcion": "64"
+        }
+      },
+      "meta": {
+        "correlationId": "6832bd5b-a3de-40e0-bb2f-7dbdeb8f7ad9"
+      }
+    }
+  },
+  "ventasTrasCierre": [
+    {
+      "idVenta": "32",
+      "estado": "PENDIENTE",
+      "estadoOperacion": "CANCELACION_PENDIENTE"
+    }
+  ],
+  "exigido": "409 OPERATIONS_IN_PROGRESS; ninguna venta admitida después del cierre",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T07:12:11.595161Z"
+}

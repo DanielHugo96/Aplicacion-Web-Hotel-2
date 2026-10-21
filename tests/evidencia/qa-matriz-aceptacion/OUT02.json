@@ -1,0 +1,97 @@
+{
+  "caso": "OUT02",
+  "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
+  "reintento": {
+    "status": 202,
+    "headers": {
+      "x-correlation-id": "1513ba3c-0b14-4f2d-afa4-68f0da0f3a78",
+      "location": "/api/recepcion/61",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json;charset=UTF-8",
+      "content-length": "1308",
+      "date": "Wed, 21 Oct 2026 07:13:18 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "data": {
+        "cierre": {
+          "estado": "CONFIRMANDO",
+          "calculo": {
+            "cobroAhora": 100.0,
+            "totalGeneral": 107.0,
+            "consumosTotal": 7.0,
+            "alojamientoTotal": 100.0,
+            "saldoAlojamiento": 100.0,
+            "consumosPendientes": 0.0,
+            "consumosPagadosAntes": 7.0,
+            "expectedPendingTotal": 0.0
+          },
+          "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
+          "lastErrorCode": "DEPENDENCY_UNAVAILABLE"
+        },
+        "correo": "cliente.uno@hotel.test",
+        "estado": true,
+        "nombre": "Cliente",
+        "numero": "102",
+        "idHotel": 1,
+        "vencida": false,
+        "version": 2,
+        "adelanto": 0.0,
+        "apellido": "Uno",
+        "archivada": false,
+        "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
+        "documento": "90000100",
+        "idCliente": 100,
+        "pisoNombre": "Primer piso",
+        "fechaSalida": "2026-10-22",
+        "idRecepcion": 61,
+        "observacion": "Fixture qa-runbooks",
+        "totalPagado": 0.0,
+        "fechaEntrada": "2026-10-21",
+        "idHabitacion": 102,
+        "estadoEstadia": "CERRANDO",
+        "precioInicial": 100.0,
+        "tipoDocumento": "DNI",
+        "costoPenalidad": 0.0,
+        "precioRestante": 100.0,
+        "categoriaNombre": "Doble",
+        "cleaningCycleId": null,
+        "motivoPenalidad": null,
+        "precioHabitacion": 100.0,
+        "detalleHabitacion": "Habitacion doble de demostracion",
+        "medioPagoAdelanto": "EFECTIVO",
+        "fechaSalidaConfirmacion": null
+      },
+      "meta": {
+        "correlationId": "38333edb-9a74-43c6-8eef-7176599acc5c"
+      },
+      "message": "Cierre en curso",
+      "success": true
+    }
+  },
+  "cierre": {
+    "estado": "COMPLETADO",
+    "conReceipt": "t"
+  },
+  "receipts": [
+    {
+      "closureId": "1b9b765f-98a5-4a32-a337-981829fea204",
+      "totalPendiente": "0.00"
+    }
+  ],
+  "ventas": [
+    {
+      "idVenta": "30",
+      "estado": "PAGADO"
+    }
+  ],
+  "exigido": "un receipt y una salida; ventas una sola vez",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T07:13:18.742050Z"
+}
