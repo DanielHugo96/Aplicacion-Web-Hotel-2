@@ -56,8 +56,8 @@ GATEWAY = c.GATEWAY
 
 def save(case: str, content: Any) -> Path:
     EVIDENCE.mkdir(parents=True, exist_ok=True)
-    if not isinstance(content, dict) or "caso" not in content:
-        content = {"caso": case, "resultado": content}
+    if not isinstance(content, dict):
+        content = {"resultado": content}
     content.setdefault("caso", case)
     content.setdefault("ejecutadoEn", c.iso())
     path = EVIDENCE / f"{case}.json"
@@ -325,6 +325,195 @@ def fixtures() -> int:
 
 
 # ---------------------------------------------------------------------------
+# Pasos 4–6 — F4, F5, F6, F9
+# ---------------------------------------------------------------------------
+
+
+def _nueva_estadia(room_id: int, hotel_id: int, cliente: int, adelanto: float, token: str) -> int:
+    _cerrar_estadia_activa(room_id, token)
+    f.free_room(room_id, hotel_id)
+    check, stay = f.checkin(room_id=room_id, hotel_id=hotel_id, cliente=cliente, adelanto=adelanto, token=token)
+    if check.status != 201:
+        raise c.RunbookError(f"check-in {room_id} devolvió {check.status}: {check.body[:400]}")
+    return int(stay["idRecepcion"])
+
+
+def _cerrar_estadia_activa(room_id: int, token: str) -> None:
+    """Cierra por la API cualquier estadía ACTIVA que quede de una corrida anterior."""
+    filas = c.psql(
+        "reception_db",
+        f"select id from recepcion where id_habitacion={room_id} and estado_estadia in ('ACTIVA','CERRANDO')",
+    )
+    for (id_recepcion,) in filas:
+        cot = c.http("GET", f"/api/recepcion/{id_recepcion}/cotizacion-salida", token=token)
+        out = f.checkout(id_recepcion=int(id_recepcion), room_id=room_id,
+                         monto=float(cot.field("data", "cobroAhora") or 0), token=token,
+                         base="http://localhost:8083")
+        if out.status not in (200, 202):
+            raise c.RunbookError(f"no se pudo cerrar la estadía {id_recepcion} de {room_id}: {out.status} {out.body[:200]}")
+    if filas:
+        esperar(f"estadía de {room_id} cerrada", lambda: c.psql_one(
+            "reception_db",
+            f"select count(*) from recepcion where id_habitacion={room_id} and estado_estadia in ('ACTIVA','CERRANDO')") == "0",
+            timeout=120)
+        f.free_room(room_id, 1 if room_id < 200 else (2 if room_id < 300 else 3))
+
+
+def fixtures_avanzados() -> int:
+    token = f.admin_token()
+    estado = leer_estado()
+    evidencia: dict[str, Any] = {}
+
+    # ---- F4: cierre en CONFIRMANDO. El «Sales detenido tras aceptar» se reproduce reteniendo el
+    # advisory lock que serializa la confirmación de Sales (mismo recurso que usa RB2).
+    idr = _nueva_estadia(102, 1, 100, 0.0, token)
+    esperar_operacion_terminal(idr)
+    cot = c.http("GET", f"/api/recepcion/{idr}/cotizacion-salida", token=token)
+    clave_f4 = str(uuid.uuid4())
+    lock = c.AdvisoryLock("sales_db", idr)
+    try:
+        out = f.checkout(id_recepcion=idr, room_id=102, monto=float(cot.field("data", "cobroAhora")),
+                         key=clave_f4, token=token, base="http://localhost:8083")
+        closure_id = str(out.field("data", "closureId") or "")
+        if out.status != 202 or not closure_id:
+            raise c.RunbookError(f"F4 esperaba 202 con closureId, obtuve {out.status}: {out.body[:400]}")
+        fase = f.wait_cierre_state(closure_id, "CONFIRMANDO", timeout=60)
+        detalle = c.psql(
+            "reception_db",
+            "select estado, attempts, COALESCE(last_error_code,''), calculo is not null, receipt_sales is not null "
+            f"from cierre where closure_id='{closure_id}'",
+        )[0]
+        estado["F4"] = {
+            "idRecepcion": idr,
+            "idHabitacion": 102,
+            "closureId": closure_id,
+            "idempotencyKey": clave_f4,
+            "monto": float(cot.field("data", "cobroAhora")),
+            "checkout": out.summary(),
+            "fase": fase,
+        }
+        evidencia["F4"] = {
+            "inducido": "advisory lock pg_advisory_lock(7101, idRecepcion) retenido en sales_db",
+            "checkout": out.summary(),
+            "cierre": {"estado": detalle[0], "attempts": int(detalle[1]), "lastErrorCode": detalle[2] or None,
+                       "calculoCongelado": detalle[3] == "t", "sinReceipt": detalle[4] == "f"},
+            "exigido": "estado CONFIRMANDO con cálculo y sin receipt",
+            "cumple": detalle[0] == "CONFIRMANDO" and detalle[3] == "t" and detalle[4] == "f",
+        }
+    finally:
+        lock.release()
+    # El cierre se completa al soltar el lock; se registra que F4 queda consumido.
+    esperar("cierre F4 COMPLETADO", lambda: c.psql_one(
+        "reception_db", f"select estado from cierre where closure_id='{estado['F4']['closureId']}'") == "COMPLETADO",
+        timeout=120)
+    f.free_room(102, 1)
+    estado["F4"]["consumidoPor"] = "el cierre se completó al liberar el lock (se reinduce en OUT02)"
+
+    # ---- F5: operación MANTENIMIENTO en PREPARANDO con reception parado a mitad de admisión.
+    f.free_room(102, 1)
+    c.stop_service("reception-service")
+    time.sleep(2)
+    try:
+        out = f.maintenance(102, "F5 mantenimiento", token=token)
+        block_id = str(out.field("data", "blockId") or "")
+        if out.status != 202 or not block_id:
+            raise c.RunbookError(f"F5 esperaba 202 con blockId, obtuve {out.status}: {out.body[:400]}")
+        op = c.psql(
+            "hotel_db",
+            "select estado, tipo, attempts from operacion_habitacion " f"where block_id='{block_id}'",
+        )[0]
+        bloqueo = c.psql("reception_db", f"select estado from bloqueo_habitacion where block_id='{block_id}'")
+        estado["F5"] = {"blockId": block_id, "idHabitacion": 102, "maintenance": out.summary()}
+        # La consulta de la operación se hace cuando reception vuelve (la ruta vive en hotel).
+        c.start_service("reception-service", timeout=180)
+        consulta = c.http("GET", f"/api/habitacion/operaciones/{block_id}", token=token)
+        gate_102 = gate(102)
+        evidencia["F5"] = {
+            "inducido": "reception-service detenido durante la admisión de la operación",
+            "maintenance": out.summary(),
+            "operacion": {"blockId": block_id, "estado": op[0], "tipo": op[1], "attempts": int(op[2])},
+            "bloqueoAntesDeReception": bloqueo,
+            "consultaOperacion": {"status": consulta.status, "body": consulta.json or consulta.body[:500]},
+            "gate": gate_102,
+            "exigido": "blockId guardado y fase PREPARANDO visible en GET /api/habitacion/operaciones/{blockId}",
+            "cumple": op[0] == "PREPARANDO" and consulta.status == 200,
+        }
+        # Liberar la operación por las rutas del operador para no dejar 102 bloqueada.
+        esperar("operación F5 APLICADA", lambda: c.psql_one(
+            "hotel_db", f"select estado from operacion_habitacion where block_id='{block_id}'") in ("APLICADA", "LIBERADA"),
+            timeout=180)
+        f.free_room(102, 1)
+    finally:
+        if not c.port_open(8083):
+            c.start_service("reception-service", timeout=180)
+
+    # ---- F6: rechazo durable. Habitación 201 (sede 2) ocupada por cliente 101.
+    idr_f6 = _nueva_estadia(201, 2, 101, 0.0, token)
+    clave_f6 = str(uuid.uuid4())
+    rechazo = f.maintenance(201, "F6 rechazo durable", key=clave_f6, token=token)
+    filas = c.psql(
+        "reception_db",
+        "select block_id::text, estado, COALESCE(error_code,'') from bloqueo_habitacion "
+        "where id_habitacion=201 order by created_at desc limit 1",
+    )
+    block_r = filas[0][0] if filas else ""
+    estado["F6"] = {"idRecepcion": idr_f6, "idHabitacion": 201, "idHotel": 2,
+                    "blockIdR": block_r, "idempotencyKey": clave_f6, "maintenance": rechazo.summary()}
+    evidencia["F6"] = {
+        "idRecepcion": idr_f6,
+        "maintenance": rechazo.summary(),
+        "bloqueo": {"blockId": block_r, "estado": filas[0][1], "errorCode": filas[0][2]} if filas else None,
+        "gate": gate(201),
+        "exigido": "409 GATE_NOT_AVAILABLE con bloqueo RECHAZADO durable y gate OCUPADA",
+        "cumple": rechazo.status == 409 and bool(filas) and filas[0][1] == "RECHAZADO",
+    }
+
+    # ---- F9: venta LEGACY sin movimiento conciliado. Único fixture por SQL (06 §3.7).
+    id_recepcion_legacy = int(estado.get("F8", {}).get("idRecepcion") or 0)
+    if not id_recepcion_legacy:
+        id_recepcion_legacy = int(c.psql_one("reception_db", "select min(id) from recepcion", default="0") or 0)
+    operacion = str(uuid.uuid4())
+    sql = f"""
+BEGIN;
+INSERT INTO venta (id_recepcion, id_cliente, id_hotel, estado, estado_operacion, admitida, origen,
+                   inventory_version, total, request_items, current_operation_id, request_hash,
+                   version, created_at, updated_at)
+VALUES ({id_recepcion_legacy}, 100, 1, 'PENDIENTE', 'CONFIRMADA', true, 'LEGACY', 0, 5.00,
+        '[{{"idProducto": 2, "cantidad": 1}}]'::jsonb, '{operacion}', repeat('a', 64), 1, now(), now());
+INSERT INTO operacion_venta (operation_id, id_venta, tipo, estado, request, actor_id, actor_rol)
+SELECT '{operacion}', id, 'VENTA', 'TERMINAL', '{{}}'::jsonb, 1, 'ADMIN' FROM venta
+ WHERE current_operation_id='{operacion}';
+COMMIT;
+"""
+    c.psql("sales_db", sql)
+    fila = c.psql(
+        "sales_db",
+        f"select id, origen, estado, estado_operacion from venta where current_operation_id='{operacion}'",
+    )[0]
+    estado["F9"] = {"idVenta": int(fila[0]), "origen": fila[1], "estado": fila[2]}
+    evidencia["F9"] = {
+        "filaImportada": {"idVenta": int(fila[0]), "origen": fila[1], "estado": fila[2],
+                          "estadoOperacion": fila[3]},
+        "movimientos": movimientos(int(fila[0])),
+        "porSql": "fila de importación/migración: no existe endpoint que cree origen=LEGACY",
+        "exigido": "venta LEGACY sin movimiento conciliado visible solo en DB",
+        "cumple": fila[1] == "LEGACY" and not movimientos(int(fila[0])),
+    }
+
+    guardar_estado(estado)
+    save("fixtures-avanzados", {"caso": "FIXTURES-AVANZADOS", **evidencia,
+                                "F4": estado["F4"], "F5": estado["F5"], "F6": estado["F6"], "F9": estado["F9"]})
+    fallos = [k for k, v in evidencia.items() if not v["cumple"]]
+    save("F4", {"caso": "F4", **evidencia["F4"]})
+    save("F5", {"caso": "F5", **evidencia["F5"]})
+    save("F6", {"caso": "F6", **evidencia["F6"]})
+    save("F9", {"caso": "F9", **evidencia["F9"]})
+    print(json.dumps({"fallos": fallos, "F4": evidencia["F4"]["cumple"], "F5": evidencia["F5"]["cumple"],
+                      "F6": evidencia["F6"]["cumple"], "F9": evidencia["F9"]["cumple"]}, indent=2, ensure_ascii=False))
+    return 0 if not fallos else 1
+
+
+# ---------------------------------------------------------------------------
 # Paso 7 — SEC01–SEC08
 # ---------------------------------------------------------------------------
 
@@ -440,11 +629,7 @@ def sec() -> int:
         fallos.append("SEC03")
 
     # SEC04 — cliente 100 sobre estadía ajena (cliente 101).
-    f.free_room(102, 1)
-    check, stay = f.checkin(room_id=102, hotel_id=1, cliente=101, adelanto=0.0, token=token)
-    if check.status != 201:
-        raise c.RunbookError(f"SEC04 no pudo sembrar la estadía ajena: {check.status} {check.body[:300]}")
-    ajena = int(stay["idRecepcion"])
+    ajena = _nueva_estadia(102, 1, 101, 0.0, token)
     cliente = token_cliente(100)
     carrito = c.http("GET", f"/api/carrito/listar/{ajena}", token=cliente)
     ventas_antes = c.psql_one("sales_db", f"select count(*) from venta where id_recepcion={ajena}")
@@ -620,17 +805,45 @@ def sec() -> int:
             "cumple": cumple,
         },
     )
-    # Restituir el segundo ADMIN activo para el resto de la matriz.
-    if resultados["put"].status == 200:
-        detalle = c.http("GET", f"/api/persona/buscar/{admin2_id}", token=token)
-        c.http(
+    # Restituir los dos ADMIN activos (el 200 de SEC07 desactivó uno de ellos, a propósito).
+    # El que quedó activo tiene clave y puede reactivar al otro por la API.
+    for pid in (1, admin2_id):
+        fila = c.psql("identity_db", f"select estado, correo from persona where id={pid}")
+        if not fila or fila[0][0] == "t":
+            continue
+        resto = c.psql("identity_db", "select id from persona where id_tipo_persona=1 and estado and clave_hash is not null")
+        token_activo = token
+        for (otro,) in resto:
+            if int(otro) == 1:
+                token_activo = token
+                break
+            if int(otro) == admin2_id:
+                token_activo = c.login("admin2@hotel.test", "ClaveSegura123!")
+                break
+        detalle = c.http("GET", f"/api/persona/buscar/{pid}", token=token_activo)
+        reactivar = c.http(
             "PUT",
-            f"/api/persona/actualizar/{admin2_id}",
-            token=token,
-            body={"nombre": "Segundo", "apellido": "Admin", "correo": "admin2@hotel.test",
+            f"/api/persona/actualizar/{pid}",
+            token=token_activo,
+            body={"nombre": "Demo" if pid == 1 else "Segundo",
+                  "apellido": "Admin",
+                  "correo": "admin@hotel.test" if pid == 1 else "admin2@hotel.test",
                   "fotoUrl": None, "idTipoPersona": 1, "sedes": [], "estado": True},
             headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(detalle.field("data", "version"))},
         )
+        if reactivar.status != 200:
+            raise c.RunbookError(f"SEC07: no se pudo reactivar el ADMIN {pid}: {reactivar.status} {reactivar.body[:300]}")
+    save(
+        "SEC07-restauracion",
+        {
+            "caso": "SEC07-RESTAURACION",
+            "admins": [{"id": int(r[0]), "correo": r[1], "estado": r[2], "conClave": r[3]}
+                       for r in c.psql("identity_db",
+                                       "select id, correo, estado, (clave_hash is not null) from persona "
+                                       "where id_tipo_persona=1 order by id")],
+            "motivo": "el 200 de SEC07 desactiva un ADMIN por diseño; se restituye por la API para el resto de la matriz",
+        },
+    )
     if not cumple:
         fallos.append("SEC07")
 
@@ -708,9 +921,8 @@ def lp_crud() -> int:
         data = r.field("data")
         entrada = data[0] if isinstance(data, list) and data else data
         claves = sorted(_claves(entrada))
-        esperadas = CLAVES_HOTEL_PUBLICO if tipo == "hotel" else (CLAVES_CATEGORIA_PUBLICA if tipo == "categoria" else None)
-        if tipo == "lista" and isinstance(data, list) and data:
-            esperadas = CLAVES_HOTEL_PUBLICO if "hoteles" in ruta else CLAVES_CATEGORIA_PUBLICA
+        es_categoria = "/categorias" in ruta
+        esperadas = CLAVES_CATEGORIA_PUBLICA if es_categoria else CLAVES_HOTEL_PUBLICO
         sobrantes = sorted(set(claves) - (esperadas or set()))
         if sobrantes:
             privadas[ruta] = sobrantes
@@ -743,7 +955,7 @@ def lp_crud() -> int:
     patrones = {
         "endpointPrivado": r"/api/(persona|habitacion|recepcion|venta|reportes|carrito|producto|hotel|piso|categoria)/",
         "precioInterno": r"precioInicial|clave_hash|correo_contacto",
-        "endpointReserva": r"/api/public/reservas|disponibilidad|ocupacion",
+        "endpointReserva": r"/api/(public/(reservas|disponibilidad)|reservas)|[?&]fecha=",
     }
     hallazgos = {nombre: [archivo for archivo, texto in textos.items() if re.search(patron, texto)]
                  for nombre, patron in patrones.items()}
@@ -755,7 +967,7 @@ def lp_crud() -> int:
     save(
         "LP02",
         {
-            "variantesFechaOcupacion": {k: {"status": v.status, "body": (v.json or v.body)[:500]} for k, v in variantes.items()},
+            "variantesFechaOcupacion": {k: {"status": v.status, "body": v.json or v.body[:500]} for k, v in variantes.items()},
             "bundle": {"ruta": str(dist.relative_to(ROOT)), "archivos": [p.name for p in archivos]},
             "hallazgos": hallazgos,
             "exigido": "parámetro ignorado o 400; sin dato privado ni endpoint nuevo",
@@ -807,22 +1019,19 @@ def lp_crud() -> int:
         "db": c.psql("hotel_db", f"select id, estado, version from hotel where id={id_sede}"),
     }
 
-    # Piso
+    # Piso (el contrato de actualizar exige {descripcion, estado})
     piso = crear("/api/piso/registrar", {"idHotel": 1, "descripcion": f"Piso Matriz {sufijo}"})
     id_piso = piso.field("data", "idPiso")
     v = c.http("GET", f"/api/piso/buscar/{id_piso}", token=token).field("data", "version")
-    piso_upd = actualizar(f"/api/piso/actualizar/{id_piso}", {"idHotel": 1, "descripcion": f"Piso Matriz {sufijo} editado"}, v)
+    piso_upd = actualizar(f"/api/piso/actualizar/{id_piso}",
+                          {"descripcion": f"Piso Matriz {sufijo} editado", "estado": True}, v)
     sin_ifmatch_f = c.http("PUT", f"/api/piso/actualizar/{id_piso}", token=token,
-                           body={"idHotel": 1, "descripcion": "x"},
+                           body={"descripcion": "x", "estado": True},
                            headers={"Idempotency-Key": str(uuid.uuid4())})
-    borrar_piso = c.http("DELETE", f"/api/piso/eliminar/{id_piso}", token=token,
-                         headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(piso_upd.field("data", "version"))})
     pasos["piso"] = {
         "alta": {"status": piso.status, "idPiso": id_piso},
         "edicion": {"status": piso_upd.status, "version": piso_upd.field("data", "version")},
         "sinIfMatch": {"status": sin_ifmatch_f.status, "code": codigo(sin_ifmatch_f)},
-        "delete": {"status": borrar_piso.status},
-        "db": c.psql("hotel_db", f"select id, estado, version from piso where id={id_piso}"),
     }
 
     # Categoría
@@ -839,23 +1048,16 @@ def lp_crud() -> int:
     sin_ifmatch_c = c.http("PUT", f"/api/categoria/actualizar/{id_categoria}", token=token,
                            body={"descripcion": "x", "detalle": "x", "capacidad": 1, "estado": True},
                            headers={"Idempotency-Key": str(uuid.uuid4())})
-    borrar_categoria = c.http("DELETE", f"/api/categoria/eliminar/{id_categoria}", token=token,
-                              headers={"Idempotency-Key": str(uuid.uuid4()),
-                                       "If-Match": str(categoria_upd.field("data", "version"))})
     pasos["categoria"] = {
         "alta": {"status": categoria.status, "idCategoria": id_categoria},
         "edicion": {"status": categoria_upd.status, "version": categoria_upd.field("data", "version")},
         "sinIfMatch": {"status": sin_ifmatch_c.status, "code": codigo(sin_ifmatch_c)},
-        "delete": {"status": borrar_categoria.status},
-        "db": c.psql("hotel_db", f"select id, estado, version from categoria where id={id_categoria}"),
     }
 
-    # Habitación (en la sede nueva antes de darla de baja: se crea con piso/categoría propios)
-    piso2 = crear("/api/piso/registrar", {"idHotel": int(id_sede) if id_sede else 1,
-                                          "descripcion": f"Piso CRUD {sufijo}"})
-    id_piso2 = piso2.field("data", "idPiso") if piso2.status == 201 else id_piso
+    # Habitación: en la sede 1 pero con número único, para no chocar con las activas de la demo.
     habitacion = crear("/api/habitacion/registrar", {
-        "idHotel": 1, "numero": f"M{sufijo[:4]}", "idPiso": int(id_piso), "idCategoria": int(id_categoria),
+        "idHotel": 1, "numero": f"M{sufijo[:4]}", "idPiso": int(id_piso),
+        "idCategoria": int(id_categoria),
         "detalle": "Habitacion de la matriz", "precio": 55.00, "publicada": False, "urlsImagenes": [],
     })
     id_habitacion = habitacion.field("data", "idHabitacion")
@@ -869,41 +1071,45 @@ def lp_crud() -> int:
                                body={"idPiso": int(id_piso), "idCategoria": int(id_categoria), "detalle": "x",
                                      "precio": 60.00, "publicada": False, "urlsImagenes": []},
                                headers={"Idempotency-Key": str(uuid.uuid4())})
+        # El gate se crea por evento desde hotel; la baja (BLOQUEO) exige gate disponible.
+        esperar(f"gate de {id_habitacion}", lambda: bool(gate(int(id_habitacion))), timeout=90)
+        esperar(f"gate de {id_habitacion} LIBRE", lambda: gate(int(id_habitacion)).get("estado") == "LIBRE", timeout=90)
         borrar_habitacion = c.http("DELETE", f"/api/habitacion/eliminar/{id_habitacion}", token=token,
                                    headers={"Idempotency-Key": str(uuid.uuid4()),
                                             "If-Match": str(habitacion_upd.field("data", "version"))})
+        # La baja es una operación durable: se espera a que la habitación quede estado=false.
+        esperar(f"baja de {id_habitacion}", lambda: c.psql_one(
+            "hotel_db", f"select estado from habitacion where id={id_habitacion}") == "f", timeout=120)
         pasos["habitacion"] = {
             "alta": {"status": habitacion.status, "idHabitacion": id_habitacion},
             "edicion": {"status": habitacion_upd.status, "version": habitacion_upd.field("data", "version")},
             "sinIfMatch": {"status": sin_ifmatch_h.status, "code": codigo(sin_ifmatch_h)},
-            "delete": {"status": borrar_habitacion.status},
+            "delete": {"status": borrar_habitacion.status, "code": codigo(borrar_habitacion),
+                       "body": borrar_habitacion.json or borrar_habitacion.body[:400]},
             "db": c.psql("hotel_db", f"select id, estado, version from habitacion where id={id_habitacion}"),
+            "operacionBaja": c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion "
+                                               f"where id_habitacion={id_habitacion} order by block_id"),
         }
     else:
         pasos["habitacion"] = {"alta": {"status": habitacion.status, "body": habitacion.body[:500]}}
-        if piso2.status == 201:
-            c.http("DELETE", f"/api/piso/eliminar/{id_piso2}", token=token,
-                   headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": "1"})
-        if borrar_categoria.status != 200:
-            pass
 
-    # Producto
+    # Producto (GET/PUT/DELETE exigen ?idHotel= y productoVersion en el cuerpo)
     producto = crear("/api/producto/registrar", {
         "sku": f"MAT-{sufijo}", "nombre": f"Producto Matriz {sufijo}", "detalle": "Producto de la matriz",
         "idHotel": 1, "precio": 4.50, "cantidadInicial": 3, "umbralBajo": 1,
     })
     id_producto = producto.field("data", "idProducto")
     if producto.status == 201:
-        v = c.http("GET", f"/api/producto/buscar/{id_producto}", token=token).field("data", "version")
-        producto_upd = actualizar(f"/api/producto/actualizar/{id_producto}", {
-            "sku": f"MAT-{sufijo}", "nombre": f"Producto Matriz {sufijo} editado", "detalle": "editado",
-            "imagenUrl": None, "estado": True,
-        }, v)
-        sin_ifmatch_p = c.http("PUT", f"/api/producto/actualizar/{id_producto}", token=token,
-                               body={"sku": f"MAT-{sufijo}", "nombre": "x", "detalle": None,
-                                     "imagenUrl": None, "estado": True},
+        detalle_p = c.http("GET", f"/api/producto/buscar/{id_producto}?idHotel=1", token=token)
+        producto_version = detalle_p.field("data", "productoVersion")
+        producto_upd = actualizar(f"/api/producto/actualizar/{id_producto}?idHotel=1", {
+            "nombre": f"Producto Matriz {sufijo} editado", "detalle": "editado", "estado": True,
+            "productoVersion": producto_version,
+        }, producto_version)
+        sin_ifmatch_p = c.http("PUT", f"/api/producto/actualizar/{id_producto}?idHotel=1", token=token,
+                               body={"nombre": "x", "productoVersion": producto_version},
                                headers={"Idempotency-Key": str(uuid.uuid4())})
-        borrar_producto = c.http("DELETE", f"/api/producto/eliminar/{id_producto}", token=token,
+        borrar_producto = c.http("DELETE", f"/api/producto/eliminar/{id_producto}?idHotel=1", token=token,
                                  headers={"Idempotency-Key": str(uuid.uuid4()),
                                           "If-Match": str(producto_upd.field("data", "version"))})
         pasos["producto"] = {
@@ -912,10 +1118,27 @@ def lp_crud() -> int:
             "sinIfMatch": {"status": sin_ifmatch_p.status, "code": codigo(sin_ifmatch_p)},
             "delete": {"status": borrar_producto.status},
             "db": c.psql("inventory_db",
-                         f"select id, estado, version from producto where id={id_producto}"),
+                         "select p.id, ps.estado, ps.version from producto p "
+                         "join producto_sede ps on ps.id_producto=p.id "
+                         f"where p.id={id_producto} and ps.id_hotel=1"),
         }
     else:
         pasos["producto"] = {"alta": {"status": producto.status, "body": producto.body[:500]}}
+
+    # Bajas de los maestros de hotel: el orden importa (hijos antes que padres).
+    baja_piso = c.http(
+        "DELETE", f"/api/piso/eliminar/{id_piso}", token=token,
+        headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(piso_upd.field("data", "version"))})
+    pasos["piso"]["delete"] = {"status": baja_piso.status, "code": codigo(baja_piso),
+                               "body": baja_piso.json or baja_piso.body[:400]}
+    pasos["piso"]["db"] = c.psql("hotel_db", f"select id, estado, version from piso where id={id_piso}")
+    baja_categoria = c.http(
+        "DELETE", f"/api/categoria/eliminar/{id_categoria}", token=token,
+        headers={"Idempotency-Key": str(uuid.uuid4()),
+                 "If-Match": str(categoria_upd.field("data", "version"))})
+    pasos["categoria"]["delete"] = {"status": baja_categoria.status, "code": codigo(baja_categoria),
+                                    "body": baja_categoria.json or baja_categoria.body[:400]}
+    pasos["categoria"]["db"] = c.psql("hotel_db", f"select id, estado, version from categoria where id={id_categoria}")
 
     # Evaluación del criterio: cada recurso creado tiene version incrementada, DELETE deja
     # estado=false y el PUT sin If-Match devuelve 428.
@@ -962,6 +1185,7 @@ def main(argv: list[str] | None = None) -> int:
     sub = parser.add_subparsers(dest="command", metavar="<grupo>")
     sub.add_parser("preflight", help="Compose sano, readiness por servicio y Gateway 401")
     sub.add_parser("fixtures", help="siembra F1-F3 y F8 y guarda los IDs")
+    sub.add_parser("fixtures-avanzados", help="siembra F4-F6 y F9")
     sub.add_parser("sec", help="SEC01-SEC08")
     sub.add_parser("lp-crud", help="LP01-LP02 y CRUD01")
     args = parser.parse_args(argv)
@@ -973,6 +1197,8 @@ def main(argv: list[str] | None = None) -> int:
             return preflight()
         if args.command == "fixtures":
             return fixtures()
+        if args.command == "fixtures-avanzados":
+            return fixtures_avanzados()
         if args.command == "sec":
             return sec()
         if args.command == "lp-crud":

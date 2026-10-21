@@ -1,0 +1,35 @@
+{
+  "endpoint": "GET /api/persona/listar",
+  "sinToken": {
+    "status": 401,
+    "headers": {
+      "content-type": "application/json",
+      "x-correlation-id": "00193f2e-68a0-4432-b7d5-fa96835ec135",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-content-type-options": "nosniff",
+      "x-frame-options": "DENY",
+      "x-xss-protection": "0",
+      "referrer-policy": "no-referrer",
+      "content-length": "198",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "Tu sesión expiró. Vuelve a iniciar sesión.",
+      "data": null,
+      "error": {
+        "code": "UNAUTHENTICATED",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "00193f2e-68a0-4432-b7d5-fa96835ec135"
+      }
+    }
+  },
+  "exigido": "401 UNAUTHENTICATED sin datos",
+  "cumple": true,
+  "caso": "SEC01",
+  "ejecutadoEn": "2026-10-21T06:00:31.108187Z"
+}

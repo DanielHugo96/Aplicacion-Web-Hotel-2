@@ -1,0 +1,146 @@
+{
+  "caso": "FIXTURES",
+  "F1": {
+    "idRecepcion": 1,
+    "idHabitacion": 101,
+    "idCliente": 100,
+    "checkin": {
+      "status": 201,
+      "headers": {
+        "vary": "Access-Control-Request-Headers",
+        "x-correlation-id": "ab1cffa3-e9b1-4c36-bec5-48110a2af17d",
+        "etag": "\"1\"",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "0",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "pragma": "no-cache",
+        "expires": "0",
+        "x-frame-options": "DENY",
+        "content-type": "application/json",
+        "content-length": "876",
+        "date": "Wed, 21 Oct 2026 05:47:54 GMT",
+        "referrer-policy": "no-referrer",
+        "connection": "close"
+      },
+      "body": "{\"success\":true,\"message\":\"Check-in registrado\",\"data\":{\"idRecepcion\":1,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":101,\"numero\":\"101\",\"categoriaNombre\":\"Individual\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion individual de demostracion\",\"precioHabitacion\":70.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":null,\"precioInicial\":70.00,\"adelanto\":20.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":50.00,\"totalPagado\":20.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":true,\"estadoEstadia\":\"ACTIVA\",\"archivada\":false,\"vencida\":false,\"version\":1,\"closureId\":null,\"cleaningCycleId\":null,\"cierre\":null},\"meta\":{\"correlationId\":\"ab1cffa3-e9b1-4c36-bec5-48110a2af17d\"}}"
+    }
+  },
+  "F2": {
+    "idVenta": 1,
+    "operationId": "b7c55af0-54cd-4207-9578-63784886c92b",
+    "idempotencyKey": "26e6e527-e261-4cde-b100-c1b77c1b19ee",
+    "payload": {
+      "idRecepcion": 1,
+      "detalles": [
+        {
+          "idProducto": 1,
+          "cantidad": 2
+        }
+      ]
+    },
+    "venta": {
+      "status": 201,
+      "headers": {
+        "vary": "Access-Control-Request-Headers",
+        "x-correlation-id": "cb0baaf0-b7a0-434b-8cbb-320c7db679df",
+        "location": "/api/venta/buscar/1",
+        "retry-after": "2",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "0",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "pragma": "no-cache",
+        "expires": "0",
+        "x-frame-options": "DENY",
+        "content-type": "application/json",
+        "content-length": "497",
+        "date": "Wed, 21 Oct 2026 05:47:55 GMT",
+        "referrer-policy": "no-referrer",
+        "connection": "close"
+      },
+      "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"idVenta\":1,\"idRecepcion\":1,\"idCliente\":100,\"idHotel\":1,\"total\":7.00,\"estado\":\"PENDIENTE\",\"estadoOperacion\":\"CONFIRMADA\",\"operationId\":\"b7c55af0-54cd-4207-9578-63784886c92b\",\"medioPago\":null,\"version\":2,\"fechaCreacion\":\"2026-10-21T05:47:54.961698Z\",\"paidAt\":null,\"detalles\":[{\"idDetalleVenta\":1,\"idProducto\":1,\"nombreProducto\":\"Agua 500ml\",\"cantidad\":2,\"precioUnitario\":3.50,\"subTotal\":7.00}]},\"meta\":{\"correlationId\":\"cb0baaf0-b7a0-434b-8cbb-320c7db679df\"}}"
+    }
+  },
+  "F3": {
+    "idVenta": 1,
+    "pago": {
+      "status": 200,
+      "headers": {
+        "vary": "Access-Control-Request-Headers",
+        "x-correlation-id": "6252ea35-6bfc-4951-a5b8-a270852a8741",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "0",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "pragma": "no-cache",
+        "expires": "0",
+        "x-frame-options": "DENY",
+        "content-type": "application/json",
+        "content-length": "525",
+        "date": "Wed, 21 Oct 2026 05:47:55 GMT",
+        "referrer-policy": "no-referrer",
+        "connection": "close"
+      },
+      "body": "{\"success\":true,\"message\":\"OK\",\"data\":{\"idVenta\":1,\"idRecepcion\":1,\"idCliente\":100,\"idHotel\":1,\"total\":7.00,\"estado\":\"PAGADO\",\"estadoOperacion\":\"CONFIRMADA\",\"operationId\":\"ef044efa-7e41-4527-83a4-73642ce5a5e2\",\"medioPago\":\"EFECTIVO\",\"version\":3,\"fechaCreacion\":\"2026-10-21T05:47:54.961698Z\",\"paidAt\":\"2026-10-21T05:47:55.594527Z\",\"detalles\":[{\"idDetalleVenta\":1,\"idProducto\":1,\"nombreProducto\":\"Agua 500ml\",\"cantidad\":2,\"precioUnitario\":3.50,\"subTotal\":7.00}]},\"meta\":{\"correlationId\":\"6252ea35-6bfc-4951-a5b8-a270852a8741\"}}"
+    },
+    "venta": {
+      "idVenta": 1,
+      "estado": "PAGADO",
+      "estadoOperacion": "CONFIRMADA",
+      "total": "7.00",
+      "paidAt": "2026-10-21 05:47:55.594527+00",
+      "medioPago": "EFECTIVO",
+      "origen": "NUEVA",
+      "version": 3,
+      "closureId": null
+    }
+  },
+  "F8": {
+    "idRecepcion": 1,
+    "idVenta": 1,
+    "closureId": "5cdcab25-baa8-435e-b21e-dfa75f9efe89",
+    "cleaningCycleId": "9e7297d9-34c1-4a1e-9847-a4a4807ff9cf",
+    "checkout": {
+      "status": 200,
+      "headers": {
+        "vary": "Access-Control-Request-Headers",
+        "x-correlation-id": "8914fade-deb1-4216-9bd8-0e8d9905d457",
+        "etag": "\"3\"",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "0",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "pragma": "no-cache",
+        "expires": "0",
+        "x-frame-options": "DENY",
+        "content-type": "application/json",
+        "content-length": "1279",
+        "date": "Wed, 21 Oct 2026 05:48:02 GMT",
+        "referrer-policy": "no-referrer",
+        "connection": "close"
+      },
+      "body": "{\"success\":true,\"message\":\"Salida registrada\",\"data\":{\"idRecepcion\":1,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":101,\"numero\":\"101\",\"categoriaNombre\":\"Individual\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion individual de demostracion\",\"precioHabitacion\":70.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":\"2026-10-21T05:48:02.522669Z\",\"precioInicial\":70.00,\"adelanto\":20.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":0.00,\"totalPagado\":70.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":false,\"estadoEstadia\":\"CERRADA\",\"archivada\":false,\"vencida\":false,\"version\":3,\"closureId\":\"5cdcab25-baa8-435e-b21e-dfa75f9efe89\",\"cleaningCycleId\":\"9e7297d9-34c1-4a1e-9847-a4a4807ff9cf\",\"cierre\":{\"closureId\":\"5cdcab25-baa8-435e-b21e-dfa75f9efe89\",\"estado\":\"COMPLETADO\",\"lastErrorCode\":null,\"calculo\":{\"cobroAhora\":50.0,\"totalGeneral\":77.0,\"consumosTotal\":7.0,\"alojamientoTotal\":70.0,\"saldoAlojamiento\":50.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":7.0,\"expectedPendingTotal\":0.0},\"medioPago\":\"EFECTIVO\"}},\"meta\":{\"correlationId\":\"8914fade-deb1-4216-9bd8-0e8d9905d457\"}}"
+    },
+    "gate": {
+      "estado": "LIMPIEZA_PENDIENTE",
+      "blockId": null,
+      "cleaningCycleId": "9e7297d9-34c1-4a1e-9847-a4a4807ff9cf",
+      "roomVersion": 2
+    },
+    "limpieza": [
+      [
+        "9e7297d9-34c1-4a1e-9847-a4a4807ff9cf",
+        "PENDIENTE",
+        "1"
+      ]
+    ]
+  },
+  "verificacion": {
+    "F2_stock18": true,
+    "F3_pagada": true,
+    "F8_ciclo_creado": true
+  },
+  "counts": {
+    "recepcion": "1",
+    "venta": "1",
+    "limpieza": "1"
+  },
+  "ejecutadoEn": "2026-10-21T05:48:13.893948Z"
+}

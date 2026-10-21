@@ -42,7 +42,7 @@
       },
       "api-gateway": {
         "status": 401,
-        "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"5cb60cbf-77ac-4d14-a006-9743610efb22\"}}"
+        "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"937416ff-57e3-49d3-981d-266795f798ed\"}}"
       }
     },
     "gateway": {
@@ -55,12 +55,12 @@
     "seeds": {
       "hoteles": "3",
       "habitaciones": "6",
-      "personas": "7",
+      "personas": "6",
       "gates": "6",
       "productosSede": "9"
     },
     "fallos": [],
     "ok": true
   },
-  "ejecutadoEn": "2026-10-21T05:44:36.201310Z"
+  "ejecutadoEn": "2026-10-21T05:47:52.718996Z"
 }

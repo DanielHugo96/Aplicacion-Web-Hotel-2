@@ -1,0 +1,57 @@
+{
+  "caso": "F5",
+  "inducido": "reception-service detenido durante la admisión de la operación",
+  "maintenance": {
+    "status": 202,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "f41fa958-c511-4484-b465-000e2ccd90b0",
+      "location": "/api/habitacion/operaciones/7cf54a78-acaa-4bb3-8521-a8e4e198a40f",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "234",
+      "date": "Wed, 21 Oct 2026 05:58:18 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": "{\"success\":true,\"message\":\"Operación en curso\",\"data\":{\"blockId\":\"7cf54a78-acaa-4bb3-8521-a8e4e198a40f\",\"idHabitacion\":102,\"tipo\":\"MANTENIMIENTO\",\"estado\":\"PREPARANDO\"},\"meta\":{\"correlationId\":\"f41fa958-c511-4484-b465-000e2ccd90b0\"}}"
+  },
+  "operacion": {
+    "blockId": "7cf54a78-acaa-4bb3-8521-a8e4e198a40f",
+    "estado": "PREPARANDO",
+    "tipo": "MANTENIMIENTO",
+    "attempts": 0
+  },
+  "bloqueoAntesDeReception": [],
+  "consultaOperacion": {
+    "status": 200,
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "blockId": "7cf54a78-acaa-4bb3-8521-a8e4e198a40f",
+        "idHabitacion": 102,
+        "tipo": "MANTENIMIENTO",
+        "estado": "PREPARANDO"
+      },
+      "meta": {
+        "correlationId": "665ca792-744c-4805-a029-6cd75ef181b1"
+      }
+    }
+  },
+  "gate": {
+    "estado": "LIBRE",
+    "blockId": null,
+    "cleaningCycleId": null,
+    "roomVersion": 18
+  },
+  "exigido": "blockId guardado y fase PREPARANDO visible en GET /api/habitacion/operaciones/{blockId}",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T05:59:16.976009Z"
+}

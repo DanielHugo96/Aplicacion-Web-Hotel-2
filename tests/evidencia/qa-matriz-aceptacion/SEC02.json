@@ -1,0 +1,49 @@
+{
+  "endpoint": "POST /api/auth/registro",
+  "cuerpo": {
+    "tipoDocumento": "DNI",
+    "documento": "99999901",
+    "nombre": "Sec",
+    "apellido": "Dos",
+    "correo": "sec02-matriz@hotel.test",
+    "clave": "<redactada>",
+    "idTipoPersona": 1
+  },
+  "respuesta": {
+    "status": 400,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "9b633a6d-0d4c-44fe-9672-e6eb48946c7c",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "231",
+      "date": "Wed, 21 Oct 2026 06:00:31 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "Revisa los datos marcados.",
+      "data": null,
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "fields": {
+          "cuerpo": "JSON invalido o con campos no permitidos"
+        }
+      },
+      "meta": {
+        "correlationId": "9b633a6d-0d4c-44fe-9672-e6eb48946c7c"
+      }
+    }
+  },
+  "personasCreadas": 0,
+  "exigido": "400 VALIDATION_ERROR y persona no creada",
+  "cumple": true,
+  "caso": "SEC02",
+  "ejecutadoEn": "2026-10-21T06:00:31.218275Z"
+}

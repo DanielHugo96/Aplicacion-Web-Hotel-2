@@ -1,0 +1,230 @@
+{
+  "pasos": {
+    "sede": {
+      "alta": {
+        "status": 201,
+        "idHotel": 7
+      },
+      "edicion": {
+        "status": 200,
+        "version": 2
+      },
+      "sinIfMatch": {
+        "status": 428,
+        "code": "PRECONDITION_REQUIRED"
+      },
+      "delete": {
+        "status": 200
+      },
+      "db": [
+        [
+          "7",
+          "f",
+          "3"
+        ]
+      ]
+    },
+    "piso": {
+      "alta": {
+        "status": 201,
+        "idPiso": 36
+      },
+      "edicion": {
+        "status": 200,
+        "version": 2
+      },
+      "sinIfMatch": {
+        "status": 428,
+        "code": "PRECONDITION_REQUIRED"
+      },
+      "delete": {
+        "status": 200,
+        "code": null,
+        "body": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "idPiso": 36,
+            "idHotel": 1,
+            "descripcion": "Piso Matriz D291A181 editado",
+            "estado": false,
+            "version": 3
+          },
+          "meta": {
+            "correlationId": "6201aa20-ab5f-4f34-9bac-1ad2e01c304e"
+          }
+        }
+      },
+      "db": [
+        [
+          "36",
+          "f",
+          "3"
+        ]
+      ]
+    },
+    "categoria": {
+      "alta": {
+        "status": 201,
+        "idCategoria": 6
+      },
+      "edicion": {
+        "status": 200,
+        "version": 2
+      },
+      "sinIfMatch": {
+        "status": 428,
+        "code": "PRECONDITION_REQUIRED"
+      },
+      "delete": {
+        "status": 200,
+        "code": null,
+        "body": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "idCategoria": 6,
+            "descripcion": "Categoria Matriz D291A181 editada",
+            "detalle": "Categoria de la matriz editada",
+            "capacidad": 2,
+            "estado": false,
+            "version": 3
+          },
+          "meta": {
+            "correlationId": "d5b1c246-785d-45d0-80be-53ab8177f248"
+          }
+        }
+      },
+      "db": [
+        [
+          "6",
+          "f",
+          "3"
+        ]
+      ]
+    },
+    "habitacion": {
+      "alta": {
+        "status": 201,
+        "idHabitacion": 306
+      },
+      "edicion": {
+        "status": 200,
+        "version": 2
+      },
+      "sinIfMatch": {
+        "status": 428,
+        "code": "PRECONDITION_REQUIRED"
+      },
+      "delete": {
+        "status": 200,
+        "code": null,
+        "body": {
+          "success": true,
+          "message": "OK",
+          "data": {
+            "idHabitacion": 306,
+            "idHotel": 1,
+            "numero": "MD291",
+            "idPiso": 36,
+            "pisoNombre": "Piso Matriz D291A181 editado",
+            "idCategoria": 6,
+            "categoriaNombre": "Categoria Matriz D291A181 editada",
+            "detalle": "Habitacion de la matriz editada",
+            "precio": 60.0,
+            "publicada": false,
+            "urlsImagenes": [],
+            "estado": false,
+            "idEstadoHabitacion": 1,
+            "estadoFisico": {
+              "idEstadoHabitacion": 1,
+              "codigo": "LISTA",
+              "descripcion": "Lista",
+              "estado": true,
+              "version": 1
+            },
+            "ocupacion": {
+              "estadoEstadia": "DESCONOCIDA",
+              "idRecepcion": null,
+              "updatedAt": null
+            },
+            "blockId": "ef1672b9-0ddd-4a41-922e-414c7f718140",
+            "endpoint": "/api/habitacion/operaciones/ef1672b9-0ddd-4a41-922e-414c7f718140",
+            "version": 3
+          },
+          "meta": {
+            "correlationId": "8bcfe1bd-d504-4490-88e6-b16a854cb72e"
+          }
+        }
+      },
+      "db": [
+        [
+          "306",
+          "f",
+          "3"
+        ]
+      ],
+      "operacionBaja": [
+        [
+          "ef1672b9-0ddd-4a41-922e-414c7f718140",
+          "APLICADA"
+        ]
+      ]
+    },
+    "producto": {
+      "alta": {
+        "status": 201,
+        "idProducto": 7
+      },
+      "edicion": {
+        "status": 200,
+        "version": 2
+      },
+      "sinIfMatch": {
+        "status": 428,
+        "code": "PRECONDITION_REQUIRED"
+      },
+      "delete": {
+        "status": 200
+      },
+      "db": [
+        [
+          "7",
+          "f",
+          "3"
+        ]
+      ]
+    }
+  },
+  "evaluacion": {
+    "sede": {
+      "cumple": true,
+      "versionFinal": "3",
+      "estadoFinal": "f"
+    },
+    "piso": {
+      "cumple": true,
+      "versionFinal": "3",
+      "estadoFinal": "f"
+    },
+    "categoria": {
+      "cumple": true,
+      "versionFinal": "3",
+      "estadoFinal": "f"
+    },
+    "habitacion": {
+      "cumple": true,
+      "versionFinal": "3",
+      "estadoFinal": "f"
+    },
+    "producto": {
+      "cumple": true,
+      "versionFinal": "3",
+      "estadoFinal": "f"
+    }
+  },
+  "exigido": "filas persistidas, version incrementada, DELETE estado=false, PUT sin If-Match 428",
+  "cumple": true,
+  "caso": "CRUD01",
+  "ejecutadoEn": "2026-10-21T06:04:16.476965Z"
+}

@@ -1,0 +1,33 @@
+{
+  "caso": "F4",
+  "inducido": "advisory lock pg_advisory_lock(7101, idRecepcion) retenido en sales_db",
+  "checkout": {
+    "status": 202,
+    "headers": {
+      "x-correlation-id": "524e1403-b7c2-4e5d-9684-6f830e5c7918",
+      "location": "/api/recepcion/7",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "1212",
+      "date": "Wed, 21 Oct 2026 05:57:06 GMT",
+      "connection": "close"
+    },
+    "body": "{\"success\":true,\"message\":\"Cierre en curso\",\"data\":{\"idRecepcion\":7,\"idHotel\":1,\"idCliente\":100,\"idHabitacion\":102,\"numero\":\"102\",\"categoriaNombre\":\"Doble\",\"pisoNombre\":\"Primer piso\",\"detalleHabitacion\":\"Habitacion doble de demostracion\",\"precioHabitacion\":100.00,\"nombre\":\"Cliente\",\"apellido\":\"Uno\",\"tipoDocumento\":\"DNI\",\"documento\":\"90000100\",\"correo\":\"cliente.uno@hotel.test\",\"fechaEntrada\":\"2026-10-21\",\"fechaSalida\":\"2026-10-22\",\"fechaSalidaConfirmacion\":null,\"precioInicial\":100.00,\"adelanto\":0.00,\"medioPagoAdelanto\":\"EFECTIVO\",\"precioRestante\":100.00,\"totalPagado\":0.00,\"costoPenalidad\":0.00,\"motivoPenalidad\":null,\"observacion\":\"Fixture qa-runbooks\",\"estado\":true,\"estadoEstadia\":\"CERRANDO\",\"archivada\":false,\"vencida\":false,\"version\":2,\"closureId\":\"62589b0e-98c9-4b1d-bdaf-22a90b92a8d6\",\"cleaningCycleId\":null,\"cierre\":{\"closureId\":\"62589b0e-98c9-4b1d-bdaf-22a90b92a8d6\",\"estado\":\"CONFIRMANDO\",\"lastErrorCode\":\"DEPENDENCY_UNAVAILABLE\",\"calculo\":{\"cobroAhora\":100.0,\"totalGeneral\":100.0,\"consumosTotal\":0.0,\"alojamientoTotal\":100.0,\"saldoAlojamiento\":100.0,\"consumosPendientes\":0.0,\"consumosPagadosAntes\":0.0,\"expectedPendingTotal\":0.0}}},\"meta\":{\"correlationId\":\"524e1403-b7c2-4e5d-9684-6f830e5c7918\"}}"
+  },
+  "cierre": {
+    "estado": "CONFIRMANDO",
+    "attempts": 2,
+    "lastErrorCode": "DEPENDENCY_UNAVAILABLE",
+    "calculoCongelado": true,
+    "sinReceipt": true
+  },
+  "exigido": "estado CONFIRMANDO con cálculo y sin receipt",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T05:59:16.976009Z"
+}
