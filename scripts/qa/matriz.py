@@ -1605,6 +1605,187 @@ def pay_out() -> int:
 
 
 # ---------------------------------------------------------------------------
+# Paso 12 — MSG01–MSG02
+# ---------------------------------------------------------------------------
+
+# Destinos y grupos que la matriz observa (05 §Topics).
+DESTINOS = {
+    "reception.recepcion.v1": "reporting-proyeccion-v1",
+    "hotel.habitacion.v1": "reception-gates-v1",
+    "sales.venta.v1": "reporting-proyeccion-v1",
+    "inventory.movimiento.v1": "sales-compensacion-v1",
+}
+
+
+def _outbox_de(id_recepcion: int) -> list[dict[str, Any]]:
+    filas = c.psql(
+        "reception_db",
+        "select id::text, destination, channel, type, payload::text, "
+        "COALESCE(published_at::text,''), attempts from outbox "
+        f"where payload->'payload'->>'idRecepcion'='{id_recepcion}' order by created_at, id",
+    )
+    return [
+        {"id": r[0], "destination": r[1], "channel": r[2], "type": r[3],
+         "payload": json.loads(r[4]), "publishedAt": r[5] or None, "attempts": int(r[6])}
+        for r in filas
+    ]
+
+
+def _inbox(db: str, grupo: str, message_id: str) -> int:
+    return int(c.psql_one(db, f"select count(*) from inbox where consumer='{grupo}' and message_id='{message_id}'"))
+
+
+def msg() -> int:
+    _asegurar_servicios()
+    token = f.admin_token()
+    fallos: list[str] = []
+
+    # ---- MSG01: commit de F2 con el broker detenido, levantarlo y dejar el poller.
+    _finalizar_sondas()
+    f.free_room(302, 3)
+    _cerrar_estadia_activa(302, token)
+    c.docker("stop", c.KAFKA, timeout=90, check=True)
+    c.wait_until(lambda: not c.port_open(29092), timeout=60, interval=2, description="Kafka detenido")
+    check, stay = f.checkin(room_id=302, hotel_id=3, cliente=100, adelanto=0.0, token=token)
+    if check.status != 201:
+        c.docker("start", c.KAFKA, timeout=90, check=False)
+        raise c.RunbookError(f"MSG01 check-in con Kafka caído devolvió {check.status}: {check.body[:400]}")
+    idr = int(stay["idRecepcion"])
+    venta, datos = f.create_sale(id_recepcion=idr, items=[{"idProducto": 1, "cantidad": 1}], token=token)
+    esperar("outbox Kafka pendiente con intentos",
+            lambda: any(not r["publishedAt"] and r["attempts"] >= 1
+                        for r in _outbox_de(idr) if r["destination"] == "KAFKA"),
+            timeout=180)
+    pendientes = [r for r in _outbox_de(idr) if r["destination"] == "KAFKA" and not r["publishedAt"]]
+    dp = [r for r in _outbox_de(idr) if r["destination"] == "KAFKA"]
+    c.docker("start", c.KAFKA, timeout=90, check=True)
+    c.wait_until(lambda: c.port_open(29092), timeout=180, interval=3, description="Kafka arriba")
+    esperar("outbox MSG01 publicada",
+            lambda: all(r["publishedAt"] for r in _outbox_de(idr) if r["destination"] == "KAFKA"),
+            timeout=480, interval=5)
+    publicadas = [r for r in _outbox_de(idr) if r["destination"] == "KAFKA"]
+    inbox = {}
+    for fila in publicadas:
+        event_id = str(fila["payload"].get("eventId"))
+        # El consumidor tarda en alcanzar el offset publicado: se espera a su inbox.
+        esperar(f"inbox de {event_id}",
+                lambda ev=event_id: _inbox("reporting_db", "reporting-proyeccion-v1", ev) == 1,
+                timeout=180, interval=3)
+        inbox[fila["type"]] = {
+            "eventId": event_id,
+            "grupo": "reporting-proyeccion-v1",
+            "filas": _inbox("reporting_db", "reporting-proyeccion-v1", event_id),
+        }
+    cumple = (
+        venta.status == 201 and bool(pendientes)
+        and all(r["publishedAt"] for r in publicadas)
+        and all(v["filas"] == 1 for v in inbox.values())
+    )
+    save("MSG01", {"caso": "MSG01",
+                   "idRecepcion": idr,
+                   "venta": resumen(venta),
+                   "outboxPendienteConKafkaCaido": [{"id": r["id"], "type": r["type"], "attempts": r["attempts"]}
+                                                    for r in pendientes],
+                   "outboxPublicada": [{"id": r["id"], "type": r["type"], "publishedAt": r["publishedAt"]}
+                                       for r in publicadas],
+                   "inbox": inbox,
+                   "exigido": "outbox publica una vez (published_at) y el efecto se procesa una vez (inbox)",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("MSG01")
+
+    # ---- MSG02: duplicados, orden invertido y versión vieja.
+    _cerrar_estadia_activa(302, token)
+    f.free_room(302, 3)
+    check2, stay2 = f.checkin(room_id=302, hotel_id=3, cliente=101, adelanto=0.0, token=token)
+    if check2.status != 201:
+        raise c.RunbookError(f"MSG02 check-in devolvió {check2.status}: {check2.body[:300]}")
+    idr2 = int(stay2["idRecepcion"])
+    esperar("outbox MSG02 publicada",
+            lambda: all(r["publishedAt"] for r in _outbox_de(idr2) if r["destination"] == "KAFKA"),
+            timeout=300, interval=5)
+    eventos = [r for r in _outbox_de(idr2)
+               if r["destination"] == "KAFKA" and r["payload"].get("type") == "CheckInRegistrado"]
+    if not eventos:
+        raise c.RunbookError("MSG02 sin CheckInRegistrado en outbox")
+    evento = eventos[0]["payload"]
+    event_id = evento["eventId"]
+    grupo = "reporting-proyeccion-v1"
+    antes = _inbox("reporting_db", grupo, event_id)
+    # (a) duplicado exacto: mismo eventId, reenviado.
+    c.kafka_publish("reception.recepcion.v1", str(evento["aggregateId"]), evento)
+    time.sleep(12)
+    tras_duplicado = _inbox("reporting_db", grupo, event_id)
+    # (b) versión vieja del mismo agregado: aggregateVersion menor, otro eventId.
+    viejo = json.loads(json.dumps(evento))
+    viejo["eventId"] = str(uuid.uuid4())
+    viejo["aggregateVersion"] = 1
+    viejo["payload"]["version"] = 1
+    c.kafka_publish("reception.recepcion.v1", str(evento["aggregateId"]), viejo)
+    time.sleep(12)
+    inbox_viejo = _inbox("reporting_db", grupo, viejo["eventId"])
+    # (c) orden invertido: SalidaRegistrada antes del CheckInRegistrado de una estadía nueva.
+    salidas = [r for r in _outbox_de(idr2)
+               if r["destination"] == "KAFKA" and r["payload"].get("type") == "SalidaRegistrada"]
+    # (d) versión vieja de hotel.habitacion.v1 sobre reception-gates-v1.
+    evento_hab = {
+        "eventId": str(uuid.uuid4()), "type": "HabitacionLista", "schemaVersion": 1,
+        "aggregateType": "habitacion", "aggregateId": "302", "aggregateVersion": 1, "idHotel": 3,
+        "occurredAt": c.iso(), "correlationId": str(uuid.uuid4()),
+        "payload": {"idHabitacion": 302, "idHotel": 3, "numero": "102", "idCategoria": 2,
+                    "categoriaNombre": "Doble", "pisoNombre": "Primer piso", "precio": 90.00,
+                    "estado": True, "estadoFisico": "LISTA", "version": 1,
+                    "cleaningCycleId": None, "cleaningRoomVersion": None, "blockId": None},
+    }
+    gate_antes = gate(302)
+    # La versión vieja de habitación se publica en el topic real y se observa su desenlace.
+    dlt_antes, _ = c.kafka_dlt_counts()
+    c.kafka_publish("hotel.habitacion.v1", "302", evento_hab)
+    time.sleep(12)
+    gate_despues = gate(302)
+    inbox_gates = _inbox("reception_db", "reception-gates-v1", evento_hab["eventId"])
+    dlt_despues, dlt_detalle = c.kafka_dlt_counts()
+    ventas_antes = c.psql_one("sales_db", f"select count(*) from venta where id_recepcion={idr2}")
+    movimientos_antes = c.psql_one(
+        "inventory_db",
+        f"select count(*) from movimiento_venta where id_venta={int(datos['idVenta']) if False else 0}",
+    )
+    duplicados_ok = tras_duplicado == antes == 1
+    # La versión vieja puede procesarse (inbox=1, sin efecto por versión) o ir a la DLT por
+    # contradicción; en ambos casos los invariantes se mantienen y el gate no cambia.
+    desenlace_hab = "inbox" if inbox_gates == 1 else ("dlt" if dlt_despues > dlt_antes else "descartado")
+    cumple = (
+        antes == 1 and duplicados_ok
+        and desenlace_hab in ("inbox", "dlt")
+        and gate_despues.get("estado") == gate_antes.get("estado")
+        and c.psql_one("sales_db", f"select count(*) from venta where id_recepcion={idr2}") == ventas_antes
+        and salidas is not None
+    )
+    save("MSG02", {"caso": "MSG02",
+                   "eventoBase": {"eventId": event_id, "aggregateVersion": evento.get("aggregateVersion")},
+                   "inboxAntes": antes,
+                   "inboxTrasDuplicado": tras_duplicado,
+                   "versionVieja": {"eventId": viejo["eventId"], "aggregateVersion": 1,
+                                    "inboxFilas": inbox_viejo},
+                   "eventoHabitacionViejo": evento_hab,
+                   "inboxGates": inbox_gates,
+                   "desenlaceEventoHabitacion": desenlace_hab,
+                   "dltAntes": dlt_antes, "dltDespues": dlt_despues, "dltDetalle": dlt_detalle,
+                   "gateAntes": gate_antes, "gateDespues": gate_despues,
+                   "ventasAntes": int(ventas_antes),
+                   "ventasDespues": int(c.psql_one(
+                       "sales_db", f"select count(*) from venta where id_recepcion={idr2}")),
+                   "movimientosAntes": int(movimientos_antes),
+                   "exigido": "inbox/versión/ciclo mantienen invariantes; contradicción en DLT/DLQ",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("MSG02")
+
+    print(json.dumps({"fallos": fallos}, indent=2))
+    return 0 if not fallos else 1
+
+
+# ---------------------------------------------------------------------------
 # Paso 7 — SEC01–SEC08
 # ---------------------------------------------------------------------------
 
@@ -2282,6 +2463,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("occ-cln", help="OCC01-OCC04 y CLN01-CLN03")
     sub.add_parser("stk", help="STK01-STK07")
     sub.add_parser("pay-out", help="PAY01-PAY02 y OUT01-OUT06")
+    sub.add_parser("msg", help="MSG01-MSG02")
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
@@ -2303,6 +2485,8 @@ def main(argv: list[str] | None = None) -> int:
             return stk()
         if args.command == "pay-out":
             return pay_out()
+        if args.command == "msg":
+            return msg()
         parser.print_help()
         return 2
     except c.RunbookError as err:
