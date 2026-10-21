@@ -68,7 +68,7 @@ public class RecuperadorVentas {
 
   /**
    * Operaciones en PREPARANDO, por tipo: la venta alta vencida se rechaza sin stock y las
-   * operaciones PAGO y ANULACION reanudan su admision y su CAS (docs/especificacion/04-flujos.md §2).
+   * operaciones PAGO y ANULACION reanudan su admisión y su CAS (docs/especificacion/04-flujos.md §2).
    */
   private void recuperarPreparando() {
     for (SalesRepository.Recuperable rec : repo.preparandoVencidas(staleSeconds)) {
@@ -104,7 +104,7 @@ public class RecuperadorVentas {
       return;
     }
     if ("PAGO".equals(operacion.tipo()) && "PAGADO".equals(venta.estado())) {
-      // Ya pago (por ejemplo, el cierre): solo se asegura el finalizar, sin admitir ni cobrar.
+      // Ya pagó (por ejemplo, el cierre): solo se asegura el finalizar, sin admitir ni cobrar.
       finalizarSinAdmitir(operacion, venta, "PAGO", "PAGO_REGISTRADO");
       return;
     }
@@ -114,7 +114,7 @@ public class RecuperadorVentas {
         return;
       }
       if ("CANCELACION_PENDIENTE".equals(venta.estadoOperacion())) {
-        // La restitucion ya esta en curso: no se vuelve a admitir y cancelacionesPendientes la
+        // La restitución ya está en curso: no se vuelve a admitir y cancelacionesPendientes la
         // republica si hace falta.
         repo.posponerOperacion(operacion.operationId(), 60);
         return;
@@ -156,8 +156,8 @@ public class RecuperadorVentas {
   }
 
   /**
-   * Termina la operacion y asegura el comando de finalizar. La operacion sigue no terminal, asi
-   * que todavia no tiene comando de finalizar: se emite uno solo.
+   * Termina la operación y asegura el comando de finalizar. La operación sigue no terminal, así
+   * que todavía no tiene comando de finalizar: se emite uno solo.
    */
   private void finalizarSinAdmitir(
       OperacionRow operacion, VentaRow venta, String tipo, String resultado) {

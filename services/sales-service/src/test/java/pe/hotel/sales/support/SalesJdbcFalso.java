@@ -68,6 +68,11 @@ public final class SalesJdbcFalso extends JdbcTemplate {
   }
 
   @Override
+  public <T> List<T> query(String sql, RowMapper<T> rowMapper) {
+    return query(sql, rowMapper, new Object[0]);
+  }
+
+  @Override
   public <T> List<T> query(String sql, RowMapper<T> rowMapper, Object... args) {
     if (!sql.contains("FROM venta v JOIN operacion_venta o")) {
       throw new UnsupportedOperationException("consulta no simulada: " + sql);

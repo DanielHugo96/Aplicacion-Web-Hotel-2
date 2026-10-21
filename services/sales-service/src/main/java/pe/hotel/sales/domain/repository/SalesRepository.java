@@ -568,7 +568,7 @@ public class SalesRepository {
 
   /**
    * Operaciones en PREPARANDO que la recuperación debe atender, separadas por tipo: la venta alta
-   * vencida por edad y las operaciones PAGO y ANULACION cuyo siguiente intento ya vencio
+   * vencida por edad y las operaciones PAGO y ANULACION cuyo siguiente intento ya venció
    * (docs/especificacion/04-flujos.md §2).
    */
   public List<Recuperable> preparandoVencidas(int staleSeconds) {
@@ -579,7 +579,7 @@ public class SalesRepository {
     return candidatas;
   }
 
-  /** Venta alta PENDIENTE con operacion VENTA en PREPARANDO de mas de staleSeconds: se rechaza. */
+  /** Venta alta PENDIENTE con operación VENTA en PREPARANDO de más de staleSeconds: se rechaza. */
   public List<Recuperable> preparandoVentasVencidas(int staleSeconds) {
     return jdbc.query(
         """
@@ -598,7 +598,7 @@ public class SalesRepository {
   }
 
   /**
-   * Operacion PAGO en PREPARANDO sobre una venta todavia impaga: se reintenta la misma admision y
+   * Operación PAGO en PREPARANDO sobre una venta todavía impaga: se reintenta la misma admisión y
    * el mismo pago local. La venta ya PAGADA no se selecciona: no hay nada que cobrar.
    */
   public List<Recuperable> preparandoPagos() {
@@ -618,7 +618,7 @@ public class SalesRepository {
                 rs.getString("estado_operacion")));
   }
 
-  /** Operacion ANULACION en PREPARANDO: reanuda su admision y su CAS de anulacion. */
+  /** Operación ANULACION en PREPARANDO: reanuda su admisión y su CAS de anulación. */
   public List<Recuperable> preparandoAnulaciones() {
     return jdbc.query(
         """

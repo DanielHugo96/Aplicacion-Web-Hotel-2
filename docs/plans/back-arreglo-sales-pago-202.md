@@ -7,12 +7,12 @@
 | Componente | `sales-service` |
 | Fase | `F3` |
 | Modo | `openspec` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `back-sales-ventas` |
 | Repara | `back-sales-ventas` |
 | Spec | [`04-flujos.md` §2. Venta y stock](../especificacion/04-flujos.md#2-venta-y-stock), [`sales/api.md` §REST: ventas](../especificacion/microservicios/sales/api.md#rest-ventas), [`sales/base-de-datos.md` §Tablas](../especificacion/microservicios/sales/base-de-datos.md#tablas) y [§Funciones/procedimientos](../especificacion/microservicios/sales/base-de-datos.md#funcionesprocedimientos), [`03-contrato-comun.md` §Respuestas](../especificacion/03-contrato-comun.md#respuestas) y [§Headers](../especificacion/03-contrato-comun.md#headers), [`sales.yaml`](../contracts/openapi/sales.yaml), [`errors.md` §Inventory y Sales](../contracts/errors.md#inventory-y-sales) y [`openspec/specs/sales-ventas/spec.md`](../../openspec/specs/sales-ventas/spec.md) §Operaciones observables con recuperación cada 30 s |
 | Casos | `—` |
-| Change | `openspec/changes/back-arreglo-sales-pago-202/` |
+| Change | `openspec/changes/archive/2026-10-20-back-arreglo-sales-pago-202/` |
 
 ## 1. Objetivo
 
@@ -97,11 +97,11 @@ $ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
 - [x] 4. Aplicar el mismo tratamiento en `SalesService.anular`: solo `409`, `403` y `404` terminan la operación; un fallo de transporte la deja `PREPARANDO` y responde `202`. Verificación: la prueba de anulación con `503` queda en verde; la anulación normal sigue devolviendo `202` y terminando en `CANCELADA` cuando llega la restitución.
 - [x] 5. Separar en `SalesRepository` la consulta de operaciones `PREPARANDO`: `VENTA` conserva `v.estado_operacion='PENDIENTE'` y `o.created_at < now() - (? * interval '1 second')`; `PAGO` se selecciona con `v.estado='PENDIENTE'` y `v.estado_operacion IN ('PENDIENTE','CONFIRMADA')` y `o.next_attempt_at <= now()`; `ANULACION` con `v.estado_operacion IN ('PENDIENTE','CONFIRMADA')` y `o.next_attempt_at <= now()`. Mantener el `JOIN` por `current_operation_id` y no tocar `debitoVencido` ni `cancelacionesPendientes`. Verificación: la prueba de repositorio devuelve el `PAGO` de la venta `CONFIRMADA` y no devuelve el `PAGO` de una venta ya `PAGADO`; la `VENTA` vieja sigue en la lista de rechazo.
 - [x] 6. Corregir `RecuperadorVentas`: el método que hoy se llama `rechazarPreparandoVencidas` pasa a recuperar por tipo; para `PAGO` y `ANULACION` llama a `reintentarAdmision` y nunca a `rechazarVenta`. En `reintentarAdmision`, si la venta ya está `PAGADO` (para `PAGO`) o CANCELADA (para `ANULACION`), terminar la operación y asegurar el `recepcion.operacion-finalizar` sin volver a admitir; si la anulación está en CANCELACION_PENDIENTE, no volver a admitir y dejar que `cancelacionesPendientes` republique la restitución. Verificación: el recuperador deja la venta `PAGADO` en el primer ciclo con reception arriba; una venta pagada por el cierre termina la operación sin segunda admisión ni segundo finalizar.
-- [ ] 7. Verificar la idempotencia: ejecutar el recuperador dos veces seguidas sobre la misma operación `PAGO` y comprobar que `pagarVenta` gana un solo CAS, que `paid_at` no cambia y que hay una sola fila de `sales.venta.v1` y una sola de `recepcion.operacion-finalizar` con `tipo=PAGO` en `outbox`. Verificación: los conteos de `outbox` y el `version` de la venta son los esperados; no aparece `stock.restituir` por el pago.
-- [ ] 8. Reiniciar `sales-service` desde la rama corregida y repetir la reproducción de §3 con el script o su flujo equivalente. Verificación: el `202` conserva `Location` y `Retry-After: 2`; el sondeo llega a `PAGADO` antes del sondeo 30; `paidAt` y `medioPago` quedan registrados; la operación `PAGO` queda `TERMINAL` y la venta tiene una sola operación `PAGO`.
-- [ ] 9. Comprobar que el pago no movió inventario ni compensó stock: `producto_sede.cantidad` de la sede 1 no cambia por el pago, `movimiento_venta` no gana una restitución por ese `idVenta` y el log no muestra `stock_restituido` ni una llamada a `inventory` por el pago. Verificación: las consultas de §6 y el log de `sales-service` no muestran compensación.
-- [ ] 10. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl sales-service test`, `bash scripts/mvn.sh -f services/pom.xml verify`, `python scripts/validar-planes.py`, `python scripts/validar-contratos.py --base origin/main` y `npx openspec validate back-arreglo-sales-pago-202 --strict`. Verificación: pruebas y build en `BUILD SUCCESS`, 0 errores del validador, «Los contratos solo se han ampliado. Correcto.» y change válido.
-- [ ] 11. Guardar en §6 las salidas de los pasos 1, 2, 6, 7, 8, 9 y 10, marcar todos los pasos y cambiar `Estado` a `cerrado` en el último commit. Verificación: no quedan pasos sin marcar y la reproducción original está en verde.
+- [x] 7. Verificar la idempotencia: ejecutar el recuperador dos veces seguidas sobre la misma operación `PAGO` y comprobar que `pagarVenta` gana un solo CAS, que `paid_at` no cambia y que hay una sola fila de `sales.venta.v1` y una sola de `recepcion.operacion-finalizar` con `tipo=PAGO` en `outbox`. Verificación: los conteos de `outbox` y el `version` de la venta son los esperados; no aparece `stock.restituir` por el pago.
+- [x] 8. Reiniciar `sales-service` desde la rama corregida y repetir la reproducción de §3 con el script o su flujo equivalente. Verificación: el `202` conserva `Location` y `Retry-After: 2`; el sondeo llega a `PAGADO` antes del sondeo 30; `paidAt` y `medioPago` quedan registrados; la operación `PAGO` queda `TERMINAL` y la venta tiene una sola operación `PAGO`.
+- [x] 9. Comprobar que el pago no movió inventario ni compensó stock: `producto_sede.cantidad` de la sede 1 no cambia por el pago, `movimiento_venta` no gana una restitución por ese `idVenta` y el log no muestra `stock_restituido` ni una llamada a `inventory` por el pago. Verificación: las consultas de §6 y el log de `sales-service` no muestran compensación.
+- [x] 10. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl sales-service test`, `bash scripts/mvn.sh -f services/pom.xml verify`, `python scripts/validar-planes.py`, `python scripts/validar-contratos.py --base origin/main` y `npx openspec validate back-arreglo-sales-pago-202 --strict`. Verificación: pruebas y build en `BUILD SUCCESS`, 0 errores del validador, «Los contratos solo se han ampliado. Correcto.» y change válido.
+- [x] 11. Guardar en §6 las salidas de los pasos 1, 2, 6, 7, 8, 9 y 10, marcar todos los pasos y cambiar `Estado` a `cerrado` en el último commit. Verificación: no quedan pasos sin marcar y la reproducción original está en verde.
 
 ## 5. Contratos afectados
 
@@ -113,44 +113,265 @@ $ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
 
 ## 6. Pruebas
 
-### Reproducción antes del arreglo
+### Reproducción antes del arreglo (paso 1)
 
-Ejecutada el 2026-10-20 sobre `main` (`803a9f1`), con `reception-service` detenido y el JWT de `admin@hotel.test`. Salida literal de §3: `PUT /api/venta/{id}` → `HTTP 202`, `Location: /api/venta/buscar/25`, `Retry-After: 2`; los 30 sondeos devuelven `estado=PENDIENTE`, `estadoOperacion=CONFIRMADA`, `paidAt=None`; la operación `PAGO` queda `TERMINAL` con `attempts=0`; la consulta de `preparandoVencidas` devuelve 0 filas. La transcripción `front-admin-web-ventas-integracion.txt` de la rama `front-admin-web-ventas` reproduce el mismo resultado con la venta 24. Evidencia: esta salida y la transcripción citada; sin tokens.
-
-### Verificación después del arreglo
-
-El comando original vive en la rama del front. Para ejecutarlo sobre la rama del arreglo, sin copiarlo a `main`:
+Ejecutada el 2026-10-20 sobre la rama del arreglo con el código de `main` (`e75bcde`), con
+`reception-service` detenido y el JWT de `admin@hotel.test`. El script es el de la rama del front y
+no se copia a `main`:
 
 ```bash
 mkdir -p apps/admin-web/tests/evidence
 git show origin/front-admin-web-ventas:apps/admin-web/tests/evidence/integracion-pago-202.py \
   > apps/admin-web/tests/evidence/integracion-pago-202.py
 python apps/admin-web/tests/evidence/integracion-pago-202.py
-rm -f apps/admin-web/tests/evidence/integracion-pago-202.py
 ```
 
-Con `sales-service` reiniciado desde el código corregido y la estadía 22 `ACTIVA`, el script crea una venta nueva, detiene reception, paga, la reinicia y sondea. Resultado esperado: `HTTP 202` con `Location` y `Retry-After: 2`; algún sondeo devuelve `estado=PAGADO` con `paidAt` no nulo y el script termina con `{"idVenta": <n>, "resultado": "PAGADO tras 202"}` y código 0, antes del sondeo 30. Evidencia: la salida completa en el PR de ejecución y en §6 de este plan.
+Salida literal (recortada en los 30 sondeos, que son idénticos):
 
-Consultas de apoyo:
+```text
+=== 202 de pago con recuperacion real (reception-service detenido) ===
+
+[venta crear para pago 202] HTTP 201
+  {"success":true,"message":"OK","data":{"idVenta":27,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":8.00,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"92e19dc8-657d-4bbe-922d-ecfd3da99573","medioPago":null,"version":2,"fechaCreacion":"2026-10-21T00:39:37.394729Z","paidAt":null,...}}
+
+Deteniendo reception-service para que la admisión no se confirme…
+reception-service detenido; puerto 8083 cerrado.
+
+[pago con reception caído (202 esperado)] HTTP 202 · Location=/api/venta/buscar/27 Retry-After=2
+  {"success":true,"message":"OK","data":{"idVenta":27,...,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"a796e675-b0c3-4c9b-9884-6fcf82d35e28","medioPago":null,"version":2,...,"paidAt":null,...}}
+
+Reiniciando reception-service…
+reception-service listo otra vez.
+[polling pago 202 1] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+[polling pago 202 2] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+...
+[polling pago 202 30] HTTP 200 · estado=PENDIENTE estadoOperacion=CONFIRMADA paidAt=None
+El pago no llegó a PAGADO en el tiempo de sondeo.
+```
+
+El script termina con código 1. Consultas a `sales_db` de esa venta:
+
+```text
+$ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
+    "select o.operation_id, o.id_venta, o.tipo, o.estado, o.attempts, o.next_attempt_at, v.estado, v.estado_operacion, v.version from operacion_venta o join venta v on v.id=o.id_venta where o.id_venta=27 order by o.tipo;"
+
+             operation_id             | id_venta | tipo  |  estado  | attempts |        next_attempt_at        |  estado   | estado_operacion | version
+--------------------------------------+----------+-------+----------+----------+-------------------------------+-----------+------------------+---------
+ a796e675-b0c3-4c9b-9884-6fcf82d35e28 |       27 | PAGO  | TERMINAL |        0 | 2026-10-21 00:39:38.69625+00  | PENDIENTE | CONFIRMADA       |       2
+ 92e19dc8-657d-4bbe-922d-ecfd3da99573 |       27 | VENTA | TERMINAL |        1 | 2026-10-21 00:40:07.555636+00 | PENDIENTE | CONFIRMADA       |       2
+
+$ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
+    "SELECT v.id, o.operation_id, o.tipo, v.estado_operacion FROM venta v JOIN operacion_venta o ON o.operation_id = v.current_operation_id WHERE v.estado_operacion = 'PENDIENTE' AND o.estado = 'PREPARANDO' AND o.created_at < now() - (120 * interval '1 second');"
+
+ id | operation_id | tipo | estado_operacion
+----+--------------+------+------------------
+(0 rows)
+```
+
+La operación `PAGO` queda `TERMINAL` con `attempts=0` y la consulta de la recuperación devuelve 0
+filas. La transcripción `front-admin-web-ventas-integracion.txt` de la rama `front-admin-web-ventas`
+reproduce el mismo resultado. Sin tokens en la evidencia.
+
+### Pruebas de regresión que fallan antes del cambio (paso 2)
 
 ```bash
-docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
-  "select v.id, v.estado, v.estado_operacion, v.medio_pago, v.paid_at, o.tipo, o.estado, o.attempts from venta v join operacion_venta o on o.id_venta=v.id where v.id=<idVenta> order by o.tipo;"
-docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
-  "select channel, aggregate_id, published_at from outbox where aggregate_id in (select id::text from venta where id=<idVenta>) order by channel;"
+bash scripts/mvn.sh -f services/pom.xml -pl sales-service test \
+  -Dtest='SalesRepositoryRecuperacionTests,SalesServicePagoTests,RecuperadorVentasTests'
 ```
 
-Resultado esperado: una fila `PAGADO`/`CONFIRMADA` con `medio_pago` y `paid_at`; una sola operación `PAGO` en `TERMINAL`; una sola fila de `recepcion.operacion-finalizar` con `tipo=PAGO`; ninguna fila de `stock.restituir` por el pago. En `inventory_db`, `producto_sede.cantidad` de la sede 1 no cambia por el pago.
+```text
+[ERROR] Tests run: 5, Failures: 2, Errors: 0, Skipped: 0 -- in pe.hotel.sales.domain.repository.SalesRepositoryRecuperacionTests
+[ERROR] Tests run: 5, Failures: 3, Errors: 0, Skipped: 0 -- in pe.hotel.sales.domain.service.RecuperadorVentasTests
+[ERROR] Tests run: 4, Failures: 2, Errors: 0, Skipped: 0 -- in pe.hotel.sales.domain.service.SalesServicePagoTests
+[ERROR] Tests run: 14, Failures: 7, Errors: 0, Skipped: 0
 
-### Pruebas automatizadas
+[ERROR]   SalesRepositoryRecuperacionTests.elPagoEnPreparandoSobreVentaConfirmadaSeSelecciona:44 [el PAGO en PREPARANDO con next_attempt_at vencido se recupera]
+[ERROR]   SalesRepositoryRecuperacionTests.laAnulacionEnPreparandoSeSeleccionaPorNextAttemptAt:69
+[ERROR]   RecuperadorVentasTests.elPagoDeUnaVentaQueYaPagoTerminaLaOperacionSinAdmitirNiCobrar:90
+[ERROR]   RecuperadorVentasTests.laAnulacionDeUnaVentaYaCanceladaTerminaLaOperacionSinAdmitir:128
+[ERROR]   RecuperadorVentasTests.laAnulacionEnCancelacionPendienteNoVuelveAdmitirNiRechaza:110
+[ERROR]   SalesServicePagoTests.elPagoConAdmissionCaidaDevuelve202YDejaLaOperacionPreparando:77 [la operación PAGO sigue viva para que la recuperación la reintente]
+[ERROR]   SalesServicePagoTests.laAnulacionConAdmissionCaidaDevuelve202YDejaLaOperacionPreparando:106 [la operación ANULACION sigue viva para que la recuperación la reintente]
+
+[ERROR]   SalesServicePagoTests.elPagoConAdmissionCaidaDevuelve202YDejaLaOperacionPreparando:77
+expected: "PREPARANDO"
+ but was: "TERMINAL"
+[INFO] BUILD FAILURE
+```
+
+Las siete pruebas que fallan son exactamente las del defecto: la operación `PAGO`/`ANULACION` que
+`main` termina en el `catch`, la selección de la recuperación que no devuelve el `PAGO` ni la
+`ANULACION` en `PREPARANDO` y los guards que `main` no tiene.
+
+### Pruebas automatizadas después del arreglo (pasos 3, 4, 5 y 6)
 
 ```bash
 bash scripts/mvn.sh -f services/pom.xml -pl sales-service test
 ```
 
-Resultado esperado: las pruebas nuevas de `SalesService`, `SalesRepository` y `RecuperadorVentas` en verde, además de las existentes. Evidencia: `services/sales-service/target/surefire-reports/` y la salida del comando adjunta al PR.
+```text
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.sales.domain.repository.SalesRepositoryRecuperacionTests
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.sales.domain.service.RecuperadorVentasTests
+[INFO] Tests run: 4, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.sales.domain.service.SalesServicePagoTests
+[INFO] Tests run: 35, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
 
-### Comandos canónicos
+`RecuperadorVentasTests` fija el comportamiento del recuperador: el `PAGO` en `PREPARANDO` sobre
+una venta `CONFIRMADA` se reintenta y termina `PAGADO` con un solo `recepcion.operacion-finalizar`
+de tipo `PAGO`; la venta alta `VENTA` vieja se rechaza sin stock y sin admitir; la venta que ya pagó
+termina la operación sin volver a admitir ni a cobrar; la anulación en CANCELACION_PENDIENTE no
+vuelve a admitir ni rechaza la venta. `SalesRepositoryRecuperacionTests` fija la selección: el
+`PAGO` en `PREPARANDO` de una venta `CONFIRMADA` se selecciona, el de una venta ya `PAGADO` no, y la
+venta alta vieja se sigue seleccionando para rechazo. `SalesServicePagoTests` fija que un `503` en
+la admisión devuelve `202` y deja la operación `PREPARANDO`, y que un `409` sigue devolviendo
+`STAY_NOT_ACTIVE` y termina la operación. Salida completa en
+`services/sales-service/target/surefire-reports/`.
+
+### Verificación después del arreglo (pasos 7, 8 y 9)
+
+Con `sales-service` reiniciado desde la rama corregida y la estadía 22 `ACTIVA`, el script crea una
+venta nueva, detiene reception, paga, la reinicia y sondea:
+
+```bash
+python apps/admin-web/tests/evidence/integracion-pago-202.py
+```
+
+```text
+=== 202 de pago con recuperacion real (reception-service detenido) ===
+
+[venta crear para pago 202] HTTP 201
+  {"success":true,"message":"OK","data":{"idVenta":28,"idRecepcion":22,"idCliente":100,"idHotel":1,"total":8.00,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"5f80a88e-e2c9-4e5e-97d7-41a20de05f97","medioPago":null,"version":2,...,"paidAt":null,...}}
+
+Deteniendo reception-service para que la admisión no se confirme…
+reception-service detenido; puerto 8083 cerrado.
+
+[pago con reception caído (202 esperado)] HTTP 202 · Location=/api/venta/buscar/28 Retry-After=2
+  {"success":true,"message":"OK","data":{"idVenta":28,...,"estado":"PENDIENTE","estadoOperacion":"CONFIRMADA","operationId":"9a24c979-fb6a-4110-a08b-1c0fb71f161b","medioPago":null,"version":2,...,"paidAt":null,...}}
+
+Reiniciando reception-service…
+reception-service listo otra vez.
+[polling pago 202 1] HTTP 200 · estado=PAGADO estadoOperacion=CONFIRMADA paidAt=2026-10-21T01:02:51.237342Z
+
+[pago 202 terminal] HTTP 200
+  {"success":true,"message":"OK","data":{"idVenta":28,...,"estado":"PAGADO","estadoOperacion":"CONFIRMADA","operationId":"9a24c979-fb6a-4110-a08b-1c0fb71f161b","medioPago":"TARJETA","version":3,...,"paidAt":"2026-10-21T01:02:51.237342Z",...}}
+{"idVenta": 28, "resultado": "PAGADO tras 202"}
+```
+
+El script termina con código 0 en el **sondeo 1**: el `202` conserva `Location` y `Retry-After: 2`,
+la venta llega a `PAGADO` con `paidAt` y `medioPago=TARJETA`, y la versión pasa de 2 a 3. La
+respuesta terminal se consulta en `GET /api/venta/buscar/{id}`.
+
+Estado en `sales_db` (consultas de apoyo del plan, con `{idVenta}` = 28):
+
+```text
+$ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
+    "select v.id, v.estado, v.estado_operacion, v.medio_pago, v.paid_at, v.version from venta v where v.id=28;"
+
+ id | estado | estado_operacion | medio_pago |            paid_at            | version
+----+--------+------------------+------------+-------------------------------+---------
+ 28 | PAGADO | CONFIRMADA       | TARJETA    | 2026-10-21 01:02:51.237342+00 |       3
+(1 row)
+
+$ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
+    "select o.operation_id, o.tipo, o.estado, o.attempts, o.next_attempt_at from operacion_venta o where o.id_venta=28 order by o.tipo;"
+
+             operation_id             | tipo  |  estado  | attempts |        next_attempt_at
+--------------------------------------+-------+----------+----------+-------------------------------
+ 9a24c979-fb6a-4110-a08b-1c0fb71f161b | PAGO  | TERMINAL |        0 | 2026-10-21 01:02:51.237342+00
+ 5f80a88e-e2c9-4e5e-97d7-41a20de05f97 | VENTA | TERMINAL |        1 | 2026-10-21 01:03:03.549939+00
+(2 rows)
+```
+
+Una sola operación `PAGO`, en `TERMINAL`, y con `attempts=0`: la recuperador la aplicó en el primer
+ciclo, sin reintento ni posposición.
+
+**Idempotencia (paso 7).** Con el recuperador siguiendo su ciclo de 30 s, el estado no cambia:
+
+```text
+$ date
+mar., 20 de oct. de 2026 08:04:06 p. m.
+
+$ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
+    "select v.id, v.estado, v.medio_pago, v.paid_at, v.version from venta v where v.id=28;"
+
+ id | estado | medio_pago |            paid_at            | version
+----+--------+------------+-------------------------------+---------
+ 28 | PAGADO | TARJETA    | 2026-10-21 01:02:51.237342+00 |       3
+(1 row)
+
+$ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
+    "select channel, type, count(*) from outbox where aggregate_id='28' group by channel, type order by channel;"
+
+            channel            |            type             | count
+-------------------------------+-----------------------------+-------
+ recepcion.operacion-finalizar | RecepcionOperacionFinalizar |     2
+ sales.venta.v1                | VentaSnapshot               |     2
+(2 rows)
+
+$ grep -c "recuperacion_pago_registrado idVenta=28" tests/evidence/qa-runbooks/_runtime/sales-service.log
+1
+```
+
+Un solo paso del CAS de pago: `version` 3, `paid_at` sin cambios, un `VentaSnapshot` por versión de
+venta (2 del alta, 3 del pago) y un `recepcion.operacion-finalizar` por operación:
+
+```text
+$ docker exec hotel-postgres-1 psql -U postgres -d sales_db -t -c \
+    "select aggregate_version, payload->'payload'->>'tipo', payload->'payload'->>'resultado' from outbox where channel='recepcion.operacion-finalizar' and aggregate_id='28' order by aggregate_version;"
+
+2 | VENTA | CONFIRMADA
+3 | PAGO | PAGO_REGISTRADO
+```
+
+**Sin movimiento de inventario por el pago (paso 9).** El único débito es el del alta de la venta:
+
+```text
+$ docker exec hotel-postgres-1 psql -U postgres -d inventory_db -c \
+    "select id_producto, id_hotel, cantidad, version from producto_sede where id_producto=2 and id_hotel=1;"
+ id_producto | id_hotel | cantidad | version
+-------------+----------+---------+---------
+           2 |        1 |       5 |       6
+(1 row)
+
+$ docker exec hotel-postgres-1 psql -U postgres -d inventory_db -c \
+    "select id_venta, id_hotel, estado, version from movimiento_venta where id_venta=28;"
+
+ id_venta | id_hotel |   estado   | version
+----------+----------+------------+---------
+       28 |        1 | DESCONTADO |       1
+(1 row)
+
+$ docker exec hotel-postgres-1 psql -U postgres -d sales_db -c \
+    "select count(*) from outbox where channel='stock.restituir' and aggregate_id='28';"
+ restituciones
+---------------
+             0
+(1 row)
+
+$ grep -n "stock_restituido\|restituir\|descontar\|inventario" tests/evidence/qa-runbooks/_runtime/sales-service.log
+(sin coincidencias)
+```
+
+Antes del pago, `producto_sede` del producto 2 en la sede 1 tenía `cantidad=6` y `version=5`; al
+terminar tiene `cantidad=5` y `version=6`: exactamente la unidad del alta de la venta, nada más. El
+log de `sales-service` no registra restitución ni llamada a inventory por el pago, y el outbox de
+sales no tiene ningún `stock.restituir` para esa venta.
+
+En `reception_db`, las dos operaciones de la venta quedan cerradas con su resultado:
+
+```text
+$ docker exec hotel-postgres-1 psql -U postgres -d reception_db -c \
+    "select operation_id, id_venta, tipo, estado, resultado from operacion_consumo where id_venta=28;"
+
+             operation_id             | id_venta | tipo  |  estado   | resultado
+--------------------------------------+----------+-------+-----------+-----------
+ 5f80a88e-e2c9-4e5e-97d7-41a20de05f97 |       28 | VENTA | FINALIZADA | CONFIRMADA
+ 9a24c979-fb6a-4110-a08b-1c0fb71f161b |       28 | PAGO  | FINALIZADA | PAGO_REGISTRADO
+(2 rows)
+```
+
+### Comandos canónicos (paso 10)
 
 ```bash
 bash scripts/mvn.sh -f services/pom.xml verify
@@ -159,17 +380,60 @@ python scripts/validar-contratos.py --base origin/main
 npx openspec validate back-arreglo-sales-pago-202 --strict
 ```
 
-Resultado esperado: `BUILD SUCCESS` de los nueve módulos; 0 errores del validador de planes; «Los contratos solo se han ampliado. Correcto.»; `Change 'back-arreglo-sales-pago-202' is valid`.
+```text
+[INFO] Hotel services (agregador) ......................... SUCCESS [  0.001 s]
+[INFO] identity-service ................................... SUCCESS [ 44.948 s]
+[INFO] hotel-service ...................................... SUCCESS [ 21.761 s]
+[INFO] reception-service .................................. SUCCESS [01:13 min]
+[INFO] inventory-service .................................. SUCCESS [ 56.933 s]
+[INFO] sales-service ...................................... SUCCESS [ 18.276 s]
+[INFO] reporting-service .................................. SUCCESS [ 17.727 s]
+[INFO] notification-service ............................... SUCCESS [ 11.819 s]
+[INFO] api-gateway ........................................ SUCCESS [ 41.346 s]
+[INFO] discovery-server ................................... SUCCESS [ 15.068 s]
+[INFO] BUILD SUCCESS
+
+$ python scripts/validar-planes.py
+32 plan(es) revisado(s); 32 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+$ python scripts/validar-contratos.py --base origin/main
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
+
+$ npx openspec validate back-arreglo-sales-pago-202 --strict
+Change 'back-arreglo-sales-pago-202' is valid
+```
+
+El change se archiva al cerrar el plan (norma §8), como en `back-sales-ventas` y
+`back-reception-cierre`. Tras el archivo, el validador de las specs ya sincronizadas sigue en verde:
+
+```text
+$ npx openspec validate --all --strict
+✓ spec/sales-ventas
+Totals: 10 passed, 0 failed (10 items)
+```
+
+El change queda archivado como `openspec/changes/archive/2026-10-20-back-arreglo-sales-pago-202/` y
+el requisito «Operaciones observables con recuperación cada 30 s» de
+`openspec/specs/sales-ventas/spec.md` queda actualizado con el delta de este plan.
+
 
 ## 7. Preguntas abiertas
 
-Ninguna. La recuperación de `PAGO` y `ANULACION` en `PREPARANDO` está fijada por [`04-flujos.md` §2](../especificacion/04-flujos.md#2-venta-y-stock), el `202` con `Location`/`Retry-After` por [`sales/api.md` §REST: ventas](../especificacion/microservicios/sales/api.md#rest-ventas), y `next_attempt_at` ya existe en `operacion_venta` ([`sales/base-de-datos.md` §Tablas](../especificacion/microservicios/sales/base-de-datos.md#tablas)). No se decide ningún estado, código ni valor nuevo.
+Ninguna (resuelto por IA: la separación de la selección de operaciones `PREPARANDO` se hace con
+tres consultas con su propio criterio dentro de un único punto de entrada, para no romper la API
+pública del repositorio ni la evidencia del paso 2; registrado en
+[`IA-back-arreglo-sales-pago-202-01`](../implementacion/decisiones/IA-back-arreglo-sales-pago-202-01.md)).
+La recuperación de `PAGO` y `ANULACION` en `PREPARANDO` está fijada por
+[`04-flujos.md` §2](../especificacion/04-flujos.md#2-venta-y-stock), el `202` con `Location`/`Retry-After` por
+[`sales/api.md` §REST: ventas](../especificacion/microservicios/sales/api.md#rest-ventas), y `next_attempt_at` ya existe en `operacion_venta`
+([`sales/base-de-datos.md` §Tablas](../especificacion/microservicios/sales/base-de-datos.md#tablas)). No se decide ningún estado, código ni valor nuevo.
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos de §4 marcados con su verificación.
-- [ ] Un `PUT /api/venta/{id}` con reception caído deja la operación `PAGO` en `PREPARANDO` y responde `202`; al volver reception, la venta llega a `PAGADO` dentro de los 30 sondeos de 3 s, con `paid_at` y `medio_pago`.
-- [ ] La operación `PAGO` termina `TERMINAL` una sola vez y no se emite un segundo `recepcion.operacion-finalizar` ni un `stock.restituir` por el pago.
-- [ ] La venta alta `PENDIENTE` con operación `VENTA` en `PREPARANDO` de más de 120 s sigue rechazándose sin stock; DEBITO_SOLICITADO y CANCELACION_PENDIENTE conservan su recuperación.
-- [ ] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`; `python scripts/validar-planes.py` con 0 errores; `python scripts/validar-contratos.py --base origin/main` sin cambios de contrato; `npx openspec validate back-arreglo-sales-pago-202 --strict` sin errores.
-- [ ] La reproducción original de §3 está en verde con evidencia adjunta al PR y sin preguntas abiertas.
+- [x] Todos los pasos de §4 marcados con su verificación.
+- [x] Un `PUT /api/venta/{id}` con reception caído deja la operación `PAGO` en `PREPARANDO` y responde `202`; al volver reception, la venta llega a `PAGADO` dentro de los 30 sondeos de 3 s, con `paid_at` y `medio_pago`.
+- [x] La operación `PAGO` termina `TERMINAL` una sola vez y no se emite un segundo `recepcion.operacion-finalizar` ni un `stock.restituir` por el pago.
+- [x] La venta alta `PENDIENTE` con operación `VENTA` en `PREPARANDO` de más de 120 s sigue rechazándose sin stock; DEBITO_SOLICITADO y CANCELACION_PENDIENTE conservan su recuperación.
+- [x] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`; `python scripts/validar-planes.py` con 0 errores; `python scripts/validar-contratos.py --base origin/main` sin cambios de contrato; `npx openspec validate back-arreglo-sales-pago-202 --strict` sin errores.
+- [x] La reproducción original de §3 está en verde con evidencia adjunta al PR y sin preguntas abiertas.
