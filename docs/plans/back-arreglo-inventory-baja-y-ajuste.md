@@ -7,7 +7,7 @@
 | Componente | `inventory-service` |
 | Fase | `F3` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `back-inventory-stock` |
 | Repara | `back-inventory-stock` |
 | Spec | [`inventory/api.md` §REST](../especificacion/microservicios/inventory/api.md#rest), [`inventory/base-de-datos.md` §Tablas](../especificacion/microservicios/inventory/base-de-datos.md#tablas) y [§Funciones/procedimientos](../especificacion/microservicios/inventory/base-de-datos.md#funcionesprocedimientos), [`03-contrato-comun.md` §Identidad y sedes](../especificacion/03-contrato-comun.md#identidad-y-sedes) y [§Respuestas](../especificacion/03-contrato-comun.md#respuestas), [`inventory.yaml`](../contracts/openapi/inventory.yaml), [`admin-web.yaml`](../contracts/openapi/admin-web.yaml) y [`errors.md` §Inventory y Sales](../contracts/errors.md#inventory-y-sales) |
@@ -92,9 +92,9 @@ Se envió el cuerpo cerrado del contrato `{"idHotel":1,"delta":2,"motivo":"Repro
 - [x] 5. Ajustar la firma de `ProductoService.ajustar` para recibir la sede del cuerpo (o conservar el parámetro y pasarle `request.idHotel()` desde el controlador), sin cambiar la llamada a `fn_stock_ajustar`, el lock, el cálculo del saldo ni el evento `inventory.stock.v1`. Verificación: el ajuste sigue incrementando `producto_sede.version`, devuelve `{ajusteId,cantidad,version}` y deja una fila en `ajuste_stock` con el actor auditado.
 - [x] 6. Verificar la compatibilidad y los límites: `POST /api/producto/{id}/ajustes?idHotel=1` con el mismo cuerpo sigue respondiendo `201` (el query extra se ignora); un EMPLEADO fuera de su sede sigue en `403`; un producto de otra sede sigue en `404`; un `delta=0` o un saldo negativo siguen en `400`. Verificación: las cuatro respuestas se observan en la corrida real.
 - [x] 7. Reiniciar `inventory-service` desde la rama corregida y repetir la reproducción de §3: el producto dado de baja aparece con `estado=false`, no con `estado=true`, y sigue apareciendo sin filtro; el ajuste solo con el cuerpo responde `201` y el stock sube por el `delta`. Verificación: las salidas literales de §6 quedan adjuntas al PR.
-- [ ] 8. Comprobar que el contrato no cambió: `git diff --exit-code origin/main -- docs/contracts` no produce salida, y `python scripts/validar-contratos.py --base origin/main` termina en «Los contratos solo se han ampliado. Correcto.» Verificación: 0 cambios en contratos y validador en verde.
-- [ ] 9. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test`, `bash scripts/mvn.sh -f services/pom.xml verify` y `python scripts/validar-planes.py`. Verificación: pruebas y build en `BUILD SUCCESS` y 0 errores del validador.
-- [ ] 10. Guardar en §6 las salidas de los pasos 1, 2, 6, 7 y 9, marcar todos los pasos y cambiar `Estado` a `cerrado` en el último commit. Verificación: no quedan pasos sin marcar y las dos reproducciones originales están en verde.
+- [x] 8. Comprobar que el contrato no cambió: `git diff --exit-code origin/main -- docs/contracts` no produce salida, y `python scripts/validar-contratos.py --base origin/main` termina en «Los contratos solo se han ampliado. Correcto.» Verificación: 0 cambios en contratos y validador en verde.
+- [x] 9. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test`, `bash scripts/mvn.sh -f services/pom.xml verify` y `python scripts/validar-planes.py`. Verificación: pruebas y build en `BUILD SUCCESS` y 0 errores del validador.
+- [x] 10. Guardar en §6 las salidas de los pasos 1, 2, 6, 7 y 9, marcar todos los pasos y cambiar `Estado` a `cerrado` en el último commit. Verificación: no quedan pasos sin marcar y las dos reproducciones originales están en verde.
 
 ## 5. Contratos afectados
 
@@ -356,16 +356,59 @@ python scripts/validar-contratos.py --base origin/main
 
 Resultado esperado: `BUILD SUCCESS` de los nueve módulos; 0 errores del validador de planes; «Los contratos solo se han ampliado. Correcto.» (sin cambios de contrato).
 
+#### Salida de los comandos canónicos (pasos 8 y 9)
+
+```text
+$ git diff --exit-code origin/main -- docs/contracts
+(sin salida; 0 cambios en los contratos)
+
+$ python scripts/validar-contratos.py --base origin/main
+Contratos: 8 OpenAPI, 20 schemas de evento. Regla: aditivos frente a origin/main.
+Los contratos solo se han ampliado. Correcto.
+
+$ python scripts/validar-planes.py
+32 plan(es) revisado(s); 32 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+
+$ bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.inventory.domain.service.ProductoServiceAjustarTests
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.inventory.domain.service.ProductoServiceListarTests
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0 -- in pe.hotel.inventory.web.ProductoControllerAjustesTests
+[INFO] Tests run: 44, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+
+$ bash scripts/mvn.sh -f services/pom.xml verify
+[INFO] Reactor Summary for Hotel services (agregador) 0.0.1-SNAPSHOT:
+[INFO] Hotel services (agregador) ......................... SUCCESS [  0.002 s]
+[INFO] identity-service ................................... SUCCESS [ 44.412 s]
+[INFO] hotel-service ...................................... SUCCESS [ 20.787 s]
+[INFO] reception-service .................................. SUCCESS [01:13 min]
+[INFO] inventory-service .................................. SUCCESS [ 53.840 s]
+[INFO] sales-service ..................................... SUCCESS [ 18.571 s]
+[INFO] reporting-service .................................. SUCCESS [ 18.040 s]
+[INFO] notification-service ............................... SUCCESS [ 11.713 s]
+[INFO] api-gateway ........................................ SUCCESS [ 41.954 s]
+[INFO] discovery-server ................................... SUCCESS [ 15.128 s]
+[INFO] BUILD SUCCESS
+[INFO] Total time:  04:58 min
+```
+
 ## 7. Preguntas abiertas
 
 Ninguna. El contrato fija `AjusteRequest` con `idHotel` en el cuerpo y sin query, y el filtro `estado` como baja lógica por sede con `estado` devuelto efectivo. No hay una regla de negocio, un estado, un código ni un valor nuevo que decidir; el arreglo solo alinea el código con lo publicado.
 
+Dos apuntes de ejecución, sin decisión que registrar:
+
+- **Firma del servicio.** §5 autorizaba las dos formas; se conserva la firma actual de `ProductoService.ajustar` y el controlador le pasa `request.idHotel()`, que es la sede del cuerpo del contrato. Así el contrato es la única fuente y el cambio se limita al binding de la capa web.
+- **Persistencia en las pruebas unitarias.** Las pruebas nuevas no usan PostgreSQL: `ProductoJdbcFalso` simula `producto`, `producto_sede` y `fn_stock_ajustar` en memoria. La base real se cubre con `StockDbIT` (no lo ejecuta surefire) y con la corrida real contra el Gateway que figura en §6.
+
+Nota de entorno para repetir la corrida real: en Git Bash, `RABBITMQ_VHOST=/hotel-demo` se convierte en una ruta de Windows al lanzar un proceso nativo (`MSYS2_ENV_CONV_EXCL="RABBITMQ_VHOST"` lo evita) y `localhost` resuelve primero a `::1`, donde los puertos de Compose no escuchan; con eso el `inventory-service` arranca pero no conecta con RabbitMQ.
+
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos de §4 marcados con su verificación.
-- [ ] `GET /api/producto/listar?idHotel=1&estado=false` devuelve los productos dados de baja en la sede; `estado=true` devuelve solo los activos; sin `estado` devuelve ambos con su estado efectivo.
-- [ ] `POST /api/producto/{id}/ajustes` funciona solo con el cuerpo `{idHotel,delta,motivo}` y sin query, y conserva `201`, `400`, `403`, `404`, `412` y `428`; el `500 INTERNAL_ERROR` desaparece.
-- [ ] `POST /api/producto/{id}/ajustes?idHotel=1` con el mismo cuerpo sigue respondiendo `201`; el stock y la versión de la sede se actualizan igual.
-- [ ] `docs/contracts/**` no cambia y `python scripts/validar-contratos.py --base origin/main` termina sin cambios de contrato.
-- [ ] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS` y `python scripts/validar-planes.py` con 0 errores.
-- [ ] Las dos reproducciones originales de §3 están en verde con evidencia adjunta al PR y sin preguntas abiertas.
+- [x] Todos los pasos de §4 marcados con su verificación.
+- [x] `GET /api/producto/listar?idHotel=1&estado=false` devuelve los productos dados de baja en la sede; `estado=true` devuelve solo los activos; sin `estado` devuelve ambos con su estado efectivo.
+- [x] `POST /api/producto/{id}/ajustes` funciona solo con el cuerpo `{idHotel,delta,motivo}` y sin query, y conserva `201`, `400`, `403`, `404`, `412` y `428`; el `500 INTERNAL_ERROR` desaparece.
+- [x] `POST /api/producto/{id}/ajustes?idHotel=1` con el mismo cuerpo sigue respondiendo `201`; el stock y la versión de la sede se actualizan igual.
+- [x] `docs/contracts/**` no cambia y `python scripts/validar-contratos.py --base origin/main` termina sin cambios de contrato.
+- [x] `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS` y `python scripts/validar-planes.py` con 0 errores.
+- [x] Las dos reproducciones originales de §3 están en verde con evidencia adjunta al PR y sin preguntas abiertas.
