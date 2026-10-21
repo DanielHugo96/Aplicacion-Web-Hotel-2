@@ -27,6 +27,24 @@ function esperar(ms: number): Promise<void> {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+/**
+ * El detalle muestra `dd/MM/yyyy HH:mm` en la zona del navegador. La prueba no
+ * puede escribir la hora a mano: se formatea el mismo instante con el mismo
+ * locale, así pasa igual en UTC (CI) y en America/Lima.
+ */
+function timestampEsperado(iso: string): string {
+  return new Intl.DateTimeFormat('es-PE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+    .format(new Date(iso))
+    .replace(/, /, ' ');
+}
+
 describe('VentaDetalleComponent', () => {
   let fixture: ComponentFixture<VentaDetalleComponent>;
   let http: HttpTestingController;
@@ -92,7 +110,7 @@ describe('VentaDetalleComponent', () => {
     expect(texto).toContain('Agua 500ml');
     expect(texto).toContain('S/ 7.00');
     expect(texto).toContain('No registrado');
-    expect(texto).toContain('20/10/2026 10:05');
+    expect(texto).toContain(timestampEsperado('2026-10-20T15:05:00Z'));
     const pills = Array.from(
       (fixture.nativeElement as HTMLElement).querySelectorAll('span.pill')
     ).map((p) => (p.textContent ?? '').trim());
@@ -145,7 +163,7 @@ describe('VentaDetalleComponent', () => {
     const texto = (fixture.nativeElement.textContent as string).replace(/\u00a0/g, ' ');
     expect(texto).toContain('Pagado');
     expect(texto).toContain('EFECTIVO');
-    expect(texto).toContain('20/10/2026 11:00');
+    expect(texto).toContain(timestampEsperado('2026-10-20T16:00:00Z'));
   });
 
   it('202 del pago abre el banner, bloquea la acción y sondea hasta el terminal', async () => {
