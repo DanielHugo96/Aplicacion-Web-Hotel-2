@@ -450,6 +450,7 @@ def fixtures_avanzados() -> int:
     # ---- F6: rechazo durable. Habitación 201 (sede 2) ocupada por cliente 101.
     idr_f6 = _nueva_estadia(201, 2, 101, 0.0, token)
     clave_f6 = str(uuid.uuid4())
+    version_201 = habitacion(201).get("version")
     rechazo = f.maintenance(201, "F6 rechazo durable", key=clave_f6, token=token)
     filas = c.psql(
         "reception_db",
@@ -458,7 +459,8 @@ def fixtures_avanzados() -> int:
     )
     block_r = filas[0][0] if filas else ""
     estado["F6"] = {"idRecepcion": idr_f6, "idHabitacion": 201, "idHotel": 2,
-                    "blockIdR": block_r, "idempotencyKey": clave_f6, "maintenance": rechazo.summary()}
+                    "blockIdR": block_r, "idempotencyKey": clave_f6, "ifMatch": version_201,
+                    "maintenance": rechazo.summary()}
     evidencia["F6"] = {
         "idRecepcion": idr_f6,
         "maintenance": rechazo.summary(),
@@ -510,6 +512,336 @@ COMMIT;
     save("F9", {"caso": "F9", **evidencia["F9"]})
     print(json.dumps({"fallos": fallos, "F4": evidencia["F4"]["cumple"], "F5": evidencia["F5"]["cumple"],
                       "F6": evidencia["F6"]["cumple"], "F9": evidencia["F9"]["cumple"]}, indent=2, ensure_ascii=False))
+    return 0 if not fallos else 1
+
+
+# ---------------------------------------------------------------------------
+# Paso 9 — OCC01–OCC04 y CLN01–CLN03
+# ---------------------------------------------------------------------------
+
+
+def _dos_a_la_vez(a, b) -> dict[str, Any]:
+    import threading
+
+    resultados: dict[str, Any] = {}
+
+    def correr(nombre: str, fn) -> None:
+        resultados[nombre] = fn()
+
+    hilos = [threading.Thread(target=correr, args=("a", a)), threading.Thread(target=correr, args=("b", b))]
+    for hilo in hilos:
+        hilo.start()
+    for hilo in hilos:
+        hilo.join()
+    return resultados
+
+
+def _estadias_activas(room_id: int) -> str:
+    return c.psql_one(
+        "reception_db",
+        f"select count(*) from recepcion where id_habitacion={room_id} and estado_estadia in ('ACTIVA','CERRANDO')",
+    )
+
+
+def occ_cln() -> int:
+    token = f.admin_token()
+    estado = leer_estado()
+    fallos: list[str] = []
+
+    # ---- OCC01: dos check-in simultáneos a 101.
+    f.free_room(101, 1)
+    if _estadias_activas(101) != "0":
+        _cerrar_estadia_activa(101, token)
+    res = _dos_a_la_vez(
+        lambda: f.checkin(room_id=101, hotel_id=1, cliente=100, adelanto=0.0, token=token),
+        lambda: f.checkin(room_id=101, hotel_id=1, cliente=101, adelanto=0.0, token=token),
+    )
+    estados = sorted(r[0].status for r in res.values())
+    codigos = sorted(str(codigo(r[0]) or "") for r in res.values())
+    activas = _estadias_activas(101)
+    cumple = (
+        estados == [201, 409] and "ROOM_OCCUPIED" in codigos and activas == "1"
+    )
+    save("OCC01", {"caso": "OCC01",
+                   "a": resumen(res["a"][0]), "b": resumen(res["b"][0]),
+                   "estados": estados, "codigos": codigos,
+                   "estadiasActivas101": int(activas),
+                   "indiceUnico": "uq_recepcion_habitacion_activa",
+                   "exigido": "uno 201, otro 409 ROOM_OCCUPIED, una sola fila ACTIVA",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("OCC01")
+    _cerrar_estadia_activa(101, token)
+
+    # ---- OCC02: check-in y mantenimiento concurrentes en 102.
+    f.free_room(102, 1)
+    if _estadias_activas(102) != "0":
+        _cerrar_estadia_activa(102, token)
+    res = _dos_a_la_vez(
+        lambda: f.checkin(room_id=102, hotel_id=1, cliente=100, adelanto=0.0, token=token),
+        lambda: f.maintenance(102, "OCC02 concurrente", token=token),
+    )
+    est = sorted(r[0].status if isinstance(r, tuple) else r.status for r in res.values())
+    estado_gate = gate(102)
+    ops = c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion "
+                            f"where id_habitacion=102 order by block_id desc limit 1")
+    cumple = (
+        est[0] in (200, 201, 202, 409) and est[1] == 409
+        and estado_gate.get("estado") in ("OCUPADA", "BLOQUEADA")
+    )
+    save("OCC02", {"caso": "OCC02",
+                   "checkin": resumen(res["a"][0] if isinstance(res["a"], tuple) else res["a"]),
+                   "mantenimiento": resumen(res["b"][0] if isinstance(res["b"], tuple) else res["b"]),
+                   "estados": est,
+                   "gate": estado_gate,
+                   "ultimaOperacion": ops[0] if ops else None,
+                   "exigido": "una sola admisión válida: gate OCUPADA o BLOQUEADA, nunca ambas; perdedor 409",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("OCC02")
+    # Normalizar 102: liberar bloqueo si quedó BLOQUEADA y cerrar estadía si quedó OCUPADA.
+    if _estadias_activas(102) != "0":
+        _cerrar_estadia_activa(102, token)
+    f.free_room(102, 1)
+
+    # ---- CLN01: F8 (cierre 200, C1) con Rabbit pausado; luego completar la limpieza.
+    # CLN01 se ejecuta sobre 101 (sede 1) con un cierre nuevo.
+    f.free_room(101, 1)
+    if _estadias_activas(101) != "0":
+        _cerrar_estadia_activa(101, token)
+    check, stay = f.checkin(room_id=101, hotel_id=1, cliente=100, adelanto=20.0, token=token)
+    if check.status != 201:
+        raise c.RunbookError(f"CLN01 check-in devolvió {check.status}: {check.body[:300]}")
+    idr = int(stay["idRecepcion"])
+    esperar_operacion_terminal(idr)
+    cot = c.http("GET", f"/api/recepcion/{idr}/cotizacion-salida", token=token)
+    # Rabbit detenido: el cierre responde 200 (no bloquea el negocio) y el comando queda en outbox.
+    c.docker("stop", c.RABBIT, timeout=90, check=False)
+    time.sleep(3)
+    salida = f.checkout(id_recepcion=idr, room_id=101, monto=float(cot.field("data", "cobroAhora")), token=token)
+    ciclo = salida.field("data", "cleaningCycleId")
+    estado["CLN01"] = {"idRecepcion": idr, "cleaningCycleId": ciclo, "checkout": salida.summary()}
+    # Reintento de check-in antes de completar: ROOM_NOT_READY.
+    reintento, _ = f.checkin(room_id=101, hotel_id=1, cliente=101, adelanto=0.0, token=token)
+    gate_pendiente = gate(101)
+    c.docker("start", c.RABBIT, timeout=120, check=True)
+    def rabbit_arriba() -> bool:
+        try:
+            return bool(c.rabbit_queues())
+        except c.RunbookError:
+            return False
+
+    esperar("Rabbit arriba", rabbit_arriba, timeout=180, interval=5)
+    esperar(
+        "tarea C1 creada en hotel",
+        lambda: c.psql_one("hotel_db", f"select count(*) from limpieza where cleaning_cycle_id='{ciclo}'") == "1",
+        timeout=180,
+    )
+    tarea = c.psql("hotel_db", f"select cleaning_cycle_id, estado, version from limpieza where cleaning_cycle_id='{ciclo}'")
+    version_tarea = int(tarea[0][2])
+    completar = c.http(
+        "PUT",
+        "/api/habitacion/101/limpieza-completada",
+        token=token,
+        body={"cleaningCycleId": ciclo},
+        headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(version_tarea)},
+    )
+    esperar("gate LIBRE de 101", lambda: gate(101).get("estado") == "LIBRE", timeout=120)
+    despues, _ = f.checkin(room_id=101, hotel_id=1, cliente=101, adelanto=0.0, token=token)
+    cumple = (
+        salida.status == 200
+        and reintento.status == 409 and codigo(reintento) == "ROOM_NOT_READY"
+        and gate_pendiente.get("estado") == "LIMPIEZA_PENDIENTE"
+        and completar.status == 200
+        and gate(101).get("estado") == "OCUPADA"
+        and despues.status == 201
+    )
+    save("CLN01", {"caso": "CLN01",
+                   "checkout": salida.summary(),
+                   "cleaningCycleId": ciclo,
+                   "reintentoCheckin": resumen(reintento),
+                   "gatePendiente": gate_pendiente,
+                   "tareaTrasReanudar": tarea,
+                   "completarLimpieza": resumen(completar),
+                   "gateTrasCompletar": gate(101),
+                   "checkinDespues": resumen(despues),
+                   "exigido": "409 ROOM_NOT_READY hasta completar el ciclo correcto; 201 después",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("CLN01")
+    idr_nuevo = int(despues.field("data", "idRecepcion")) if despues.status == 201 else None
+
+    # ---- CLN02: reenvío de limpieza.solicitada C1 y evento viejo tras el nuevo check-in.
+    reenvio = c.rabbit_publish(
+        "hotel.commands.v1", "limpieza.solicitada",
+        {"commandId": str(uuid.uuid4()), "type": "LimpiezaSolicitada", "schemaVersion": 1, "idHotel": 1,
+         "correlationId": str(uuid.uuid4()), "issuedAt": c.iso(),
+         "payload": {"idHabitacion": 101, "idRecepcion": idr,
+                     "cleaningCycleId": ciclo, "roomVersion": int(gate(101).get("roomVersion") or 1)}},
+        command_id=str(uuid.uuid4()),
+    )
+    time.sleep(6)
+    tarea_c1 = c.psql("hotel_db", f"select estado from limpieza where cleaning_cycle_id='{ciclo}'")
+    gate_c2 = gate(101)
+    viejo = c.kafka_publish(
+        "hotel.habitacion.v1", "101",
+        {"eventId": str(uuid.uuid4()), "type": "HabitacionLista", "schemaVersion": 1,
+         "aggregateType": "habitacion", "aggregateId": "101", "aggregateVersion": 1, "idHotel": 1,
+         "occurredAt": c.iso(), "correlationId": str(uuid.uuid4()),
+         "payload": {"idHabitacion": 101, "idHotel": 1, "numero": "101", "idCategoria": 1,
+                     "categoriaNombre": "Individual", "pisoNombre": "Primer piso", "precio": 70.00,
+                     "estado": True, "estadoFisico": "LISTA", "version": 1,
+                     "cleaningCycleId": ciclo, "cleaningRoomVersion": 1, "blockId": None}},
+    )
+    time.sleep(8)
+    cumple = (
+        reenvio.status == 200
+        and tarea_c1 and tarea_c1[0][0] == "COMPLETADA"
+        and gate_c2.get("estado") == "OCUPADA"
+        and gate(101).get("estado") == "OCUPADA"
+        and c.psql_one("hotel_db", f"select count(*) from limpieza where cleaning_cycle_id='{ciclo}'") == "1"
+    )
+    save("CLN02", {"caso": "CLN02",
+                   "reenvioComando": reenvio.summary(),
+                   "tareaC1": tarea_c1,
+                   "gateTrasReenvio": gate_c2,
+                   "eventoViejo": {"publicado": True, "resultado": viejo.stdout.strip() if viejo else None},
+                   "gateFinal": gate(101),
+                   "tareasPorCiclo": c.psql_one("hotel_db",
+                                                f"select count(*) from limpieza where cleaning_cycle_id='{ciclo}'"),
+                   "exigido": "no reabre C1 ni libera el ciclo actual; un solo registro por ciclo",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("CLN02")
+
+    # ---- CLN03: HabitacionLista antes de la salida / después del check-in nuevo.
+    # Variante observable: se entrega un HabitacionLista de un ciclo posterior al cierre y se
+    # comprueba que C1 se concilia sin liberar la ocupación vigente (gate OCUPADA) y que
+    # gate_projection no queda LIMPIEZA_PENDIENTE eterno.
+    proy_antes = c.psql("reporting_db", "select estado from gate_projection where id_habitacion=101")
+    evento_cln03 = {
+        "eventId": str(uuid.uuid4()), "type": "HabitacionLista", "schemaVersion": 1,
+        "aggregateType": "habitacion", "aggregateId": "101", "aggregateVersion": 99, "idHotel": 1,
+        "occurredAt": c.iso(), "correlationId": str(uuid.uuid4()),
+        "payload": {"idHabitacion": 101, "idHotel": 1, "numero": "101", "idCategoria": 1,
+                    "categoriaNombre": "Individual", "pisoNombre": "Primer piso", "precio": 70.00,
+                    "estado": True, "estadoFisico": "LISTA", "version": 99,
+                    "cleaningCycleId": ciclo, "cleaningRoomVersion": version_tarea, "blockId": None},
+    }
+    c.kafka_publish("hotel.habitacion.v1", "101", evento_cln03)
+    time.sleep(10)
+    proy_despues = c.psql("reporting_db", "select estado from gate_projection where id_habitacion=101")
+    limpieza_proj = c.psql(
+        "reporting_db",
+        f"select cleaning_cycle_id::text, id_habitacion, cleaning_room_version from limpieza_completada_projection where cleaning_cycle_id='{ciclo}'",
+    )
+    cumple = (
+        bool(proy_despues) and proy_despues[0][0] != "LIMPIEZA_PENDIENTE"
+        and gate(101).get("estado") == "OCUPADA"
+    )
+    save("CLN03", {"caso": "CLN03",
+                   "eventoEntregado": evento_cln03,
+                   "gateProjectionAntes": proy_antes,
+                   "gateProjectionDespues": proy_despues,
+                   "limpiezaCompletadaProjection": limpieza_proj,
+                   "gate": gate(101),
+                   "exigido": "C1 conciliado sin liberar la ocupación posterior; projection no eterna",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("CLN03")
+
+    # ---- OCC03: cierre de F6 (201) y reintento del blockId R.
+    f6 = estado.get("F6", {})
+    block_r = f6.get("blockIdR")
+    if block_r:
+        idr_f6 = f6.get("idRecepcion")
+        cot = c.http("GET", f"/api/recepcion/{idr_f6}/cotizacion-salida", token=token)
+        cierre = f.checkout(id_recepcion=int(idr_f6), room_id=201,
+                            monto=float(cot.field("data", "cobroAhora") or 0), token=token)
+        reintento_r = c.http(
+            "POST", "/api/habitacion/201/mantenimiento", token=token,
+            body={"motivo": "F6 rechazo durable"},
+            headers={"Idempotency-Key": f6.get("idempotencyKey"), "If-Match": str(f6.get("ifMatch"))},
+        )
+        # El cierre deja el gate en LIMPIEZA_PENDIENTE; se completa por la ruta del operador
+        # para que la nueva intención encuentre la habitación disponible.
+        f.free_room(201, 2)
+        nueva = f.maintenance(201, "OCC03 nueva intención", token=token)
+        bloqueos = c.psql("reception_db", "select block_id::text, estado, COALESCE(error_code,'') "
+                                          "from bloqueo_habitacion where id_habitacion=201 order by created_at")
+        ops = c.psql("hotel_db", "select block_id::text, estado from operacion_habitacion "
+                                "where id_habitacion=201 order by block_id")
+        cumple = (
+            cierre.status in (200, 202)
+            and reintento_r.status == 409 and codigo(reintento_r) == "GATE_NOT_AVAILABLE"
+            and nueva.status in (200, 202)
+            and any(b[0] == block_r and b[1] == "RECHAZADO" for b in bloqueos)
+        )
+        save("OCC03", {"caso": "OCC03",
+                       "blockIdR": block_r,
+                       "cierreEstadia": cierre.summary(),
+                       "reintentoMismoBlockId": resumen(reintento_r),
+                       "nuevaIntencion": resumen(nueva),
+                       "bloqueos": [{"blockId": b[0], "estado": b[1], "errorCode": b[2]} for b in bloqueos],
+                       "operaciones": [{"blockId": o[0], "estado": o[1]} for o in ops],
+                       "exigido": "R sigue 409 GATE_NOT_AVAILABLE (rechazo durable); el nuevo 200",
+                       "cumple": cumple})
+        if not cumple:
+            fallos.append("OCC03")
+        f.free_room(201, 2)
+    else:
+        save("OCC03", {"caso": "OCC03", "cumple": False, "motivo": "F6 sin blockIdR"})
+        fallos.append("OCC03")
+
+    # ---- OCC04: DELETE de piso con habitación activa concurrente con alta/reactivación.
+    sufijo = uuid.uuid4().hex[:6].upper()
+    piso = c.http("POST", "/api/piso/registrar", token=token,
+                  body={"idHotel": 1, "descripcion": f"Piso OCC04 {sufijo}"},
+                  headers={"Idempotency-Key": str(uuid.uuid4())})
+    categoria = c.http("POST", "/api/categoria/registrar", token=token,
+                       body={"descripcion": f"Categoria OCC04 {sufijo}", "detalle": "OCC04",
+                             "capacidad": 2, "estado": True},
+                       headers={"Idempotency-Key": str(uuid.uuid4())})
+    id_piso, id_categoria = piso.field("data", "idPiso"), categoria.field("data", "idCategoria")
+    habitacion_alta = c.http("POST", "/api/habitacion/registrar", token=token,
+                             body={"idHotel": 1, "numero": f"O{sufijo[:4]}", "idPiso": int(id_piso),
+                                   "idCategoria": int(id_categoria), "detalle": "OCC04",
+                                   "precio": 50.00, "publicada": False, "urlsImagenes": []},
+                             headers={"Idempotency-Key": str(uuid.uuid4())})
+    version_piso = c.http("GET", f"/api/piso/buscar/{id_piso}", token=token).field("data", "version")
+    version_cat = c.http("GET", f"/api/categoria/buscar/{id_categoria}", token=token).field("data", "version")
+    res = _dos_a_la_vez(
+        lambda: c.http("DELETE", f"/api/piso/eliminar/{id_piso}", token=token,
+                       headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(version_piso)}),
+        lambda: c.http("DELETE", f"/api/categoria/eliminar/{id_categoria}", token=token,
+                       headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(version_cat)}),
+    )
+    activas = c.psql(
+        "hotel_db",
+        "select h.id, p.estado as piso, c.estado as categoria, h.estado "
+        "from habitacion h join piso p on p.id=h.id_piso join categoria c on c.id=h.id_categoria "
+        f"where h.id_piso={id_piso} or h.id_categoria={id_categoria}",
+    )
+    invalido = [f for f in activas if f[3] == "t" and (f[1] == "f" or f[2] == "f")]
+    cumple = (
+        habitacion_alta.status == 201
+        and res["a"].status == 409 and res["b"].status == 409
+        and codigo(res["a"]) == "ACTIVE_DEPENDENCIES" and codigo(res["b"]) == "ACTIVE_DEPENDENCIES"
+        and not invalido
+    )
+    save("OCC04", {"caso": "OCC04",
+                   "habitacionAlta": resumen(habitacion_alta),
+                   "deletePiso": resumen(res["a"]),
+                   "deleteCategoria": resumen(res["b"]),
+                   "filas": [{"idHabitacion": f[0], "piso": f[1], "categoria": f[2], "habitacion": f[3]} for f in activas],
+                   "activaBajoPadreInactivo": invalido,
+                   "exigido": "uno 409 ACTIVE_DEPENDENCIES; nunca habitación activa bajo padre inactivo",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("OCC04")
+
+    guardar_estado(estado)
+    print(json.dumps({"fallos": fallos}, indent=2))
     return 0 if not fallos else 1
 
 
@@ -1188,6 +1520,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("fixtures-avanzados", help="siembra F4-F6 y F9")
     sub.add_parser("sec", help="SEC01-SEC08")
     sub.add_parser("lp-crud", help="LP01-LP02 y CRUD01")
+    sub.add_parser("occ-cln", help="OCC01-OCC04 y CLN01-CLN03")
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
@@ -1203,6 +1536,8 @@ def main(argv: list[str] | None = None) -> int:
             return sec()
         if args.command == "lp-crud":
             return lp_crud()
+        if args.command == "occ-cln":
+            return occ_cln()
         parser.print_help()
         return 2
     except c.RunbookError as err:

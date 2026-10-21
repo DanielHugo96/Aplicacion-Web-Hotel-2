@@ -1,0 +1,112 @@
+{
+  "caso": "OCC02",
+  "checkin": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "863c0632-34b3-4b9d-9b8a-a7163167bc1c",
+      "etag": "\"1\"",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "868",
+      "date": "Wed, 21 Oct 2026 06:17:02 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "Check-in registrado",
+      "data": {
+        "idRecepcion": 35,
+        "idHotel": 1,
+        "idCliente": 100,
+        "idHabitacion": 102,
+        "numero": "102",
+        "categoriaNombre": "Doble",
+        "pisoNombre": "Primer piso",
+        "detalleHabitacion": "Habitacion doble de demostracion",
+        "precioHabitacion": 100.0,
+        "nombre": "Cliente",
+        "apellido": "Uno",
+        "tipoDocumento": "DNI",
+        "documento": "90000100",
+        "correo": "cliente.uno@hotel.test",
+        "fechaEntrada": "2026-10-21",
+        "fechaSalida": "2026-10-22",
+        "fechaSalidaConfirmacion": null,
+        "precioInicial": 100.0,
+        "adelanto": 0.0,
+        "medioPagoAdelanto": "EFECTIVO",
+        "precioRestante": 100.0,
+        "totalPagado": 0.0,
+        "costoPenalidad": 0.0,
+        "motivoPenalidad": null,
+        "observacion": "Fixture qa-runbooks",
+        "estado": true,
+        "estadoEstadia": "ACTIVA",
+        "archivada": false,
+        "vencida": false,
+        "version": 1,
+        "closureId": null,
+        "cleaningCycleId": null,
+        "cierre": null
+      },
+      "meta": {
+        "correlationId": "863c0632-34b3-4b9d-9b8a-a7163167bc1c"
+      }
+    }
+  },
+  "mantenimiento": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "7226cd07-a152-41f5-a04b-4373d9584340",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "229",
+      "date": "Wed, 21 Oct 2026 06:17:02 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No se puede bloquear la habitación: está ocupada o en limpieza.",
+      "error": {
+        "code": "GATE_NOT_AVAILABLE",
+        "fields": {
+          "idHabitacion": "102"
+        }
+      },
+      "meta": {
+        "correlationId": "7226cd07-a152-41f5-a04b-4373d9584340"
+      }
+    }
+  },
+  "estados": [
+    201,
+    409
+  ],
+  "gate": {
+    "estado": "OCUPADA",
+    "blockId": null,
+    "cleaningCycleId": null,
+    "roomVersion": 50
+  },
+  "ultimaOperacion": [
+    "fa87db70-4e64-47d6-ab47-52362a3dd838",
+    "RECHAZADA"
+  ],
+  "exigido": "una sola admisión válida: gate OCUPADA o BLOQUEADA, nunca ambas; perdedor 409",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T06:17:02.315696Z"
+}

@@ -1,0 +1,128 @@
+{
+  "caso": "OCC04",
+  "habitacionAlta": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "dfceafc2-806b-4896-97a1-f8a86ff55d85",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "589",
+      "date": "Wed, 21 Oct 2026 06:18:32 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idHabitacion": 309,
+        "idHotel": 1,
+        "numero": "OADBA",
+        "idPiso": 39,
+        "pisoNombre": "Piso OCC04 ADBA17",
+        "idCategoria": 9,
+        "categoriaNombre": "Categoria OCC04 ADBA17",
+        "detalle": "OCC04",
+        "precio": 50.0,
+        "publicada": false,
+        "urlsImagenes": [],
+        "estado": true,
+        "idEstadoHabitacion": 1,
+        "estadoFisico": {
+          "idEstadoHabitacion": 1,
+          "codigo": "LISTA",
+          "descripcion": "Lista",
+          "estado": true,
+          "version": 1
+        },
+        "ocupacion": {
+          "estadoEstadia": "DESCONOCIDA",
+          "idRecepcion": null,
+          "updatedAt": null
+        },
+        "blockId": null,
+        "endpoint": null,
+        "version": 1
+      },
+      "meta": {
+        "correlationId": "dfceafc2-806b-4896-97a1-f8a86ff55d85"
+      }
+    }
+  },
+  "deletePiso": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "a80f932c-5179-4333-8bb5-dab203128154",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "202",
+      "date": "Wed, 21 Oct 2026 06:18:32 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No se puede dar de baja mientras tenga elementos activos.",
+      "error": {
+        "code": "ACTIVE_DEPENDENCIES",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "a80f932c-5179-4333-8bb5-dab203128154"
+      }
+    }
+  },
+  "deleteCategoria": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "8b1f7af1-7067-4904-a0bb-e860e289603e",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "202",
+      "date": "Wed, 21 Oct 2026 06:18:32 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No se puede dar de baja mientras tenga elementos activos.",
+      "error": {
+        "code": "ACTIVE_DEPENDENCIES",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "8b1f7af1-7067-4904-a0bb-e860e289603e"
+      }
+    }
+  },
+  "filas": [
+    {
+      "idHabitacion": "309",
+      "piso": "t",
+      "categoria": "t",
+      "habitacion": "t"
+    }
+  ],
+  "activaBajoPadreInactivo": [],
+  "exigido": "uno 409 ACTIVE_DEPENDENCIES; nunca habitación activa bajo padre inactivo",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T06:18:33.028815Z"
+}

@@ -1,0 +1,107 @@
+{
+  "caso": "OCC01",
+  "a": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "1c6db5a5-c01a-4bd6-9999-909019eec4d7",
+      "etag": "\"1\"",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "875",
+      "date": "Wed, 21 Oct 2026 06:16:52 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "Check-in registrado",
+      "data": {
+        "idRecepcion": 34,
+        "idHotel": 1,
+        "idCliente": 100,
+        "idHabitacion": 101,
+        "numero": "101",
+        "categoriaNombre": "Individual",
+        "pisoNombre": "Primer piso",
+        "detalleHabitacion": "Habitacion individual de demostracion",
+        "precioHabitacion": 70.0,
+        "nombre": "Cliente",
+        "apellido": "Uno",
+        "tipoDocumento": "DNI",
+        "documento": "90000100",
+        "correo": "cliente.uno@hotel.test",
+        "fechaEntrada": "2026-10-21",
+        "fechaSalida": "2026-10-22",
+        "fechaSalidaConfirmacion": null,
+        "precioInicial": 70.0,
+        "adelanto": 0.0,
+        "medioPagoAdelanto": "EFECTIVO",
+        "precioRestante": 70.0,
+        "totalPagado": 0.0,
+        "costoPenalidad": 0.0,
+        "motivoPenalidad": null,
+        "observacion": "Fixture qa-runbooks",
+        "estado": true,
+        "estadoEstadia": "ACTIVA",
+        "archivada": false,
+        "vencida": false,
+        "version": 1,
+        "closureId": null,
+        "cleaningCycleId": null,
+        "cierre": null
+      },
+      "meta": {
+        "correlationId": "1c6db5a5-c01a-4bd6-9999-909019eec4d7"
+      }
+    }
+  },
+  "b": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "89a79677-ef6e-49ef-8daf-8a4fee35d887",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "183",
+      "date": "Wed, 21 Oct 2026 06:16:52 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "La habitación ya está ocupada.",
+      "data": null,
+      "error": {
+        "code": "ROOM_OCCUPIED",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "89a79677-ef6e-49ef-8daf-8a4fee35d887"
+      }
+    }
+  },
+  "estados": [
+    201,
+    409
+  ],
+  "codigos": [
+    "",
+    "ROOM_OCCUPIED"
+  ],
+  "estadiasActivas101": 1,
+  "indiceUnico": "uq_recepcion_habitacion_activa",
+  "exigido": "uno 201, otro 409 ROOM_OCCUPIED, una sola fila ACTIVA",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T06:16:52.234425Z"
+}
