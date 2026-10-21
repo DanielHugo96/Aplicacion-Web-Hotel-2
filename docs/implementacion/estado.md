@@ -32,7 +32,7 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F4 | [`back-reporting-proyecciones`](../plans/back-reporting-proyecciones.md) | T10 | `cerrado` | `back-reporting-proyecciones` | [#107](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/107) |
 | F3 | [`front-admin-web-recepcion`](../plans/front-admin-web-recepcion.md) | T10 | `cerrado` | `front-admin-web-recepcion` | [#109](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/109) |
 | F5 | [`qa-runbooks`](../plans/qa-runbooks.md) | T11 | `cerrado` | `qa-runbooks` | [#111](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/111) |
-| F3 | [`front-admin-web-ventas`](../plans/front-admin-web-ventas.md) | T11 | `propuesto` | — | — |
+| F3 | [`front-admin-web-ventas`](../plans/front-admin-web-ventas.md) | T11 | `cerrado` | `front-admin-web-ventas` | [#119](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/119) |
 | F4 | [`front-admin-web-cierre`](../plans/front-admin-web-cierre.md) | T12 | `propuesto` | — | — |
 | F4 | [`front-admin-web-reportes`](../plans/front-admin-web-reportes.md) | T13 | `propuesto` | — | — |
 | F5 | [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md) | T14 | `propuesto` | — | — |
