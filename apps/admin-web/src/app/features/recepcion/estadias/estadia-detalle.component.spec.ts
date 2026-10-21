@@ -102,6 +102,38 @@ describe('EstadiaDetalleComponent', () => {
     expect(componente.estadia()).toBeNull();
   });
 
+  it('el detalle monta el bloque de cierre con la estadía y el ETag ya cargados', async () => {
+    await cargar(
+      recepcion({
+        estadoEstadia: 'CERRADA',
+        estado: false,
+        cierre: {
+          closureId: '20000000-0000-4000-8000-000000000002',
+          estado: 'COMPLETADO',
+          lastErrorCode: null,
+          calculo: null,
+          medioPago: 'EFECTIVO',
+        },
+      }),
+      '"7"'
+    );
+    const panel = (fixture.nativeElement as HTMLElement).querySelector('app-cierre-panel');
+    expect(panel).toBeTruthy();
+    expect(panel!.textContent).toContain('20000000-0000-4000-8000-000000000002');
+    expect(panel!.textContent).toContain('Completado');
+    // El bloque no relee la estadía: usa la que cargó el detalle.
+    http.expectNone(`${API_BASE_URL}/api/recepcion/1001`);
+  });
+
+  it('una estadía vencida muestra «Estadía vencida sin cierre» en píldora', async () => {
+    await cargar(recepcion({ vencida: true }));
+    const pills = Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll('.pill')
+    ) as HTMLElement[];
+    expect(pills.some((p) => p.textContent?.includes('Estadía vencida sin cierre'))).toBe(true);
+    expect(pills.some((p) => p.textContent?.includes('Activa'))).toBe(true);
+  });
+
   it('un 200 de edición refresca el detalle con su nuevo ETag', async () => {
     await cargar();
     componente.abrirEdicion();

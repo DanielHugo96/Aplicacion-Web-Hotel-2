@@ -9,7 +9,7 @@
  * contra el mismo contrato; aquí se reexportan para no duplicar el schema.
  */
 
-import type { MedioPago } from './cliente.models';
+import type { MedioPago, Recepcion } from './cliente.models';
 
 export type {
   CalculoCierre,
@@ -38,6 +38,62 @@ export interface CheckInInput {
 export interface ActualizarSalidaInput {
   fechaSalida: string;
   observacion?: string;
+}
+
+/**
+ * `Cotizacion` del schema `ApiCotizacion`: desglose informativo calculado por
+ * el backend. El frontend no recalcula ninguno de sus importes.
+ */
+export interface Cotizacion {
+  idRecepcion: number;
+  alojamiento: number;
+  adelanto: number;
+  penalidad: number;
+  saldoAlojamiento: number;
+  consumosPagados: number;
+  consumosPendientes: number;
+  cobroAhora: number;
+  moneda: 'PEN';
+  calculadoEn: string;
+}
+
+/** Cuerpo de `POST /api/recepcion/registrar-salida` (schema `Salida`). */
+export interface SalidaInput {
+  idRecepcion: number;
+  idHabitacion: number;
+  costoPenalidad: number;
+  motivoPenalidad?: string;
+  montoRecibido: number;
+  medioPago: MedioPago;
+}
+
+/** Cuerpo de `POST /api/recepcion/{id}/anular-checkin`. */
+export interface AnularCheckinInput {
+  motivo: string;
+}
+
+/** Resultado del cierre: 200 terminal con la estadía cerrada o 202 `CERRANDO`. */
+export type ResultadoCierre =
+  | { kind: 'confirmada'; recepcion: Recepcion }
+  | {
+      kind: 'pendiente';
+      recepcion: Recepcion;
+      location: string;
+      retryAfterMs: number;
+    };
+
+/** Nuevo 409 `AMOUNT_MISMATCH`: cotización recalculada y `closureId` recibidos. */
+export interface CotizacionRechazada {
+  cotizacion: Cotizacion | null;
+  closureId: string | null;
+  recibido: number | null;
+}
+
+/** Evento de cada sondeo del cierre pendiente (`202`). */
+export interface AvanceCierre {
+  recepcion: Recepcion;
+  etag: string | null;
+  actualizadoEn: Date;
 }
 
 /** Tarea de limpieza (`Limpieza`). `version` es el `If-Match` de la tarea. */

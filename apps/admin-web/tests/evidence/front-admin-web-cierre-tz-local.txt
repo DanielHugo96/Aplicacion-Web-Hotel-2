@@ -1,0 +1,11 @@
+$ npm test -- --watch=false
+
+
+[1m[30m[46m RUN [49m[39m[22m [36mv5.0.4 [39m[90mD:/Cibertec/6to ciclo/DAW II/final/docs/Aplicacion-Web-Hotel-2/apps/admin-web[39m
+
+
+[2m Test Files [22m [1m[32m43 passed[39m[22m[90m (43)[39m
+[2m      Tests [22m [1m[32m258 passed[39m[22m[90m (258)[39m
+[2m   Start at [22m 22:52:00
+[2m   Duration [22m 5.70s[2m (environment 73%, tests 17%, setup 5%, import 2%, transform 2%)[22m
+

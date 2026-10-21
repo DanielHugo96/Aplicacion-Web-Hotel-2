@@ -129,18 +129,11 @@
         </section>
       }
 
-      @if (e.cierre) {
-        <section class="panel" aria-labelledby="cierreTitulo">
-          <h3 id="cierreTitulo">Cierre</h3>
-          <p class="text-small">
-            <span class="monospace">{{ e.cierre.closureId }}</span>
-            · {{ e.cierre.estado }}
-            @if (e.cierre.medioPago) {
-              · {{ medioPagoEtiqueta(e.cierre.medioPago) }}
-            }
-          </p>
-        </section>
-      }
+      <app-cierre-panel
+        [recepcion]="e"
+        [etag]="etag()"
+        (recargar)="cargar()"
+      ></app-cierre-panel>
     </article>
 
     @if (editando()) {

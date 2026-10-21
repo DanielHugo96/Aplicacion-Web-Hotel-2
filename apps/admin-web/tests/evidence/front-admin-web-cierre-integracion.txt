@@ -1,0 +1,148 @@
+Integración front-admin-web-cierre por el Gateway http://localhost:8080
+Token de administrador obtenido con /api/auth/login (sin imprimir la credencial).
+
+[recepcion/listar?estadoEstadia=ACTIVA] HTTP 200
+  {"success":true,"message":"OK","data":[{"idRecepcion":35,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":null,"precioInicial":420.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":400.00,"totalPagado":20.00,"costoPenalidad":0.00,"motivoPenalidad":null,"observacion":"Integración cierre","estado":true,"estadoEstadia":"ACTIVA","archivada":false,"vencida":false,"version":1,"closureId":null,"cleaningCycleId":null,"cierre":null}],"meta":{"correlationId":"53354ebe-c91c-4bdf-a24d-2b4dc6ad109f","page":0,"size":20,"totalElements":1}}
+
+[recepcion/{id} (detalle con ETag de partida)] HTTP 200
+  ETag="1" · estadoEstadia=ACTIVA
+  {"success":true,"message":"OK","data":{"idRecepcion":35,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":null,"precioInicial":420.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":400.00,"totalPagado":20.00,"costoPenalidad":0.00,"motivoPenalidad":null,"observacion":"Integración cierre","estado":true,"estadoEstadia":"ACTIVA","archivada":false,"vencida":false,"version":1,"closureId":null,"cleaningCycleId":null,"cierre":null},"meta":{"correlationId":"9540858c-9cb1-4383-93b5-220610c53e0b"}}
+
+[recepcion/{id}/cotizacion-salida?costoPenalidad=10] HTTP 200
+  el frontend solo pinta este desglose; no recalcula importes
+  {"success":true,"message":"OK","data":{"idRecepcion":35,"alojamiento":430.00,"adelanto":20.00,"penalidad":10.00,"saldoAlojamiento":410.00,"consumosPagados":0.00,"consumosPendientes":0.00,"cobroAhora":410.00,"moneda":"PEN","calculadoEn":"2026-10-21T03:48:31.845959100Z"},"meta":{"correlationId":"e502deab-6d00-4521-8316-9de71e8e0c10"}}
+
+[recepcion/{id}/cotizacion-salida?costoPenalidad=0 (recotiza sin tocar el detalle)] HTTP 200
+  penalidad=0.0 · cobroAhora=400.0
+  {"success":true,"message":"OK","data":{"idRecepcion":35,"alojamiento":420.00,"adelanto":20.00,"penalidad":0.00,"saldoAlojamiento":400.00,"consumosPagados":0.00,"consumosPendientes":0.00,"cobroAhora":400.00,"moneda":"PEN","calculadoEn":"2026-10-21T03:48:31.864491100Z"},"meta":{"correlationId":"e78b300c-95db-4981-9fde-568d5512fef2"}}
+
+[recepcion/registrar-salida con monto +0.01 (409 AMOUNT_MISMATCH esperado)] HTTP 409
+  cobroAhora=410.0 · montoRecibido=410.01 · code=AMOUNT_MISMATCH · nuevaCotizacion=410.0 · closureIdRechazado=2f9857b6-b125-459e-b6ba-f8c2870611e2
+  {"success":false,"message":"El monto no coincide con el calculado. Revisa la nueva cotización.","data":{"cotizacion":{"idRecepcion":35,"alojamiento":430.00,"adelanto":20.00,"penalidad":10.00,"saldoAlojamiento":410.00,"consumosPagados":0.00,"consumosPendientes":0.00,"cobroAhora":410.00,"moneda":"PEN","calculadoEn":"2026-10-21T03:48:31.913539300Z"},"closureId":"2f9857b6-b125-459e-b6ba-f8c2870611e2"},"error":{"code":"AMOUNT_MISMATCH","fields":{"montoRecibido":"410.01"}},"meta":{"correlationId":"3ae883e5-4372-4e3b-b788-a47b7fc5fa96"}}
+
+[recepcion/registrar-salida con el monto calculado (intención nueva)] HTTP 200
+  ETag="5" · estadoEstadia=CERRADA · estadoCierre=COMPLETADO · medioPago=EFECTIVO
+  {"success":true,"message":"Salida registrada","data":{"idRecepcion":35,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":"2026-10-21T03:48:32.024504Z","precioInicial":420.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":0.00,"totalPagado":430.00,"costoPenalidad":10.00,"motivoPenalidad":"Salida tardía (integración)","observacion":"Integración cierre","estado":false,"estadoEstadia":"CERRADA","archivada":false,"vencida":false,"version":5,"closureId":"7ffd80b6-3484-465f-ade5-6b36e962acd1","cleaningCycleId":"da35725f-7b49-4374-a223-61b2d2944efc","cierre":{"closureId":"7ffd80b6-3484-465f-ade5-6b36e962acd1","estado":"COMPLETADO","lastErrorCode":null,"calculo":{"cobroAhora":410.0,"totalGeneral":430.0,"consumosTotal":0.0,"alojamientoTotal":430.0,"saldoAlojamiento":410.0,"consumosPendientes":0.0,"consumosPagadosAntes":0.0,"expectedPendingTotal":0.0},"medioPago":"EFECTIVO"}},"meta":{"correlationId":"a0ed93d0-feb7-4b4f-b5ab-c4a122a27bf3"}}
+
+[recepcion/{id} tras el cierre] HTTP 200
+  ETag="5" · estadoEstadia=CERRADA · totalPagado=430.0
+  {"success":true,"message":"OK","data":{"idRecepcion":35,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":"2026-10-21T03:48:32.024504Z","precioInicial":420.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":0.00,"totalPagado":430.00,"costoPenalidad":10.00,"motivoPenalidad":"Salida tardía (integración)","observacion":"Integración cierre","estado":false,"estadoEstadia":"CERRADA","archivada":false,"vencida":false,"version":5,"closureId":"7ffd80b6-3484-465f-ade5-6b36e962acd1","cleaningCycleId":"da35725f-7b49-4374-a223-61b2d2944efc","cierre":{"closureId":"7ffd80b6-3484-465f-ade5-6b36e962acd1","estado":"COMPLETADO","lastErrorCode":null,"calculo":{"cobroAhora":410.0,"totalGeneral":430.0,"consumosTotal":0.0,"alojamientoTotal":430.0,"saldoAlojamiento":410.0,"consumosPendientes":0.0,"consumosPagadosAntes":0.0,"expectedPendingTotal":0.0},"medioPago":"EFECTIVO"}},"meta":{"correlationId":"cee30d19-d6c9-4feb-be8c-f9f0d62dafbd"}}
+
+[recepcion/registrar-salida sobre una estadía CERRADA (409 STAY_NOT_ACTIVE)] HTTP 409
+  code=STAY_NOT_ACTIVE
+  {"success":false,"message":"La estadía no está activa para esa operación.","data":null,"error":{"code":"STAY_NOT_ACTIVE","fields":{}},"meta":{"correlationId":"01fc0134-a37c-4e27-8baf-ab049ba8054a"}}
+
+[habitacion/limpiezas?estado=PENDIENTE (gate en limpieza)] HTTP 200
+  {"success":true,"message":"OK","data":[{"cleaningCycleId":"da35725f-7b49-4374-a223-61b2d2944efc","idHabitacion":101,"idRecepcion":35,"estado":"PENDIENTE","roomVersion":51,"version":1,"createdAt":"2026-10-21T03:48:39.640699Z","completedAt":null}],"meta":{"correlationId":"d1467a10-7865-4fc1-a95e-dd23e9dc7edf","page":0,"size":50,"totalElements":1}}
+
+[habitacion/limpieza-completada (gate vuelve a LISTA)] HTTP 200
+  {"success":true,"message":"OK","data":{"limpieza":{"cleaningCycleId":"da35725f-7b49-4374-a223-61b2d2944efc","idHabitacion":101,"idRecepcion":35,"estado":"COMPLETADA","roomVersion":51,"version":2,"createdAt":"2026-10-21T03:48:39.640699Z","completedAt":"2026-10-21T03:48:40.218279Z"},"habitacion":{"idHabitacion":101,"idHotel":1,"numero":"101","idPiso":11,"pisoNombre":"Primer piso","idCategoria":1,"categoriaNombre":"Individual","detalle":"Habitacion individual de demostracion","precio":70.00,"publicada":true,"urlsImagenes":[{"url":"/assets/demo/hab-101-1.jpg","alt":"Habitacion de demostracion","orden":1}],"estado":true,"idEstadoHabitacion":1,"estadoFisico":{"idEstadoHabitacion":1,"codigo":"LISTA","descripcion":"Lista","estado":true,"version":1},"ocupacion":{"estadoEstadia":"DESCONOCIDA","idRecepcion":null,"updatedAt":null},"blockId":null,"endpoint":null,"version":13}},"meta":{"correlationId":"c5802438-6f32-466d-b2d4-0e5e4c39f98b"}}
+
+[habitacion/buscar (gate tras completar limpieza)] HTTP 200
+  estadoFisico=LISTA · ocupacion={'estadoEstadia': 'DESCONOCIDA', 'idRecepcion': None, 'updatedAt': None}
+  {"success":true,"message":"OK","data":{"idHabitacion":101,"idHotel":1,"numero":"101","idPiso":11,"pisoNombre":"Primer piso","idCategoria":1,"categoriaNombre":"Individual","detalle":"Habitacion individual de demostracion","precio":70.00,"publicada":true,"urlsImagenes":[{"url":"/assets/demo/hab-101-1.jpg","alt":"Habitacion de demostracion","orden":1}],"estado":true,"idEstadoHabitacion":1,"estadoFisico":{"idEstadoHabitacion":1,"codigo":"LISTA","descripcion":"Lista","estado":true,"version":1},"ocupacion":{"estadoEstadia":"DESCONOCIDA","idRecepcion":null,"updatedAt":null},"blockId":null,"endpoint":null,"version":13},"meta":{"correlationId":"a1207507-276e-413a-bdaa-1f0d2c6105c8"}}
+
+[recepcion/registrar (check-in para anular, intento 1)] HTTP 409
+  {"success":false,"message":"La habitación no admite ingreso todavía (limpieza o mantenimiento).","data":null,"error":{"code":"ROOM_NOT_READY","fields":{}},"meta":{"correlationId":"7942b491-4385-485b-9c97-95c9b0673f63"}}
+  -> ROOM_NOT_READY transitorio; se reintenta con intención nueva
+
+[recepcion/registrar (check-in para anular, intento 2)] HTTP 409
+  {"success":false,"message":"La habitación no admite ingreso todavía (limpieza o mantenimiento).","data":null,"error":{"code":"ROOM_NOT_READY","fields":{}},"meta":{"correlationId":"0ec59812-1a23-4488-be04-c9e2a76a202e"}}
+  -> ROOM_NOT_READY transitorio; se reintenta con intención nueva
+
+[recepcion/registrar (check-in para anular, intento 3)] HTTP 201
+  {"success":true,"message":"Check-in registrado","data":{"idRecepcion":36,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":null,"precioInicial":420.00,"adelanto":0.00,"medioPagoAdelanto":null,"precioRestante":420.00,"totalPagado":0.00,"costoPenalidad":0.00,"motivoPenalidad":null,"observacion":"Integración de anulación de check-in","estado":true,"estadoEstadia":"ACTIVA","archivada":false,"vencida":false,"version":1,"closureId":null,"cleaningCycleId":null,"cierre":null},"meta":{"correlationId":"5891bc06-f784-4cfa-aae4-7713ab095e5d"}}
+
+[recepcion/{id} de la estadía a anular] HTTP 200
+  ETag="1" · estadoEstadia=ACTIVA
+  {"success":true,"message":"OK","data":{"idRecepcion":36,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":null,"precioInicial":420.00,"adelanto":0.00,"medioPagoAdelanto":null,"precioRestante":420.00,"totalPagado":0.00,"costoPenalidad":0.00,"motivoPenalidad":null,"observacion":"Integración de anulación de check-in","estado":true,"estadoEstadia":"ACTIVA","archivada":false,"vencida":false,"version":1,"closureId":null,"cleaningCycleId":null,"cierre":null},"meta":{"correlationId":"595eb818-f810-4ae1-a878-7546fc2946b0"}}
+
+[recepcion/eliminar/{id} sobre una estadía ACTIVA (409 esperado)] HTTP 409
+  code=STAY_NOT_ACTIVE
+  {"success":false,"message":"La estadía no está activa para esa operación.","data":null,"error":{"code":"STAY_NOT_ACTIVE","fields":{}},"meta":{"correlationId":"df248b08-e038-434a-b0d8-962de8c24acb"}}
+
+[recepcion/{id}/anular-checkin con motivo vacío (400 esperado)] HTTP 400
+  {"success":false,"message":"Revisa los datos marcados.","data":null,"error":{"code":"VALIDATION_ERROR","fields":{"motivo":"obligatorio entre 1 y 300 caracteres"}},"meta":{"correlationId":"06be22ea-1f5b-4b4b-8738-62c09e2df70a"}}
+
+[recepcion/36/anular-checkin con If-Match "2" (412 esperado)] HTTP 412
+  code=PRECONDITION_FAILED
+  {"success":false,"message":"Otra persona modificó este registro. Recarga para ver los cambios.","data":null,"error":{"code":"PRECONDITION_FAILED","fields":{}},"meta":{"correlationId":"0260492c-a1b0-42a0-95da-70a1452e1634"}}
+
+[recepcion/{id}/anular-checkin (200)] HTTP 200
+  estadoEstadia=CERRADA · archivada=True · totalPagado=0.0
+  {"success":true,"message":"Check-in anulado","data":{"idRecepcion":36,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":null,"precioInicial":420.00,"adelanto":0.00,"medioPagoAdelanto":null,"precioRestante":420.00,"totalPagado":0.00,"costoPenalidad":0.00,"motivoPenalidad":null,"observacion":"Integración de anulación de check-in","estado":false,"estadoEstadia":"CERRADA","archivada":true,"vencida":false,"version":2,"closureId":null,"cleaningCycleId":null,"cierre":null},"meta":{"correlationId":"e697e126-5a14-4c9f-ab9f-a133fcb20eef"}}
+
+[recepcion/{id}/anular-checkin repetido (409 esperado, sin cierre en curso)] HTTP 409
+  code=STAY_NOT_ACTIVE
+  {"success":false,"message":"La estadía no está activa para esa operación.","data":null,"error":{"code":"STAY_NOT_ACTIVE","fields":{}},"meta":{"correlationId":"b877be5e-861c-42fa-bc67-d14e26aad179"}}
+
+[recepcion/eliminar/35 con If-Match "1" (412 esperado)] HTTP 412
+  code=PRECONDITION_FAILED
+  {"success":false,"message":"Otra persona modificó este registro. Recarga para ver los cambios.","data":null,"error":{"code":"PRECONDITION_FAILED","fields":{}},"meta":{"correlationId":"449683ff-3c8f-4855-89dc-5d07d40a1aab"}}
+
+[recepcion/eliminar/{id} (archivar CERRADA)] HTTP 200
+  archivada=True · ETag="6"
+  {"success":true,"message":"Estadía archivada","data":{"idRecepcion":35,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":"2026-10-21T03:48:32.024504Z","precioInicial":420.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":0.00,"totalPagado":430.00,"costoPenalidad":10.00,"motivoPenalidad":"Salida tardía (integración)","observacion":"Integración cierre","estado":false,"estadoEstadia":"CERRADA","archivada":true,"vencida":false,"version":6,"closureId":"7ffd80b6-3484-465f-ade5-6b36e962acd1","cleaningCycleId":"da35725f-7b49-4374-a223-61b2d2944efc","cierre":{"closureId":"7ffd80b6-3484-465f-ade5-6b36e962acd1","estado":"COMPLETADO","lastErrorCode":null,"calculo":{"cobroAhora":410.0,"totalGeneral":430.0,"consumosTotal":0.0,"alojamientoTotal":430.0,"saldoAlojamiento":410.0,"consumosPendientes":0.0,"consumosPagadosAntes":0.0,"expectedPendingTotal":0.0},"medioPago":"EFECTIVO"}},"meta":{"correlationId":"70d5e6cd-2b63-490b-9eed-dc13d9e17caf"}}
+
+[recepcion/eliminar/{id} repetido (la estadía ya está archivada)] HTTP 200
+  {"success":true,"message":"Estadía archivada","data":{"idRecepcion":35,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-26","fechaSalidaConfirmacion":"2026-10-21T03:48:32.024504Z","precioInicial":420.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":0.00,"totalPagado":430.00,"costoPenalidad":10.00,"motivoPenalidad":"Salida tardía (integración)","observacion":"Integración cierre","estado":false,"estadoEstadia":"CERRADA","archivada":true,"vencida":false,"version":7,"closureId":"7ffd80b6-3484-465f-ade5-6b36e962acd1","cleaningCycleId":"da35725f-7b49-4374-a223-61b2d2944efc","cierre":{"closureId":"7ffd80b6-3484-465f-ade5-6b36e962acd1","estado":"COMPLETADO","lastErrorCode":null,"calculo":{"cobroAhora":410.0,"totalGeneral":430.0,"consumosTotal":0.0,"alojamientoTotal":430.0,"saldoAlojamiento":410.0,"consumosPendientes":0.0,"consumosPagadosAntes":0.0,"expectedPendingTotal":0.0},"medioPago":"EFECTIVO"}},"meta":{"correlationId":"103c26d4-28e5-44b3-ba48-88c3771c6f82"}}
+
+Resumen JSON: {"idRecepcionCerrada": 35, "idRecepcionAnulada": 36, "situacion": "Integración por el Gateway completada"}
+
+=== 202 de cierre con recuperación real (confirmación de Sales retenida) ===
+
+[recepcion/registrar (estadía para el 202)] HTTP 201
+  {"success":true,"message":"Check-in registrado","data":{"idRecepcion":37,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-21","fechaSalidaConfirmacion":null,"precioInicial":70.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":50.00,"totalPagado":20.00,"costoPenalidad":0.00,"motivoPenalidad":null,"observacion":"Integración del 202 de cierre","estado":true,"estadoEstadia":"ACTIVA","archivada":false,"vencida":false,"version":1,"closureId":null,"cleaningCycleId":null,"cierre":null},"meta":{"correlationId":"4cde3225-f69f-4124-82ab-350b6bf0cc5d"}}
+
+[recepcion/{id}/cotizacion-salida?costoPenalidad=0] HTTP 200
+  {"success":true,"message":"OK","data":{"idRecepcion":37,"alojamiento":70.00,"adelanto":20.00,"penalidad":0.00,"saldoAlojamiento":50.00,"consumosPagados":0.00,"consumosPendientes":0.00,"cobroAhora":50.00,"moneda":"PEN","calculadoEn":"2026-10-21T03:48:47.104254900Z"},"meta":{"correlationId":"cc7b433d-782d-4d51-8ab7-83a755b84fa8"}}
+
+Reiniciando reception-service con FEIGN_READ_TIMEOUT_MS=1500 (por debajo del corte de 5 s del Gateway)…
+reception-service listo con el timeout reducido.
+
+Reteniendo pg_advisory_xact_lock(7101, 37) en sales_db para que la confirmación no termine en el request…
+lock retenido; enviando el cierre.
+
+[recepcion/registrar-salida con la confirmación retenida (202 esperado)] HTTP 202 · Location=/api/recepcion/37 Retry-After=2 estadoEstadia=CERRANDO estadoCierre=CONFIRMANDO
+  {"success":true,"message":"Cierre en curso","data":{"idRecepcion":37,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-21","fechaSalidaConfirmacion":null,"precioInicial":70.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":50.00,"totalPagado":20.00,"costoPenalidad":0.00,"motivoPenalidad":null,"observacion":"Integración del 202 de cierre","estado":true,"estadoEstadia":"CERRANDO","archivada":false,"vencida":false,"version":2,"closureId":"e4c743b1-086e-4144-9ac1-dc1ed01a3b12","cleaningCycleId":null,"cierre":{"closureId":"e4c743b1-086e-4144-9ac1-dc1ed01a3b12","estado":"CONFIRMANDO","lastErrorCode":"DEPENDENCY_UNAVAILABLE","calculo":{"cobroAhora":50.0,"totalGeneral":70.0,"consumosTotal":0.0,"alojamientoTotal":70.0,"saldoAlojamiento":50.0,"consumosPendientes":0.0,"consumosPagadosAntes":0.0,"expectedPendingTotal":0.0}}},"meta":{"correlationId":"04a1df0b-6c2d-4552-a8e4-8b297d826c18"}}
+lock liberado; el recuperador de reception ya puede confirmar.
+[polling cierre 202 1] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 2] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 3] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 4] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 5] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 6] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 7] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 8] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 9] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 10] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 11] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 12] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 13] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 14] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 15] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 16] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 17] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 18] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 19] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 20] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 21] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 22] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 23] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 24] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 25] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 26] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 27] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 28] HTTP 200 · estadoEstadia=CERRANDO · estadoCierre=CONFIRMANDO · lastErrorCode=DEPENDENCY_UNAVAILABLE
+[polling cierre 202 29] HTTP 200 · estadoEstadia=CERRADA · estadoCierre=COMPLETADO · lastErrorCode=None
+
+[cierre 202 terminal] HTTP 200
+  {"success":true,"message":"OK","data":{"idRecepcion":37,"idHotel":1,"idCliente":100,"idHabitacion":101,"numero":"101","categoriaNombre":"Individual","pisoNombre":"Primer piso","detalleHabitacion":"Habitacion individual de demostracion","precioHabitacion":70.00,"nombre":"Cliente","apellido":"Uno","tipoDocumento":"DNI","documento":"90000100","correo":"cliente.uno@hotel.test","fechaEntrada":"2026-10-20","fechaSalida":"2026-10-21","fechaSalidaConfirmacion":"2026-10-21T03:50:06.550449Z","precioInicial":70.00,"adelanto":20.00,"medioPagoAdelanto":"EFECTIVO","precioRestante":0.00,"totalPagado":70.00,"costoPenalidad":0.00,"motivoPenalidad":null,"observacion":"Integración del 202 de cierre","estado":false,"estadoEstadia":"CERRADA","archivada":false,"vencida":false,"version":3,"closureId":"e4c743b1-086e-4144-9ac1-dc1ed01a3b12","cleaningCycleId":"a3ba7ca7-4db1-48b8-b531-00a4678bbcca","cierre":{"closureId":"e4c743b1-086e-4144-9ac1-dc1ed01a3b12","estado":"COMPLETADO","lastErrorCode":null,"calculo":{"cobroAhora":50.0,"totalGeneral":70.0,"consumosTotal":0.0,"alojamientoTotal":70.0,"saldoAlojamiento":50.0,"consumosPendientes":0.0,"consumosPagadosAntes":0.0,"expectedPendingTotal":0.0},"medioPago":"TARJETA"}},"meta":{"correlationId":"d09d26c6-95e6-4465-b884-06b7f0b4ad7c"}}
+
+[recepcion/registrar-salida con la misma Idempotency-Key (mismo closureId, sin segunda salida)] HTTP 202 · estadoEstadia=CERRANDO · closureId=e4c743b1-086e-4144-9ac1-dc1ed01a3b12
+  {"data": {"cierre": {"estado": "CONFIRMANDO", "calculo": {"cobroAhora": 50.0, "totalGeneral": 70.0, "consumosTotal": 0.0, "alojamientoTotal": 70.0, "saldoAlojamiento": 50.0, "consumosPendientes": 0.0, "consumosPagadosAntes": 0.0, "expectedPendingTotal": 0.0}, "closureId": "e4c743b1-086e-4144-9ac1-dc1ed01a3b12", "lastErrorCode": "DEPENDENCY_UNAVAILABLE"}, "correo": "cliente.uno@hotel.test", "estado": true, "nombre": "Cliente", "numero": "101", "idHotel": 1, "vencida": false, "version": 2, "adelanto": 20.00, "apellido": "Uno", "archivada": false, "closureId": "e4c743b1-086e-4144-9ac1-dc1ed01a3b12", "documento": "90000100", "idCliente": 100, "pisoNombre": "Primer piso", "fechaSalida": "2026-10-21", "idRecepcion": 37, "observacion": "Integración del 202 de cierre", "totalPagado": 20.00, "fechaEntrada": "2026-10-20", "idHabitacion": 101, "estadoEstadia": "CERRANDO", "precioInicial": 70.00, "tipoDocumento": "DNI", "costoPenalidad": 0.00, "precioRestante": 50.00, "categoriaNombre": "Individual", "cleaningCycleId": null, "motivoPenalidad": null, "precioHabitacion": 70.00, "detalleHabitacion": "Habitacion individual de demostracion", "medioPagoAdelanto": "EFECTIVO", "fechaSalidaConfirmacion": null}, "meta": {"correlationId": "04a1df0b-6c2d-4552-a8e4-8b297d826c18"}, "message": "Cierre en curso", "success": true}
+  cierres persistidos para la estadía 37: 1 (esperado 1)
+
+Restaurando reception-service con el read-timeout por defecto…
+reception-service listo otra vez con los valores por defecto.
+{"idRecepcion": 37, "resultado": "CERRADA tras 202 con polling", "cierresPersistidos": "1"}

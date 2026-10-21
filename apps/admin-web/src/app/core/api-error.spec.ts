@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { CATALOGO_ERRORS, ERROR_CATALOG, parseApiError } from './api-error';
 
 describe('catálogo de errores', () => {
-  it('cubre los treinta códigos del alcance del panel, recepción, área de cliente y ventas', () => {
-    expect(CATALOGO_ERRORS).toHaveLength(30);
-    expect(new Set(CATALOGO_ERRORS).size).toBe(30);
+  it('cubre los treinta y dos códigos del alcance del panel, recepción, área de cliente y ventas', () => {
+    expect(CATALOGO_ERRORS).toHaveLength(32);
+    expect(new Set(CATALOGO_ERRORS).size).toBe(32);
   });
 
   it('usa el mensaje para UI y la acción esperada de errors.md', () => {
@@ -63,6 +63,21 @@ describe('catálogo de errores', () => {
     );
     expect(ERROR_CATALOG['ADVANCE_EXCEEDS_NEW_TOTAL'].message).toBe(
       'La nueva fecha deja el alojamiento por debajo del adelanto registrado.'
+    );
+  });
+
+  it('los códigos de cierre copian el catálogo de errors.md', () => {
+    expect(ERROR_CATALOG['AMOUNT_MISMATCH'].message).toBe(
+      'El monto no coincide con el calculado. Revisa la nueva cotización.'
+    );
+    expect(ERROR_CATALOG['CLOSURE_IN_PROGRESS'].message).toBe(
+      'Ya hay un cierre en curso; no vuelvas a cobrar.'
+    );
+    expect(ERROR_CATALOG['STAY_NOT_ACTIVE'].message).toBe(
+      'La estadía no está activa para esa operación.'
+    );
+    expect(ERROR_CATALOG['OPERATIONS_IN_PROGRESS'].message).toBe(
+      'Hay consumos en proceso. Espera a que terminen.'
     );
   });
 

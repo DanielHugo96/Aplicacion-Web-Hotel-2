@@ -1,0 +1,116 @@
+/* El bloque reutiliza las clases de panel/datos del detalle; solo añade el
+   diálogo con motivo y el resalte de penalidad. Tokens de DESIGN.md §10. */
+
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  align-items: flex-start;
+  margin-bottom: var(--space-4);
+}
+
+.datos {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+
+.datos > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--color-junta);
+  padding-bottom: var(--space-2);
+}
+
+.datos > div:last-child {
+  border-bottom: none;
+}
+
+.datos dt {
+  color: var(--color-garua);
+  font-size: var(--text-small);
+}
+
+.datos dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.datos-columnas {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.desglose {
+  margin-top: var(--space-4);
+}
+
+.desglose h3,
+.penalidad h3 {
+  font-size: var(--text-h3);
+  margin-bottom: var(--space-2);
+}
+
+.destacado {
+  background: var(--color-cochinilla-wash);
+  border-bottom: none;
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  font-weight: 600;
+}
+
+.destacado dt {
+  color: var(--color-tinta);
+}
+
+.penalidad {
+  margin-top: var(--space-4);
+  border: 1px solid var(--color-error);
+  background: var(--color-error-bg);
+  border-radius: var(--radius-card);
+  padding: var(--space-4);
+}
+
+.penalidad-importe {
+  font-size: var(--text-h2);
+  color: var(--color-error);
+  text-align: left;
+  margin: var(--space-1) 0;
+}
+
+.acciones-destructivas {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--color-junta);
+  padding-top: var(--space-4);
+}
+
+.dialogo-capa {
+  position: fixed;
+  inset: 0;
+  background: var(--color-azul-noche-scrim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  z-index: 50;
+}
+
+.dialogo {
+  background: #fff;
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-dialog);
+  padding: var(--space-6);
+  width: min(480px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.dialogo h2 {
+  font-size: var(--text-h2);
+  margin-bottom: var(--space-2);
+}

@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { API_BASE_URL } from '../../core/api.config';
 import { SessionService } from '../../core/services/session.service';
@@ -33,10 +33,11 @@ describe('rutas y menú del módulo de recepción', () => {
   beforeEach(() => stubMatchMedia());
   afterEach(() => TestBed.resetTestingModule());
 
-  it('declara las cuatro rutas lazy dentro del shell del panel', () => {
+  it('declara las cinco rutas lazy dentro del shell del panel', () => {
     expect(recepcionRoutes.map((r) => r.path)).toEqual([
       'recepcion',
       'recepcion/check-in',
+      'recepcion/:id/cierre',
       'recepcion/:id',
       'limpieza',
     ]);
@@ -47,10 +48,12 @@ describe('rutas y menú del módulo de recepción', () => {
     const paths = (shell?.children ?? []).map((r) => r.path);
     expect(paths).toContain('recepcion');
     expect(paths).toContain('recepcion/check-in');
+    expect(paths).toContain('recepcion/:id/cierre');
     expect(paths).toContain('recepcion/:id');
     expect(paths).toContain('limpieza');
-    // El literal check-in se declara antes que el parámetro :id.
+    // Los literales se declaran antes que los parámetros que los capturarían.
     expect(paths.indexOf('recepcion/check-in')).toBeLessThan(paths.indexOf('recepcion/:id'));
+    expect(paths.indexOf('recepcion/:id/cierre')).toBeLessThan(paths.indexOf('recepcion/:id'));
   });
 
   it('A y E ven Recepción y Limpieza en el menú; C no las ve', async () => {
@@ -128,5 +131,29 @@ describe('rutas y menú del módulo de recepción', () => {
     shell = fixture.componentInstance;
     expect(shell.estaVisible({ label: 'Recepción', path: '/app/recepcion', roles: ['ADMIN', 'EMPLEADO'] })).toBe(false);
     expect(shell.estaVisible({ label: 'Limpieza', path: '/app/limpieza', roles: ['ADMIN', 'EMPLEADO'] })).toBe(false);
+  });
+
+  it('la ruta de cierre exige A/E: E puede y C no', () => {
+    const ruta = recepcionRoutes.find((r) => r.path === 'recepcion/:id/cierre');
+    const guard = ruta?.canActivate?.[0] as (a: unknown, b: unknown) => unknown;
+    expect(typeof guard).toBe('function');
+
+    TestBed.configureTestingModule({
+      providers: [
+        SessionService,
+        { provide: Router, useValue: { navigateByUrl: vi.fn() } },
+      ],
+    });
+    const session = TestBed.inject(SessionService);
+    const router = TestBed.inject(Router);
+
+    session.setSession(authData('Empleado', [1]), PERSONA_EMPLEADO);
+    expect(TestBed.runInInjectionContext(() => guard({} as any, {} as any))).toBe(true);
+
+    session.setSession(authData('Cliente'), personaCliente);
+    const spy = vi.spyOn(router, 'navigateByUrl');
+    expect(TestBed.runInInjectionContext(() => guard({} as any, {} as any))).toBe(false);
+    expect(spy).toHaveBeenCalledWith('/mi-estadia', { replaceUrl: true });
+    TestBed.resetTestingModule();
   });
 });
