@@ -1,0 +1,55 @@
+{
+  "caso": "CLN03",
+  "eventoEntregado": {
+    "eventId": "e7de338f-e99b-49a5-a5bd-2a1e0539ad4c",
+    "type": "HabitacionLista",
+    "schemaVersion": 1,
+    "aggregateType": "habitacion",
+    "aggregateId": "101",
+    "aggregateVersion": 99,
+    "idHotel": 1,
+    "occurredAt": "2026-10-21T08:21:56.559170Z",
+    "correlationId": "5b357332-6ee8-4fe3-912d-418c3e0d1bc6",
+    "payload": {
+      "idHabitacion": 101,
+      "idHotel": 1,
+      "numero": "101",
+      "idCategoria": 1,
+      "categoriaNombre": "Individual",
+      "pisoNombre": "Primer piso",
+      "precio": 70.0,
+      "estado": true,
+      "estadoFisico": "LISTA",
+      "version": 99,
+      "cleaningCycleId": "501dc07c-778d-469f-9de9-312f8f756863",
+      "cleaningRoomVersion": 1,
+      "blockId": null
+    }
+  },
+  "gateProjectionAntes": [
+    [
+      "OCUPADA"
+    ]
+  ],
+  "gateProjectionDespues": [
+    [
+      "OCUPADA"
+    ]
+  ],
+  "limpiezaCompletadaProjection": [
+    [
+      "501dc07c-778d-469f-9de9-312f8f756863",
+      "101",
+      "1"
+    ]
+  ],
+  "gate": {
+    "estado": "OCUPADA",
+    "blockId": null,
+    "cleaningCycleId": null,
+    "roomVersion": 10
+  },
+  "exigido": "C1 conciliado sin liberar la ocupación posterior; projection no eterna",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:22:09.306825Z"
+}

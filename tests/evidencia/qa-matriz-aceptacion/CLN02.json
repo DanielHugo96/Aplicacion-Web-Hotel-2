@@ -1,0 +1,43 @@
+{
+  "caso": "CLN02",
+  "reenvioComando": {
+    "status": 200,
+    "headers": {
+      "allow": "POST, OPTIONS",
+      "cache-control": "no-cache",
+      "connection": "close",
+      "content-length": "15",
+      "content-security-policy": "script-src 'self'; object-src 'self'",
+      "content-type": "application/json",
+      "date": "Wed, 21 Oct 2026 08:21:39 GMT",
+      "server": "Cowboy",
+      "vary": "accept, accept-encoding, origin"
+    },
+    "body": "{\"routed\":true}"
+  },
+  "tareaC1": [
+    [
+      "COMPLETADA"
+    ]
+  ],
+  "gateTrasReenvio": {
+    "estado": "OCUPADA",
+    "blockId": null,
+    "cleaningCycleId": null,
+    "roomVersion": 10
+  },
+  "eventoViejo": {
+    "publicado": true,
+    "resultado": null
+  },
+  "gateFinal": {
+    "estado": "OCUPADA",
+    "blockId": null,
+    "cleaningCycleId": null,
+    "roomVersion": 10
+  },
+  "tareasPorCiclo": "1",
+  "exigido": "no reabre C1 ni libera el ciclo actual; un solo registro por ciclo",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:21:56.374375Z"
+}

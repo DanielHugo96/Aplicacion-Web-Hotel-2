@@ -1,0 +1,157 @@
+{
+  "endpoints": [
+    "GET /api/auth/me",
+    "GET /api/hotel/listar",
+    "GET /api/persona/listar"
+  ],
+  "pruebas": {
+    "firmaAjena": {
+      "/api/auth/me": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "x-correlation-id": "18e4a881-0efa-4587-9c18-e287f2ad0256",
+          "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+          "pragma": "no-cache",
+          "expires": "0",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "0",
+          "referrer-policy": "no-referrer",
+          "content-length": "198",
+          "connection": "close"
+        },
+        "body": {
+          "success": false,
+          "message": "Tu sesión expiró. Vuelve a iniciar sesión.",
+          "data": null,
+          "error": {
+            "code": "UNAUTHENTICATED",
+            "fields": {}
+          },
+          "meta": {
+            "correlationId": "18e4a881-0efa-4587-9c18-e287f2ad0256"
+          }
+        }
+      },
+      "/api/hotel/listar": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "x-correlation-id": "e15ea3b9-7517-4524-9687-76abf0b54c46",
+          "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+          "pragma": "no-cache",
+          "expires": "0",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "0",
+          "referrer-policy": "no-referrer",
+          "content-length": "198",
+          "connection": "close"
+        },
+        "body": {
+          "success": false,
+          "message": "Tu sesión expiró. Vuelve a iniciar sesión.",
+          "data": null,
+          "error": {
+            "code": "UNAUTHENTICATED",
+            "fields": {}
+          },
+          "meta": {
+            "correlationId": "e15ea3b9-7517-4524-9687-76abf0b54c46"
+          }
+        }
+      }
+    },
+    "audienciaIncorrecta": {
+      "/api/auth/me": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "x-correlation-id": "d9f6bddc-770c-4dce-9cea-48ba63333547",
+          "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+          "pragma": "no-cache",
+          "expires": "0",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "0",
+          "referrer-policy": "no-referrer",
+          "content-length": "198",
+          "connection": "close"
+        },
+        "body": {
+          "success": false,
+          "message": "Tu sesión expiró. Vuelve a iniciar sesión.",
+          "data": null,
+          "error": {
+            "code": "UNAUTHENTICATED",
+            "fields": {}
+          },
+          "meta": {
+            "correlationId": "d9f6bddc-770c-4dce-9cea-48ba63333547"
+          }
+        }
+      },
+      "/api/hotel/listar": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "x-correlation-id": "9c1fcf47-ca3a-4683-8694-53a6691fe5f3",
+          "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+          "pragma": "no-cache",
+          "expires": "0",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "0",
+          "referrer-policy": "no-referrer",
+          "content-length": "198",
+          "connection": "close"
+        },
+        "body": {
+          "success": false,
+          "message": "Tu sesión expiró. Vuelve a iniciar sesión.",
+          "data": null,
+          "error": {
+            "code": "UNAUTHENTICATED",
+            "fields": {}
+          },
+          "meta": {
+            "correlationId": "9c1fcf47-ca3a-4683-8694-53a6691fe5f3"
+          }
+        }
+      },
+      "/api/persona/listar": {
+        "status": 401,
+        "headers": {
+          "content-type": "application/json",
+          "x-correlation-id": "e9c3512c-6b10-4150-9e38-efd4d6a4afa2",
+          "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+          "pragma": "no-cache",
+          "expires": "0",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "x-xss-protection": "0",
+          "referrer-policy": "no-referrer",
+          "content-length": "198",
+          "connection": "close"
+        },
+        "body": {
+          "success": false,
+          "message": "Tu sesión expiró. Vuelve a iniciar sesión.",
+          "data": null,
+          "error": {
+            "code": "UNAUTHENTICATED",
+            "fields": {}
+          },
+          "meta": {
+            "correlationId": "e9c3512c-6b10-4150-9e38-efd4d6a4afa2"
+          }
+        }
+      }
+    }
+  },
+  "exigido": "401 en cada servicio",
+  "cumple": true,
+  "caso": "SEC06",
+  "ejecutadoEn": "2026-10-21T08:10:24.689121Z"
+}

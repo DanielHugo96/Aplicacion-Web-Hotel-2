@@ -1,0 +1,77 @@
+{
+  "caso": "STK07",
+  "inducido": "proxy TCP que retiene el débito; sales matado en DEBITO_SOLICITADO",
+  "venta202": {
+    "status": 202,
+    "headers": {
+      "x-correlation-id": "bf55d0a1-672d-4298-ac86-52698c17edfc",
+      "location": "/api/venta/buscar/9",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "392",
+      "date": "Wed, 21 Oct 2026 08:26:03 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idVenta": 9,
+        "idRecepcion": 8,
+        "idCliente": 101,
+        "idHotel": 1,
+        "total": 0.0,
+        "estado": "PENDIENTE",
+        "estadoOperacion": "CANCELACION_PENDIENTE",
+        "operationId": "633d55c3-14fb-472d-a084-4dfe187dfe9b",
+        "medioPago": null,
+        "version": 2,
+        "fechaCreacion": "2026-10-21T08:25:58.662006Z",
+        "paidAt": null,
+        "detalles": []
+      },
+      "meta": {
+        "correlationId": "bf55d0a1-672d-4298-ac86-52698c17edfc"
+      }
+    }
+  },
+  "operacionEnDebito": [
+    {
+      "operationId": "633d55c3-14fb-472d-a084-4dfe187dfe9b",
+      "estado": "DEBITO_SOLICITADO",
+      "attempts": 2
+    }
+  ],
+  "estadoFinal": {
+    "idVenta": 9,
+    "estado": "PENDIENTE",
+    "estadoOperacion": "CANCELADA",
+    "total": "0.00",
+    "paidAt": null,
+    "medioPago": null,
+    "origen": "NUEVA",
+    "version": 3,
+    "closureId": null
+  },
+  "movimientos": [
+    {
+      "idVenta": 9,
+      "idHotel": 1,
+      "estado": "RESTITUIDO",
+      "resultado": "{\"estado\": \"RESTITUIDO\", \"motivo\": \"resultado incierto del débito\", \"version\": 1, \"restituidoAt\": \"2026-10-21T03:26:19.986487-05:00\"}",
+      "createdAt": "2026-10-21 08:26:19.986487+00"
+    }
+  ],
+  "stockAntes": 20,
+  "stockDespues": 20,
+  "operacionNoTerminal": false,
+  "exigido": "misma compensación segura sin liberar antes de RESTITUIDO",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:27:12.846451Z"
+}

@@ -1,0 +1,73 @@
+{
+  "endpoints": [
+    "GET /api/carrito/listar/{idRecepcion}",
+    "POST /api/venta"
+  ],
+  "token": "C del cliente 100",
+  "idRecepcionAjena": 4,
+  "carrito": {
+    "status": 404,
+    "headers": {
+      "transfer-encoding": "chunked",
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "976e0055-ef8f-499d-93ee-91742d39a975",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "date": "Wed, 21 Oct 2026 08:10:23 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No encontramos lo que buscas.",
+      "error": {
+        "code": "RESOURCE_NOT_FOUND",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "976e0055-ef8f-499d-93ee-91742d39a975"
+      }
+    }
+  },
+  "venta": {
+    "status": 404,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "69e3aca6-40fb-4417-ba61-005b807febf9",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "173",
+      "date": "Wed, 21 Oct 2026 08:10:24 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No encontramos lo que buscas.",
+      "error": {
+        "code": "RESOURCE_NOT_FOUND",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "69e3aca6-40fb-4417-ba61-005b807febf9"
+      }
+    }
+  },
+  "ventasAntes": 0,
+  "ventasDespues": 0,
+  "filasCarrito": 0,
+  "exigido": "404 sin filas creadas",
+  "cumple": true,
+  "caso": "SEC04",
+  "ejecutadoEn": "2026-10-21T08:10:24.316556Z"
+}

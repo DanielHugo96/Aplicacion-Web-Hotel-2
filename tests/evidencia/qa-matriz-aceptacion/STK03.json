@@ -1,0 +1,68 @@
+{
+  "caso": "STK03",
+  "repeticion": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "42aacecf-de1c-433e-a3a2-213c45ab0186",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json;charset=UTF-8",
+      "content-length": "541",
+      "date": "Wed, 21 Oct 2026 08:22:32 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "data": {
+        "total": 7.0,
+        "estado": "PENDIENTE",
+        "paidAt": null,
+        "idHotel": 1,
+        "idVenta": 1,
+        "version": 2,
+        "detalles": [
+          {
+            "cantidad": 2,
+            "subTotal": 7.0,
+            "idProducto": 1,
+            "idDetalleVenta": 1,
+            "nombreProducto": "Agua 500ml",
+            "precioUnitario": 3.5
+          }
+        ],
+        "idCliente": 100,
+        "medioPago": null,
+        "idRecepcion": 1,
+        "operationId": "9e9acea4-6785-4120-b2a3-e148c2ed5dcf",
+        "fechaCreacion": "2026-10-21T08:08:09.151820Z",
+        "estadoOperacion": "CONFIRMADA"
+      },
+      "meta": {
+        "correlationId": "941d951a-dc1a-4aa0-9c85-09310b61a75e"
+      },
+      "message": "OK",
+      "success": true
+    }
+  },
+  "idVentaOriginal": 1,
+  "idVentaRepetido": 1,
+  "stockAntes": 20,
+  "stockDespues": 20,
+  "movimientos": [
+    {
+      "idVenta": 1,
+      "idHotel": 1,
+      "estado": "DESCONTADO",
+      "resultado": "{\"items\": [{\"cantidad\": 2, \"subTotal\": 7.00, \"idProducto\": 1, \"nombreProducto\": \"Agua 500ml\", \"precioUnitario\": 3.50}], \"total\": 7.00, \"estado\": \"DESCONTADO\", \"moneda\": \"PEN\", \"version\": 1}",
+      "createdAt": "2026-10-21 08:08:09.404928+00"
+    }
+  ],
+  "exigido": "mismo idVenta, un solo débito y un solo movimiento",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:22:32.692573Z"
+}

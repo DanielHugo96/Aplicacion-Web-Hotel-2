@@ -1,0 +1,91 @@
+{
+  "endpoints": [
+    "POST /internal/stock/descontar (puerto 8084)",
+    "GET/POST /internal/stock/descontar (Gateway)"
+  ],
+  "token": "A humano",
+  "directoPost": {
+    "status": 403,
+    "headers": {
+      "x-correlation-id": "1a9d3f7b-7d4e-4b2f-9485-43b24c6e7f7d",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json;charset=UTF-8",
+      "content-length": "183",
+      "date": "Wed, 21 Oct 2026 08:10:24 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No tienes permiso para esta acción.",
+      "data": null,
+      "error": {
+        "code": "FORBIDDEN",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "1a9d3f7b-7d4e-4b2f-9485-43b24c6e7f7d"
+      }
+    }
+  },
+  "directoGet": {
+    "status": 403,
+    "headers": {
+      "x-correlation-id": "22e65622-50b6-406d-bfd4-7e8ed2132c44",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json;charset=UTF-8",
+      "content-length": "183",
+      "date": "Wed, 21 Oct 2026 08:10:24 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No tienes permiso para esta acción.",
+      "data": null,
+      "error": {
+        "code": "FORBIDDEN",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "22e65622-50b6-406d-bfd4-7e8ed2132c44"
+      }
+    }
+  },
+  "viaGateway": {
+    "status": 404,
+    "headers": {
+      "content-type": "application/json",
+      "content-length": "134",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-content-type-options": "nosniff",
+      "x-frame-options": "DENY",
+      "x-xss-protection": "0",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "timestamp": "2026-10-21T08:10:24.449Z",
+      "path": "/internal/stock/descontar",
+      "status": 404,
+      "error": "Not Found",
+      "requestId": "e8336e5d-46"
+    }
+  },
+  "stockAntes": 16,
+  "stockDespues": 16,
+  "exigido": "403 FORBIDDEN (o 404 sin ruta por Gateway) con stock intacto",
+  "cumple": true,
+  "caso": "SEC05",
+  "ejecutadoEn": "2026-10-21T08:10:24.571433Z"
+}

@@ -1,0 +1,45 @@
+{
+  "caso": "NOT03",
+  "inducido": "job ENVIADA con sent_at de hace 40 días insertado por SQL",
+  "jobAntes": {
+    "commandId": "f42484a0-cb50-4da9-b7f6-30baf4a7d35b",
+    "tipo": "BIENVENIDA",
+    "estado": "ENVIADA",
+    "attempts": 1,
+    "lastErrorCode": null,
+    "sentAt": "2026-09-11 08:44:02.145788+00",
+    "destinatario": "matriz-antigua@hotel.test",
+    "idRecepcion": null,
+    "leaseToken": null,
+    "leaseUntil": null
+  },
+  "comandoPurge": {
+    "exit": 0,
+    "salida": "purga aplicada: ENVIADA anteriores a 2026-10-21T00:00:00Z anonimizadas=1 (PENDIENTE y ERROR intactos)"
+  },
+  "jobDespues": {
+    "commandId": "f42484a0-cb50-4da9-b7f6-30baf4a7d35b",
+    "tipo": "BIENVENIDA",
+    "estado": "ENVIADA",
+    "attempts": 1,
+    "lastErrorCode": null,
+    "sentAt": "2026-09-11 08:44:02.145788+00",
+    "destinatario": "",
+    "idRecepcion": null,
+    "leaseToken": null,
+    "leaseUntil": null
+  },
+  "pendientesAntes": 3,
+  "pendientesDespues": 3,
+  "auditLog": [
+    {
+      "accion": "NOTIFICATION_PURGE",
+      "entidad": "notification_job",
+      "actor": "juan2",
+      "ocurridoEn": "2026-10-21 08:44:14.805113+00"
+    }
+  ],
+  "exigido": "purga solo en ENVIADA conservando estado; PENDIENTE/ERROR intactos; audit_log",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:44:15.654922Z"
+}

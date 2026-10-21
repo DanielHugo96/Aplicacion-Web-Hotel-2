@@ -1,0 +1,45 @@
+{
+  "caso": "OUT06",
+  "idRecepcion": 15,
+  "actualizar": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "ed3aaf13-b36d-476c-b087-78b29cfcdc78",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "233",
+      "date": "Wed, 21 Oct 2026 08:31:08 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "La nueva fecha deja el alojamiento por debajo del adelanto registrado.",
+      "data": null,
+      "error": {
+        "code": "ADVANCE_EXCEEDS_NEW_TOTAL",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "ed3aaf13-b36d-476c-b087-78b29cfcdc78"
+      }
+    }
+  },
+  "antes": {
+    "precioInicial": 180.0,
+    "adelanto": 140.0
+  },
+  "despues": {
+    "precioInicial": 180.0,
+    "adelanto": 140.0
+  },
+  "exigido": "409 ADVANCE_EXCEEDS_NEW_TOTAL; precioInicial y adelanto sin cambios",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:31:09.029795Z"
+}

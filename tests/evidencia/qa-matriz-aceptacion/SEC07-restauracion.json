@@ -1,0 +1,19 @@
+{
+  "caso": "SEC07-RESTAURACION",
+  "admins": [
+    {
+      "id": 1,
+      "correo": "admin@hotel.test",
+      "estado": "t",
+      "conClave": "t"
+    },
+    {
+      "id": 102,
+      "correo": "admin2@hotel.test",
+      "estado": "t",
+      "conClave": "t"
+    }
+  ],
+  "motivo": "el 200 de SEC07 desactiva un ADMIN por diseño; se restituye por la API para el resto de la matriz",
+  "ejecutadoEn": "2026-10-21T08:10:26.077098Z"
+}

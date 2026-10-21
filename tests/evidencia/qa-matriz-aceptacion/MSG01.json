@@ -1,0 +1,79 @@
+{
+  "caso": "MSG01",
+  "idRecepcion": 16,
+  "venta": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "5bf1debe-9c3e-4a18-87d4-cca5f102248a",
+      "location": "/api/venta/buscar/11",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "499",
+      "date": "Wed, 21 Oct 2026 08:31:25 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idVenta": 11,
+        "idRecepcion": 16,
+        "idCliente": 100,
+        "idHotel": 3,
+        "total": 3.5,
+        "estado": "PENDIENTE",
+        "estadoOperacion": "CONFIRMADA",
+        "operationId": "ad8d6e89-2b17-4adc-ab56-f2379e562515",
+        "medioPago": null,
+        "version": 2,
+        "fechaCreacion": "2026-10-21T08:31:24.776420Z",
+        "paidAt": null,
+        "detalles": [
+          {
+            "idDetalleVenta": 4,
+            "idProducto": 1,
+            "nombreProducto": "Agua 500ml",
+            "cantidad": 1,
+            "precioUnitario": 3.5,
+            "subTotal": 3.5
+          }
+        ]
+      },
+      "meta": {
+        "correlationId": "5bf1debe-9c3e-4a18-87d4-cca5f102248a"
+      }
+    }
+  },
+  "outboxPendienteConKafkaCaido": [
+    {
+      "id": "7ef1b091-9ad2-4085-9264-3b5483b593e0",
+      "type": "CheckInRegistrado",
+      "attempts": 1
+    }
+  ],
+  "outboxPublicada": [
+    {
+      "id": "7ef1b091-9ad2-4085-9264-3b5483b593e0",
+      "type": "CheckInRegistrado",
+      "publishedAt": "2026-10-21 08:31:38.110118+00"
+    }
+  ],
+  "inbox": {
+    "CheckInRegistrado": {
+      "eventId": "4059527b-a646-4385-ac9b-8c19aa8c94fe",
+      "grupo": "reporting-proyeccion-v1",
+      "filas": 1
+    }
+  },
+  "exigido": "outbox publica una vez (published_at) y el efecto se procesa una vez (inbox)",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:31:39.748461Z"
+}

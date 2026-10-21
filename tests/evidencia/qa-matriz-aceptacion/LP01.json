@@ -1,0 +1,74 @@
+{
+  "endpoints": [
+    "/api/public/hoteles",
+    "/api/public/hoteles/lima-centro",
+    "/api/public/hoteles/lima-centro/categorias",
+    "/api/public/hoteles/lima-centro/categorias/2"
+  ],
+  "sinToken": true,
+  "respuestas": {
+    "/api/public/hoteles": {
+      "status": 200,
+      "claves": [
+        "ciudad",
+        "correoContacto",
+        "descripcion",
+        "direccion",
+        "idHotel",
+        "nombre",
+        "slug",
+        "telefono"
+      ],
+      "cumpleEsquema": true,
+      "bodyResumen": "[{'idHotel': 1, 'slug': 'lima-centro', 'nombre': 'Hotel Demo Lima Centro', 'descripcion': 'Sede de demostracion', 'direccion': 'Direccion de demostracion', 'ciudad': 'Lima', 'telefono': '+51 900 000 001', 'correoContacto': 'contacto@hotel.test'}, {'idHotel': 2, 'slug': 'miraflores', 'nombre': 'Hotel Demo Miraflores', 'descripcion': 'Sede de demostracion', 'direccion': 'Direccion de demostracion', 'ciudad': 'Lima', 'telefono': '+51 900 000 001', 'correoContacto': 'contacto@hotel.test'}, {'idHotel': 3, 'slug': 'arequipa', 'nombre': 'Hotel Demo Arequipa', 'descripcion': 'Sede de demostracion', 'd"
+    },
+    "/api/public/hoteles/lima-centro": {
+      "status": 200,
+      "claves": [
+        "ciudad",
+        "correoContacto",
+        "descripcion",
+        "direccion",
+        "idHotel",
+        "nombre",
+        "slug",
+        "telefono"
+      ],
+      "cumpleEsquema": true,
+      "bodyResumen": "{'idHotel': 1, 'slug': 'lima-centro', 'nombre': 'Hotel Demo Lima Centro', 'descripcion': 'Sede de demostracion', 'direccion': 'Direccion de demostracion', 'ciudad': 'Lima', 'telefono': '+51 900 000 001', 'correoContacto': 'contacto@hotel.test'}"
+    },
+    "/api/public/hoteles/lima-centro/categorias": {
+      "status": 200,
+      "claves": [
+        "capacidad",
+        "descripcion",
+        "detalle",
+        "idCategoria",
+        "imagenes",
+        "moneda",
+        "precioDesde"
+      ],
+      "cumpleEsquema": true,
+      "bodyResumen": "[{'idCategoria': 2, 'descripcion': 'Doble', 'detalle': 'Habitacion doble de demostracion', 'capacidad': 2, 'precioDesde': 100.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-102-1.jpg', 'alt': 'Habitacion de demostracion'}]}]"
+    },
+    "/api/public/hoteles/lima-centro/categorias/2": {
+      "status": 200,
+      "claves": [
+        "capacidad",
+        "descripcion",
+        "detalle",
+        "idCategoria",
+        "imagenes",
+        "moneda",
+        "precioDesde"
+      ],
+      "cumpleEsquema": true,
+      "bodyResumen": "{'idCategoria': 2, 'descripcion': 'Doble', 'detalle': 'Habitacion doble de demostracion', 'capacidad': 2, 'precioDesde': 100.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-102-1.jpg', 'alt': 'Habitacion de demostracion'}]}"
+    }
+  },
+  "clavesSobrantes": {},
+  "exigido": "200 en los 4 con solo claves de HotelPublico/CategoriaPublica",
+  "cumple": true,
+  "caso": "LP01",
+  "ejecutadoEn": "2026-10-21T08:15:55.447375Z"
+}

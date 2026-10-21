@@ -1,0 +1,92 @@
+{
+  "variantesFechaOcupacion": {
+    "/api/public/hoteles?fecha=2026-10-24": {
+      "status": 200,
+      "body": {
+        "success": true,
+        "message": "OK",
+        "data": [
+          {
+            "idHotel": 1,
+            "slug": "lima-centro",
+            "nombre": "Hotel Demo Lima Centro",
+            "descripcion": "Sede de demostracion",
+            "direccion": "Direccion de demostracion",
+            "ciudad": "Lima",
+            "telefono": "+51 900 000 001",
+            "correoContacto": "contacto@hotel.test"
+          },
+          {
+            "idHotel": 2,
+            "slug": "miraflores",
+            "nombre": "Hotel Demo Miraflores",
+            "descripcion": "Sede de demostracion",
+            "direccion": "Direccion de demostracion",
+            "ciudad": "Lima",
+            "telefono": "+51 900 000 001",
+            "correoContacto": "contacto@hotel.test"
+          },
+          {
+            "idHotel": 3,
+            "slug": "arequipa",
+            "nombre": "Hotel Demo Arequipa",
+            "descripcion": "Sede de demostracion",
+            "direccion": "Direccion de demostracion",
+            "ciudad": "Arequipa",
+            "telefono": "+51 900 000 001",
+            "correoContacto": "contacto@hotel.test"
+          }
+        ],
+        "meta": {
+          "correlationId": "aa91647a-fa2d-4dec-8836-1f91cf2839a8",
+          "page": 0,
+          "size": 20,
+          "totalElements": 3
+        }
+      }
+    },
+    "/api/public/hoteles/lima-centro?ocupacion=1": {
+      "status": 200,
+      "body": {
+        "success": true,
+        "message": "OK",
+        "data": {
+          "idHotel": 1,
+          "slug": "lima-centro",
+          "nombre": "Hotel Demo Lima Centro",
+          "descripcion": "Sede de demostracion",
+          "direccion": "Direccion de demostracion",
+          "ciudad": "Lima",
+          "telefono": "+51 900 000 001",
+          "correoContacto": "contacto@hotel.test"
+        },
+        "meta": {
+          "correlationId": "1f2815b9-094b-45d9-b6d5-cd74526503ec"
+        }
+      }
+    }
+  },
+  "bundle": {
+    "ruta": "apps\\public-web\\dist\\public-web\\browser",
+    "archivos": [
+      "chunk-4A9s8j_B.js",
+      "chunk-AplLfBld.js",
+      "chunk-BayOjm7D.js",
+      "chunk-BXhgr2IG.js",
+      "chunk-C9hX3MZb.js",
+      "chunk-D_IwY_Bu.js",
+      "chunk-Dc2_sOZZ.js",
+      "chunk-NkEmEN6w.js",
+      "main-MJLHU2S2.js"
+    ]
+  },
+  "hallazgos": {
+    "endpointPrivado": [],
+    "precioInterno": [],
+    "endpointReserva": []
+  },
+  "exigido": "parámetro ignorado o 400; sin dato privado ni endpoint nuevo",
+  "cumple": true,
+  "caso": "LP02",
+  "ejecutadoEn": "2026-10-21T08:15:55.522633Z"
+}

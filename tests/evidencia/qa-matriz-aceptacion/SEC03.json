@@ -1,0 +1,71 @@
+{
+  "endpoints": [
+    "GET /api/habitacion/buscar/{id}",
+    "GET /api/reportes/dashboard?idHotel=2"
+  ],
+  "token": "E de sede 1 (recepcion.lima)",
+  "habitacion201": {
+    "status": 404,
+    "headers": {
+      "transfer-encoding": "chunked",
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "007bb9c9-3c65-4286-b75a-eed49a3e564f",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "date": "Wed, 21 Oct 2026 08:10:23 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No encontramos lo que buscas.",
+      "error": {
+        "code": "RESOURCE_NOT_FOUND",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "007bb9c9-3c65-4286-b75a-eed49a3e564f"
+      }
+    }
+  },
+  "dashboardSede2": {
+    "status": 404,
+    "headers": {
+      "transfer-encoding": "chunked",
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "1be45785-96d6-4782-9f9f-6d84ba0c95b7",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "date": "Wed, 21 Oct 2026 08:10:23 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No encontramos lo que buscas.",
+      "data": null,
+      "error": {
+        "code": "RESOURCE_NOT_FOUND",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "1be45785-96d6-4782-9f9f-6d84ba0c95b7",
+        "updatedAt": null
+      }
+    }
+  },
+  "exigido": "404 RESOURCE_NOT_FOUND en ambos",
+  "cumple": true,
+  "caso": "SEC03",
+  "ejecutadoEn": "2026-10-21T08:10:23.458215Z"
+}

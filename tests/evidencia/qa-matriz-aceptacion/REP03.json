@@ -1,0 +1,132 @@
+{
+  "caso": "REP03",
+  "bootstrap": {
+    "estado": "LISTO",
+    "completedAt": "2026-10-21 08:07:23.997975+00",
+    "dominios": {
+      "ventas": 0,
+      "hoteles": 3,
+      "personas": 6,
+      "recepciones": 0,
+      "habitaciones": 6,
+      "productosSede": 9
+    },
+    "watermarks": {
+      "identity.persona.v1": -1,
+      "hotel.sede.v1": -1,
+      "hotel.habitacion.v1": -1,
+      "reception.recepcion.v1": -1,
+      "inventory.stock.v1": -1,
+      "sales.venta.v1": -1
+    }
+  },
+  "checkpoints": [
+    {
+      "topic": "hotel.habitacion.v1",
+      "lastOffset": 5,
+      "degraded": false
+    },
+    {
+      "topic": "hotel.sede.v1",
+      "lastOffset": -1,
+      "degraded": false
+    },
+    {
+      "topic": "identity.persona.v1",
+      "lastOffset": 5,
+      "degraded": false
+    },
+    {
+      "topic": "inventory.stock.v1",
+      "lastOffset": 8,
+      "degraded": false
+    },
+    {
+      "topic": "reception.recepcion.v1",
+      "lastOffset": -1,
+      "degraded": false
+    },
+    {
+      "topic": "sales.venta.v1",
+      "lastOffset": -1,
+      "degraded": false
+    }
+  ],
+  "dashboard": {
+    "status": 200,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "b5ddf8d8-22a3-434c-bb67-944f6664e63e",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "322",
+      "date": "Wed, 21 Oct 2026 08:08:07 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "habitacionesOcupadas": 0,
+        "habitacionesDisponibles": 6,
+        "productosBajoStock": 3,
+        "ingresosHoy": 0.0,
+        "moneda": "PEN"
+      },
+      "meta": {
+        "correlationId": "b5ddf8d8-22a3-434c-bb67-944f6664e63e",
+        "updatedAt": "2026-10-21T08:07:24.413576Z",
+        "consistency": "EVENTUAL",
+        "degraded": false,
+        "bootstrapComplete": true
+      }
+    }
+  },
+  "ventasSembradas": 0,
+  "recepcionesSembradas": 0,
+  "exigido": "LISTO por manifiesto/watermarks con 200 y bootstrapComplete=true",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:08:07.803831Z",
+  "sinBootstrap": {
+    "dbNueva": "reporting_sin_bootstrap_db",
+    "bootstrapEstado": "",
+    "dashboard": {
+      "status": 503,
+      "headers": {
+        "x-correlation-id": "0ddd1ef3-1e17-4f99-b251-8065397b2231",
+        "retry-after": "60",
+        "x-content-type-options": "nosniff",
+        "x-xss-protection": "0",
+        "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+        "pragma": "no-cache",
+        "expires": "0",
+        "x-frame-options": "DENY",
+        "content-type": "application/json",
+        "transfer-encoding": "chunked",
+        "date": "Wed, 21 Oct 2026 09:42:47 GMT",
+        "connection": "close"
+      },
+      "body": {
+        "success": false,
+        "message": "Los reportes aún se están preparando.",
+        "data": null,
+        "error": {
+          "code": "REPORTING_NOT_READY",
+          "fields": {}
+        },
+        "meta": {
+          "correlationId": "0ddd1ef3-1e17-4f99-b251-8065397b2231",
+          "updatedAt": null
+        }
+      }
+    },
+    "exigido": "503 REPORTING_NOT_READY mientras el bootstrap no está LISTO",
+    "cumple": true
+  }
+}

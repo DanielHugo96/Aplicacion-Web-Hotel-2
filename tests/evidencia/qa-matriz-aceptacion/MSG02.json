@@ -1,0 +1,67 @@
+{
+  "caso": "MSG02",
+  "eventoBase": {
+    "eventId": "b7477259-57cb-408b-9326-b2dfc38899d6",
+    "aggregateVersion": 10
+  },
+  "inboxAntes": 1,
+  "inboxTrasDuplicado": 1,
+  "versionVieja": {
+    "eventId": "5316e252-2394-4113-9484-072c1568b487",
+    "aggregateVersion": 1,
+    "inboxFilas": 1
+  },
+  "eventoHabitacionViejo": {
+    "eventId": "e04a79b9-caee-4f3d-a01e-e36a991f4995",
+    "type": "HabitacionLista",
+    "schemaVersion": 1,
+    "aggregateType": "habitacion",
+    "aggregateId": "302",
+    "aggregateVersion": 1,
+    "idHotel": 3,
+    "occurredAt": "2026-10-21T08:32:26.444884Z",
+    "correlationId": "a78b74b9-e185-46a3-942a-4c07bc65bbe8",
+    "payload": {
+      "idHabitacion": 302,
+      "idHotel": 3,
+      "numero": "102",
+      "idCategoria": 2,
+      "categoriaNombre": "Doble",
+      "pisoNombre": "Primer piso",
+      "precio": 90.0,
+      "estado": true,
+      "estadoFisico": "LISTA",
+      "version": 1,
+      "cleaningCycleId": null,
+      "cleaningRoomVersion": null,
+      "blockId": null
+    }
+  },
+  "inboxGates": 0,
+  "desenlaceEventoHabitacion": "dlt",
+  "dltAntes": 3,
+  "dltDespues": 5,
+  "dltDetalle": {
+    "hotel.habitacion.v1.reception-gates-v1.dlt": 1,
+    "hotel.habitacion.v1.reporting-proyeccion-v1.dlt": 1,
+    "reception.recepcion.v1.hotel-ocupacion-v1.dlt": 3
+  },
+  "gateAntes": {
+    "estado": "OCUPADA",
+    "blockId": null,
+    "cleaningCycleId": null,
+    "roomVersion": 10
+  },
+  "gateDespues": {
+    "estado": "OCUPADA",
+    "blockId": null,
+    "cleaningCycleId": null,
+    "roomVersion": 10
+  },
+  "ventasAntes": 0,
+  "ventasDespues": 0,
+  "movimientosAntes": 0,
+  "exigido": "inbox/versión/ciclo mantienen invariantes; contradicción en DLT/DLQ",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:32:57.895875Z"
+}

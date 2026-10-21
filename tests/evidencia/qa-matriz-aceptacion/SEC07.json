@@ -1,0 +1,102 @@
+{
+  "endpoints": [
+    "PUT /api/persona/actualizar/{id}",
+    "DELETE /api/persona/eliminar/{id}"
+  ],
+  "adminObjetivo": 1,
+  "adminDesactivado": 102,
+  "versionesIfMatch": {
+    "1": "1",
+    "102": "1"
+  },
+  "delete": {
+    "status": 200,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "1bba7f89-c3b1-4c0e-baf2-958b1900e7b9",
+      "etag": "\"2\"",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "373",
+      "date": "Wed, 21 Oct 2026 08:10:24 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idPersona": 1,
+        "tipoDocumento": "DNI",
+        "documento": "90000001",
+        "nombre": "Demo",
+        "apellido": "Admin",
+        "correo": "admin@hotel.test",
+        "fotoUrl": null,
+        "idTipoPersona": 1,
+        "tipoPersona": "Administrador",
+        "sedes": [],
+        "estado": false,
+        "fechaCreacion": "2026-10-21T08:05:59.274063Z",
+        "version": 2
+      },
+      "meta": {
+        "correlationId": "1bba7f89-c3b1-4c0e-baf2-958b1900e7b9"
+      }
+    }
+  },
+  "put": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "36e567b0-c9c9-4683-95be-4c3afe3d6473",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "203",
+      "date": "Wed, 21 Oct 2026 08:10:24 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "Debe quedar al menos un administrador activo.",
+      "data": null,
+      "error": {
+        "code": "LAST_ADMIN_PROTECTED",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "36e567b0-c9c9-4683-95be-4c3afe3d6473"
+      }
+    }
+  },
+  "adminsDespues": [
+    {
+      "id": 1,
+      "correo": "admin@hotel.test",
+      "estado": "f",
+      "conClave": "t"
+    },
+    {
+      "id": 102,
+      "correo": "admin2@hotel.test",
+      "estado": "t",
+      "conClave": "t"
+    }
+  ],
+  "adminsActivosConClave": 1,
+  "exigido": "exactamente un 200 y un 409 LAST_ADMIN_PROTECTED con >=1 ADMIN activo con clave",
+  "cumple": true,
+  "caso": "SEC07",
+  "ejecutadoEn": "2026-10-21T08:10:25.169890Z"
+}

@@ -1,0 +1,96 @@
+{
+  "caso": "REP01",
+  "ingresosHoy": 77.0,
+  "esperado": 77.0,
+  "dashboard": {
+    "status": 200,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "79bab087-b13a-4c9b-9325-058a94b5fdd3",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "323",
+      "date": "Wed, 21 Oct 2026 08:08:28 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "habitacionesOcupadas": 0,
+        "habitacionesDisponibles": 1,
+        "productosBajoStock": 1,
+        "ingresosHoy": 77.0,
+        "moneda": "PEN"
+      },
+      "meta": {
+        "correlationId": "79bab087-b13a-4c9b-9325-058a94b5fdd3",
+        "updatedAt": "2026-10-21T08:07:24.413576Z",
+        "consistency": "EVENTUAL",
+        "degraded": false,
+        "bootstrapComplete": true
+      }
+    }
+  },
+  "rango": {
+    "inicio": "2026-10-21T00:00:00-05:00",
+    "fin": "2026-10-22T00:00:00-05:00"
+  },
+  "reporteVentas": {
+    "status": 200,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "5f4c3d8f-edd5-4e87-980b-d8c98f5ee74c",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "337",
+      "date": "Wed, 21 Oct 2026 08:08:28 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": [
+        {
+          "idProducto": 1,
+          "nombreProducto": "Agua 500ml",
+          "cantidadTotal": 2,
+          "totalIngresado": 7.0
+        }
+      ],
+      "meta": {
+        "correlationId": "5f4c3d8f-edd5-4e87-980b-d8c98f5ee74c",
+        "updatedAt": "2026-10-21T08:07:24.413576Z",
+        "consistency": "EVENTUAL",
+        "degraded": false,
+        "bootstrapComplete": true,
+        "page": 0,
+        "size": 20,
+        "totalElements": 1
+      }
+    }
+  },
+  "sumaReporteVentas": 7.0,
+  "ventasPagadasHoy": [
+    {
+      "idVenta": 1,
+      "total": "7.00",
+      "paidAt": "2026-10-21 08:08:09.721577+00"
+    }
+  ],
+  "exigido": "ingresosHoy 77.00 sin duplicar y solo PAGADO por paid_at",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:08:28.717604Z"
+}

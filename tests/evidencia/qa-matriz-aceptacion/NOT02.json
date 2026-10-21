@@ -1,0 +1,64 @@
+{
+  "caso": "NOT02",
+  "inducido": "lease_until forzado al pasado por SQL con el worker detenido; el resultado tardío se aplica por el procedimiento real sp_notificacion_resultado",
+  "jobOriginal": {
+    "commandId": "537f5390-8841-4b31-8214-8261e2664266",
+    "tipo": "CHECKIN",
+    "estado": "ERROR",
+    "attempts": 4,
+    "lastErrorCode": "SMTP_ERROR",
+    "sentAt": null,
+    "destinatario": "cliente.uno@hotel.test",
+    "idRecepcion": 22,
+    "leaseToken": null,
+    "leaseUntil": null
+  },
+  "jobAntesDelTardio": {
+    "commandId": "537f5390-8841-4b31-8214-8261e2664266",
+    "tipo": "CHECKIN",
+    "estado": "ENVIANDO",
+    "attempts": 4,
+    "lastErrorCode": "SMTP_ERROR",
+    "sentAt": null,
+    "destinatario": "cliente.uno@hotel.test",
+    "idRecepcion": 22,
+    "leaseToken": "dce7fc99-a56a-4142-8579-77b71fc504da",
+    "leaseUntil": "2026-10-21 10:48:18.896524+00"
+  },
+  "leaseViejo": {
+    "token": "dce7fc99-a56a-4142-8579-77b71fc504da",
+    "leaseUntil": "2026-10-21 10:48:18.896524+00"
+  },
+  "respuestaTardia": "sp_notificacion_resultado(commandId, lease viejo, exito=true)",
+  "jobTrasTardio": {
+    "commandId": "537f5390-8841-4b31-8214-8261e2664266",
+    "tipo": "CHECKIN",
+    "estado": "ENVIANDO",
+    "attempts": 4,
+    "lastErrorCode": "SMTP_ERROR",
+    "sentAt": null,
+    "destinatario": "cliente.uno@hotel.test",
+    "idRecepcion": 22,
+    "leaseToken": "dce7fc99-a56a-4142-8579-77b71fc504da",
+    "leaseUntil": "2026-10-21 10:48:18.896524+00"
+  },
+  "exigido": "el lease_token viejo no modifica el job nuevo",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T10:53:19.231224Z",
+  "despuesDeLaMedicion": {
+    "nota": "Al reiniciar el worker, fn_notificacion_tomar devuelve los leases vencidos a PENDIENTE y el job se reintenta. No contradice la medición: el token viejo no había modificado nada; la recuperación la hace el worker nuevo con un token distinto.",
+    "jobTrasReiniciarWorker": {
+      "commandId": "537f5390-8841-4b31-8214-8261e2664266",
+      "tipo": "CHECKIN",
+      "estado": "ENVIADA",
+      "attempts": 5,
+      "lastErrorCode": null,
+      "sentAt": "2026-10-21 10:53:42.742074+00",
+      "destinatario": "cliente.uno@hotel.test",
+      "idRecepcion": 22,
+      "leaseToken": null,
+      "leaseUntil": null
+    },
+    "comprobacion": "intento 5 con lease nuevo; el resultado tardío con el token viejo no cambió sent_at ni estado"
+  }
+}

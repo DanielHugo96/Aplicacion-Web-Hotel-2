@@ -1,0 +1,110 @@
+{
+  "caso": "PAY01",
+  "postPagadoComoCliente": {
+    "status": 403,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "d7358b1a-f6da-464f-bb13-0a56b1451c84",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "212",
+      "date": "Wed, 21 Oct 2026 08:27:27 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No tienes permiso para esta acción.",
+      "error": {
+        "code": "FORBIDDEN",
+        "fields": {
+          "estado": "solo A/E registran pago manual"
+        }
+      },
+      "meta": {
+        "correlationId": "d7358b1a-f6da-464f-bb13-0a56b1451c84"
+      }
+    }
+  },
+  "postConPrecio": {
+    "status": 400,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "66dd0c86-4d30-44d1-94f9-bc127e0991b8",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "254",
+      "date": "Wed, 21 Oct 2026 08:27:27 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "Revisa los datos marcados.",
+      "error": {
+        "code": "VALIDATION_ERROR",
+        "fields": {
+          "body": "JSON inválido o con campos no admitidos (precios, totales o estadoOperacion)"
+        }
+      },
+      "meta": {
+        "correlationId": "66dd0c86-4d30-44d1-94f9-bc127e0991b8"
+      }
+    }
+  },
+  "ventaF2": {
+    "idVenta": 1,
+    "estado": "PAGADO",
+    "estadoOperacion": "CONFIRMADA",
+    "total": "7.00",
+    "paidAt": "2026-10-21 08:08:09.721577+00",
+    "medioPago": "EFECTIVO",
+    "origen": "NUEVA",
+    "version": 3,
+    "closureId": null
+  },
+  "detalleF2": {
+    "success": true,
+    "message": "OK",
+    "data": {
+      "idVenta": 1,
+      "idRecepcion": 1,
+      "idCliente": 100,
+      "idHotel": 1,
+      "total": 7.0,
+      "estado": "PAGADO",
+      "estadoOperacion": "CONFIRMADA",
+      "operationId": "f5e56ed1-cada-48ae-b528-c68a96404e76",
+      "medioPago": "EFECTIVO",
+      "version": 3,
+      "fechaCreacion": "2026-10-21T08:08:09.151820Z",
+      "paidAt": "2026-10-21T08:08:09.721577Z",
+      "detalles": [
+        {
+          "idDetalleVenta": 1,
+          "idProducto": 1,
+          "nombreProducto": "Agua 500ml",
+          "cantidad": 2,
+          "precioUnitario": 3.5,
+          "subTotal": 7.0
+        }
+      ]
+    },
+    "meta": {
+      "correlationId": "1fee046c-cd20-4f20-b34d-767e7df1b987"
+    }
+  },
+  "exigido": "403 (rol) o 400 (campo calculado); venta PENDIENTE y precio autoritativo intacto",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:27:27.188294Z"
+}

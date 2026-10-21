@@ -1,0 +1,128 @@
+{
+  "caso": "REP02",
+  "dbNueva": "reporting_rebuild_db",
+  "grupoConsumo": "reporting-rebuild-35f01204",
+  "principal": {
+    "counts": [
+      [
+        "gate_projection",
+        "9"
+      ],
+      [
+        "persona_projection",
+        "7"
+      ],
+      [
+        "recepcion_projection",
+        "18"
+      ],
+      [
+        "venta_projection",
+        "4"
+      ]
+    ],
+    "dashboard": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "habitacionesOcupadas": 1,
+        "habitacionesDisponibles": 1,
+        "productosBajoStock": 1,
+        "ingresosHoy": 846.5,
+        "moneda": "PEN"
+      },
+      "meta": {
+        "correlationId": "1b8c9ed4-a7d3-4310-a6ef-fdecf0ec6a37",
+        "updatedAt": "2026-10-21T08:10:30.723857Z",
+        "consistency": "EVENTUAL",
+        "degraded": true,
+        "bootstrapComplete": true
+      }
+    },
+    "ventas": {
+      "success": true,
+      "message": "OK",
+      "data": [
+        {
+          "idProducto": 1,
+          "nombreProducto": "Agua 500ml",
+          "cantidadTotal": 19,
+          "totalIngresado": 66.5
+        }
+      ],
+      "meta": {
+        "correlationId": "b8019b0e-b0bf-4deb-abaf-350956d9631b",
+        "updatedAt": "2026-10-21T08:10:30.723857Z",
+        "consistency": "EVENTUAL",
+        "degraded": true,
+        "bootstrapComplete": true,
+        "page": 0,
+        "size": 20,
+        "totalElements": 1
+      }
+    }
+  },
+  "rebuild": {
+    "counts": [
+      [
+        "gate_projection",
+        "9"
+      ],
+      [
+        "persona_projection",
+        "7"
+      ],
+      [
+        "recepcion_projection",
+        "18"
+      ],
+      [
+        "venta_projection",
+        "4"
+      ]
+    ],
+    "dashboard": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "habitacionesOcupadas": 1,
+        "habitacionesDisponibles": 1,
+        "productosBajoStock": 1,
+        "ingresosHoy": 846.5,
+        "moneda": "PEN"
+      },
+      "meta": {
+        "correlationId": "4d2a99bb-9b2d-4d40-adfc-32c7ec3bca65",
+        "updatedAt": "2026-10-21T08:43:11.146377Z",
+        "consistency": "EVENTUAL",
+        "degraded": true,
+        "bootstrapComplete": true
+      }
+    },
+    "ventas": {
+      "success": true,
+      "message": "OK",
+      "data": [
+        {
+          "idProducto": 1,
+          "nombreProducto": "Agua 500ml",
+          "cantidadTotal": 19,
+          "totalIngresado": 66.5
+        }
+      ],
+      "meta": {
+        "correlationId": "9071dcf1-b52d-45ff-a0a9-7eb621df5b78",
+        "updatedAt": "2026-10-21T08:43:11.146377Z",
+        "consistency": "EVENTUAL",
+        "degraded": true,
+        "bootstrapComplete": true,
+        "page": 0,
+        "size": 20,
+        "totalElements": 1
+      }
+    }
+  },
+  "exigido": "mismos totales y claves tras el rebuild",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:43:19.496825Z"
+}

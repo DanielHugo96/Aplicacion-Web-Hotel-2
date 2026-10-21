@@ -1,0 +1,72 @@
+{
+  "caso": "PAY02",
+  "venta": 1,
+  "delete": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "ce0e0cb8-3abd-4cce-ad14-58fd670be8ec",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "223",
+      "date": "Wed, 21 Oct 2026 08:27:27 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "Una venta pagada no se anula; requiere devolución (fuera del MVP).",
+      "error": {
+        "code": "SALE_ALREADY_PAID",
+        "fields": {
+          "idVenta": "1"
+        }
+      },
+      "meta": {
+        "correlationId": "ce0e0cb8-3abd-4cce-ad14-58fd670be8ec"
+      }
+    }
+  },
+  "filaAntes": [
+    "PAGADO",
+    "CONFIRMADA",
+    "2026-10-21 08:08:09.721577+00",
+    "7.00"
+  ],
+  "filaDespues": [
+    "PAGADO",
+    "CONFIRMADA",
+    "2026-10-21 08:08:09.721577+00",
+    "7.00"
+  ],
+  "lineasAntes": [
+    [
+      "1",
+      "7.00"
+    ]
+  ],
+  "lineasDespues": [
+    [
+      "1",
+      "7.00"
+    ]
+  ],
+  "receiptAntes": [
+    [
+      "1"
+    ]
+  ],
+  "receiptDespues": [
+    [
+      "1"
+    ]
+  ],
+  "exigido": "409 SALE_ALREADY_PAID con líneas, receipt y paid_at intactos",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:27:28.102063Z"
+}

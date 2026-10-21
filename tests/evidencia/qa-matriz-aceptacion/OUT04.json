@@ -1,0 +1,102 @@
+{
+  "caso": "OUT04",
+  "estadia": 12,
+  "cotizacion": {
+    "idRecepcion": 12,
+    "alojamiento": 90.0,
+    "adelanto": 0.0,
+    "penalidad": 0.0,
+    "saldoAlojamiento": 90.0,
+    "consumosPagados": 0.0,
+    "consumosPendientes": 0.0,
+    "cobroAhora": 90.0,
+    "moneda": "PEN",
+    "calculadoEn": "2026-10-21T08:29:15.903421800Z"
+  },
+  "salida": {
+    "status": 200,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "74509349-2ee5-42c7-95e6-23f66e205590",
+      "etag": "\"3\"",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "1269",
+      "date": "Wed, 21 Oct 2026 08:29:15 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "Salida registrada",
+      "data": {
+        "idRecepcion": 12,
+        "idHotel": 3,
+        "idCliente": 101,
+        "idHabitacion": 302,
+        "numero": "102",
+        "categoriaNombre": "Doble",
+        "pisoNombre": "Primer piso",
+        "detalleHabitacion": "Habitacion doble de demostracion",
+        "precioHabitacion": 90.0,
+        "nombre": "Cliente",
+        "apellido": "Dos",
+        "tipoDocumento": "DNI",
+        "documento": "90000101",
+        "correo": "cliente.dos@hotel.test",
+        "fechaEntrada": "2026-10-21",
+        "fechaSalida": "2026-10-22",
+        "fechaSalidaConfirmacion": "2026-10-21T08:29:15.943745Z",
+        "precioInicial": 90.0,
+        "adelanto": 0.0,
+        "medioPagoAdelanto": "EFECTIVO",
+        "precioRestante": 0.0,
+        "totalPagado": 90.0,
+        "costoPenalidad": 0.0,
+        "motivoPenalidad": null,
+        "observacion": "Fixture qa-runbooks",
+        "estado": false,
+        "estadoEstadia": "CERRADA",
+        "archivada": false,
+        "vencida": false,
+        "version": 3,
+        "closureId": "12495a80-7b0e-4e03-8579-b9fd9c111c2c",
+        "cleaningCycleId": "630626b4-76ca-4cf6-a91d-2cf884ff0b88",
+        "cierre": {
+          "closureId": "12495a80-7b0e-4e03-8579-b9fd9c111c2c",
+          "estado": "COMPLETADO",
+          "lastErrorCode": null,
+          "calculo": {
+            "cobroAhora": 90.0,
+            "totalGeneral": 90.0,
+            "consumosTotal": 0.0,
+            "alojamientoTotal": 90.0,
+            "saldoAlojamiento": 90.0,
+            "consumosPendientes": 0.0,
+            "consumosPagadosAntes": 0.0,
+            "expectedPendingTotal": 0.0
+          },
+          "medioPago": "EFECTIVO"
+        }
+      },
+      "meta": {
+        "correlationId": "74509349-2ee5-42c7-95e6-23f66e205590"
+      }
+    }
+  },
+  "receipt": [
+    {
+      "closureId": "12495a80-7b0e-4e03-8579-b9fd9c111c2c",
+      "totalPendiente": "0.00",
+      "totalPagadoPrevio": "0.00"
+    }
+  ],
+  "exigido": "receipt con totalConsumos 0.00, sede 3 y cobroAhora",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T08:29:16.055503Z"
+}
