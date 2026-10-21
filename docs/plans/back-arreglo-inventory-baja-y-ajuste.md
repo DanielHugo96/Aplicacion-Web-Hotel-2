@@ -90,8 +90,8 @@ Se envió el cuerpo cerrado del contrato `{"idHotel":1,"delta":2,"motivo":"Repro
 - [x] 3. Corregir `ProductoService.listar`: cuando `estado` no es nulo, filtrar solo por `producto_sede.estado` (`AND ps.estado = ?`), manteniendo el `JOIN`, el orden por id ascendente y el `estado` devuelto como `ps_estado && estado`. No cambiar el comportamiento sin `estado` (sin filtro) ni añadir paginación. Verificación: la prueba de `estado=false` devuelve el producto 9 con `estado=false`; `estado=true` devuelve solo los activos; sin `estado` devuelve ambos.
 - [x] 4. Corregir `ProductoController.ajustar`: retirar `@RequestParam Integer idHotel`; usar `request.idHotel()` para `verificarSede(...)` y para el servicio. Mantener `@Valid`, `If-Match` obligatorio, `Idempotency-Key`, y las respuestas `201`/`400`/`403`/`404`/`412`/`428`. Verificación: una petición solo con `{"idHotel":1,"delta":2,"motivo":"..."}` y `If-Match` responde `201`; sin `If-Match` sigue en `428`; con versión vieja, `412`; con `idHotel` ausente del cuerpo, `400 VALIDATION_ERROR` y no `500`.
 - [x] 5. Ajustar la firma de `ProductoService.ajustar` para recibir la sede del cuerpo (o conservar el parámetro y pasarle `request.idHotel()` desde el controlador), sin cambiar la llamada a `fn_stock_ajustar`, el lock, el cálculo del saldo ni el evento `inventory.stock.v1`. Verificación: el ajuste sigue incrementando `producto_sede.version`, devuelve `{ajusteId,cantidad,version}` y deja una fila en `ajuste_stock` con el actor auditado.
-- [ ] 6. Verificar la compatibilidad y los límites: `POST /api/producto/{id}/ajustes?idHotel=1` con el mismo cuerpo sigue respondiendo `201` (el query extra se ignora); un EMPLEADO fuera de su sede sigue en `403`; un producto de otra sede sigue en `404`; un `delta=0` o un saldo negativo siguen en `400`. Verificación: las cuatro respuestas se observan en la corrida real.
-- [ ] 7. Reiniciar `inventory-service` desde la rama corregida y repetir la reproducción de §3: el producto dado de baja aparece con `estado=false`, no con `estado=true`, y sigue apareciendo sin filtro; el ajuste solo con el cuerpo responde `201` y el stock sube por el `delta`. Verificación: las salidas literales de §6 quedan adjuntas al PR.
+- [x] 6. Verificar la compatibilidad y los límites: `POST /api/producto/{id}/ajustes?idHotel=1` con el mismo cuerpo sigue respondiendo `201` (el query extra se ignora); un EMPLEADO fuera de su sede sigue en `403`; un producto de otra sede sigue en `404`; un `delta=0` o un saldo negativo siguen en `400`. Verificación: las cuatro respuestas se observan en la corrida real.
+- [x] 7. Reiniciar `inventory-service` desde la rama corregida y repetir la reproducción de §3: el producto dado de baja aparece con `estado=false`, no con `estado=true`, y sigue apareciendo sin filtro; el ajuste solo con el cuerpo responde `201` y el stock sube por el `delta`. Verificación: las salidas literales de §6 quedan adjuntas al PR.
 - [ ] 8. Comprobar que el contrato no cambió: `git diff --exit-code origin/main -- docs/contracts` no produce salida, y `python scripts/validar-contratos.py --base origin/main` termina en «Los contratos solo se han ampliado. Correcto.» Verificación: 0 cambios en contratos y validador en verde.
 - [ ] 9. Correr los comandos canónicos: `bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test`, `bash scripts/mvn.sh -f services/pom.xml verify` y `python scripts/validar-planes.py`. Verificación: pruebas y build en `BUILD SUCCESS` y 0 errores del validador.
 - [ ] 10. Guardar en §6 las salidas de los pasos 1, 2, 6, 7 y 9, marcar todos los pasos y cambiar `Estado` a `cerrado` en el último commit. Verificación: no quedan pasos sin marcar y las dos reproducciones originales están en verde.
@@ -176,6 +176,115 @@ curl -s -i -X POST "http://localhost:8080/api/producto/{id}/ajustes" \
 ```
 
 Resultado esperado: `estado=false` devuelve el producto dado de baja con `"estado":false` y `"version":2`; `estado=true` no lo devuelve; sin `estado` aparece con su estado efectivo; el ajuste sin query responde `201` con `{ajusteId,cantidad:5,version:3}` y el stock de la sede sube de 3 a 5. El ajuste con `?idHotel=1` sigue respondiendo `201`. Evidencia: las respuestas completas en el PR de ejecución y en §6 de este plan.
+
+#### Corrida real después del arreglo (pasos 6 y 7)
+
+Ejecutada el 2026-10-21 con `inventory-service` reiniciado desde la rama corregida
+(`bash scripts/mvn.sh -f services/pom.xml -pl inventory-service spring-boot:run`), el Gateway en `8080`, los siete servicios arriba y el JWT de `admin@hotel.test`. Scripts: `%TEMP%/opencode/inv-evid/repro.sh` (paso 7) y `%TEMP%/opencode/inv-evid/limites.sh` (paso 6); salidas completas en `despues.txt` y `limites.txt`. Salida literal (sin tokens), con `{id}` en lugar del id creado:
+
+```text
+### [registrar] POST /api/producto/registrar
+{"success":true,"message":"Producto registrado","data":{"idProducto":16,"sku":"REP-E7532647",...,"idHotel":1,"precio":4.50,"cantidad":3,"umbralBajo":1,"estado":true,...,"version":1,"productoVersion":1},...}
+HTTP 201
+
+### [eliminar] DELETE /api/producto/eliminar/{id}?idHotel=1 (If-Match: "1")
+{"success":true,"message":"OK","data":{"idProducto":16,"sku":"REP-E7532647",...,"idHotel":1,"cantidad":3,"estado":false,...,"version":2,"productoVersion":1},...}
+HTTP 200
+
+### [listar] GET /api/producto/listar?idHotel=1&estado=false&page=0&size=20
+filas=6 (idProducto, estado, version) = (9,false,3) (10,false,3) (12,false,3) (13,false,3) (15,false,3) (16,false,2)
+                                                                 <-- el producto dado de baja (16) aparece con estado false
+
+### [listar] GET /api/producto/listar?idHotel=1&estado=true&page=0&size=20
+filas=10 = (1,true,11) (2,true,4) (3,true,1) (4,true,7) (5,true,9) (6,true,8) (7,true,8) (8,true,8) (11,true,1) (14,true,2)
+                                                                 <-- ninguno de los dados de baja
+
+### [listar] GET /api/producto/listar?idHotel=1&page=0&size=20 (sin estado)
+filas=16 = (1,true,11) (2,true,4) (3,true,1) (4,true,7) (5,true,9) (6,true,8) (7,true,8) (8,true,8) (9,false,3) (10,false,3) (11,true,1) (12,false,3) (13,false,3) (14,true,2) (15,false,3) (16,false,2)
+                                                                 <-- todos, con su estado efectivo
+
+### [ajuste sin query] POST /api/producto/{id}/ajustes solo con el cuerpo del contrato (If-Match: "2")
+{"success":true,"message":"Ajuste registrado","data":{"ajusteId":"db55ce6b-4b00-4bcf-aacc-d6cd2499849f","cantidad":5,"version":3},...}
+HTTP 201
+
+### [ajuste con query] POST /api/producto/{id}/ajustes?idHotel=1 con el mismo cuerpo (If-Match: "3")
+{"success":true,"message":"Ajuste registrado","data":{"ajusteId":"0e5f163c-a5a1-4ae8-bcd1-faf85a51951b","cantidad":7,"version":4},...}
+HTTP 201
+```
+
+El ajuste sin query ya no responde `500 INTERNAL_ERROR`: el stock de la sede sube de 3 a 5 y la versión de `producto_sede` de 2 a 3; con la query de la sede (la forma que envía el front) también responde `201` y el stock sigue subiendo (5 → 7, versión 3 → 4).
+
+#### Límites y compatibilidad (paso 6)
+
+```text
+### [compat] POST /api/producto/{id}/ajustes?idHotel=1 con el cuerpo del contrato (If-Match: "1")
+{"success":true,"message":"Ajuste registrado","data":{"ajusteId":"ec0c3d58-8dc8-492d-be6a-88f81ec5d287","cantidad":5,"version":2},...}
+HTTP 201
+
+### [otra sede] POST /api/producto/{id}/ajustes con idHotel=2 (el producto no esta en esa sede) (If-Match: "2")
+{"success":false,"message":"No encontramos lo que buscas.","error":{"code":"RESOURCE_NOT_FOUND","fields":{}},...}
+HTTP 404
+
+### [delta cero] POST /api/producto/{id}/ajustes con delta=0 (If-Match: "2")
+{"success":false,"message":"Revisa los datos marcados.","error":{"code":"VALIDATION_ERROR","fields":{"delta":"debe ser distinto de 0"}},...}
+HTTP 400
+
+### [saldo negativo] POST /api/producto/{id}/ajustes con delta=-10 (If-Match: "2")
+{"success":false,"message":"Revisa los datos marcados.","error":{"code":"VALIDATION_ERROR","fields":{"delta":"el ajuste dejaría saldo negativo"}},...}
+HTTP 400
+
+### [sin If-Match] POST /api/producto/{id}/ajustes con el cuerpo del contrato
+{"success":false,"message":"Falta la versión del registro.","error":{"code":"PRECONDITION_REQUIRED","fields":{"If-Match":"ausente"}},...}
+HTTP 428
+
+### [version vieja] POST /api/producto/{id}/ajustes con If-Match: "1" (la vigente es 2)
+{"success":false,"message":"Otra persona modificó este registro. Recarga para ver los cambios.","error":{"code":"PRECONDITION_FAILED","fields":{"If-Match":"\"1\""}},...}
+HTTP 412
+
+### [idHotel ausente del cuerpo] POST /api/producto/{id}/ajustes sin idHotel (If-Match: "2")
+{"success":false,"message":"Revisa los datos marcados.","error":{"code":"VALIDATION_ERROR","fields":{"idHotel":"no debe ser nulo"}},...}
+HTTP 400
+
+### [empleado] POST /api/producto/{id}/ajustes con el JWT de recepcion.lima@hotel.test (sede 1)
+{"success":false,"message":"No tienes permiso para esta acción.","error":{"code":"FORBIDDEN","fields":{}},...}
+HTTP 403
+
+### [empleado] POST /api/producto/{id}/ajustes con idHotel=2 (fuera de su sede)
+{"success":false,"message":"No tienes permiso para esta acción.","error":{"code":"FORBIDDEN","fields":{}},...}
+HTTP 403
+
+### [empleado] GET /api/producto/listar?idHotel=2 (fuera de su sede)
+{"success":false,"message":"No tienes permiso para esta acción.","error":{"code":"FORBIDDEN","fields":{}},...}
+HTTP 403
+```
+
+El `201` con la query de la sede sigue igual (el query extra se ignora), el `404` de un producto que no está en la sede, los dos `400`, el `428`, el `412` y el `403` se conservan.
+
+#### Persistencia del ajuste (paso 5)
+
+Consulta directa a `inventory_db` (`docker exec hotel-postgres-1 psql -U postgres -d inventory_db`) tras los ajustes de la corrida:
+
+```text
+                  id                  | id_producto | id_hotel | delta |                motivo                 | actor_id | saldo_resultante |          created_at
+--------------------------------------+-------------+----------+-------+---------------------------------------+----------+------------------+-------------------------------
+ ec0c3d58-8dc8-492d-be6a-88f81ec5d287 |          14 |        1 |     2 | Compatibilidad con la query del front |        1 |                5 | 2026-10-21 00:18:23.907642+00
+ db55ce6b-4b00-4bcf-aacc-d6cd2499849f |          16 |        1 |     2 | Reproduccion defecto ajuste           |        1 |                5 | 2026-10-21 00:19:25.375871+00
+ 0e5f163c-a5a1-4ae8-bcd1-faf85a51951b |          16 |        1 |     2 | Reproduccion defecto ajuste           |        1 |                7 | 2026-10-21 00:19:25.542919+00
+
+ id_producto | id_hotel | cantidad | version | estado
+-------------+----------+---------+---------+--------
+          14 |        1 |       5 |       2 | t
+          16 |        1 |       7 |       4 | f
+
+             type          |      channel       | partition_key | aggregate_version |          created_at
+-----------------------+------------------------+---------------+-------------------+-------------------------------
+ ProductoStockSnapshot | inventory.stock.v1 | 1:16          |                 1 | 2026-10-21 00:19:24.974227+00
+ ProductoStockSnapshot | inventory.stock.v1 | 1:16          |                 2 | 2026-10-21 00:19:25.167569+00
+ ProductoStockSnapshot | inventory.stock.v1 | 1:16          |                 3 | 2026-10-21 00:19:25.375871+00
+ ProductoStockSnapshot | inventory.stock.v1 | 1:16          |                 4 | 2026-10-21 00:19:25.542919+00
+```
+
+La fila de `ajuste_stock` queda con el actor auditado (`actor_id` del JWT, nunca una cabecera), `producto_sede.version` sube en cada ajuste y el evento `inventory.stock.v1` se sigue emitiendo con la versión de la sede.
 
 ### Pruebas automatizadas
 
