@@ -1,0 +1,66 @@
+{
+  "caso": "preflight",
+  "resultado": {
+    "compose": {
+      "kafka": "running/healthy",
+      "mailpit": "running/healthy",
+      "postgres": "running/healthy",
+      "rabbitmq": "running/healthy"
+    },
+    "servicios": {
+      "discovery-server": {
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "identity-service": {
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "hotel-service": {
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "inventory-service": {
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "reception-service": {
+        "status": 200,
+        "body": "{\"components\":{\"db\":{\"details\":{\"database\":\"PostgreSQL\",\"validationQuery\":\"isValid()\"},\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+      },
+      "sales-service": {
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "reporting-service": {
+        "status": 200,
+        "body": "{\"status\":\"UP\"}"
+      },
+      "notification-service": {
+        "status": 200,
+        "body": "{\"components\":{\"db\":{\"status\":\"UP\"},\"rabbit\":{\"status\":\"UP\"},\"readinessState\":{\"status\":\"UP\"}},\"status\":\"UP\"}"
+      },
+      "api-gateway": {
+        "status": 401,
+        "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"5cb60cbf-77ac-4d14-a006-9743610efb22\"}}"
+      }
+    },
+    "gateway": {
+      "sinToken": {
+        "status": 401,
+        "code": "UNAUTHENTICATED"
+      }
+    },
+    "reportingBootstrap": "LISTO",
+    "seeds": {
+      "hoteles": "3",
+      "habitaciones": "6",
+      "personas": "7",
+      "gates": "6",
+      "productosSede": "9"
+    },
+    "fallos": [],
+    "ok": true
+  },
+  "ejecutadoEn": "2026-10-21T05:44:36.201310Z"
+}

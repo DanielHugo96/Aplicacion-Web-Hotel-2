@@ -32,8 +32,8 @@ Los 41 casos de la matriz de [06 §5](../especificacion/06-migracion-y-pruebas.m
 
 ## 4. Pasos
 
-- [ ] 1. Confirmar plataforma F1–F4 cerrada y sana antes de sembrar. Verificación: `docker compose` con los contenedores healthy, `GET /actuator/health/readiness` 200 por servicio y el Gateway respondiendo 401 sin token.
-- [ ] 2. Crear el esqueleto en tests/ y scripts/ (runner, siembra de F1–F9 e informe de evidencia). Verificación: `ls tests/fixtures tests/evidencia scripts` lista lo creado y `scripts/ejecutar-matriz.sh --help` termina en 0.
+- [x] 1. Confirmar plataforma F1–F4 cerrada y sana antes de sembrar. Verificación: `docker compose` con los contenedores healthy, `GET /actuator/health/readiness` 200 por servicio y el Gateway respondiendo 401 sin token.
+- [x] 2. Crear el esqueleto en tests/ y scripts/ (runner, siembra de F1–F9 e informe de evidencia). Verificación: `ls tests/fixtures tests/evidencia scripts` lista lo creado y `scripts/ejecutar-matriz.sh --help` termina en 0.
 - [ ] 3. Sembrar F1–F3: estadía ACTIVA (cliente 100, habitación 101, adelanto 20.00) con `POST /api/recepcion/registrar`, venta PENDIENTE con `POST /api/venta` y venta PAGADA con `PUT /api/venta/{id}`. Verificación: idRecepcion, idVenta y operationId guardados como variables y counts en reception_db y sales_db coinciden con lo sembrado.
 - [ ] 4. Sembrar F4–F5: cierre en CONFIRMANDO con `POST /api/recepcion/registrar-salida` con Sales detenido tras aceptar, y mantenimiento en PREPARANDO con `POST /api/habitacion/{id}/mantenimiento` con reception detenido a mitad de admisión. Verificación: closureId y blockId guardados y fases visibles en `GET /api/recepcion/{id}` y `GET /api/habitacion/operaciones/{blockId}`.
 - [ ] 5. Sembrar F6–F7: check-in en 201 más `POST /api/habitacion/{id}/mantenimiento` rechazado (bloqueo R durable) y venta en recuperación simulando timeout de inventory durante el débito sin liberar la operación. Verificación: bloqueo R RECHAZADO en DB y la operación de F7 sigue sin terminal.
