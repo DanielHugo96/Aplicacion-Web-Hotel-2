@@ -118,12 +118,7 @@ export class VentasService {
     body: AjusteStockInput,
     ifMatch: string
   ): Promise<AjusteResultado> {
-    // El controlador de inventory exige además `idHotel` como query (mismo
-    // valor que el cuerpo cerrado del contrato); se envía en ambos sitios para
-    // no cambiar el schema y que el ajuste real funcione. Ver
-    // IA-front-admin-web-ventas-01.
-    const params = new HttpParams().set('idHotel', body.idHotel);
-    return this.post<AjusteResultado>(API_PATHS.productoAjustes(id), body, ifMatch, params);
+    return this.post<AjusteResultado>(API_PATHS.productoAjustes(id), body, ifMatch);
   }
 
   async listarMovimientos(

@@ -110,7 +110,7 @@ def main() -> int:
     buscar2 = c.http("GET", f"/api/producto/buscar/{id_producto}?idHotel=1", token=token)
     ajuste = c.http(
         "POST",
-        f"/api/producto/{id_producto}/ajustes?idHotel=1",
+        f"/api/producto/{id_producto}/ajustes",
         token=token,
         headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": etag(buscar2)},
         body={"idHotel": 1, "delta": 2, "motivo": "Reposición de integración"},
@@ -135,21 +135,19 @@ def main() -> int:
     )
     mostrar("producto/eliminar (200)", baja, f"ETag={etag(baja)}")
 
-    # El filtro `estado=false` de inventory ANDa el estado global (que sigue
-    # activo por contrato) y el de la sede, así que no devuelve la baja. El
-    # panel llega a la fila por «Todos» y la reactiva desde ahí; queda anotado
-    # como defecto de la dependencia.
-    todos = c.http(
+    # El arreglo de inventory filtra por producto_sede.estado, así que la baja
+    # ya se alcanza con el filtro de dados de baja.
+    inactivos = c.http(
         "GET",
-        "/api/producto/listar?idHotel=1&page=0&size=100",
+        "/api/producto/listar?idHotel=1&page=0&size=100&estado=false",
         token=token,
     )
     fila = next(
-        (p for p in (todos.field("data") or []) if p["idProducto"] == id_producto), None
+        (p for p in (inactivos.field("data") or []) if p["idProducto"] == id_producto), None
     )
     print(
-        "\n[producto/listar todos tras la baja] HTTP",
-        todos.status,
+        "\n[producto/listar estado=false tras la baja] HTTP",
+        inactivos.status,
         "· fila:",
         json.dumps(fila, ensure_ascii=False) if fila else "no encontrada",
     )

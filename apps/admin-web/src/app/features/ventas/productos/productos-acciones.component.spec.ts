@@ -196,11 +196,8 @@ describe('ProductosListComponent (acciones A)', () => {
       .expectOne(`${API_BASE_URL}/api/producto/buscar/1?idHotel=1`)
       .flush(envelopeSingle(producto()), { status: 200, statusText: 'OK', headers: { ETag: '"3"' } });
     await microtasks();
-    const post = http.expectOne(
-      (r) =>
-        r.url === `${API_BASE_URL}/api/producto/1/ajustes` &&
-        r.params.get('idHotel') === '1'
-    );
+    const post = http.expectOne(`${API_BASE_URL}/api/producto/1/ajustes`);
+    expect(post.request.params.has('idHotel')).toBe(false);
     expect(post.request.body).toEqual({
       idHotel: 1,
       delta: 5,

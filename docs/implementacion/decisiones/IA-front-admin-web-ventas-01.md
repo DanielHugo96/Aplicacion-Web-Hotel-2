@@ -1,50 +1,48 @@
-# IA-front-admin-web-ventas-01 — `idHotel` también como query en el ajuste de stock
+# IA-front-admin-web-ventas-01 — `idHotel` en el ajuste de stock (workaround retirado)
 
 - **Plan:** `front-admin-web-ventas`
 - **Paso:** 8 de la sección 4. Pasos
 - **Nivel:** 2 (decidir, registrar y seguir)
-- **Fecha:** 2026-10-20
+- **Fecha:** 2026-10-20 · **Actualizado:** 2026-10-21
+- **Estado:** resuelto; el workaround ya no está en el cliente
 
 ## Qué se encontró
 
 `admin-web.yaml` declara `POST /api/producto/{id}/ajustes` con un cuerpo cerrado
-`{idHotel, delta, motivo}` y sin parámetro `idHotel` en la query. El contrato de
-inventory (`inventory.yaml`) publica el mismo `AjusteRequest` y tampoco declara la
-query. En cambio, el controlador real de `inventory-service`
-(`ProductoController.ajustar`) exige `@RequestParam Integer idHotel` además del
-cuerpo. Al ejecutar la integración real por el Gateway, el front enviaba solo el
-cuerpo y el servicio respondía `500 INTERNAL_ERROR` con
-`Required request parameter 'idHotel' … is not present` en su log.
+`{idHotel, delta, motivo}` y sin parámetro `idHotel` en la query. El controlador
+real de `inventory-service` exigía `@RequestParam Integer idHotel` además del
+cuerpo, así que la integración por el Gateway devolvía
+`500 INTERNAL_ERROR` con `Required request parameter 'idHotel' … is not present`.
 
-## Qué se decidió
+## Qué se decidió entonces
 
-`VentasService.ajustarStock` envía `idHotel` **también como query**, con el mismo
-valor que ya viaja en el cuerpo cerrado del contrato. No se quita `idHotel` del
-cuerpo ni se cambia ningún schema: la petición sigue siendo válida para
-`admin-web.yaml` y satisface al controlador real.
+`VentasService.ajustarStock` enviaba `idHotel` **también como query**, con el
+mismo valor del cuerpo, sin cambiar el schema. Era la opción menos invasiva
+mientras el defecto vivía en `back-inventory-stock`.
 
-## Por qué
+## Qué pasó después
 
-Es la opción menos invasiva: una línea en el cliente HTTP del plan, sin tocar
-servicios, contratos ni planes ya cerrados. Mantener el cuerpo intacto evita
-romper el schema `AjusteRequest`/`ProductoAjuste` y el validador de contratos.
-La alternativa de cambiar el contrato para declarar la query es zona de
-`docs/contracts/**` y exigiría un plan de arreglo de back; la norma del plan
-`front` solo permite ampliaciones aditivas y aquí basta con enviar el parámetro.
+El plan de arreglo `back-arreglo-inventory-baja-y-ajuste` (PR #115) corrigió el
+controlador: ahora toma `idHotel` de `AjusteRequest.idHotel`, como publica el
+contrato, y ya no exige la query. La integración real del 21/10/2026 confirma
+`201` enviando solo el cuerpo cerrado.
+
+## Decisión vigente
+
+Se **retiró el workaround**: `ajustarStock` vuelve a enviar únicamente
+`{idHotel, delta, motivo}` y el `If-Match`; no añade ningún query param. Las
+pruebas del servicio y del listado comprueban que la petición no lleva
+`idHotel` en la query.
 
 ## Alternativas descartadas
 
-- **Quitar `idHotel` del cuerpo y mandarlo solo en la query.** Rompe el schema
-  cerrado que publica `admin-web.yaml` y las pruebas de contrato del front.
-- **Cambiar `inventory.yaml` para declarar la query.** Es un contrato de otro
-  ámbito; un plan `front` no lo modifica y obligaría a reabrir
-  `back-inventory-stock`.
-- **Ajustar el controlador de inventory.** Zona `back`; fuera del alcance de este
-  plan y de su rama.
+- **Mantener la query “por compatibilidad”.** El backend arreglado ya no la
+  necesita y el contrato no la publica; dejarla sería deuda y ruido.
+- **Cambiar `admin-web.yaml`.** No hace falta: el contrato ya describía el
+  cuerpo correcto; el defecto era del controlador y se reparó en su ámbito.
 
 ## A quién afecta
 
 - `apps/admin-web/src/app/core/services/ventas.service.ts` y su spec.
 - La pantalla `/app/productos` (diálogo «Ajustar stock»).
-- Ningún contrato ni servicio cambia; queda anotado para que un futuro plan de
-  arreglo alinee `inventory-service` con `admin-web.yaml`.
+- Ningún contrato ni servicio cambia en este plan.
