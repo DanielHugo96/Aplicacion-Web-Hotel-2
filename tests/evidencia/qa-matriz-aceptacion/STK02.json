@@ -1,0 +1,45 @@
+{
+  "caso": "STK02",
+  "venta": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "75c35c3a-5b14-46d7-b20f-277424c9fbf0",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "223",
+      "date": "Wed, 21 Oct 2026 06:44:43 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No hay stock suficiente de uno o más productos.",
+      "error": {
+        "code": "STOCK_INSUFFICIENT",
+        "fields": {
+          "cantidad": "stock insuficiente"
+        }
+      },
+      "meta": {
+        "correlationId": "75c35c3a-5b14-46d7-b20f-277424c9fbf0"
+      }
+    }
+  },
+  "stocksAntes": {
+    "p1": 20,
+    "p3": 5
+  },
+  "stocksDespues": {
+    "p1": 20,
+    "p3": 5
+  },
+  "exigido": "409 STOCK_INSUFFICIENT sin descuento parcial",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T06:44:43.654049Z"
+}

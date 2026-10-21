@@ -171,11 +171,17 @@ def operaciones_consumo(id_recepcion: int) -> list[dict[str, Any]]:
 
 
 def esperar_operacion_terminal(id_recepcion: int, timeout: int = 90) -> None:
+    """Espera a que las operaciones vigentes tengan su lápida TERMINAL en sales.
+
+    Las operaciones `ABIERTA` sin venta asociada (sondas de STK06) no se cierran solas: una lápida
+    posterior las finaliza. Solo interesa que las ventas reales no sigan en curso.
+    """
     esperar(
         f"operaciones de consumo terminales de {id_recepcion}",
         lambda: c.psql_one(
-            "reception_db",
-            f"select count(*) from operacion_consumo where id_recepcion={id_recepcion} and estado='ABIERTA'",
+            "sales_db",
+            "select count(*) from operacion_venta ov join venta v on v.id=ov.id_venta "
+            f"where v.id_recepcion={id_recepcion} and ov.estado <> 'TERMINAL'",
         )
         == "0",
         timeout=timeout,
@@ -841,6 +847,343 @@ def occ_cln() -> int:
         fallos.append("OCC04")
 
     guardar_estado(estado)
+    print(json.dumps({"fallos": fallos}, indent=2))
+    return 0 if not fallos else 1
+
+
+# ---------------------------------------------------------------------------
+# Paso 10 — STK01–STK07
+# ---------------------------------------------------------------------------
+
+
+def _ajustar_stock(id_producto: int, id_hotel: int, delta: int, motivo: str, token: str) -> c.Resp:
+    detalle = c.http("GET", f"/api/producto/buscar/{id_producto}?idHotel={id_hotel}", token=token)
+    version = detalle.field("data", "version")
+    return c.http(
+        "POST",
+        f"/api/producto/{id_producto}/ajustes?idHotel={id_hotel}",
+        token=token,
+        body={"idHotel": id_hotel, "delta": delta, "motivo": motivo},
+        headers={"Idempotency-Key": str(uuid.uuid4()), "If-Match": str(version)},
+    )
+
+
+def _estadia_activa(room_id: int, token: str) -> int:
+    fila = c.psql_one(
+        "reception_db",
+        f"select id from recepcion where id_habitacion={room_id} and estado_estadia='ACTIVA'",
+        default="",
+    )
+    if fila:
+        return int(fila)
+    return _nueva_estadia(room_id, 1 if room_id < 200 else (2 if room_id < 300 else 3), 100, 0.0, token)
+
+
+def _con_proxy_inventory(fn):
+    """Arranca sales apuntando a un proxy que cuelga el débito y ejecuta `fn`; restituye al final."""
+    from scripts.qa import ventas as v
+
+    proxy = v.SelectiveProxy()
+    proxy.start()
+    try:
+        c.stop_service("sales-service")
+        c.start_service("sales-service", timeout=200,
+                        env_overrides={"FEIGN_URL_INVENTORY": f"http://127.0.0.1:{v.PROXY_PORT}"}, force=True)
+        c.start_service("inventory-service", timeout=200)
+        time.sleep(2)
+        return fn()
+    finally:
+        proxy.stop()
+        c.stop_service("sales-service")
+        c.start_service("sales-service", timeout=200, force=True)
+
+
+def _asegurar_servicios() -> None:
+    """Arranca los servicios de dominio que hayan quedado caídos de una corrida anterior."""
+    for nombre in c.START_ORDER:
+        if nombre == "discovery-server":
+            continue
+        if not c.port_open(c.SERVICES[nombre]["port"]):
+            c.start_service(nombre, timeout=220)
+
+
+def stk() -> int:
+    _asegurar_servicios()
+    token = f.admin_token()
+    fallos: list[str] = []
+    idr = _estadia_activa(101, token)
+
+    # ---- STK01: dos ventas ×15 simultáneas sobre stock 20.
+    esperar("inventory y sales listos",
+            lambda: c.service_health("inventory-service")["status"] == 200
+            and c.service_health("sales-service")["status"] == 200, timeout=120)
+    actual = stock(1, 1)
+    _ajustar_stock(1, 1, 20 - actual, "Matriz STK01: stock a 20", token)
+    stock_inicial = stock(1, 1)
+    res = _dos_a_la_vez(
+        lambda: f.create_sale(id_recepcion=idr, items=[{"idProducto": 1, "cantidad": 15}], token=token),
+        lambda: f.create_sale(id_recepcion=idr, items=[{"idProducto": 1, "cantidad": 15}], token=token),
+    )
+    estados = sorted(r[0].status for r in res.values())
+    codigos = [codigo(r[0]) for r in res.values()]
+    final = stock(1, 1)
+    movs = c.psql(
+        "inventory_db",
+        "select id_venta, estado from movimiento_venta where id_hotel=1 "
+        f"and id_venta in ({int(res['a'][1].get('idVenta') or 0)},{int(res['b'][1].get('idVenta') or 0)})",
+    )
+    cumple = (
+        estados == [201, 409] and "STOCK_INSUFFICIENT" in codigos
+        and final == stock_inicial - 15 and len(movs) == 1 and movs[0][1] == "DESCONTADO"
+    )
+    save("STK01", {"caso": "STK01", "stockInicial": stock_inicial, "stockFinal": final,
+                   "a": resumen(res["a"][0]), "b": resumen(res["b"][0]),
+                   "estados": estados, "codigos": codigos,
+                   "movimientos": [{"idVenta": m[0], "estado": m[1]} for m in movs],
+                   "exigido": "una 201, otra 409 STOCK_INSUFFICIENT, stock final 5, un solo movimiento",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("STK01")
+    _ajustar_stock(1, 1, 20 - final, "Matriz STK01: restituir stock", token)
+
+    # ---- STK02: multítem que excede un ítem (p1 ×2 y p3 ×10 con p3=5).
+    _ajustar_stock(1, 1, 20 - stock(1, 1), "Matriz STK02: stock p1 a 20", token)
+    _ajustar_stock(3, 1, 5 - stock(3, 1), "Matriz STK02: stock p3 a 5", token)
+    p1, p3 = stock(1, 1), stock(3, 1)
+    venta, data = f.create_sale(id_recepcion=idr, items=[{"idProducto": 1, "cantidad": 2},
+                                                         {"idProducto": 3, "cantidad": 10}], token=token)
+    cumple = (
+        venta.status == 409 and codigo(venta) == "STOCK_INSUFFICIENT"
+        and stock(1, 1) == p1 and stock(3, 1) == p3
+    )
+    save("STK02", {"caso": "STK02", "venta": resumen(venta),
+                   "stocksAntes": {"p1": p1, "p3": p3},
+                   "stocksDespues": {"p1": stock(1, 1), "p3": stock(3, 1)},
+                   "exigido": "409 STOCK_INSUFFICIENT sin descuento parcial",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("STK02")
+
+    # ---- STK03: repetición de F2 con la misma Idempotency-Key.
+    f2 = leer_estado().get("F2", {})
+    if f2:
+        antes = stock(1, 1)
+        # Se repite la intención de F2 con su payload y su clave, tal cual se envió.
+        repeticion, repetida = f.create_sale(id_recepcion=int(f2["payload"]["idRecepcion"]),
+                                             items=f2["payload"]["detalles"],
+                                             key=f2["idempotencyKey"], token=token)
+        movs = movimientos(int(f2["idVenta"]))
+        cumple = (
+            repeticion.status in (200, 201) and int(repetida.get("idVenta") or 0) == int(f2["idVenta"])
+            and stock(1, 1) == antes and len(movs) == 1
+        )
+        save("STK03", {"caso": "STK03", "repeticion": resumen(repeticion),
+                       "idVentaOriginal": f2["idVenta"], "idVentaRepetido": repetida.get("idVenta"),
+                       "stockAntes": antes, "stockDespues": stock(1, 1),
+                       "movimientos": movs,
+                       "exigido": "mismo idVenta, un solo débito y un solo movimiento",
+                       "cumple": cumple})
+    else:
+        cumple = False
+        save("STK03", {"caso": "STK03", "cumple": False, "motivo": "F2 ausente en fixtures.json"})
+    if not cumple:
+        fallos.append("STK03")
+
+    # ---- STK04: anulación con débito en vuelo y entrega tardía del débito.
+    _ajustar_stock(1, 1, 20 - stock(1, 1), "Matriz STK04: stock p1 a 20", token)
+
+    def crear_incierta():
+        sale, venta = f.create_sale(id_recepcion=idr, items=[{"idProducto": 1, "cantidad": 2}],
+                                    token=token, base="http://localhost:8085")
+        return sale, venta
+
+    venta_202, datos_202 = _con_proxy_inventory(crear_incierta)
+    idv = int(datos_202.get("idVenta") or 0)
+    stock_antes = stock(1, 1)
+    detalle_v = c.http("GET", f"/api/venta/buscar/{idv}", token=token)
+    anulacion = c.http(
+        "DELETE", f"/api/venta/{idv}?motivo=Matriz%20STK04", token=token,
+        headers={"Idempotency-Key": str(uuid.uuid4()),
+                 "If-Match": str(detalle_v.field("data", "version"))},
+    )
+    esperar("venta CANCELADA", lambda: venta_row(idv).get("estadoOperacion") == "CANCELADA", timeout=180)
+    movs = movimientos(idv)
+    machine = c.machine_token("sales", "inventory")
+    tardio = c.http(
+        "POST", "http://localhost:8084/internal/stock/descontar", token=machine,
+        body={"idVenta": idv, "idHotel": 1, "items": [{"idProducto": 1, "cantidad": 2}]},
+        headers={"Idempotency-Key": str(uuid.uuid4())}, base="",
+    )
+    cumple = (
+        venta_202.status == 202 and datos_202.get("estadoOperacion") == "CANCELACION_PENDIENTE"
+        and anulacion.status == 202
+        and any(m["estado"] == "RESTITUIDO" for m in movs)
+        and tardio.status == 409 and codigo(tardio) == "DEBIT_CANCELLED"
+        and stock(1, 1) == stock_antes
+    )
+    save("STK04", {"caso": "STK04",
+                   "inducido": "proxy TCP delante de inventory que no responde al débito",
+                   "venta202": resumen(venta_202), "venta": venta_row(idv),
+                   "anulacion": resumen(anulacion), "movimientos": movs,
+                   "debitoTardio": resumen(tardio),
+                   "stockAntes": stock_antes, "stockDespues": stock(1, 1),
+                   "exigido": "lápida RESTITUIDO, débito tardío 409 DEBIT_CANCELLED, stock intacto",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("STK04")
+
+    # ---- STK05: job de recuperación cada 30 s sobre F7.
+    _ajustar_stock(1, 1, 20 - stock(1, 1), "Matriz STK05: stock p1 a 20", token)
+    venta_202, datos_202 = _con_proxy_inventory(crear_incierta)
+    idv5 = int(datos_202.get("idVenta") or 0)
+    estado_inicial = venta_row(idv5)
+    final = esperar("venta recuperada por el job",
+                    lambda: venta_row(idv5) if venta_row(idv5).get("estadoOperacion") in
+                    ("CONFIRMADA", "CANCELADA", "RECHAZADA") else None, timeout=420, interval=10)
+    movs = movimientos(idv5)
+    cumple = (
+        venta_202.status == 202 and estado_inicial.get("estadoOperacion") == "CANCELACION_PENDIENTE"
+        and final.get("estadoOperacion") in ("CONFIRMADA", "CANCELADA")
+        and len(movs) == 1
+        and not (final.get("estadoOperacion") == "CONFIRMADA" and movs[0]["estado"] != "DESCONTADO")
+    )
+    save("STK05", {"caso": "STK05",
+                   "venta202": resumen(venta_202), "estadoInicial": estado_inicial,
+                   "estadoFinal": final, "movimientos": movs,
+                   "esperaSegundos": 420,
+                   "exigido": "estado terminal consistente; nunca confirmar tras compensar; un movimiento",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("STK05")
+
+    # ---- STK06: recepcion.operacion-finalizar RECHAZADA antes de la respuesta de admitir.
+    idr6 = _estadia_activa(101, token)
+    machine = c.machine_token("sales", "reception")
+    operation_id = str(uuid.uuid4())
+    id_venta_virtual = 990000 + int(time.time()) % 10000
+    admision = c.http(
+        "POST", f"http://localhost:8083/internal/recepciones/{idr6}/operaciones", token=machine,
+        body={"operationId": operation_id, "idVenta": id_venta_virtual, "idHotel": 1,
+              "tipo": "VENTA", "actorId": 1, "actorRol": "ADMIN"},
+        headers={"Idempotency-Key": operation_id}, base="",
+    )
+    comando_id = str(uuid.uuid4())
+    publicacion = c.rabbit_publish(
+        "hotel.commands.v1", "recepcion.operacion-finalizar",
+        {"commandId": comando_id, "type": "RecepcionOperacionFinalizar", "schemaVersion": 1,
+         "idHotel": 1, "correlationId": str(uuid.uuid4()), "issuedAt": c.iso(),
+         "payload": {"operationId": operation_id, "idRecepcion": idr6,
+                     "idVenta": id_venta_virtual, "tipo": "VENTA", "resultado": "RECHAZADA"}},
+        command_id=comando_id,
+    )
+    esperar("lápida FINALIZADA", lambda: c.psql_one(
+        "reception_db",
+        f"select estado from operacion_consumo where operation_id='{operation_id}'") == "FINALIZADA",
+        timeout=120)
+    lapida = c.psql(
+        "reception_db",
+        "select operation_id::text, tipo, estado, resultado from operacion_consumo "
+        f"where operation_id='{operation_id}'",
+    )[0]
+    tardio = c.http(
+        "POST", f"http://localhost:8083/internal/recepciones/{idr6}/operaciones", token=machine,
+        body={"operationId": operation_id, "idVenta": id_venta_virtual, "idHotel": 1,
+              "tipo": "VENTA", "actorId": 1, "actorRol": "ADMIN"},
+        headers={"Idempotency-Key": str(uuid.uuid4())}, base="",
+    )
+    movs = c.psql_one("inventory_db",
+                      f"select count(*) from movimiento_venta where id_venta={id_venta_virtual}")
+    cumple = (
+        admision.status == 200 and publicacion.status == 200
+        and lapida[2] == "FINALIZADA" and lapida[3] == "RECHAZADA"
+        and tardio.status == 409
+        and movs == "0"
+    )
+    save("STK06", {"caso": "STK06",
+                   "admitir": resumen(admision), "comandoPublicado": publicacion.summary(),
+                   "lapida": {"operationId": lapida[0], "tipo": lapida[1], "estado": lapida[2],
+                              "resultado": lapida[3]},
+                   "admitirTardio": resumen(tardio),
+                   "movimientos": int(movs),
+                   "exigido": "lápida FINALIZADA con tipo completo; admitir tardío 409; sin débito",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("STK06")
+
+    # ---- STK07: worker caído tras DEBITO_SOLICITADO, reinicio y recuperación.
+    # El débito se cuelga con un proxy (la operación queda DEBITO_SOLICITADO en sales); se mata
+    # sales en ese punto, se restituye inventory y se reinicia: el recuperador compensa sin
+    # liberar la operación antes de RESTITUIDO.
+    _ajustar_stock(1, 1, 20 - stock(1, 1), "Matriz STK07: stock p1 a 20", token)
+    stock_antes = stock(1, 1)
+    from scripts.qa import ventas as v
+
+    proxy = v.SelectiveProxy()
+    proxy.start()
+    venta_202 = None
+    datos: dict[str, Any] = {}
+    estado_en_debito: list[list[str]] = []
+    try:
+        c.stop_service("sales-service")
+        c.start_service("sales-service", timeout=220,
+                        env_overrides={"FEIGN_URL_INVENTORY": f"http://127.0.0.1:{v.PROXY_PORT}"}, force=True)
+        c.start_service("inventory-service", timeout=220)
+        time.sleep(2)
+        sale = c.http(
+            "POST", "http://localhost:8085/api/venta",
+            token=token,
+            body={"idRecepcion": _estadia_activa(101, token),
+                  "detalles": [{"idProducto": 1, "cantidad": 2}]},
+            headers={"Idempotency-Key": str(uuid.uuid4())},
+            timeout=60,
+        )
+        venta_202 = sale
+        datos = sale.field("data") or {}
+        idv7 = int(datos.get("idVenta") or 0)
+        # La petición de débito está retenida por el proxy: la operación ya está en DEBITO_SOLICITADO.
+        estado_en_debito = c.psql(
+            "sales_db",
+            "select operation_id::text, estado, attempts from operacion_venta "
+            f"where id_venta={idv7} and estado <> 'TERMINAL'",
+        )
+        # Worker caído: se mata sales mientras el débito sigue en vuelo.
+        c.stop_service("sales-service")
+    finally:
+        proxy.stop()
+        c.stop_service("sales-service")
+        c.start_service("inventory-service", timeout=220)
+        c.start_service("sales-service", timeout=220, force=True)
+
+    final = esperar("STK07 compensado tras el reinicio",
+                    lambda: venta_row(idv7) if venta_row(idv7).get("estadoOperacion") in
+                    ("CONFIRMADA", "CANCELADA", "RECHAZADA") else None, timeout=420, interval=10)
+    movs = movimientos(idv7)
+    liberado_antes = c.psql_one(
+        "sales_db",
+        f"select count(*) from operacion_venta where id_venta={idv7} and estado <> 'TERMINAL'",
+    )
+    cumple = (
+        venta_202 is not None and venta_202.status == 202
+        and bool(estado_en_debito) and estado_en_debito[0][1] == "DEBITO_SOLICITADO"
+        and final.get("estadoOperacion") in ("CANCELADA", "RECHAZADA")
+        and len(movs) == 1 and movs[0]["estado"] == "RESTITUIDO"
+        and stock(1, 1) == stock_antes
+        and liberado_antes == "0"
+    )
+    save("STK07", {"caso": "STK07",
+                   "inducido": "proxy TCP que retiene el débito; sales matado en DEBITO_SOLICITADO",
+                   "venta202": resumen(venta_202) if venta_202 else None,
+                   "operacionEnDebito": [{"operationId": r[0], "estado": r[1], "attempts": int(r[2])}
+                                         for r in estado_en_debito],
+                   "estadoFinal": final,
+                   "movimientos": movs,
+                   "stockAntes": stock_antes, "stockDespues": stock(1, 1),
+                   "operacionNoTerminal": liberado_antes == "1",
+                   "exigido": "misma compensación segura sin liberar antes de RESTITUIDO",
+                   "cumple": cumple})
+    if not cumple:
+        fallos.append("STK07")
+
     print(json.dumps({"fallos": fallos}, indent=2))
     return 0 if not fallos else 1
 
@@ -1521,6 +1864,7 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("sec", help="SEC01-SEC08")
     sub.add_parser("lp-crud", help="LP01-LP02 y CRUD01")
     sub.add_parser("occ-cln", help="OCC01-OCC04 y CLN01-CLN03")
+    sub.add_parser("stk", help="STK01-STK07")
     args = parser.parse_args(argv)
     if not args.command:
         parser.print_help()
@@ -1538,6 +1882,8 @@ def main(argv: list[str] | None = None) -> int:
             return lp_crud()
         if args.command == "occ-cln":
             return occ_cln()
+        if args.command == "stk":
+            return stk()
         parser.print_help()
         return 2
     except c.RunbookError as err:

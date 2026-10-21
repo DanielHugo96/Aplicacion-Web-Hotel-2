@@ -1,0 +1,104 @@
+{
+  "caso": "STK01",
+  "stockInicial": 20,
+  "stockFinal": 5,
+  "a": {
+    "status": 201,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "6a82a989-d115-4279-bc16-b871d3ef27e2",
+      "location": "/api/venta/buscar/19",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "502",
+      "date": "Wed, 21 Oct 2026 06:44:41 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idVenta": 19,
+        "idRecepcion": 37,
+        "idCliente": 101,
+        "idHotel": 1,
+        "total": 52.5,
+        "estado": "PENDIENTE",
+        "estadoOperacion": "CONFIRMADA",
+        "operationId": "589995cf-085f-429a-bf43-112be2a0d9c6",
+        "medioPago": null,
+        "version": 2,
+        "fechaCreacion": "2026-10-21T06:44:41.645623Z",
+        "paidAt": null,
+        "detalles": [
+          {
+            "idDetalleVenta": 5,
+            "idProducto": 1,
+            "nombreProducto": "Agua 500ml",
+            "cantidad": 15,
+            "precioUnitario": 3.5,
+            "subTotal": 52.5
+          }
+        ]
+      },
+      "meta": {
+        "correlationId": "6a82a989-d115-4279-bc16-b871d3ef27e2"
+      }
+    }
+  },
+  "b": {
+    "status": 409,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "192e6f3c-1f5a-4e97-b193-8984445f499c",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "223",
+      "date": "Wed, 21 Oct 2026 06:44:41 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "No hay stock suficiente de uno o más productos.",
+      "error": {
+        "code": "STOCK_INSUFFICIENT",
+        "fields": {
+          "cantidad": "stock insuficiente"
+        }
+      },
+      "meta": {
+        "correlationId": "192e6f3c-1f5a-4e97-b193-8984445f499c"
+      }
+    }
+  },
+  "estados": [
+    201,
+    409
+  ],
+  "codigos": [
+    null,
+    "STOCK_INSUFFICIENT"
+  ],
+  "movimientos": [
+    {
+      "idVenta": "19",
+      "estado": "DESCONTADO"
+    }
+  ],
+  "exigido": "una 201, otra 409 STOCK_INSUFFICIENT, stock final 5, un solo movimiento",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T06:44:42.100285Z"
+}

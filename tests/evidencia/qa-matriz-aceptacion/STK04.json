@@ -1,0 +1,140 @@
+{
+  "caso": "STK04",
+  "inducido": "proxy TCP delante de inventory que no responde al débito",
+  "venta202": {
+    "status": 202,
+    "headers": {
+      "x-correlation-id": "e876b5c1-a557-4a10-b9df-6504f42d11de",
+      "location": "/api/venta/buscar/21",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "394",
+      "date": "Wed, 21 Oct 2026 06:45:08 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idVenta": 21,
+        "idRecepcion": 37,
+        "idCliente": 101,
+        "idHotel": 1,
+        "total": 0.0,
+        "estado": "PENDIENTE",
+        "estadoOperacion": "CANCELACION_PENDIENTE",
+        "operationId": "ba8c3795-fa3b-49eb-861d-26372f72d8b9",
+        "medioPago": null,
+        "version": 2,
+        "fechaCreacion": "2026-10-21T06:45:03.668670Z",
+        "paidAt": null,
+        "detalles": []
+      },
+      "meta": {
+        "correlationId": "e876b5c1-a557-4a10-b9df-6504f42d11de"
+      }
+    }
+  },
+  "venta": {
+    "idVenta": 21,
+    "estado": "PENDIENTE",
+    "estadoOperacion": "CANCELADA",
+    "total": "0.00",
+    "paidAt": null,
+    "medioPago": null,
+    "origen": "NUEVA",
+    "version": 3,
+    "closureId": null
+  },
+  "anulacion": {
+    "status": 202,
+    "headers": {
+      "vary": "Access-Control-Request-Headers",
+      "x-correlation-id": "d5b8c29b-8462-469e-bdd4-a22e92044bfb",
+      "location": "/api/venta/buscar/21",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "394",
+      "date": "Wed, 21 Oct 2026 06:45:26 GMT",
+      "referrer-policy": "no-referrer",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idVenta": 21,
+        "idRecepcion": 37,
+        "idCliente": 101,
+        "idHotel": 1,
+        "total": 0.0,
+        "estado": "PENDIENTE",
+        "estadoOperacion": "CANCELACION_PENDIENTE",
+        "operationId": "ba8c3795-fa3b-49eb-861d-26372f72d8b9",
+        "medioPago": null,
+        "version": 2,
+        "fechaCreacion": "2026-10-21T06:45:03.668670Z",
+        "paidAt": null,
+        "detalles": []
+      },
+      "meta": {
+        "correlationId": "d5b8c29b-8462-469e-bdd4-a22e92044bfb"
+      }
+    }
+  },
+  "movimientos": [
+    {
+      "idVenta": 21,
+      "idHotel": 1,
+      "estado": "RESTITUIDO",
+      "resultado": "{\"estado\": \"RESTITUIDO\", \"motivo\": \"resultado incierto del débito\", \"version\": 1, \"restituidoAt\": \"2026-10-21T01:45:24.198628-05:00\"}",
+      "createdAt": "2026-10-21 06:45:24.198628+00"
+    }
+  ],
+  "debitoTardio": {
+    "status": 409,
+    "headers": {
+      "x-correlation-id": "4faaa0a8-ac45-4ed3-9c20-61505c73252f",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "transfer-encoding": "chunked",
+      "date": "Wed, 21 Oct 2026 06:46:15 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "La venta fue anulada; el cobro no corresponde.",
+      "error": {
+        "code": "DEBIT_CANCELLED",
+        "fields": {
+          "idVenta": "débito cancelado por restitución previa"
+        }
+      },
+      "meta": {
+        "correlationId": "4faaa0a8-ac45-4ed3-9c20-61505c73252f"
+      }
+    }
+  },
+  "stockAntes": 20,
+  "stockDespues": 20,
+  "exigido": "lápida RESTITUIDO, débito tardío 409 DEBIT_CANCELLED, stock intacto",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T06:46:15.587466Z"
+}

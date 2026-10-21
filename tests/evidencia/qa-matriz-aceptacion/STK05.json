@@ -1,0 +1,78 @@
+{
+  "caso": "STK05",
+  "venta202": {
+    "status": 202,
+    "headers": {
+      "x-correlation-id": "1980ef9b-ffdb-4543-86eb-0a9c3207a70b",
+      "location": "/api/venta/buscar/22",
+      "retry-after": "2",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "content-length": "394",
+      "date": "Wed, 21 Oct 2026 06:46:38 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "idVenta": 22,
+        "idRecepcion": 37,
+        "idCliente": 101,
+        "idHotel": 1,
+        "total": 0.0,
+        "estado": "PENDIENTE",
+        "estadoOperacion": "CANCELACION_PENDIENTE",
+        "operationId": "7528363e-672b-44c1-9aac-ee612bad1caf",
+        "medioPago": null,
+        "version": 2,
+        "fechaCreacion": "2026-10-21T06:46:32.794565Z",
+        "paidAt": null,
+        "detalles": []
+      },
+      "meta": {
+        "correlationId": "1980ef9b-ffdb-4543-86eb-0a9c3207a70b"
+      }
+    }
+  },
+  "estadoInicial": {
+    "idVenta": 22,
+    "estado": "PENDIENTE",
+    "estadoOperacion": "CANCELACION_PENDIENTE",
+    "total": "0.00",
+    "paidAt": null,
+    "medioPago": null,
+    "origen": "NUEVA",
+    "version": 2,
+    "closureId": null
+  },
+  "estadoFinal": {
+    "idVenta": 22,
+    "estado": "PENDIENTE",
+    "estadoOperacion": "CANCELADA",
+    "total": "0.00",
+    "paidAt": null,
+    "medioPago": null,
+    "origen": "NUEVA",
+    "version": 3,
+    "closureId": null
+  },
+  "movimientos": [
+    {
+      "idVenta": 22,
+      "idHotel": 1,
+      "estado": "RESTITUIDO",
+      "resultado": "{\"estado\": \"RESTITUIDO\", \"motivo\": \"resultado incierto del débito\", \"version\": 1, \"restituidoAt\": \"2026-10-21T01:46:52.763114-05:00\"}",
+      "createdAt": "2026-10-21 06:46:52.763114+00"
+    }
+  ],
+  "esperaSegundos": 420,
+  "exigido": "estado terminal consistente; nunca confirmar tras compensar; un movimiento",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T06:47:54.349645Z"
+}

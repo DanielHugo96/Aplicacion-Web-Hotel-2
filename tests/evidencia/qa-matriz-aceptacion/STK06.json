@@ -1,0 +1,84 @@
+{
+  "caso": "STK06",
+  "admitir": {
+    "status": 200,
+    "headers": {
+      "x-correlation-id": "3fd11d27-17ad-4eef-b06e-f58ffa8f2af1",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "transfer-encoding": "chunked",
+      "date": "Wed, 21 Oct 2026 06:47:54 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": true,
+      "message": "OK",
+      "data": {
+        "operationId": "69afae1c-e67a-4eda-a2b4-40c9c9a0e6f7",
+        "tipo": "VENTA",
+        "estado": "ABIERTA"
+      },
+      "meta": {
+        "correlationId": "3fd11d27-17ad-4eef-b06e-f58ffa8f2af1"
+      }
+    }
+  },
+  "comandoPublicado": {
+    "status": 200,
+    "headers": {
+      "allow": "POST, OPTIONS",
+      "cache-control": "no-cache",
+      "connection": "close",
+      "content-length": "15",
+      "content-security-policy": "script-src 'self'; object-src 'self'",
+      "content-type": "application/json",
+      "date": "Wed, 21 Oct 2026 06:47:56 GMT",
+      "server": "Cowboy",
+      "vary": "accept, accept-encoding, origin"
+    },
+    "body": "{\"routed\":true}"
+  },
+  "lapida": {
+    "operationId": "69afae1c-e67a-4eda-a2b4-40c9c9a0e6f7",
+    "tipo": "VENTA",
+    "estado": "FINALIZADA",
+    "resultado": "RECHAZADA"
+  },
+  "admitirTardio": {
+    "status": 409,
+    "headers": {
+      "x-correlation-id": "e3ccba3b-f632-47d2-b7bf-188b98119d8d",
+      "x-content-type-options": "nosniff",
+      "x-xss-protection": "0",
+      "cache-control": "no-cache, no-store, max-age=0, must-revalidate",
+      "pragma": "no-cache",
+      "expires": "0",
+      "x-frame-options": "DENY",
+      "content-type": "application/json",
+      "transfer-encoding": "chunked",
+      "date": "Wed, 21 Oct 2026 06:47:56 GMT",
+      "connection": "close"
+    },
+    "body": {
+      "success": false,
+      "message": "La estadía no está activa para esa operación.",
+      "data": null,
+      "error": {
+        "code": "STAY_NOT_ACTIVE",
+        "fields": {}
+      },
+      "meta": {
+        "correlationId": "e3ccba3b-f632-47d2-b7bf-188b98119d8d"
+      }
+    }
+  },
+  "movimientos": 0,
+  "exigido": "lápida FINALIZADA con tipo completo; admitir tardío 409; sin débito",
+  "cumple": true,
+  "ejecutadoEn": "2026-10-21T06:47:56.915745Z"
+}
