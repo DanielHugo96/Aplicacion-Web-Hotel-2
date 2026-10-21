@@ -4,8 +4,8 @@ Generado por `python scripts/qa/matriz.py informe` a partir de los archivos de
 `tests/evidencia/qa-matriz-aceptacion/`. Cada fila se ejecutó contra el Compose real y los
 servicios reales; el archivo citado contiene el comando/endpoint, la respuesta y el criterio.
 
-- Casos con evidencia ejecutada: **40/41**
-- Casos que cumplen el criterio: **39/41**
+- Casos con evidencia ejecutada: **41/41**
+- Casos que cumplen el criterio: **41/41**
 
 | Caso | Grupo | Comando o endpoint | Invocación | Resultado | Evidencia |
 |---|---|---|---|---|---|
@@ -47,8 +47,8 @@ servicios reales; el archivo citado contiene el comando/endpoint, la respuesta y
 | REP01 | reportes | `GET /api/reportes/dashboard y GET /api/reportes/ventas` | `python scripts/qa/matriz.py rep / rep03_sin_bootstrap` | ✅ | `tests/evidencia/qa-matriz-aceptacion/REP01.json` |
 | REP02 | reportes | `rebuild de reporting en DB nueva` | `python scripts/qa/matriz.py rep / rep03_sin_bootstrap` | ✅ | `tests/evidencia/qa-matriz-aceptacion/REP02.json` |
 | REP03 | reportes | `arranque en demo sin ventas` | `python scripts/qa/matriz.py rep / rep03_sin_bootstrap` | ✅ | `tests/evidencia/qa-matriz-aceptacion/REP03.json` |
-| NOT01 | notificaciones | `cierre de F1 con Mailpit caído y repetición de notificacion.checkout` | `python scripts/qa/matriz.py not` | ❌ | `tests/evidencia/qa-matriz-aceptacion/NOT01.json` |
-| NOT02 | notificaciones | `respuesta tardía con lease vencido` | `sin evidencia` | ❌ | `—` |
+| NOT01 | notificaciones | `cierre de F1 con Mailpit caído y repetición de notificacion.checkout` | `python scripts/qa/matriz.py not` | ✅ | `tests/evidencia/qa-matriz-aceptacion/NOT01.json` |
+| NOT02 | notificaciones | `respuesta tardía con lease vencido` | `python scripts/qa/matriz.py not` | ✅ | `tests/evidencia/qa-matriz-aceptacion/NOT02.json` |
 | NOT03 | notificaciones | `CLI notification-service --admin purge --before sobre ENVIADA antigua y PENDIENTE/ERROR` | `python scripts/qa/matriz.py not` | ✅ | `tests/evidencia/qa-matriz-aceptacion/NOT03.json` |
 
 ## Estados inducidos
