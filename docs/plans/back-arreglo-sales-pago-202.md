@@ -7,7 +7,7 @@
 | Componente | `sales-service` |
 | Fase | `F3` |
 | Modo | `openspec` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-sales-ventas` |
 | Repara | `back-sales-ventas` |
 | Spec | [`04-flujos.md` §2. Venta y stock](../especificacion/04-flujos.md#2-venta-y-stock), [`sales/api.md` §REST: ventas](../especificacion/microservicios/sales/api.md#rest-ventas), [`sales/base-de-datos.md` §Tablas](../especificacion/microservicios/sales/base-de-datos.md#tablas) y [§Funciones/procedimientos](../especificacion/microservicios/sales/base-de-datos.md#funcionesprocedimientos), [`03-contrato-comun.md` §Respuestas](../especificacion/03-contrato-comun.md#respuestas) y [§Headers](../especificacion/03-contrato-comun.md#headers), [`sales.yaml`](../contracts/openapi/sales.yaml), [`errors.md` §Inventory y Sales](../contracts/errors.md#inventory-y-sales) y [`openspec/specs/sales-ventas/spec.md`](../../openspec/specs/sales-ventas/spec.md) §Operaciones observables con recuperación cada 30 s |
