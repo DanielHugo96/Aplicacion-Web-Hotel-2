@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -565,12 +566,26 @@ public class SalesRepository {
 
   public record Recuperable(int idVenta, UUID operationId, String tipo, String estadoOperacion) {}
 
+  /**
+   * Operaciones en PREPARANDO que la recuperación debe atender, separadas por tipo: la venta alta
+   * vencida por edad y las operaciones PAGO y ANULACION cuyo siguiente intento ya venció
+   * (docs/especificacion/04-flujos.md §2).
+   */
   public List<Recuperable> preparandoVencidas(int staleSeconds) {
+    List<Recuperable> candidatas = new ArrayList<>();
+    candidatas.addAll(preparandoVentasVencidas(staleSeconds));
+    candidatas.addAll(preparandoPagos());
+    candidatas.addAll(preparandoAnulaciones());
+    return candidatas;
+  }
+
+  /** Venta alta PENDIENTE con operación VENTA en PREPARANDO de más de staleSeconds: se rechaza. */
+  public List<Recuperable> preparandoVentasVencidas(int staleSeconds) {
     return jdbc.query(
         """
         SELECT v.id, o.operation_id, o.tipo, v.estado_operacion
           FROM venta v JOIN operacion_venta o ON o.operation_id = v.current_operation_id
-         WHERE v.estado_operacion = 'PENDIENTE' AND o.estado = 'PREPARANDO'
+         WHERE o.tipo = 'VENTA' AND v.estado_operacion = 'PENDIENTE' AND o.estado = 'PREPARANDO'
            AND o.created_at < now() - (? * interval '1 second')
         """,
         (rs, n) ->
@@ -580,6 +595,45 @@ public class SalesRepository {
                 rs.getString("tipo"),
                 rs.getString("estado_operacion")),
         staleSeconds);
+  }
+
+  /**
+   * Operación PAGO en PREPARANDO sobre una venta todavía impaga: se reintenta la misma admisión y
+   * el mismo pago local. La venta ya PAGADA no se selecciona: no hay nada que cobrar.
+   */
+  public List<Recuperable> preparandoPagos() {
+    return jdbc.query(
+        """
+        SELECT v.id, o.operation_id, o.tipo, v.estado_operacion
+          FROM venta v JOIN operacion_venta o ON o.operation_id = v.current_operation_id
+         WHERE o.tipo = 'PAGO' AND o.estado = 'PREPARANDO'
+           AND v.estado = 'PENDIENTE' AND v.estado_operacion IN ('PENDIENTE','CONFIRMADA')
+           AND o.next_attempt_at <= now()
+        """,
+        (rs, n) ->
+            new Recuperable(
+                rs.getInt("id"),
+                rs.getObject("operation_id", UUID.class),
+                rs.getString("tipo"),
+                rs.getString("estado_operacion")));
+  }
+
+  /** Operación ANULACION en PREPARANDO: reanuda su admisión y su CAS de anulación. */
+  public List<Recuperable> preparandoAnulaciones() {
+    return jdbc.query(
+        """
+        SELECT v.id, o.operation_id, o.tipo, v.estado_operacion
+          FROM venta v JOIN operacion_venta o ON o.operation_id = v.current_operation_id
+         WHERE o.tipo = 'ANULACION' AND o.estado = 'PREPARANDO'
+           AND v.estado_operacion IN ('PENDIENTE','CONFIRMADA')
+           AND o.next_attempt_at <= now()
+        """,
+        (rs, n) ->
+            new Recuperable(
+                rs.getInt("id"),
+                rs.getObject("operation_id", UUID.class),
+                rs.getString("tipo"),
+                rs.getString("estado_operacion")));
   }
 
   public List<Recuperable> debitoVencido(int staleSeconds) {

@@ -400,18 +400,23 @@ public class SalesService {
               currentUser.subjectId() == null ? 0 : currentUser.subjectId(),
               rolActual()));
     } catch (FeignException ex) {
-      tx.executeWithoutResult(
-          status -> repo.terminarOperacionSiCoincide(operationId, idVenta));
       if (ex.status() == 409) {
+        tx.executeWithoutResult(
+            status -> repo.terminarOperacionSiCoincide(operationId, idVenta));
         throw new ApiException(ErrorCode.STAY_NOT_ACTIVE, Map.of("idRecepcion", String.valueOf(venta.idRecepcion())));
       }
       if (ex.status() == 403) {
+        tx.executeWithoutResult(
+            status -> repo.terminarOperacionSiCoincide(operationId, idVenta));
         throw new ApiException(ErrorCode.FORBIDDEN);
       }
       if (ex.status() == 404) {
+        tx.executeWithoutResult(
+            status -> repo.terminarOperacionSiCoincide(operationId, idVenta));
         throw new ApiException(ErrorCode.RESOURCE_NOT_FOUND, Map.of("idRecepcion", String.valueOf(venta.idRecepcion())));
       }
-      // Operación durable en recuperación: el job reintenta la misma admisión y el pago.
+      // Fallo de transporte: la operación sigue PREPARANDO y la recuperación reintenta la misma
+      // admisión y el mismo pago local (docs/especificacion/04-flujos.md §2).
       return new Resultado(202, ver(idVenta));
     }
 
@@ -507,18 +512,23 @@ public class SalesService {
               currentUser.subjectId() == null ? 0 : currentUser.subjectId(),
               rolActual()));
     } catch (FeignException ex) {
-      tx.executeWithoutResult(
-          status -> repo.terminarOperacionSiCoincide(operationId, idVenta));
       if (ex.status() == 409) {
+        tx.executeWithoutResult(
+            status -> repo.terminarOperacionSiCoincide(operationId, idVenta));
         throw new ApiException(ErrorCode.STAY_NOT_ACTIVE, Map.of("idRecepcion", String.valueOf(venta.idRecepcion())));
       }
       if (ex.status() == 403) {
+        tx.executeWithoutResult(
+            status -> repo.terminarOperacionSiCoincide(operationId, idVenta));
         throw new ApiException(ErrorCode.FORBIDDEN);
       }
       if (ex.status() == 404) {
+        tx.executeWithoutResult(
+            status -> repo.terminarOperacionSiCoincide(operationId, idVenta));
         throw new ApiException(ErrorCode.RESOURCE_NOT_FOUND, Map.of("idRecepcion", String.valueOf(venta.idRecepcion())));
       }
-      // Admisión en recuperación: la operación sigue PREPARANDO y el job la reintenta.
+      // Fallo de transporte: la operación sigue PREPARANDO y la recuperación reintenta la misma
+      // admisión y su CAS (docs/especificacion/04-flujos.md §2).
       return new Resultado(202, ver(idVenta));
     }
 
