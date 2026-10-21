@@ -97,12 +97,13 @@ public class ProductoController {
   @PostMapping("/{id}/ajustes")
   public ResponseEntity<ApiResponse<AjusteResultado>> ajustar(
       @PathVariable Integer id,
-      @RequestParam Integer idHotel,
       @RequestHeader(name = "If-Match", required = false) String ifMatch,
       @RequestHeader(name = "Idempotency-Key", required = false) String idempotencyKey,
       @Valid @RequestBody AjusteRequest request) {
     soloAdmin();
-    AjusteResultado r = service.ajustar(id, idHotel, ifMatch, request, actorActual());
+    // La sede llega en el cuerpo del contrato (AjusteRequest.idHotel), no en la query.
+    verificarSede(request.idHotel());
+    AjusteResultado r = service.ajustar(id, request.idHotel(), ifMatch, request, actorActual());
     return ResponseEntity.status(CREATED)
         .body(ApiResponse.ok("Ajuste registrado", r, Meta.of(CorrelationId.current())));
   }

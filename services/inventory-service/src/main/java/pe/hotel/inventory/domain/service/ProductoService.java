@@ -58,8 +58,9 @@ public class ProductoService {
     List<Object> params = new ArrayList<>();
     params.add(idHotel);
     if (estado != null) {
-      sql += " AND p.estado = ? AND ps.estado = ?";
-      params.add(estado);
+      // El filtro es la baja lógica por sede (producto_sede.estado); el estado global del producto
+      // no se filtra. El estado devuelto sigue siendo el efectivo (producto AND producto_sede).
+      sql += " AND ps.estado = ?";
       params.add(estado);
     }
     sql += " ORDER BY p.id ASC";
@@ -264,6 +265,11 @@ public class ProductoService {
     return view;
   }
 
+  /**
+   * Ajuste de stock con lock: la sede es la que publica el contrato en el cuerpo
+   * ({@code AjusteRequest.idHotel}) y el controlador se la pasa ya validada contra el JWT. El saldo
+   * nunca queda negativo y la versión de {@code producto_sede} sube.
+   */
   @Transactional
   public AjusteResultado ajustar(
       Integer idProducto, Integer idHotel, String ifMatch, AjusteRequest request, Integer actorId) {

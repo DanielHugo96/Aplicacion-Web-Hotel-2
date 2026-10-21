@@ -86,10 +86,10 @@ Se envió el cuerpo cerrado del contrato `{"idHotel":1,"delta":2,"motivo":"Repro
 ## 4. Pasos
 
 - [x] 1. Reproducir los dos fallos desde `main` con el JWT de ADMIN y el Gateway: crear un producto, darlo de baja con `DELETE /api/producto/eliminar/{id}?idHotel=1`, listar con `estado=false`, `estado=true` y sin `estado`; y enviar `POST /api/producto/{id}/ajustes` solo con el cuerpo del contrato. Verificación: `estado=false` devuelve 0 filas, el producto solo aparece sin filtro, y el ajuste sin query responde `500 INTERNAL_ERROR` mientras con `?idHotel=1` responde `201`.
-- [ ] 2. Añadir pruebas de regresión que fallan en `main`: `ProductoService.listar` con `estado=false` devuelve la fila de `producto_sede.estado=false`; con `estado=true` no la devuelve; sin `estado` devuelve las dos con su estado efectivo; y `ProductoController.ajustar` responde `201` con el cuerpo del contrato y sin query. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test` falla en esas pruebas antes del cambio.
-- [ ] 3. Corregir `ProductoService.listar`: cuando `estado` no es nulo, filtrar solo por `producto_sede.estado` (`AND ps.estado = ?`), manteniendo el `JOIN`, el orden por id ascendente y el `estado` devuelto como `ps_estado && estado`. No cambiar el comportamiento sin `estado` (sin filtro) ni añadir paginación. Verificación: la prueba de `estado=false` devuelve el producto 9 con `estado=false`; `estado=true` devuelve solo los activos; sin `estado` devuelve ambos.
-- [ ] 4. Corregir `ProductoController.ajustar`: retirar `@RequestParam Integer idHotel`; usar `request.idHotel()` para `verificarSede(...)` y para el servicio. Mantener `@Valid`, `If-Match` obligatorio, `Idempotency-Key`, y las respuestas `201`/`400`/`403`/`404`/`412`/`428`. Verificación: una petición solo con `{"idHotel":1,"delta":2,"motivo":"..."}` y `If-Match` responde `201`; sin `If-Match` sigue en `428`; con versión vieja, `412`; con `idHotel` ausente del cuerpo, `400 VALIDATION_ERROR` y no `500`.
-- [ ] 5. Ajustar la firma de `ProductoService.ajustar` para recibir la sede del cuerpo (o conservar el parámetro y pasarle `request.idHotel()` desde el controlador), sin cambiar la llamada a `fn_stock_ajustar`, el lock, el cálculo del saldo ni el evento `inventory.stock.v1`. Verificación: el ajuste sigue incrementando `producto_sede.version`, devuelve `{ajusteId,cantidad,version}` y deja una fila en `ajuste_stock` con el actor auditado.
+- [x] 2. Añadir pruebas de regresión que fallan en `main`: `ProductoService.listar` con `estado=false` devuelve la fila de `producto_sede.estado=false`; con `estado=true` no la devuelve; sin `estado` devuelve las dos con su estado efectivo; y `ProductoController.ajustar` responde `201` con el cuerpo del contrato y sin query. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test` falla en esas pruebas antes del cambio.
+- [x] 3. Corregir `ProductoService.listar`: cuando `estado` no es nulo, filtrar solo por `producto_sede.estado` (`AND ps.estado = ?`), manteniendo el `JOIN`, el orden por id ascendente y el `estado` devuelto como `ps_estado && estado`. No cambiar el comportamiento sin `estado` (sin filtro) ni añadir paginación. Verificación: la prueba de `estado=false` devuelve el producto 9 con `estado=false`; `estado=true` devuelve solo los activos; sin `estado` devuelve ambos.
+- [x] 4. Corregir `ProductoController.ajustar`: retirar `@RequestParam Integer idHotel`; usar `request.idHotel()` para `verificarSede(...)` y para el servicio. Mantener `@Valid`, `If-Match` obligatorio, `Idempotency-Key`, y las respuestas `201`/`400`/`403`/`404`/`412`/`428`. Verificación: una petición solo con `{"idHotel":1,"delta":2,"motivo":"..."}` y `If-Match` responde `201`; sin `If-Match` sigue en `428`; con versión vieja, `412`; con `idHotel` ausente del cuerpo, `400 VALIDATION_ERROR` y no `500`.
+- [x] 5. Ajustar la firma de `ProductoService.ajustar` para recibir la sede del cuerpo (o conservar el parámetro y pasarle `request.idHotel()` desde el controlador), sin cambiar la llamada a `fn_stock_ajustar`, el lock, el cálculo del saldo ni el evento `inventory.stock.v1`. Verificación: el ajuste sigue incrementando `producto_sede.version`, devuelve `{ajusteId,cantidad,version}` y deja una fila en `ajuste_stock` con el actor auditado.
 - [ ] 6. Verificar la compatibilidad y los límites: `POST /api/producto/{id}/ajustes?idHotel=1` con el mismo cuerpo sigue respondiendo `201` (el query extra se ignora); un EMPLEADO fuera de su sede sigue en `403`; un producto de otra sede sigue en `404`; un `delta=0` o un saldo negativo siguen en `400`. Verificación: las cuatro respuestas se observan en la corrida real.
 - [ ] 7. Reiniciar `inventory-service` desde la rama corregida y repetir la reproducción de §3: el producto dado de baja aparece con `estado=false`, no con `estado=true`, y sigue apareciendo sin filtro; el ajuste solo con el cuerpo responde `201` y el stock sube por el `delta`. Verificación: las salidas literales de §6 quedan adjuntas al PR.
 - [ ] 8. Comprobar que el contrato no cambió: `git diff --exit-code origin/main -- docs/contracts` no produce salida, y `python scripts/validar-contratos.py --base origin/main` termina en «Los contratos solo se han ampliado. Correcto.» Verificación: 0 cambios en contratos y validador en verde.
@@ -184,6 +184,58 @@ bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test
 ```
 
 Resultado esperado: las pruebas nuevas de `ProductoService.listar`, `ProductoController.ajustar` y `ProductoService.ajustar` en verde, además de las existentes. Evidencia: `services/inventory-service/target/surefire-reports/` y la salida del comando adjunta al PR.
+
+#### Pruebas nuevas
+
+| Fichero | Qué fija |
+|---|---|
+| `services/inventory-service/src/test/java/pe/hotel/inventory/support/ProductoJdbcFalso.java` | `JdbcTemplate` en memoria con `producto`/`producto_sede` y `fn_stock_ajustar` simulados (lock, saldo no negativo y versión de la sede). |
+| `services/inventory-service/src/test/java/pe/hotel/inventory/domain/service/ProductoServiceListarTests.java` | El filtro `estado` mira la baja de la sede: `false` devuelve el dado de baja, `true` no, sin `estado` devuelve ambos con su estado efectivo, y el SQL filtra por `ps.estado` y no por `p.estado`. |
+| `services/inventory-service/src/test/java/pe/hotel/inventory/domain/service/ProductoServiceAjustarTests.java` | El ajuste sube el saldo, incrementa la versión de la sede, audita el actor, llama a `fn_stock_ajustar` con la sede, el delta, el motivo y el actor, y conserva 428, 412, 400 (delta 0 y saldo negativo) y 404. |
+| `services/inventory-service/src/test/java/pe/hotel/inventory/web/ProductoControllerAjustesTests.java` | `POST /api/producto/{id}/ajustes` con el cuerpo del contrato y sin query responde 201; con `?idHotel=1` también; sin `idHotel` en el cuerpo, 400 `VALIDATION_ERROR`; sin `If-Match`, 428; con versión vieja, 412; producto de otra sede, 404; empleado fuera de su sede, 403. |
+
+#### Salida antes del cambio (paso 2)
+
+`bash scripts/mvn.sh -f services/pom.xml -pl inventory-service test` sobre el árbol sin el arreglo:
+
+```text
+[ERROR]   ProductoServiceListarTests.elFiltroMiraLaBajaDeLaSedeYNoElEstadoGlobalDelProducto:63
+Expecting actual:
+  "SELECT p.id, p.sku, p.nombre, p.detalle, p.imagen_url, p.estado, p.version, p.created_at,
+       ps.id_hotel, ps.precio, ps.cantidad, ps.umbral_bajo, ps.estado AS ps_estado,
+       ps.version AS ps_version
+FROM producto p
+JOIN producto_sede ps ON ps.id_producto = p.id
+WHERE ps.id_hotel = ?
+ AND p.estado = ? AND ps.estado = ? ORDER BY p.id ASC"
+not to contain:
+  "p.estado = ?"
+
+[ERROR]   ProductoServiceListarTests.listarConEstadoFalseDevuelveElProductoDadoDeBajaEnLaSede:35
+Expected size: 1 but was: 0 in:
+[]
+[ERROR]   ProductoControllerAjustesTests.ajusteConElCuerpoDelContratoYSinQueryResponde201:65 Status expected:<201> but was:<500>
+[ERROR]   ProductoControllerAjustesTests.ajusteConVersionViejaSigueEn412:121 Status expected:<412> but was:<500>
+[ERROR]   ProductoControllerAjustesTests.ajusteDeUnEmpleadoFueraDeSuSedeSigueEn403:159 Status expected:<403> but was:<500>
+[ERROR]   ProductoControllerAjustesTests.ajusteDeUnProductoQueNoEstaEnLaSedeSigueEn404:134 Status expected:<404> but was:<500>
+[ERROR]   ProductoControllerAjustesTests.ajusteSinIdHotelEnElCuerpoDevuelve400ValidationErrorYNo500:95 Status expected:<400> but was:<500>
+[ERROR]   ProductoControllerAjustesTests.ajusteSinIfMatchSigueEn428:108 Status expected:<428> but was:<500>
+
+[ERROR] Tests run: 44, Failures: 8, Errors: 0, Skipped: 0
+[INFO] BUILD FAILURE
+```
+
+Los 8 fallos son los de la regresión; el `500` es el `INTERNAL_ERROR` que produce el `@RequestParam idHotel` ausente.
+
+#### Salida después del cambio (pasos 3, 4 y 5)
+
+```text
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.833 s -- in pe.hotel.inventory.domain.service.ProductoServiceAjustarTests
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.058 s -- in pe.hotel.inventory.domain.service.ProductoServiceListarTests
+[INFO] Tests run: 7, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.206 s -- in pe.hotel.inventory.web.ProductoControllerAjustesTests
+[INFO] Tests run: 44, Failures: 0, Errors: 0, Skipped: 0
+[INFO] BUILD SUCCESS
+```
 
 ### Comandos canónicos
 
