@@ -112,7 +112,7 @@ El resultado no se reescribe al restituir: se conserva para auditoría y la vent
 
 ## Seeds
 
-Productos 1 AGUA-500/Agua 500ml, 2 SNACK-01/Snack, 3 ASEO-01/Kit de aseo. Estado activo, imágenes locales de demo.
+Productos 1 AGUA-500/Agua 500ml, 2 SNACK-01/Snack, 3 ASEO-01/Kit de aseo. Estado activo, imágenes locales propias en `/assets/productos/` con `alt` descriptivo y ficha de créditos.
 
 | idHotel | idProducto 1: precio/cantidad | idProducto 2 | idProducto 3 |
 |---:|---|---|---|

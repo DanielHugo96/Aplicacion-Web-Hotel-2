@@ -1,4 +1,4 @@
-# Especificación del hotel — v1.2
+# Especificación del hotel — v1.3
 
 ## Leer en este orden
 
@@ -48,7 +48,7 @@ Gateway y Eureka son infraestructura, no dominios adicionales: no tienen BD de n
 
 ## Alcance cerrado
 
-Tres sedes de demostración; estadías inmediatas; cobro manual registrado, sin procesador bancario; carrito y consumo de productos; limpieza; reportes; correo de demostración. Landing informativa independiente del panel.
+Tres sedes de una cadena ficticia —**Casa Sillar**, en Lima y Arequipa— presentada como aplicación real: estadías inmediatas; cobro manual registrado, sin procesador bancario; carrito y consumo de productos; limpieza; reportes; correo de la cadena. Landing informativa independiente del panel. Los datos, las direcciones y las fotografías son verosímiles pero ficticios, y así se declara ([`02` § Condición de presentación real](02-landing-y-panel.md#condición-de-presentación-real)).
 
 No se implementan reservas futuras, pasarela de pago, facturación fiscal, fidelización, OTA, aplicación móvil, Kubernetes ni Config Server. No se añaden servicios de “pagos”, “reservas”, “clientes” o “limpieza” separados.
 

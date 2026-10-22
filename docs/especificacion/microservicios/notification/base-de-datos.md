@@ -72,7 +72,7 @@ CREATE TABLE template (
 `variables` de `notification_job` (según plantilla; strings escapados, importes numeric(12,2)):
 
 ```json
-{"nombre":"Cliente Uno","hotel":"Hotel Demo Lima Centro","idRecepcion":1001,"fechaSalida":"2026-10-05","totalAlojamiento":70.00,"totalConsumos":7.00}
+{"nombre":"Cliente Uno","hotel":"Casa Sillar Lima Centro","idRecepcion":1001,"fechaSalida":"2026-10-05","totalAlojamiento":70.00,"totalConsumos":7.00}
 ```
 
 - BIENVENIDA: `{nombre}`.
@@ -85,11 +85,11 @@ Obligatorios los campos de su plantilla; no se aceptan claves desconocidas ni va
 
 Plantillas v1:
 
-- BIENVENIDA: “Bienvenido al Hotel Demo”, variable nombre.
+- BIENVENIDA: “Bienvenido a Casa Sillar”, variable nombre.
 - CHECKIN: “Estadía registrada”, nombre, hotel, idRecepcion, fechaSalida.
 - CHECKOUT: “Salida registrada”, nombre, hotel, idRecepcion, totalAlojamiento, totalConsumos.
 
-Texto explícito “Notificación de demostración, no comprobante fiscal”. Variables escapadas. Jobs/inbox vacíos; no destinatarios reales ni envío durante seed.
+Texto explícito “Notificación automática de la cadena; no es un comprobante fiscal”. Variables escapadas. Jobs/inbox vacíos; no destinatarios reales ni envío durante seed.
 
 Dev SMTP=Mailpit. Producción SMTP deshabilitado por defecto hasta configurar proveedor/autorización; no se envía correo real como parte de estas especificaciones.
 

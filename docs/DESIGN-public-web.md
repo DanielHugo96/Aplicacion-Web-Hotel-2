@@ -324,7 +324,7 @@ No hay diálogos, ni toasts, ni tooltips en la landing: no se especifican sombra
 
 ### Navegación
 
-- **Cabecera:** clara sobre Sillar blanco con junta inferior de 1px; wordmark "Hotel" en Marcellus con el nombre de la cadena en Plex 600 al lado. Enlaces Sedes / Contacto / Privacidad en `--text-ui`, con el activo subrayado en carmín. A la derecha, "Acceso al panel" como enlace sobrio, no como botón.
+- **Cabecera:** clara sobre Sillar blanco con junta inferior de 1px; wordmark **Casa** en Marcellus con **Sillar** en Plex 600 al lado, que es la marca de la cadena. Enlaces Sedes / Contacto / Privacidad en `--text-ui`, con el activo subrayado en carmín. A la derecha, "Acceso al panel" como enlace sobrio, no como botón.
 - **Comportamiento al hacer scroll:** la cabecera se fija con fondo `rgba(248, 247, 244, 0.92)` y desenfoque de 8px, y **la junta inferior es la que mantiene el borde**; no se añade sombra al fijarse.
 - **Móvil:** el wordmark y los enlaces caben en una fila; si no caben, se pliegan en un menú nativo (`<details>` o un botón con `aria-expanded`) que se abre a pantalla completa sobre Sillar blanco. Sin animación de entrada en el menú.
 - **Pie:** banda Azul noche con el nombre de la cadena, el aviso de no disponibilidad, los enlaces de privacidad y contacto, y el copyright. Texto en `#F1F0EC`; enlaces subrayados al hover. El foco sobre el pie usa `#D7A3AE`.
@@ -332,15 +332,23 @@ No hay diálogos, ni toasts, ni tooltips en la landing: no se especifican sombra
 
 ### Fichas de sede
 
-- Imagen full-bleed `3:2` arriba, esquinas superiores de 8px.
+- Imagen full-bleed `3:2` arriba, esquinas superiores de 8px. La foto es la de la sede (`imagenUrl` del contrato); si la sede no tiene imagen, el hueco se rellena con el fallback neutro del sistema y la ficha conserva exactamente las mismas dimensiones.
 - Cuerpo con padding 24px: ciudad en `small` Gris garúa, nombre en Plex 600 `--text-h3`, descripción de dos o tres líneas, enlace "Ver sede" en carmín.
 - Borde 1px Junta, fondo blanco, **sin sombra en reposo**. Hover: fondo Sillar piedra en el cuerpo y junta a Tinta al 20 %; nada se mueve ni escala.
 
 ### Fichas de categoría
 
-- Imagen `4:3` arriba; cuerpo con nombre, capacidad en `small` ("Hasta 2 personas"), detalle y **bloque de tarifa**.
+- Imagen `4:3` arriba, tomada de la galería curada de la categoría; si la categoría no tiene imágenes, fallback neutro con la misma relación.
+- Cuerpo con nombre, capacidad en `small` ("Hasta 2 personas"), detalle y **bloque de tarifa**.
 - **Bloque de tarifa** — obligatorio y con esta jerarquía: importe en Plex 600 y tabular, precedido por la palabra "Desde" y seguido de "por noche"; debajo, en `small` y Gris garúa, el aviso "Consulta disponibilidad con recepción. No constituye una reserva." El aviso nunca se abrevia, nunca se oculta en un tooltip y nunca se separa del importe.
 - Enlace "Ver tipo de habitación" con `aria-label` que incluya el nombre de la categoría y el de la sede.
+
+### Página de detalle y galería
+
+- La cabecera de la sede muestra la fotografía de la sede en `21:9` a sangre dentro del contenedor, bajo el nombre y la ciudad, antes de los datos y del filtro. Es la misma imagen de la ficha, no una segunda foto distinta.
+- La página de categoría muestra una galería de hasta cuatro imágenes de las habitaciones publicadas, en una rejilla de una imagen principal `4:3` y las demás en miniatura; al seleccionar una miniatura, la principal cambia sin recargar la página.
+- La galería nunca queda vacía: si no hay imágenes, muestra el fallback neutro ocupando el hueco de la imagen principal y se omiten las miniaturas.
+- Todas las imágenes de una galería llevan `alt` propio; la principal conserva el `alt` de la imagen original del contrato.
 
 ### Filtro de capacidad
 
@@ -353,7 +361,7 @@ No hay diálogos, ni toasts, ni tooltips en la landing: no se especifican sombra
 - **Carga:** esqueletos con la forma exacta del contenido —título, dos líneas, rejilla de fichas— sobre Sillar piedra con pulso de opacidad de 1.4s. Nunca un spinner a página completa. El contenedor lleva `aria-busy="true"` y una etiqueta que describa qué se está cargando.
 - **Vacío:** una frase exacta del contrato ("El catálogo está vacío para este filtro") en Gris garúa, centrada, sin ilustración. Si hay una acción razonable, se ofrece debajo.
 - **Error:** mensaje del catálogo, la acción esperada como botón ("Reintentar") y el `correlationId` en mono si el contrato lo expone. Nunca se inventa un precio, ni se muestran datos internos como respaldo.
-- **Imagen que falla:** el componente de imagen cae a un fondo Sillar piedra con la etiqueta del tema; el layout, el texto y la tarifa no cambian.
+- **Imagen que falla:** el componente de imagen cae a un fondo Sillar piedra con la etiqueta del tema; el layout, el texto y la tarifa no cambian. La regla aplica a sede, categoría y galería por igual.
 
 ### Movimiento
 

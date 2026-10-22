@@ -41,7 +41,7 @@ Los rechazos durables se guardan mediante commit de un resultado de negocio; no 
 3. Identity y Hotel con seeds, permisos, catálogo público y LP. Probar login, aislamiento de sedes y protección del último ADMIN.
 4. Reception: gate/check-in; Inventory y Sales: operación admitida, débito y compensación.
 5. Completar cierre/limpieza, worker de correo y proyecciones de Reporting; adaptar panel.
-6. Ejecutar la [matriz de aceptación](06-migracion-y-pruebas.md) con PostgreSQL y brokers reales antes de la demostración.
+6. Ejecutar la [matriz de aceptación](06-migracion-y-pruebas.md) con PostgreSQL y brokers reales antes de la presentación.
 
 No hace falta decidir otra arquitectura para empezar. Los parches exactos de dependencias, migraciones SQL y schemas ejecutables se fijan en el primer incremento: son trabajo de implementación, no capacidades presentes en el monolito.
 
@@ -50,6 +50,25 @@ No hace falta decidir otra arquitectura para empezar. Los parches exactos de dep
 Se incorporaron a la especificación las decisiones del registro de pendientes (archivo histórico `docs/pendientes-especificacion.md`, eliminado tras la consolidación — ver historial git): catálogo único de errores (`contracts/errors.md`), configuración por servicio (`infraestructura/configuracion.md`), runbooks/backups/alertas (`infraestructura/runbooks.md`), mapa del panel (`08-admin-web.md`), envelopes y JSON Schemas de eventos (`contracts/events/`), OpenAPI por servicio (`contracts/openapi/`), DDL de referencia y esquemas JSONB por base, fixtures y matriz de aceptación detallada (`06-migracion-y-pruebas.md`), versiones fijadas (Boot 4.1.1 / Cloud 2025.1.3 / Angular 22.2.2 / PostgreSQL 18.6 / Kafka 4.3.1 / RabbitMQ 4.3.6) y reglas cerradas: `montoRecibido`, `medioPago`, penalidad acotada, anulación de check-in, estadía `vencida`, horario 15:00/12:00, número de habitación reutilizable, baja de producto con stock, auditoría de lectura de PII y retención sin job automático.
 
 La cifra de “24 Markdown” corresponde a la revisión del 05-oct; después de esta consolidación el paquete crece con los documentos y contratos nuevos listados arriba. Las pruebas de la matriz siguen pendientes de implementación.
+
+## Actualización 2026-10-21 — presentación real e imágenes visibles
+
+La aplicación deja de presentarse como demo y pasa a ser una **presentación real** de una cadena ficticia:
+Casa Sillar. Los cambios afectan a especificación, contratos y seeds; el detalle está en
+[`02` § Condición de presentación real](02-landing-y-panel.md#condición-de-presentación-real).
+
+| Cambio | Dónde manda |
+|---|---|
+| Marca única Casa Sillar; fuera “Hotel Demo” y “demostración” de pantallas, seeds y correos | [`02`](02-landing-y-panel.md#condición-de-presentación-real), seeds de hotel, identity y notification |
+| La sede tiene foto principal: `hotel.imagen_url`/`imagen_alt`, `HotelInput`, `Hotel`, `HotelPublico` y `SedeSnapshot` | [`hotel/base-de-datos.md`](microservicios/hotel/base-de-datos.md), [`hotel/api.md`](microservicios/hotel/api.md), contratos |
+| Las seis habitaciones sembradas tienen galería; ninguna categoría pública queda sin imágenes | [`hotel/base-de-datos.md` § Seeds](microservicios/hotel/base-de-datos.md#seeds-deterministas) |
+| El panel muestra la imagen de sede, habitación, producto y perfil, además del campo de URL | [`08` § 6](08-admin-web.md#6-imágenes-en-el-panel) |
+| Toda URL de imagen viaja con su `alt`; sin `alt` no se guarda | [`03` § Transporte](03-contrato-comun.md#transporte-notación-y-tipos) |
+| LP01 amplía su aserción a `imagenUrl`/`imagenAlt` y a la galería no vacía por categoría | [`06` § 5](06-migracion-y-pruebas.md#5-matriz-de-aceptación-funcional) |
+
+Lo que **no** cambia: la landing sigue sin reservar, sin cobrar y sin mostrar disponibilidad; los slugs
+`lima-centro`, `miraflores` y `arequipa` se mantienen para no romper contratos ni pruebas; las
+aplicaciones siguen siendo dos builds Angular sobre el mismo Gateway.
 
 ## Qué valida esta revisión
 

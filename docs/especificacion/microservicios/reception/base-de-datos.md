@@ -148,7 +148,7 @@ Obligatorios: `idCliente`, `tipoDocumento`, `documento`, `nombre`, `apellido`, `
 `habitacion_snapshot` (validado en el check-in):
 
 ```json
-{"idHabitacion":101,"idHotel":1,"numero":"101","idCategoria":1,"categoriaNombre":"Individual","pisoNombre":"Primer piso","detalle":"Habitación de demostración","precio":70.00,"hotelNombre":"Hotel Demo Lima Centro","estadoFisico":"LISTA","estado":true,"version":1}
+{"idHabitacion":101,"idHotel":1,"numero":"101","idCategoria":1,"categoriaNombre":"Individual","pisoNombre":"Primer piso","detalle":"Habitación individual con cama de 1.5 plazas, escritorio y baño privado.","precio":70.00,"hotelNombre":"Casa Sillar Lima Centro","estadoFisico":"LISTA","estado":true,"version":1}
 ```
 
 `precio` es la tarifa congelada (se copia a `recepcion.tarifa`). No expone ocupación ni limpieza.
@@ -195,7 +195,7 @@ Las funciones trabajan con datos ya verificados por Feign. El service escribe ev
 
 No estadías ni cierres activos en seed base. Gate se crea al consumir las 6 HabitacionCreada del seed hotel; antes no se admite check-in. Para tests aislados sí cargar gates 101, 102, 201, 202, 301, 302 LIBRE usando fixture equivalente a evento, no en paralelo con broker.
 
-Demo por API, no SQL cruzado: cliente 100 y habitación 101, fechaEntrada=fecha actual en Lima, fechaSalida=mañana, tarifa 70, adelanto 20. Esperado precioInicial 70/saldo 50. La API genera idRecepcion; los tests guardan ese ID, no asumen 1001 del ejemplo.
+Escenario por API, no SQL cruzado: cliente 100 y habitación 101, fechaEntrada=fecha actual en Lima, fechaSalida=mañana, tarifa 70, adelanto 20. Esperado precioInicial 70/saldo 50. La API genera idRecepcion; los tests guardan ese ID, no asumen 1001 del ejemplo.
 
 No resetear gates/recepciones con seed reejecutable. Pruebas de limpieza/doble check-in usan transacciones/fixtures en DB efímera.
 

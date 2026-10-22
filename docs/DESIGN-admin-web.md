@@ -272,7 +272,7 @@ El ajuste de stock nunca se envía con delta 0. Una cifra que el backend calcula
 
 **Modelo espacial: la mesa.** Dos zonas fijas y una fluida.
 
-- **Barra lateral** de `248px`, colapsable a `64px`, en Azul noche a sangre. Contiene el wordmark, el menú por rol y el control de colapso. Al colapsar, cada ítem conserva su etiqueta como tooltip accesible (`aria-label` + tooltip visual), nunca desaparece sin nombre.
+- **Barra lateral** de `248px`, colapsable a `64px`, en Azul noche a sangre. Contiene el wordmark de la cadena —**Casa** en Marcellus y **Sillar** en Plex 600—, el menú por rol y el control de colapso. Al colapsar, cada ítem conserva su etiqueta como tooltip accesible (`aria-label` + tooltip visual), nunca desaparece sin nombre; el wordmark se reduce a la inicial de la marca, nunca a un icono genérico.
 - **Barra superior** de `56px` sobre Sillar blanco con junta inferior: en la izquierda el selector de sede (filtro de trabajo, no de seguridad) y en la derecha la persona con su rol y el menú de cuenta (Mi perfil, Cerrar sesión). En tablet y móvil, el botón de menú abre la barra lateral como panel superpuesto.
 - **Contenido** fluido con padding de 24px (32px en ≥1280px) y ancho máximo de 1400px. Las tablas ocupan todo el ancho; **los formularios se limitan a 720px** para no volverse ilegibles.
 
@@ -452,6 +452,7 @@ Forma: píldora de 22px, `3px 10px`, `--text-micro` en 500, fondo tintado, punto
 - **Carrito (área C):** líneas con producto, cantidad (stepper 1..9999), precio y quitar; cambiar cantidad equivale a quitar + agregar. Los errores `PRODUCT_INACTIVE` y `STOCK_INSUFFICIENT` se pintan en la línea afectada.
 - **Bajo stock:** valor en ámbar con píldora "Bajo stock"; sin alarmas rojas ni iconos de advertencia.
 - **Galería de imágenes:** relación fija con `object-fit: cover`, espacio reservado (`aspect-ratio`, sin CLS), `alt` obligatorio (≤150) y fallback neutro si la imagen falla.
+- **Visor de imágenes:** donde el contrato expone una imagen, se muestra. Las fichas de sede, habitación, producto y perfil enseñan la miniatura y no solo la URL; los formularios la previsualizan mientras se escribe y conservan el valor si la imagen no carga. Detalle por pantalla en [`especificacion/08-admin-web.md` § 6](especificacion/08-admin-web.md#6-imágenes-en-el-panel).
 - **Gráficos de reportes:** una sola familia categórica en este orden —carmín, azul noche, verde confirmado, ámbar pendiente, azul proceso, gris garúa—; leyenda explícita, etiquetas con `S/` y fechas `es-PE`; sin donas arcoíris, sin 3D, sin sombras. El color va siempre acompañado de etiqueta o patrón.
 - **Exportar:** PDF y Excel se generan en el frontend. El PDF reutiliza la tipografía del panel y las reglas hairline, con encabezados legibles en escala de grises: una tabla exportada no puede depender del color para entenderse.
 

@@ -99,7 +99,7 @@ Perfil dev, idempotente, datos ficticios. Roles: 1 ADMIN/Administrador, 2 EMPLEA
 | 100 | cliente.uno@hotel.test | CLIENTE | ninguna | 90000100 |
 | 101 | cliente.dos@hotel.test | CLIENTE | ninguna | 90000101 |
 
-Nombres “Demo Admin”, “Demo Empleado Lima/Miraflores/Arequipa”, “Cliente Uno/Dos”. Activos, version 1. BCrypt calculado desde DEMO_PASSWORD del entorno; si no está definida, seed de usuarios no se ejecuta. Nunca usar claves reales ni repetir credenciales heredadas.
+Nombres “Sillar Admin”, “Sillar Recepción Lima/Miraflores/Arequipa”, “Cliente Uno/Dos”. Activos, version 1. BCrypt calculado desde `DEMO_PASSWORD` del entorno; si no está definida, seed de usuarios no se ejecuta. Nunca usar claves reales ni repetir credenciales heredadas. Los correos `@hotel.test` son ficticios y de uso interno de la presentación: no se muestran en la landing ni se enlazan desde ella.
 
 service_client: identity-service, reception-service, hotel-service, inventory-service, sales-service con credenciales diferentes desde entorno; scopes del contrato común y ampliaciones en APIs. No client secret de reporting/notification si no hacen Feign.
 

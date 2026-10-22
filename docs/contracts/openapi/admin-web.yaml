@@ -2134,6 +2134,8 @@ components:
         ciudad: {type: string, maxLength: 80}
         telefono: {type: string, maxLength: 20}
         correoContacto: {type: string, format: email, maxLength: 254}
+        imagenUrl: {type: [string, 'null'], maxLength: 500, description: https allowlist o /assets/. Opcional; el panel la muestra como vista previa.}
+        imagenAlt: {type: [string, 'null'], maxLength: 150, description: Obligatorio si hay imagenUrl.}
         publicado: {type: boolean}
         estado: {type: boolean}
     Hotel:
@@ -2142,12 +2144,14 @@ components:
       properties:
         idHotel: {type: integer, minimum: 1, example: 1}
         slug: {type: string, maxLength: 80, example: lima-centro}
-        nombre: {type: string, maxLength: 120, example: Hotel Demo Lima Centro}
-        descripcion: {type: string, maxLength: 300, example: Sede de demostración}
-        direccion: {type: string, maxLength: 200, example: Dirección de demostración}
+        nombre: {type: string, maxLength: 120, example: Casa Sillar Lima Centro}
+        descripcion: {type: string, maxLength: 300, example: Casona restaurada a dos cuadras de la Plaza Mayor, con patio de sillar y recepción permanente.}
+        direccion: {type: string, maxLength: 200, example: Jr. de la Unión 540, Cercado de Lima}
         ciudad: {type: string, maxLength: 80, example: Lima}
-        telefono: {type: string, maxLength: 20, example: '+51 900 000 001'}
-        correoContacto: {type: string, format: email, maxLength: 254, example: contacto@hotel.test}
+        telefono: {type: string, maxLength: 20, example: '+51 1 428 6400'}
+        correoContacto: {type: string, format: email, maxLength: 254, example: contacto@casasillar.pe}
+        imagenUrl: {type: [string, 'null'], maxLength: 500, example: /assets/sedes/lima-centro-fachada.jpg}
+        imagenAlt: {type: [string, 'null'], maxLength: 150, example: Fachada de piedra de la sede de Lima Centro al atardecer}
         estado: {type: boolean, example: true}
         publicado: {type: boolean, example: true}
         version: {type: integer, minimum: 1, example: 1}
@@ -2175,7 +2179,7 @@ components:
       properties:
         idCategoria: {type: integer, minimum: 1, example: 1}
         descripcion: {type: string, maxLength: 80, example: Individual}
-        detalle: {type: string, maxLength: 500, example: Habitación individual de demostración}
+        detalle: {type: string, maxLength: 500, example: Habitación individual con cama de 1.5 plazas, escritorio y baño privado.}
         capacidad: {type: integer, minimum: 1, maximum: 10, example: 1}
         estado: {type: boolean, example: true}
         version: {type: integer, minimum: 1, example: 1}
@@ -2228,7 +2232,7 @@ components:
         pisoNombre: {type: string, example: Primer piso}
         idCategoria: {type: integer, minimum: 1, example: 1}
         categoriaNombre: {type: string, example: Individual}
-        detalle: {type: string, maxLength: 500, example: Habitación individual de demostración}
+        detalle: {type: string, maxLength: 500, example: Habitación individual con cama de 1.5 plazas, escritorio y baño privado.}
         precio: {type: number, multipleOf: 0.01, minimum: 0, example: 70.00}
         publicada: {type: boolean, example: true}
         urlsImagenes: {type: array, maxItems: 10, items: {$ref: '#/components/schemas/ImagenHabitacion'}}
@@ -2445,7 +2449,7 @@ components:
         numero: {type: string, maxLength: 10, example: '101'}
         categoriaNombre: {type: string, maxLength: 80, example: Individual}
         pisoNombre: {type: string, maxLength: 80, example: Primer piso}
-        detalleHabitacion: {type: string, maxLength: 500, example: Habitación individual de demostración}
+        detalleHabitacion: {type: string, maxLength: 500, example: Habitación individual con cama de 1.5 plazas, escritorio y baño privado.}
         precioHabitacion: {type: number, multipleOf: 0.01, exclusiveMinimum: 0, description: Tarifa congelada del snapshot de habitación.}
         nombre: {type: string, maxLength: 100}
         apellido: {type: string, maxLength: 100}

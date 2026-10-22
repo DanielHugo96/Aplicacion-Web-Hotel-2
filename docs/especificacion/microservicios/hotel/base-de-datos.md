@@ -6,7 +6,7 @@ BD `hotel_db`. Datos físicos y catálogo público. [Convenciones comunes](../..
 
 | Tabla | Columnas |
 |---|---|
-| hotel | id:int PK identity; slug:varchar(80) UNIQUE; nombre:varchar(120); descripcion:varchar(300); direccion:varchar(200); ciudad:varchar(80); telefono:varchar(20); correo_contacto:varchar(254); estado:boolean; publicado:boolean; version:bigint; created_at:timestamptz |
+| hotel | id:int PK identity; slug:varchar(80) UNIQUE; nombre:varchar(120); descripcion:varchar(300); direccion:varchar(200); ciudad:varchar(80); telefono:varchar(20); correo_contacto:varchar(254); imagen_url:varchar(500)?; imagen_alt:varchar(150)?; estado:boolean; publicado:boolean; version:bigint; created_at:timestamptz |
 | categoria | id:int PK identity; descripcion:varchar(80) UNIQUE; detalle:varchar(500); capacidad:int CHECK 1..10; estado:boolean; version:bigint |
 | piso | id:int PK identity; id_hotel:int FK hotel; descripcion:varchar(80); estado:boolean; version:bigint; UNIQUE(id_hotel,descripcion) |
 | estado_habitacion | id:int PK fijo; codigo:varchar(30) UNIQUE; descripcion:varchar(80); estado:boolean; version:bigint |
@@ -35,6 +35,8 @@ CREATE TABLE hotel (
   ciudad          varchar(80)  NOT NULL,
   telefono        varchar(20)  NOT NULL,
   correo_contacto varchar(254) NOT NULL,
+  imagen_url      varchar(500),
+  imagen_alt      varchar(150),
   estado          boolean      NOT NULL DEFAULT true,
   publicado       boolean      NOT NULL DEFAULT false,
   version         bigint       NOT NULL DEFAULT 1,
@@ -94,6 +96,12 @@ CREATE TABLE imagen_habitacion (
   orden         int          NOT NULL,
   UNIQUE (id_habitacion, orden)
 );
+
+-- La sede también es una imagen de catálogo: una sola foto principal, opcional.
+-- CHECK: la descripción alternativa acompaña a la imagen, nunca va sola.
+ALTER TABLE hotel
+  ADD CONSTRAINT ck_hotel_imagen_alt
+  CHECK (imagen_url IS NULL OR imagen_alt IS NOT NULL);
 
 CREATE TABLE limpieza (
   cleaning_cycle_id uuid PRIMARY KEY,
@@ -159,17 +167,23 @@ Altas/reactivaciones/cambios de habitación y bajas de hotel/categoría/piso usa
 
 JPA para CRUD de sede/categoría/piso y lectura HotelPublico; fn_catalogo_publico entrega categorías/tarifa/galería agrupadas y el service añade detalle de categoria para CategoriaPublica. Filtros nulos devuelven todos los publicados; nunca datos operativos de cada habitación. No invoca reception dentro de SQL.
 
+La imagen de la sede se guarda en `hotel` (`imagen_url`, `imagen_alt`) y no en una tabla aparte: la landing muestra una sola foto principal por sede. Se valida con la regla del contrato común (https de la lista permitida o `/assets/`, ≤ 500; alt ≤ 150) en el mismo punto que las imágenes de habitación, y `HotelPublico` la expone como `imagenUrl`/`imagenAlt` opcionales. Una sede sin imagen se sirve con ambos campos nulos y la landing cae al fallback neutro.
+
+La galería de la categoría pública se arma con las imágenes de sus habitaciones publicadas y activas, en orden de `orden` y con tope de 10; una habitación sin imágenes no aporta ninguna, así que una categoría puede quedarse sin galería. El seed inicial garantiza al menos una imagen por habitación de cada sede para que ninguna ficha pública aparezca vacía.
+
 Al persistir PREPARANDO, otras mutaciones físicas/catálogo de esa habitación devuelven 409 hasta aplicar o rechazar la operación. Índice único parcial: una operación PREPARANDO/APLICADA no liberada por habitación. La baja conserva blockId hasta reactivación. Reception gate se obtiene por Feign antes de mantenimiento/baja, fuera de transacción SQL. Jobs recuperan operacion_habitacion PREPARANDO; nunca se “arregla” desocupando una habitación por SQL.
 
 ## Seeds deterministas
 
-| idHotel / slug | nombre | ciudad |
-|---|---|---|
-| 1 / lima-centro | Hotel Demo Lima Centro | Lima |
-| 2 / miraflores | Hotel Demo Miraflores | Lima |
-| 3 / arequipa | Hotel Demo Arequipa | Arequipa |
+Contenido inicial de la presentación real: la cadena **Casa Sillar**, con datos ficticios verosímiles ([`02`](../../02-landing-y-panel.md#condición-de-presentación-real)). No corresponden a una empresa real ni a personas reales.
 
-Dirección “Dirección de demostración”; correo contacto@hotel.test; teléfono ficticio no clicable en demo; activar enlaces reales solo con datos del equipo. Sedes activas/publicadas, version 1.
+| idHotel / slug | nombre | ciudad | teléfono |
+|---|---|---|---|
+| 1 / lima-centro | Casa Sillar Lima Centro | Lima | +51 1 428 6400 |
+| 2 / miraflores | Casa Sillar Miraflores | Lima | +51 1 445 2180 |
+| 3 / arequipa | Casa Sillar Arequipa | Arequipa | +51 54 216 800 |
+
+Correo `contacto@casasillar.pe` en las tres sedes; el dominio es ficticio y no se enlaza desde la landing como `mailto:` operativo salvo que exista. Direcciones verosímiles: Jr. de la Unión 540 (Cercado de Lima), Av. José Larco 1105 (Miraflores) y Calle Mercaderes 218 (Cercado de Arequipa). Descripción de una o dos frases por sede, ≤ 300 caracteres, sin afirmar disponibilidad. Sedes activas/publicadas, version 1 mas las columnas `imagen_url`/`imagen_alt` con una fotografía de fachada por sede.
 
 Categorías 1 Individual/capacidad 1, 2 Doble/capacidad 2. Pisos 11 sede 1, 21 sede 2, 31 sede 3, descripción “Primer piso”.
 
@@ -182,6 +196,12 @@ Categorías 1 Individual/capacidad 1, 2 Doble/capacidad 2. Pisos 11 sede 1, 21 s
 | 301 | 3 | 31 | 101 | 1 | 60.00 |
 | 302 | 3 | 31 | 102 | 2 | 90.00 |
 
-Todas LISTA, activas/publicadas, version 1. Imagen local propia placeholder bajo /assets/demo/, alt explícito “Habitación de demostración”; no hotlinks/acortadores del seed viejo. Limpieza/operaciones vacías. Bootstrap emite SedeSnapshot y HabitacionCreada para cada fila, con eventId estable de bootstrap; recepción/reporting deben consumir antes de demo.
+Todas LISTA, activas/publicadas, version 1. Detalle por habitación descriptivo y propio de la cadena, sin la palabra “demostración”. **Cada una de las seis habitaciones tiene al menos tres imágenes** en `imagen_habitacion`, en `/assets/habitaciones/`, con `alt` que nombra la sede y el tipo, y `orden` correlativo desde 1: la galería pública no puede quedar vacía en ninguna sede. Imágenes propias o licenciadas, guardadas en el repositorio con su ficha de créditos; no hotlinks ni acortadores. Limpieza/operaciones vacías. Bootstrap emite SedeSnapshot y HabitacionCreada para cada fila, con eventId estable de bootstrap; recepción/reporting deben consumir antes de operar.
 
-No sembrar “ocupado” sin estadía. No restablecer rooms de una demo ejecutada al reejecutar seeds.
+El `SedeSnapshot` de bootstrap incluye `imagenUrl`/`imagenAlt` cuando la sede tiene imagen: la proyección de reporting y cualquier consumidor ven la misma foto que la landing.
+
+No sembrar “ocupado” sin estadía. No restablecer rooms de una presentación ya operada al reejecutar seeds.
+
+## Verificación
+
+La sede sembrada tiene `imagenUrl` no nula y `imagen_alt` presente (el CHECK lo exige); una sede creada sin imagen devuelve ambos campos nulos y la landing no rompe. `GET /api/public/hoteles/lima-centro/categorias` devuelve `imagenes` no vacío para las dos categorías. Una habitación con `publicada=false` no aporta imágenes a la galería pública. Una URL con esquema distinto de `https` o ruta `/assets/` se rechaza con 400.

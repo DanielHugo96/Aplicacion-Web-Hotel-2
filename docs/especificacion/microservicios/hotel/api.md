@@ -11,7 +11,7 @@
 | GET /api/public/hoteles/{slug}/categorias | page, size, capacidad? 1..10 | CategoriaPublica[] |
 | GET /api/public/hoteles/{slug}/categorias/{idCategoria} | — | CategoriaPublica |
 
-Acceso P. Detalle oculto/inactivo 404. No fechas ni parámetro “disponible”. Cache-Control public, max-age=60. HotelPublico `{idHotel,slug,nombre,descripcion,direccion,ciudad,telefono,correoContacto}`. CategoriaPublica `{idCategoria,descripcion,detalle,capacidad,precioDesde,moneda:"PEN",imagenes:[{url,alt}]}`. No números de habitación/huéspedes/stock/estado físico.
+Acceso P. Detalle oculto/inactivo 404. No fechas ni parámetro “disponible”. Cache-Control public, max-age=60. HotelPublico `{idHotel,slug,nombre,descripcion,direccion,ciudad,telefono,correoContacto,imagenUrl?,imagenAlt?}`. CategoriaPublica `{idCategoria,descripcion,detalle,capacidad,precioDesde,moneda:"PEN",imagenes:[{url,alt}]}`. `imagenUrl`/`imagenAlt` son opcionales y viajan juntos o no viajan: sin imagen, ambos nulos y el cliente usa su fallback. No números de habitación/huéspedes/stock/estado físico.
 
 ## Sedes, pisos y categorías
 
@@ -66,7 +66,7 @@ El número de habitación es reutilizable una vez dada de baja la habitación: e
 
 ## DTO
 
-HotelInput: `{slug,nombre,descripcion,direccion,ciudad,telefono,correoContacto,publicado,estado}`; slug lowercase[a-z0-9-], estable tras publicación. Aplica los [límites comunes](../../03-contrato-comun.md): descripcion ≤ 300, telefono ≤ 20, correoContacto ≤ 254. Hotel añade idHotel, version. PUT estado=false aplica la misma regla que DELETE: sin habitaciones activas; tampoco categoría/piso se inactivan si hay habitaciones activas. No cambiar sede de un piso por PUT.
+HotelInput: `{slug,nombre,descripcion,direccion,ciudad,telefono,correoContacto,imagenUrl?,imagenAlt?,publicado,estado}`; slug lowercase[a-z0-9-], estable tras publicación. Aplica los [límites comunes](../../03-contrato-comun.md): descripcion ≤ 300, telefono ≤ 20, correoContacto ≤ 254, imagenUrl ≤ 500 con la regla de URL de imagen y `imagenAlt` obligatorio si hay `imagenUrl` (≤ 150). Hotel añade idHotel, version, y devuelve `imagenUrl`/`imagenAlt` nulos cuando la sede no tiene foto. PUT estado=false aplica la misma regla que DELETE: sin habitaciones activas; tampoco categoría/piso se inactivan si hay habitaciones activas. No cambiar sede de un piso por PUT.
 
 PisoInput: `{idHotel,descripcion}` (≤ 80); Piso añade idPiso, estado, version.
 CategoriaInput: `{descripcion,detalle,capacidad,estado}`; detalle ≤ 500. Categoria añade idCategoria, version.

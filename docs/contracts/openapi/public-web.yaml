@@ -41,12 +41,14 @@ paths:
                 data:
                   - idHotel: 1
                     slug: lima-centro
-                    nombre: Hotel Demo Lima Centro
-                    descripcion: Sede de demostración
-                    direccion: Dirección de demostración
+                    nombre: Casa Sillar Lima Centro
+                    descripcion: Casona restaurada a dos cuadras de la Plaza Mayor, con patio de sillar y recepción permanente.
+                    direccion: Jr. de la Unión 540, Cercado de Lima
                     ciudad: Lima
-                    telefono: '+51 900 000 001'
-                    correoContacto: contacto@hotel.test
+                    telefono: '+51 1 428 6400'
+                    correoContacto: contacto@casasillar.pe
+                    imagenUrl: /assets/sedes/lima-centro-fachada.jpg
+                    imagenAlt: Fachada de piedra de la sede de Lima Centro al atardecer
                 meta:
                   page: 0
                   size: 20
@@ -154,13 +156,13 @@ paths:
                 data:
                   idCategoria: 2
                   descripcion: Doble
-                  detalle: Habitación doble de demostración
+                  detalle: Habitación doble con dos camas de 1.5 plazas, escritorio y baño privado.
                   capacidad: 2
                   precioDesde: 100.00
                   moneda: PEN
                   imagenes:
-                    - url: /assets/demo/hab-102-1.jpg
-                      alt: Habitación de demostración
+                    - url: /assets/habitaciones/lima-centro-doble-1.jpg
+                      alt: Habitación doble de la sede Lima Centro con dos camas
                 meta:
                   correlationId: 11111111-1111-4111-8111-111111111111
         '404':
@@ -211,10 +213,10 @@ components:
         url:
           type: string
           description: https allowlist o /assets/
-          example: /assets/demo/hab-102-1.jpg
+          example: /assets/habitaciones/lima-centro-doble-1.jpg
         alt:
           type: string
-          example: Habitación de demostración
+          example: Habitación doble de la sede Lima Centro con dos camas
     HotelPublico:
       type: object
       required: [idHotel, slug, nombre, descripcion, direccion, ciudad, telefono, correoContacto]
@@ -237,6 +239,17 @@ components:
         correoContacto:
           type: string
           format: email
+        imagenUrl:
+          type: [string, 'null']
+          maxLength: 500
+          description: >-
+            Foto principal de la sede; https de la lista permitida o /assets/.
+            Opcional y siempre acompañada de imagenAlt: si falta la imagen, ambos
+            van nulos y el cliente usa su fallback neutro.
+        imagenAlt:
+          type: [string, 'null']
+          maxLength: 150
+          description: Texto alternativo de imagenUrl; obligatorio cuando hay imagen.
     CategoriaPublica:
       type: object
       required: [idCategoria, descripcion, detalle, capacidad, precioDesde, moneda, imagenes]

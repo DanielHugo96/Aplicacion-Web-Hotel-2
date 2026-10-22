@@ -87,7 +87,7 @@
         "idRecepcion": 1001,
         "destinatario": "cliente.uno@hotel.test",
         "nombre": "Cliente Uno",
-        "hotel": "Hotel Demo Lima Centro",
+        "hotel": "Casa Sillar Lima Centro",
         "totalAlojamiento": 70.00,
         "totalConsumos": 7.00,
         "templateVersion": 1
