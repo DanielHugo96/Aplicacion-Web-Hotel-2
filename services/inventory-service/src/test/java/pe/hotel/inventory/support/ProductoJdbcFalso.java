@@ -33,7 +33,7 @@ public final class ProductoJdbcFalso extends JdbcTemplate {
     public String sku;
     public String nombre = "Producto";
     public String detalle = "Detalle";
-    public String imagenUrl = "/assets/demo/producto-agua.png";
+    public String imagenUrl = "/assets/productos/agua-500ml.png";
     public boolean estadoProducto = true;
     public int versionProducto = 1;
     public int idHotel;
