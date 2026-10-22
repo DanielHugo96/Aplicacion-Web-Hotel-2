@@ -86,21 +86,78 @@
       <div class="field" style="grid-column: 1 / -1;">
         <span class="label" id="imagenes-label">Imágenes (máximo 10)</span>
         <p class="field-help">URL https o /assets/ (máximo 500 caracteres), texto alternativo obligatorio y orden único.</p>
-        @for (imagen of imagenes; track $index) {
+        @for (fila of imagenesOrdenadas(); track fila.indice) {
           <div class="image-row">
-            <div>
-              <label class="sr-only" [for]="'imagen-url-' + $index">URL de la imagen {{ $index + 1 }}</label>
-              <input [id]="'imagen-url-' + $index" [name]="'imagenUrl' + $index" [(ngModel)]="imagen.url" maxlength="500" placeholder="https://..." />
+            <div class="image-row__previa">
+              @if (mostrarPrevia(fila.imagen)) {
+                <span class="vista-previa">
+                  <app-imagen-panel
+                    [src]="fila.imagen.url.trim()"
+                    [alt]="fila.imagen.alt.trim() || ('Imagen ' + (fila.indice + 1) + ' de la habitación')"
+                    relacion="4 / 3"
+                    (fallo)="alFallarPrevia(fila.indice)"
+                  ></app-imagen-panel>
+                </span>
+              } @else {
+                <span class="vista-previa vacia text-micro muted">Sin vista previa</span>
+              }
             </div>
             <div>
-              <label class="sr-only" [for]="'imagen-alt-' + $index">Texto alternativo de la imagen {{ $index + 1 }}</label>
-              <input [id]="'imagen-alt-' + $index" [name]="'imagenAlt' + $index" [(ngModel)]="imagen.alt" maxlength="150" placeholder="Habitación de demostración" />
+              <label class="sr-only" [for]="'imagen-url-' + fila.indice">URL de la imagen {{ fila.indice + 1 }}</label>
+              <input
+                [id]="'imagen-url-' + fila.indice"
+                [name]="'imagenUrl' + fila.indice"
+                [ngModel]="fila.imagen.url"
+                (ngModelChange)="fila.imagen.url = $event; alEscribirUrl(fila.indice)"
+                maxlength="500"
+                placeholder="/assets/habitaciones/lima-centro-doble-1.jpg o https://..."
+              />
+              @if (imagenRota(fila.indice)) {
+                <span class="field-msg" role="alert">No se pudo cargar la imagen</span>
+              }
             </div>
             <div>
-              <label class="sr-only" [for]="'imagen-orden-' + $index">Orden de la imagen {{ $index + 1 }}</label>
-              <input [id]="'imagen-orden-' + $index" [name]="'imagenOrden' + $index" type="number" min="0" step="1" [(ngModel)]="imagen.orden" />
+              <label class="sr-only" [for]="'imagen-alt-' + fila.indice">Texto alternativo de la imagen {{ fila.indice + 1 }}</label>
+              <input
+                [id]="'imagen-alt-' + fila.indice"
+                [name]="'imagenAlt' + fila.indice"
+                [(ngModel)]="fila.imagen.alt"
+                maxlength="150"
+                placeholder="Dormitorio doble con ventanal"
+              />
             </div>
-            <button class="btn btn-secondary" type="button" (click)="quitarImagen($index)">Quitar</button>
+            <div>
+              <label class="sr-only" [for]="'imagen-orden-' + fila.indice">Orden de la imagen {{ fila.indice + 1 }}</label>
+              <input
+                [id]="'imagen-orden-' + fila.indice"
+                [name]="'imagenOrden' + fila.indice"
+                type="number"
+                min="0"
+                step="1"
+                [(ngModel)]="fila.imagen.orden"
+              />
+            </div>
+            <div class="image-row__acciones">
+              <button
+                class="btn btn-secondary"
+                type="button"
+                [attr.aria-label]="'Subir la imagen ' + (fila.indice + 1)"
+                [disabled]="$first"
+                (click)="moverImagen(fila.indice, -1)"
+              >
+                Subir
+              </button>
+              <button
+                class="btn btn-secondary"
+                type="button"
+                [attr.aria-label]="'Bajar la imagen ' + (fila.indice + 1)"
+                [disabled]="$last"
+                (click)="moverImagen(fila.indice, 1)"
+              >
+                Bajar
+              </button>
+              <button class="btn btn-secondary" type="button" (click)="quitarImagen(fila.indice)">Quitar</button>
+            </div>
           </div>
         } @empty {
           <p class="text-small muted">Sin imágenes.</p>

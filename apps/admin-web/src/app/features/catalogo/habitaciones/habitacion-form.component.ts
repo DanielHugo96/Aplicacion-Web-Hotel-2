@@ -15,13 +15,14 @@ import {
   Piso,
 } from '../../../core/models/catalogo.models';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 const URL_PERMITIDA = /^(https:\/\/|\/assets\/)/;
 
 @Component({
   selector: 'app-habitacion-form',
   standalone: true,
-  imports: [FormsModule, RouterLink, ErrorBannerComponent],
+  imports: [FormsModule, RouterLink, ErrorBannerComponent, ImagenPanelComponent],
   templateUrl: './habitacion-form.component.html',
   styleUrl: './habitacion-form.component.css',
 })
@@ -53,6 +54,8 @@ export class HabitacionFormComponent implements OnInit {
   publicada = false;
   imagenes: ImagenHabitacion[] = [];
   errores: Record<string, string> = {};
+  /** Filas cuya vista previa no cargó. El valor escrito no se borra. */
+  readonly imagenesRotas = signal<ReadonlySet<number>>(new Set());
 
   readonly actionLabel = computed(() => {
     const err = this.error();
@@ -124,6 +127,57 @@ export class HabitacionFormComponent implements OnInit {
 
   quitarImagen(index: number): void {
     this.imagenes.splice(index, 1);
+    this.imagenesRotas.set(new Set());
+  }
+
+  /** URL válida del contrato para la vista previa de una fila. */
+  urlImagenValida(imagen: ImagenHabitacion): boolean {
+    const url = (imagen.url ?? '').trim();
+    return !!url && URL_PERMITIDA.test(url) && url.length <= 500;
+  }
+
+  /** `true` si la fila debe pintar la miniatura de la URL ya escrita. */
+  mostrarPrevia(imagen: ImagenHabitacion): boolean {
+    return this.urlImagenValida(imagen);
+  }
+
+  /** La fila ha fallado al cargar: se pinta el fallback y el texto. */
+  imagenRota(index: number): boolean {
+    return this.imagenesRotas().has(index);
+  }
+
+  /** Una URL nueva en la fila vuelve a intentar la vista previa. */
+  alEscribirUrl(index: number): void {
+    if (!this.imagenesRotas().has(index)) return;
+    const siguiente = new Set(this.imagenesRotas());
+    siguiente.delete(index);
+    this.imagenesRotas.set(siguiente);
+  }
+
+  alFallarPrevia(index: number): void {
+    const siguiente = new Set(this.imagenesRotas());
+    siguiente.add(index);
+    this.imagenesRotas.set(siguiente);
+  }
+
+  /** Galería ordenada por `orden`: el orden visual sigue al dato guardado. */
+  imagenesOrdenadas(): { imagen: ImagenHabitacion; indice: number }[] {
+    return this.imagenes
+      .map((imagen, indice) => ({ imagen, indice }))
+      .sort((a, b) => Number(a.imagen.orden) - Number(b.imagen.orden));
+  }
+
+  /** Mueve una fila una posición en el orden guardado (paso 6). */
+  moverImagen(index: number, delta: number): void {
+    const ordenadas = this.imagenesOrdenadas();
+    const posicion = ordenadas.findIndex((fila) => fila.indice === index);
+    const destino = posicion + delta;
+    if (posicion < 0 || destino < 0 || destino >= ordenadas.length) return;
+    const actual = ordenadas[posicion];
+    const otra = ordenadas[destino];
+    const ordenActual = Number(this.imagenes[actual.indice].orden);
+    this.imagenes[actual.indice].orden = Number(this.imagenes[otra.indice].orden);
+    this.imagenes[otra.indice].orden = ordenActual;
   }
 
   private siguienteOrden(): number {

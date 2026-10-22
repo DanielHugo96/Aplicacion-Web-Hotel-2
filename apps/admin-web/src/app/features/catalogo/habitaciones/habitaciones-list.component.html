@@ -74,6 +74,7 @@
         <thead>
           <tr>
             <th scope="col">Número</th>
+            <th scope="col">Imagen</th>
             <th scope="col">Piso</th>
             <th scope="col">Categoría</th>
             <th scope="col">Detalle</th>
@@ -88,6 +89,24 @@
           @for (habitacion of habitaciones(); track habitacion.idHabitacion) {
             <tr>
               <td class="monospace">{{ habitacion.numero }}</td>
+              <td>
+                <span class="miniatura">
+                  @if (primeraImagen(habitacion); as img) {
+                    <app-imagen-panel
+                      [src]="img.url"
+                      [alt]="img.alt"
+                      relacion="4 / 3"
+                    ></app-imagen-panel>
+                  } @else {
+                    <app-imagen-panel
+                      [src]="null"
+                      alt=""
+                      relacion="4 / 3"
+                      [decorativa]="true"
+                    ></app-imagen-panel>
+                  }
+                </span>
+              </td>
               <td>{{ habitacion.pisoNombre ?? ('Piso ' + habitacion.idPiso) }}</td>
               <td>{{ habitacion.categoriaNombre ?? ('Categoría ' + habitacion.idCategoria) }}</td>
               <td>{{ habitacion.detalle }}</td>
@@ -105,6 +124,7 @@
               </td>
               <td>
                 <div class="row-actions">
+                  <button class="btn btn-secondary" type="button" (click)="verDetalle(habitacion)">Ver detalle</button>
                   @if (esAdmin()) {
                     <button class="btn btn-secondary" type="button" (click)="editar(habitacion)">Editar</button>
                   }
