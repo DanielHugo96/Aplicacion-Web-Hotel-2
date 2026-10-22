@@ -62,12 +62,12 @@ describe('ReportesComponent (/app/reportes)', () => {
       {
         idHotel: 1,
         slug: 'lima-centro',
-        nombre: 'Hotel Demo Lima Centro',
-        descripcion: 'Sede de demostración',
-        direccion: 'Dirección de demostración',
+        nombre: 'Casa Sillar Lima Centro',
+        descripcion: 'Casona restaurada a dos cuadras de la Plaza Mayor.',
+        direccion: 'Jr. de la Unión 540, Cercado de Lima',
         ciudad: 'Lima',
-        telefono: '+51 900 000 001',
-        correoContacto: 'contacto@hotel.test',
+        telefono: '+51 1 428 6400',
+        correoContacto: 'contacto@casasillar.pe',
         estado: true,
         publicado: true,
         version: 1,
@@ -365,7 +365,7 @@ describe('ReportesComponent (/app/reportes)', () => {
       '#reporte-sede'
     ) as HTMLSelectElement;
     expect(select.value).toBe('1');
-    expect(select.selectedOptions[0].textContent?.trim()).toBe('Hotel Demo Lima Centro');
+    expect(select.selectedOptions[0].textContent?.trim()).toBe('Casa Sillar Lima Centro');
   });
 
   it('el empleado no ve el consolidado ni la opción de todas las sedes', () => {
