@@ -8,6 +8,13 @@ export interface HotelPublico {
   ciudad: string;
   telefono: string;
   correoContacto: string;
+  /**
+   * Foto principal de la sede (`HotelPublico.imagenUrl` del contrato).
+   * Opcional: si falta, el cliente usa su fallback neutro. Siempre viaja
+   * acompañada de `imagenAlt`.
+   */
+  imagenUrl?: string | null;
+  imagenAlt?: string | null;
 }
 
 export interface ImagenPublica {

@@ -73,6 +73,26 @@ describe('CatalogService', () => {
     await expect(promise).resolves.toEqual(response);
   });
 
+  it('transporta imagenUrl e imagenAlt sin transformarlos', async () => {
+    const conImagen: HotelPublico = {
+      ...HOTEL,
+      imagenUrl: '/assets/sedes/lima-centro-fachada.jpg',
+      imagenAlt: 'Fachada de piedra de la sede de Lima Centro al atardecer',
+    };
+    const promise = firstValueFrom(service.obtenerHotel('lima-centro'));
+    const request = http.expectOne(
+      'http://localhost:8080/api/public/hoteles/lima-centro',
+    );
+    request.flush({ success: true, message: 'OK', data: conImagen, meta: {} });
+
+    await expect(promise).resolves.toMatchObject({
+      data: {
+        imagenUrl: '/assets/sedes/lima-centro-fachada.jpg',
+        imagenAlt: 'Fachada de piedra de la sede de Lima Centro al atardecer',
+      },
+    });
+  });
+
   it('consulta el detalle por slug sin ids literales', async () => {
     const promise = firstValueFrom(service.obtenerHotel('lima-centro'));
     const request = http.expectOne(
