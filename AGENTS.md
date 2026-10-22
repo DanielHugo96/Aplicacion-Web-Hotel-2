@@ -35,6 +35,13 @@ Si un plan ya `cerrado` rompe `main` o hace falta refactorizar antes de seguir, 
 al agente `planificador-arreglos` (también DeepSeek V4.1 Flash) para que genere un plan de arreglo
 con evidencia. Ese plan se ejecuta antes de retomar los planes normales.
 
+Si la especificación cambia (un documento nuevo en `docs/especificacion/` o una modificación de uno
+existente), el orquestador llama al agente `planificador-especificaciones`
+(`.opencode/agents/planificador-especificaciones.md`) indicándole qué cambió y dónde. Ese agente
+divide el delta por ámbito y componente y publica uno o varios planes de ejecución en `docs/plans/`,
+con sus filas de catálogo, su tanda de calendario y la validación en verde. No implementa y no
+mergea: el PR `docs:` lo mergea el orquestador.
+
 Si se agotan los créditos de DeepSeek V4.1 Flash, la campaña no se para: el agente `ejecutor`
 (`.opencode/agents/ejecutor.md`), que corre sobre MiniMax M3.1 Flash Free
 (`opencode-go/minimax-m3.1-flash-free#high`), implementa los planes de cualquier ámbito. En la

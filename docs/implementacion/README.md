@@ -151,6 +151,7 @@ Los 20 planes pendientes se ejecutan sin intervención humana. Los agentes viven
 |---|---|---|---|
 | `orquestador` | uno por plan | `opencode-go/deepseek-v4.1-flash` | Conduce, delega, da por validado y hace el merge. Si `main` está roto, encarga un plan de arreglo. No elige plan, no escribe código y no puede preguntar. |
 | `planificador-arreglos` | cuando `main` se rompe | `opencode-go/deepseek-v4.1-flash` | Reproduce el fallo, redacta un plan `<ámbito>-arreglo-<tema>` con evidencia, lo añade al catálogo y lo publica en un PR `docs:`. No implementa y no mergea. |
+| `planificador-especificaciones` | cuando cambia la spec | `opencode-go/deepseek-v4.1-flash` | Lee el delta de `docs/especificacion/**` o de `docs/DESIGN-*.md`, lo divide por ámbito y componente y publica uno o varios planes `<ámbito>-<tema>` con sus filas de catálogo, su entrada en el calendario y la validación en verde. No implementa y no mergea. |
 | `plan-back` | `back`, `infra` | `opencode-go/longcat-2.5-preview-free` | Implementa los pasos de un plan, verifica y deja evidencia. |
 | `plan-front` | `front` | `opencode-go/longcat-2.5-preview-free` | Igual, sobre `apps/<app>/`. |
 | `plan-qa` | `qa` | `opencode-go/longcat-2.5-preview-free` | Igual, sobre `tests/**` y `scripts/**`. |

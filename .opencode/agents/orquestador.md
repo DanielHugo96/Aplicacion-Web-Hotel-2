@@ -1,5 +1,5 @@
 ---
-description: Conduce la campaña de ejecución de planes de docs/plans. Es el agente que se usa desde OpenCode para dejar los planes implementados: comprueba las precondiciones, va eligiendo el siguiente plan con un script, delega la implementación y, si la ejecutora no lo deja bloqueado, da el plan por validado, hace el merge y registra el resultado. Si un plan ya cerrado rompió algo o hace falta refactorizar, encarga un plan de arreglo al agente `planificador-arreglos` antes de continuar. Repite hasta que no queda ningún plan listo. Úsalo con `/campana` o diciéndole «ejecuta la campaña».
+description: Conduce la campaña de ejecución de planes de docs/plans. Es el agente que se usa desde OpenCode para dejar los planes implementados: comprueba las precondiciones, va eligiendo el siguiente plan con un script, delega la implementación y, si la ejecutora no lo deja bloqueado, da el plan por validado, hace el merge y registra el resultado. Si un plan ya cerrado rompió algo o hace falta refactorizar, encarga un plan de arreglo al agente `planificador-arreglos` antes de continuar. Si la especificación cambió, encarga los planes nuevos al agente `planificador-especificaciones`. Repite hasta que no queda ningún plan listo. Úsalo con `/campana` o diciéndole «ejecuta la campaña».
 mode: primary
 model: opencode-go/deepseek-v4.1-flash
 color: "#ff6b6b"
@@ -15,6 +15,9 @@ permissions:
     effect: allow
   - action: subagent
     resource: "planificador-arreglos"
+    effect: allow
+  - action: subagent
+    resource: "planificador-especificaciones"
     effect: allow
   - action: subagent
     resource: "ejecutor"
@@ -285,6 +288,31 @@ Procedimiento:
 6. **Dos planes de arreglo para el mismo fallo son el máximo.** Si el segundo no lo resuelve, no
    insistas: escribe el motivo en `docs/implementacion/decisiones/`, anótalo como bloqueo en el
    resumen y sigue con el siguiente plan normal.
+
+### 8.1. Cuando cambia la especificación
+
+Si la persona te dice que la spec cambió, o `main` recibe documentos nuevos o modificados en
+`docs/especificacion/**` o `docs/DESIGN-*.md`, no planifiques tú ni improvises pasos: encarga los
+planes al agente `planificador-especificaciones`.
+
+1. **Reúne el delta**: rutas de los documentos y la referencia donde vive el cambio
+   (`origin/main` si ya está mergeado, `origin/<rama>` si está en un PR, o el rango que te den).
+2. **Delega en primer plano**:
+
+   ```
+   Task(agent: "planificador-especificaciones", description: "Genera planes del cambio de spec",
+        prompt: "Cambió la especificación. Documentos: <rutas>. Referencia: <ref o rango>.
+                 Alcance pedido: <...|todo el delta>. Devuelve los planes, su orden, el PR y la
+                 verificación.")
+   ```
+
+3. El planificador publica uno o varios planes con estado `propuesto`, sus filas de catálogo, su
+   tanda de calendario y un PR `docs:`. **No lo mergea él.** Mergealo tú
+   (`gh pr merge --squash --delete-branch`) cuando `python scripts/validar-planes.py` y
+   `python scripts/proximo-plan.py --comprobar` estén en verde, y vuelve a `main`.
+4. Después, el bucle normal: `scripts/proximo-plan.py` devuelve el plan nuevo cuando sus
+   dependencias estén cerradas. Si responde `BLOQUEADO:` porque la spec nueva no fija el
+   comportamiento de negocio, no escribas el plan: anótalo en el resumen final y sigue.
 
 ### 9. Resumen final
 
