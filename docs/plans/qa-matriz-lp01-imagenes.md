@@ -40,11 +40,11 @@ El script cerrado por `qa-matriz-aceptacion` compara las claves de cada respuest
 
 ## 4. Pasos
 
-- [ ] 1. Añadir `imagenUrl` e `imagenAlt` al conjunto de claves permitidas (CLAVES_HOTEL_PUBLICO) como opcionales. Verificación: una respuesta de sede con el par no marca claves sobrantes.
-- [ ] 2. Comprobar la coherencia del par en cada sede del listado y del detalle: si `imagenUrl` no es nula, `imagenAlt` es una cadena no vacía; si es nula, `imagenAlt` también. Verificación: `LP01.json` incluye, por sede, si el par viaja y si es coherente, y la corrida deja `cumple: true` con las tres sedes sembradas.
-- [ ] 3. Comprobar que cada categoría de `GET /api/public/hoteles/{slug}/categorias` trae `imagenes` con al menos un elemento, cada uno con `url` y `alt` no vacíos, y como máximo diez. Verificación: `LP01.json` incluye `galeriaNoVacia` y `galeriaAcotada` por categoría, y las dos categorías de `lima-centro` salen con imágenes.
-- [ ] 4. Conservar las cuatro peticiones sin token y el formato de evidencia de `LP01`. Verificación: `tests/evidencia/qa-matriz-aceptacion/LP01.json` mantiene `endpoints`, `sinToken`, `respuestas` y `cumple`.
-- [ ] 5. Ejecutar la matriz con el stack real. Verificación: `python scripts/qa/matriz.py lp-crud` deja `LP01`, `LP02` y `CRUD01` en verde y `LP01.json` con `"cumple": true`.
+- [x] 1. Añadir `imagenUrl` e `imagenAlt` al conjunto de claves permitidas (CLAVES_HOTEL_PUBLICO) como opcionales. Verificación: una respuesta de sede con el par no marca claves sobrantes.
+- [x] 2. Comprobar la coherencia del par en cada sede del listado y del detalle: si `imagenUrl` no es nula, `imagenAlt` es una cadena no vacía; si es nula, `imagenAlt` también. Verificación: `LP01.json` incluye, por sede, si el par viaja y si es coherente, y la corrida deja `cumple: true` con las tres sedes sembradas.
+- [x] 3. Comprobar que cada categoría de `GET /api/public/hoteles/{slug}/categorias` trae `imagenes` con al menos un elemento, cada uno con `url` y `alt` no vacíos, y como máximo diez. Verificación: `LP01.json` incluye `galeriaNoVacia` y `galeriaAcotada` por categoría, y las dos categorías de `lima-centro` salen con imágenes.
+- [x] 4. Conservar las cuatro peticiones sin token y el formato de evidencia de `LP01`. Verificación: `tests/evidencia/qa-matriz-aceptacion/LP01.json` mantiene `endpoints`, `sinToken`, `respuestas` y `cumple`.
+- [x] 5. Ejecutar la matriz con el stack real. Verificación: `python scripts/qa/matriz.py lp-crud` deja `LP01`, `LP02` y `CRUD01` en verde y `LP01.json` con `"cumple": true`.
 - [ ] 6. Actualizar la fila `LP01` de `INFORME.md` con la aserción ampliada y la fecha de la corrida. Verificación: la tabla del informe cita `imagenUrl`/`imagenAlt` y la galería no vacía.
 - [ ] 7. Ejecutar la verificación canónica. Verificación: `python scripts/validar-planes.py` con 0 errores y `python scripts/validar-contratos.py --base origin/main` sin retiradas.
 
