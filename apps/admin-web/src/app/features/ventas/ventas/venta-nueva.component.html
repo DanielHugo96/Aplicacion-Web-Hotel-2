@@ -79,12 +79,23 @@
                   @for (item of carrito(); track item.idProducto) {
                     <tr>
                       <td>
-                        {{ item.nombreProducto }}
-                        @if (erroresLinea()[item.idProducto]) {
-                          <div class="field-msg" role="alert">
-                            {{ erroresLinea()[item.idProducto] }}
-                          </div>
-                        }
+                        <div class="celda-producto">
+                          <span class="miniatura">
+                            <app-imagen-panel
+                              [src]="item.imagenUrl"
+                              [alt]="'Producto ' + item.nombreProducto"
+                              relacion="1 / 1"
+                            ></app-imagen-panel>
+                          </span>
+                          <span>
+                            {{ item.nombreProducto }}
+                            @if (erroresLinea()[item.idProducto]) {
+                              <div class="field-msg" role="alert">
+                                {{ erroresLinea()[item.idProducto] }}
+                              </div>
+                            }
+                          </span>
+                        </div>
                       </td>
                       <td class="num">{{ item.precioUnitario | money }}</td>
                       <td class="num">
@@ -144,8 +155,19 @@
                   @for (p of catalogo(); track p.idProducto) {
                     <tr>
                       <td>
-                        {{ p.nombre }}
-                        <div class="monospace text-micro muted">{{ p.sku }}</div>
+                        <div class="celda-producto">
+                          <span class="miniatura">
+                            <app-imagen-panel
+                              [src]="p.imagenUrl"
+                              [alt]="'Producto ' + p.nombre"
+                              relacion="1 / 1"
+                            ></app-imagen-panel>
+                          </span>
+                          <span>
+                            {{ p.nombre }}
+                            <div class="monospace text-micro muted">{{ p.sku }}</div>
+                          </span>
+                        </div>
                       </td>
                       <td class="num">{{ p.precio | money }}</td>
                       <td class="text-right">

@@ -38,16 +38,12 @@
     <div class="grid-productos">
       @for (p of productos(); track p.idProducto) {
         <article class="producto-card">
-          @if (p.imagenUrl) {
-            <img
-              class="producto-imagen"
-              [src]="p.imagenUrl"
-              [alt]="'Producto ' + p.nombre"
-              loading="lazy"
-            />
-          } @else {
-            <div class="producto-imagen producto-sin-imagen" aria-hidden="true"></div>
-          }
+          <app-imagen-panel
+            class="producto-imagen"
+            [src]="p.imagenUrl"
+            [alt]="'Producto ' + p.nombre"
+            relacion="4 / 3"
+          ></app-imagen-panel>
           <div class="producto-cuerpo">
             <h2>{{ p.nombre }}</h2>
             @if (p.detalle) {

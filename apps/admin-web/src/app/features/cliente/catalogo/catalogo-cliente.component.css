@@ -52,14 +52,7 @@
 
 .producto-imagen {
   width: 100%;
-  aspect-ratio: 3 / 2;
-  object-fit: cover;
-  background: var(--color-sillar-piedra);
   display: block;
-}
-
-.producto-sin-imagen {
-  background: var(--color-sillar-piedra);
 }
 
 .producto-cuerpo {

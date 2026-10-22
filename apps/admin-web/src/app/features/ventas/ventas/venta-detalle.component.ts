@@ -10,6 +10,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { VentasService, etagDeVersion } from '../../../core/services/ventas.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 import { PendingBannerComponent } from '../../../ui/pending-banner/pending-banner.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 /**
  * `/app/ventas/:id` (A/E): detalle con las líneas inmutables tal como llegan
@@ -31,8 +32,25 @@ import { PendingBannerComponent } from '../../../ui/pending-banner/pending-banne
     PendingBannerComponent,
     MoneyPipe,
     PeTimestampPipe,
+    ImagenPanelComponent,
   ],
   templateUrl: './venta-detalle.component.html',
+  styles: [
+    `
+      .celda-producto {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        min-width: 0;
+      }
+
+      .miniatura {
+        display: block;
+        flex: 0 0 auto;
+        width: 40px;
+      }
+    `,
+  ],
 })
 export class VentaDetalleComponent implements OnInit, OnDestroy {
   private readonly ventasService = inject(VentasService);

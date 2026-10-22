@@ -21,6 +21,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { VentasService } from '../../../core/services/ventas.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 import { PendingBannerComponent } from '../../../ui/pending-banner/pending-banner.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 const MAX_PRODUCTOS = 50;
 const MAX_CANTIDAD = 9999;
@@ -46,8 +47,25 @@ const MAX_CANTIDAD = 9999;
     ErrorBannerComponent,
     PendingBannerComponent,
     MoneyPipe,
+    ImagenPanelComponent,
   ],
   templateUrl: './venta-nueva.component.html',
+  styles: [
+    `
+      .celda-producto {
+        display: flex;
+        align-items: center;
+        gap: var(--space-3);
+        min-width: 0;
+      }
+
+      .miniatura {
+        display: block;
+        flex: 0 0 auto;
+        width: 36px;
+      }
+    `,
+  ],
 })
 export class VentaNuevaComponent implements OnInit, OnDestroy {
   private readonly ventasService = inject(VentasService);
