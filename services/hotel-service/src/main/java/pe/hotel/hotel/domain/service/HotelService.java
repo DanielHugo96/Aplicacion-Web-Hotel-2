@@ -1,6 +1,7 @@
 package pe.hotel.hotel.domain.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -66,6 +67,9 @@ public class HotelService {
     if (repository.existsBySlug(input.slug())) {
       throw new ApiException(ErrorCode.DUPLICATE_RESOURCE);
     }
+    String imagenUrl = normalizar(input.imagenUrl());
+    String imagenAlt = normalizar(input.imagenAlt());
+    validarImagen(imagenUrl, imagenAlt);
     Hotel hotel =
         new Hotel(
             input.slug(),
@@ -75,6 +79,8 @@ public class HotelService {
             input.ciudad(),
             input.telefono(),
             input.correoContacto(),
+            imagenUrl,
+            imagenAlt,
             input.publicado());
     hotel = repository.save(hotel);
     repository.flush();
@@ -96,6 +102,9 @@ public class HotelService {
         && !input.slug().equals(hotel.getSlug())) {
       throw new ResponseStatusException(BAD_REQUEST, "slug no modificable tras la publicación");
     }
+    String imagenUrl = normalizar(input.imagenUrl());
+    String imagenAlt = normalizar(input.imagenAlt());
+    validarImagen(imagenUrl, imagenAlt);
     hotel.setSlug(input.slug());
     hotel.setNombre(input.nombre());
     hotel.setDescripcion(input.descripcion());
@@ -103,6 +112,8 @@ public class HotelService {
     hotel.setCiudad(input.ciudad());
     hotel.setTelefono(input.telefono());
     hotel.setCorreoContacto(input.correoContacto());
+    hotel.setImagenUrl(imagenUrl);
+    hotel.setImagenAlt(imagenAlt);
     hotel.setPublicado(input.publicado());
     hotel.setEstado(input.estado());
     try {
@@ -158,6 +169,51 @@ public class HotelService {
     return Long.valueOf(v);
   }
 
+  /**
+   * Recorta el valor y trata la cadena vacía como ausente: la foto de la sede es opcional y su
+   * contrato la expresa con {@code null}.
+   */
+  private static String normalizar(String valor) {
+    if (valor == null) {
+      return null;
+    }
+    String limpio = valor.trim();
+    return limpio.isEmpty() ? null : limpio;
+  }
+
+  /**
+   * Regla de URL de imagen de docs/especificacion/03-contrato-comun.md § Límites de campos comunes:
+   * https o {@code /assets/}, ≤ 500, y toda URL viaja con su descripción alternativa (≤ 150). Una
+   * URL sin alt y un alt sin URL se rechazan con 400 {@code VALIDATION_ERROR} sobre el campo.
+   */
+  private static void validarImagen(String imagenUrl, String imagenAlt) {
+    if (imagenUrl == null && imagenAlt == null) {
+      return;
+    }
+    if (imagenUrl == null) {
+      throw new ApiException(
+          ErrorCode.VALIDATION_ERROR,
+          Map.of("imagenAlt", "se rechaza una descripción sin URL de imagen"));
+    }
+    if (!imagenUrl.startsWith("https://") && !imagenUrl.startsWith("/assets/")) {
+      throw new ApiException(
+          ErrorCode.VALIDATION_ERROR,
+          Map.of("imagenUrl", "url de imagen no permitida (https o /assets/)"));
+    }
+    if (imagenUrl.length() > 500) {
+      throw new ApiException(
+          ErrorCode.VALIDATION_ERROR, Map.of("imagenUrl", "no puede superar 500 caracteres"));
+    }
+    if (imagenAlt == null) {
+      throw new ApiException(
+          ErrorCode.VALIDATION_ERROR, Map.of("imagenAlt", "obligatorio cuando hay imagenUrl"));
+    }
+    if (imagenAlt.length() > 150) {
+      throw new ApiException(
+          ErrorCode.VALIDATION_ERROR, Map.of("imagenAlt", "no puede superar 150 caracteres"));
+    }
+  }
+
   private HotelView toView(Hotel h) {
     return new HotelView(
         h.getId(),
@@ -168,6 +224,8 @@ public class HotelService {
         h.getCiudad(),
         h.getTelefono(),
         h.getCorreoContacto(),
+        h.getImagenUrl(),
+        h.getImagenAlt(),
         h.getEstado(),
         h.getPublicado(),
         h.getVersion());
