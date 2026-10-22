@@ -20,7 +20,15 @@
 }
 
 .hero__scrim {
-  background: var(--color-azul-noche-scrim);
+  /* Scrim de Azul noche al 55 % con refuerzo lineal hacia la izquierda. */
+  background:
+    linear-gradient(
+      90deg,
+      rgba(32, 43, 58, 0.72) 0%,
+      rgba(32, 43, 58, 0.25) 65%,
+      rgba(32, 43, 58, 0) 100%
+    ),
+    var(--color-azul-noche-scrim);
 }
 
 .hero__contenido {
@@ -28,13 +36,6 @@
   z-index: 1;
   padding-block: var(--space-16);
   color: var(--color-texto-oscuro);
-}
-
-.hero__etiqueta {
-  margin-bottom: var(--space-3);
-  color: var(--color-texto-oscuro);
-  font-size: var(--text-small);
-  letter-spacing: 0.02em;
 }
 
 .hero h1 {
@@ -60,34 +61,69 @@
   min-width: 160px;
 }
 
-.tarjetas {
+/* Móvil: la banda pasa a 4:5 y baja a 60vh para dejar el titular a la vista. */
+@media (max-width: 640px) {
+  .hero {
+    min-height: 0;
+    aspect-ratio: 4 / 5;
+    max-height: 60vh;
+  }
+
+  .hero__contenido {
+    padding-block: var(--space-8);
+  }
+
+  .hero__scrim {
+    background:
+      linear-gradient(
+        180deg,
+        rgba(32, 43, 58, 0.2) 0%,
+        rgba(32, 43, 58, 0.65) 60%,
+        rgba(32, 43, 58, 0.78) 100%
+      ),
+      var(--color-azul-noche-scrim);
+  }
+}
+
+/* Índice de tres entradas en dos columnas, sin contorno de tarjeta. */
+.indice {
   display: grid;
   grid-template-columns: 1fr;
-  gap: var(--space-4);
-  margin-top: var(--space-8);
+  margin: var(--space-8) 0 0;
+  border-top: 1px solid var(--color-junta);
 }
 
-.tarjeta {
-  padding: var(--space-6);
-  border: 1px solid var(--color-junta);
-  border-radius: var(--radius-card);
-  background: var(--color-sillar-piedra);
+.indice__entrada {
+  padding-block: var(--space-6);
+  border-bottom: 1px solid var(--color-junta);
 }
 
-.tarjeta p {
-  margin-top: var(--space-3);
+.indice__entrada dt {
+  font-family: var(--font-ui);
+  font-size: var(--text-h3);
+  font-weight: 600;
+}
+
+.indice__entrada dt a {
+  color: var(--color-tinta);
+  text-decoration: none;
+}
+
+.indice__entrada dt a:hover {
+  color: var(--color-cochinilla);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.indice__entrada dd {
+  max-width: 60ch;
+  margin: var(--space-2) 0 0;
   color: var(--color-garua);
 }
 
-.tarjeta a {
-  display: inline-block;
-  margin-top: var(--space-4);
-  font-size: var(--text-ui);
-}
-
+/* Bloque tintado: el único de la página con fondo Sillar piedra. */
 .aviso {
   padding: var(--space-8);
-  border: 1px solid var(--color-junta);
   border-radius: var(--radius-card);
   background: var(--color-sillar-piedra);
 }
@@ -102,11 +138,29 @@
   border-top: 1px solid var(--color-junta);
   color: var(--color-tinta);
   font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.cierre {
+  margin-top: var(--space-16);
+  text-align: start;
+}
+
+.cierre p {
+  max-width: 55ch;
+  margin-top: var(--space-3);
+  color: var(--color-garua);
+}
+
+.cierre .enlace-sutil {
+  display: inline-block;
+  margin-top: var(--space-4);
+  font-size: var(--text-ui);
 }
 
 @media (min-width: 768px) {
-  .tarjetas {
-    grid-template-columns: repeat(3, 1fr);
-    gap: var(--space-6);
+  .indice {
+    grid-template-columns: repeat(2, 1fr);
+    column-gap: var(--space-12);
   }
 }

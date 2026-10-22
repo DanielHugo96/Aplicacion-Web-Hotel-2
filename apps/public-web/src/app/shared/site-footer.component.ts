@@ -8,10 +8,16 @@ import { RouterLink } from '@angular/router';
   template: `
     <footer class="pie">
       <div class="contenedor pie__interior">
-        <div>
+        <div class="pie__marca">
+          <p class="pie__nombre">Casa Sillar</p>
           <p class="pie__aviso">
-            Datos de demostración. Las sedes, categorías e importes provienen del
-            catálogo público; no constituyen una reserva.
+            Cadena hotelera de presentación. Las sedes, categorías e importes
+            provienen del catálogo público y no constituyen una reserva; la
+            disponibilidad se consulta con recepción.
+          </p>
+          <p class="pie__aviso">
+            Los datos de esta presentación son ficticios y no corresponden a una
+            empresa real en operación.
           </p>
           <p class="pie__fecha">Página generada el {{ hoy | date: 'dd/MM/yyyy HH:mm' }}</p>
         </div>
