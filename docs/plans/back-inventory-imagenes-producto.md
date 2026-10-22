@@ -7,7 +7,7 @@
 | Componente | `inventory-service` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-inventory-stock` |
 | Spec | [`inventory/base-de-datos.md` §Seeds](../especificacion/microservicios/inventory/base-de-datos.md#seeds); [`02` §Imágenes](../especificacion/02-landing-y-panel.md#imágenes); [`08` §6](../especificacion/08-admin-web.md#6-imágenes-en-el-panel) |
 | Casos | `—` |
