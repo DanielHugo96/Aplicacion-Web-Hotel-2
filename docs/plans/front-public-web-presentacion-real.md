@@ -101,7 +101,7 @@ La fase es `F5` porque `F0`–`F4` están cerradas en `main`: este cambio llega 
     - `LP01-hoteles_lima-centro_categorias_page_0_size_20.json` — dos categorías con 3 imágenes cada una (galería no vacía).
     - `LP01-hoteles_lima-centro_categorias_1.json` — detalle de categoría con `imagenes` de 3 elementos.
     - Los cuatro con estado `200`, sin token y sin campos fuera de `HotelPublico`/`CategoriaPublica` (comprobado con script sobre los JSON).
-    - `LP01-02-inicio-1440.png`, `LP01-03-sedes-1440.png`, `LP01-04-sede-detalle-1440.png`, `LP01-05-categoria-detalle-1440.png`, `LP01-06-contacto-1440.png`, `LP01-07-privacidad-1440.png`, `LP01-01-inicio-390.png` y `LP01-08-sedes-390.png` — capturas del DOM pintado.
+    - `LP01-02-inicio-1440.png`, `LP01-03-sedes-1440.png`, `LP01-04-sede-detalle-1440.png`, `LP01-05-categoria-detalle-1440.png`, `LP01-06-contacto-1440.png`, `LP01-07-privacidad-1440.png`, `LP01-09-inicio-completo-1440.png`, `LP01-01-inicio-390.png` y `LP01-08-sedes-390.png` — capturas del DOM pintado.
     - `LP01-red.md` — registro de red: la landing pide `/api/public/...` al Gateway y las imágenes a su propio origen.
   - Decisión de nivel 2 registrada: el build se sirve en `http://localhost:4200` porque es uno de los orígenes del `allowedOrigins` del Gateway; otro puerto provoca un bloqueo CORS del navegador que no es un defecto de la landing. Ver [`IA-front-public-web-presentacion-real-02.md`](../implementacion/decisiones/IA-front-public-web-presentacion-real-02.md).
   - `npm run build` → `Application bundle generation complete`; `python scripts/validar-planes.py` → `0 error(es), 0 aviso(s)`.
