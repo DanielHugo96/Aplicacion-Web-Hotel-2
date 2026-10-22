@@ -117,20 +117,29 @@ lee solo el nivel raíz, así que este índice es la vista agrupada.
   [`front-admin-web-cierre`](../plans/front-admin-web-cierre.md) ·
   [`front-admin-web-reportes`](../plans/front-admin-web-reportes.md) ·
   [`front-admin-web-area-cliente`](../plans/front-admin-web-area-cliente.md)
-- **F5 · Aceptación (2):** [`qa-runbooks`](../plans/qa-runbooks.md) ·
-  [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md)
+- **F5 · Aceptación (9):** [`qa-runbooks`](../plans/qa-runbooks.md) ·
+  [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md) ·
+  [`back-hotel-presentacion-real`](../plans/back-hotel-presentacion-real.md) ·
+  [`back-identity-presentacion-real`](../plans/back-identity-presentacion-real.md) ·
+  [`back-notification-presentacion-real`](../plans/back-notification-presentacion-real.md) ·
+  [`back-inventory-imagenes-producto`](../plans/back-inventory-imagenes-producto.md) ·
+  [`front-public-web-presentacion-real`](../plans/front-public-web-presentacion-real.md) ·
+  [`front-admin-web-imagenes-panel`](../plans/front-admin-web-imagenes-panel.md) ·
+  [`qa-matriz-lp01-imagenes`](../plans/qa-matriz-lp01-imagenes.md)
 
 **Por ámbito**
 
 - **infra (3):** `infra-monorepo`, `infra-compose`, `infra-gateway-eureka`
-- **back (12):** `back-plataforma-comunes`, `back-plataforma-mensajeria`, `back-identity-auth`,
+- **back (16):** `back-plataforma-comunes`, `back-plataforma-mensajeria`, `back-identity-auth`,
   `back-identity-personas`, `back-hotel-catalogo`, `back-reception-operacion`, `back-hotel-operaciones`,
   `back-inventory-stock`, `back-sales-ventas`, `back-reception-cierre`, `back-notification-worker`,
-  `back-reporting-proyecciones`
-- **front (8):** `front-public-web-landing`, `front-admin-web-base`, `front-admin-web-catalogo`,
+  `back-reporting-proyecciones`, `back-hotel-presentacion-real`, `back-identity-presentacion-real`,
+  `back-notification-presentacion-real`, `back-inventory-imagenes-producto`
+- **front (10):** `front-public-web-landing`, `front-admin-web-base`, `front-admin-web-catalogo`,
   `front-admin-web-recepcion`, `front-admin-web-ventas`, `front-admin-web-cierre`,
-  `front-admin-web-reportes`, `front-admin-web-area-cliente`
-- **qa (2):** `qa-runbooks`, `qa-matriz-aceptacion`
+  `front-admin-web-reportes`, `front-admin-web-area-cliente`, `front-public-web-presentacion-real`,
+  `front-admin-web-imagenes-panel`
+- **qa (3):** `qa-runbooks`, `qa-matriz-aceptacion`, `qa-matriz-lp01-imagenes`
 
 Si entra un plan nuevo, su enlace se añade aquí en el mismo PR que lo planifica.
 

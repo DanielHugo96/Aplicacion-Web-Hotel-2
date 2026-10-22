@@ -31,6 +31,9 @@ libre. La tanda es la referencia para saber qué puede ir a la vez, no una barre
 | **T12** | `front-admin-web-cierre` | reception-cierre y front-admin-web-recepcion |
 | **T13** | `front-admin-web-reportes` | reporting-proyecciones y front-admin-web-base |
 | **T14** | `qa-matriz-aceptacion` | **todos** los F1–F4, incluido `front-admin-web-catalogo` |
+| **T15** | `back-hotel-presentacion-real` ‖ `back-identity-presentacion-real` ‖ `back-inventory-imagenes-producto` ‖ `back-notification-presentacion-real` | hotel-catalogo y hotel-operaciones; identity-personas; inventory-stock; notification-worker |
+| **T16** | `front-public-web-presentacion-real` ‖ `front-admin-web-imagenes-panel` | hotel-presentacion-real; para el panel además base, catalogo y area-cliente |
+| **T17** | `qa-matriz-lp01-imagenes` | qa-matriz-aceptacion, hotel-presentacion-real y public-web-presentacion-real |
 
 Notas de lectura:
 
