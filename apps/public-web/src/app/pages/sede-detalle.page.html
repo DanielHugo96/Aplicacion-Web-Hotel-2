@@ -18,6 +18,11 @@
     <header class="cabecera-sede">
       <p class="cabecera-sede__ciudad">{{ sede.ciudad }}</p>
       <h1>{{ sede.nombre }}</h1>
+      <app-catalog-image
+        class="cabecera-sede__foto"
+        [src]="sede.imagenUrl ?? IMAGEN_FALLBACK"
+        [alt]="sede.imagenAlt ?? ('Fachada de la sede ' + sede.nombre)"
+      />
       <p class="entradilla">{{ sede.descripcion }}</p>
       <dl class="datos-sede">
         <div>
@@ -93,7 +98,7 @@
           <ul class="rejilla-categorias" role="list">
             @for (categoria of categorias(); track categoria.idCategoria) {
               <li class="tarjeta-categoria">
-                <app-demo-image
+                <app-catalog-image
                   class="tarjeta-categoria__imagen"
                   [src]="imagenPrincipal(categoria)"
                   [alt]="altPrincipal(categoria)"

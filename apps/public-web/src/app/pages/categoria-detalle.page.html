@@ -28,18 +28,34 @@
   } @else if (categoria(); as tipo) {
     <div class="detalle">
       <section class="galeria" aria-label="Galería de la habitación">
-        @for (url of imagen(tipo); track url; let i = $index) {
-          <app-demo-image
-            class="galeria__imagen"
-            [src]="url"
-            [alt]="alt(tipo, i)"
-            [prioritaria]="i === 0"
-          />
+        <app-catalog-image
+          class="galeria__principal"
+          [src]="principal(tipo).url"
+          [alt]="principal(tipo).alt"
+          [prioritaria]="true"
+        />
+
+        @if (hayMiniaturas(tipo)) {
+          <ul class="galeria__miniaturas" role="list">
+            @for (imagen of galeria(tipo); track imagen.url; let i = $index) {
+              <li>
+                <button
+                  type="button"
+                  class="galeria__miniatura"
+                  [class.galeria__miniatura--activa]="i === indicePrincipal()"
+                  [attr.aria-pressed]="i === indicePrincipal()"
+                  [attr.aria-label]="'Ver imagen: ' + imagen.alt"
+                  (click)="seleccionar(i)"
+                >
+                  <app-catalog-image [src]="imagen.url" [alt]="imagen.alt" />
+                </button>
+              </li>
+            }
+          </ul>
         }
       </section>
 
       <section class="informacion" aria-labelledby="tipo-titulo">
-        <p class="informacion__etiqueta">Tipo de habitación</p>
         <h1 id="tipo-titulo">{{ tipo.descripcion }}</h1>
         <p class="informacion__detalle">{{ tipo.detalle }}</p>
         <p class="informacion__capacidad">{{ personas(tipo.capacidad) }}</p>

@@ -2,8 +2,8 @@
   <header class="cabecera-pagina">
     <h1>Sedes</h1>
     <p class="entradilla">
-      Sedes publicadas y activas de la cadena de demostración en Lima y
-      Arequipa. Elige una para ver sus tipos de habitación.
+      Las casas publicadas de Casa Sillar en Lima y Arequipa. Elige una para ver
+      sus tipos de habitación.
     </p>
   </header>
 
@@ -30,10 +30,10 @@
       <ul class="rejilla" role="list">
         @for (hotel of hoteles(); track hotel.idHotel) {
           <li class="tarjeta-sede">
-            <app-demo-image
+            <app-catalog-image
               class="tarjeta-sede__imagen"
-              src="/assets/demo/sede.svg"
-              [alt]="'Sede de demostración: ' + hotel.nombre"
+              [src]="hotel.imagenUrl ?? IMAGEN_FALLBACK"
+              [alt]="hotel.imagenAlt ?? ('Fachada de la sede ' + hotel.nombre)"
             />
             <div class="tarjeta-sede__cuerpo">
               <p class="tarjeta-sede__ciudad">{{ hotel.ciudad }}</p>

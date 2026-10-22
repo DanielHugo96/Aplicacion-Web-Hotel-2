@@ -1,13 +1,16 @@
 import { Component, input, signal } from '@angular/core';
 
-const FALLBACK = '/assets/demo/placeholder.svg';
+/** Fallback neutro propio de la app: fondo Sillar piedra con la marca de imagen. */
+export const IMAGEN_FALLBACK = '/assets/fallback.svg';
 
 /**
- * Imagen de demostración con relación fija, alt obligatorio y fallback neutro.
- * Un fallo de imagen no altera el layout ni la tarifa.
+ * Imagen del catálogo público con relación fija, `alt` obligatorio y fallback
+ * neutro. La relación la declara el contenedor (`aspect-ratio` en el `:host`) y
+ * la imagen la ocupa con `object-fit: cover`; un fallo de imagen no altera el
+ * layout, el texto ni la tarifa.
  */
 @Component({
-  selector: 'app-demo-image',
+  selector: 'app-catalog-image',
   template: `
     <img
       class="imagen"
@@ -16,6 +19,7 @@ const FALLBACK = '/assets/demo/placeholder.svg';
       [alt]="alt()"
       [attr.loading]="prioritaria() ? 'eager' : 'lazy'"
       [attr.fetchpriority]="prioritaria() ? 'high' : 'auto'"
+      [attr.decoding]="prioritaria() ? 'sync' : 'async'"
       (error)="alFallar()"
     />
   `,
@@ -30,19 +34,18 @@ const FALLBACK = '/assets/demo/placeholder.svg';
       .imagen {
         width: 100%;
         height: 100%;
-        aspect-ratio: 4 / 3;
         object-fit: cover;
         display: block;
       }
 
       .imagen--fallback {
         object-fit: contain;
-        padding: var(--space-6);
+        padding: var(--space-8);
       }
     `,
   ],
 })
-export class DemoImageComponent {
+export class CatalogImageComponent {
   readonly src = input.required<string>();
   readonly alt = input.required<string>();
   readonly prioritaria = input(false);
@@ -50,7 +53,7 @@ export class DemoImageComponent {
   protected readonly fallo = signal(false);
 
   protected actual(): string {
-    return this.fallo() ? FALLBACK : this.src();
+    return this.fallo() ? IMAGEN_FALLBACK : this.src();
   }
 
   protected alFallar(): void {

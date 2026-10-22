@@ -8,9 +8,9 @@ import { PANEL_URL } from '../core/config';
   template: `
     <header class="cabecera">
       <div class="contenedor cabecera__interior">
-        <a class="marca" routerLink="/" aria-label="Hoteles de demostración, inicio">
-          <span class="marca__nombre">Hotel</span>
-          <span class="marca__etiqueta">Demostración</span>
+        <a class="marca" routerLink="/" aria-label="Casa Sillar, inicio">
+          <span class="marca__nombre">Casa</span>
+          <span class="marca__apellido">Sillar</span>
         </a>
 
         <nav class="navegacion" aria-label="Navegación principal">

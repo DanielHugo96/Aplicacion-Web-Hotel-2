@@ -10,33 +10,58 @@ describe('InicioPage', () => {
     }).compileComponents();
   });
 
-  it('muestra los textos obligatorios del hero y la llamada a contacto', () => {
+  function crear(): HTMLElement {
     const fixture = TestBed.createComponent(InicioPage);
     fixture.detectChanges();
-    const text = (fixture.nativeElement as HTMLElement).textContent ?? '';
+    return fixture.nativeElement as HTMLElement;
+  }
 
-    expect(text).toContain('Hoteles de demostración en Lima y Arequipa');
-    expect(text).toContain(
+  it('muestra el h1 y la propuesta de valor exactos, sin etiqueta encima', () => {
+    const element = crear();
+
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe(
+      'Casa Sillar en Lima y Arequipa',
+    );
+    expect(element.querySelector('.hero__valor')?.textContent?.trim()).toBe(
       'Catálogo, sedes y contacto; sin reservas ni pagos en línea',
     );
-    expect(text).toContain('Contactar');
-    expect(text).toContain(
+    expect(element.querySelector('.hero h1')?.previousElementSibling).toBeNull();
+    expect(element.querySelector('.hero__etiqueta')).toBeNull();
+  });
+
+  it('ofrece las dos acciones del hero y el aviso de tarifa completo', () => {
+    const element = crear();
+    const acciones = Array.from(element.querySelectorAll('.hero__acciones a')).map(
+      (node) => (node.textContent ?? '').trim(),
+    );
+
+    expect(acciones).toEqual(['Contactar', 'Ver sedes']);
+    expect(element.textContent).toContain(
       'Desde S/ 70.00 por noche. Consulta disponibilidad con recepción. No constituye una reserva.',
     );
   });
 
-  it('no ofrece acciones de reserva, pago ni disponibilidad en vivo', () => {
-    const fixture = TestBed.createComponent(InicioPage);
-    fixture.detectChanges();
-    const element = fixture.nativeElement as HTMLElement;
-    const actions = Array.from(
-      element.querySelectorAll('a, button'),
-    ).map((node) => (node.textContent ?? '').toLowerCase());
+  it('usa la fotografía del hero con prioridad alta y su alt propio', () => {
+    const element = crear();
+    const imagen = element.querySelector('.hero__imagen') as HTMLImageElement;
 
-    expect(actions.some((label) => label.includes('reservar'))).toBe(false);
-    expect(actions.some((label) => label.includes('pagar'))).toBe(false);
-    expect((element.textContent ?? '').toLowerCase()).not.toContain(
-      'disponible ahora',
+    expect(imagen.getAttribute('src')).toBe('/assets/inicio/hero.jpg');
+    expect(imagen.getAttribute('fetchpriority')).toBe('high');
+    expect(imagen.getAttribute('alt')).toBeTruthy();
+    expect(imagen.getAttribute('alt')).not.toContain('demostración');
+  });
+
+  it('no deja textos de demostración ni ofrece reserva, pago o disponibilidad en vivo', () => {
+    const element = crear();
+    const texto = (element.textContent ?? '').toLowerCase();
+    const acciones = Array.from(element.querySelectorAll('a, button')).map(
+      (node) => (node.textContent ?? '').toLowerCase(),
     );
+
+    expect(texto).not.toContain('demostración');
+    expect(texto).not.toContain('hotel demo');
+    expect(acciones.some((label) => label.includes('reservar'))).toBe(false);
+    expect(acciones.some((label) => label.includes('pagar'))).toBe(false);
+    expect(texto).not.toContain('disponible ahora');
   });
 });

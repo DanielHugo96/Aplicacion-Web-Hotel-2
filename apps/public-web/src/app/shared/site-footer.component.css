@@ -1,8 +1,8 @@
 .pie {
   margin-top: var(--space-16);
   padding-block: var(--space-8);
-  border-top: 1px solid var(--color-junta);
-  background: var(--color-sillar-piedra);
+  background: var(--color-azul-noche);
+  color: var(--color-texto-oscuro);
 }
 
 .pie__interior {
@@ -13,21 +13,41 @@
   justify-content: space-between;
 }
 
+.pie__nombre {
+  font-family: var(--font-display);
+  font-size: var(--text-h3);
+  line-height: 1.2;
+}
+
 .pie__aviso {
   max-width: 65ch;
-  color: var(--color-garua);
+  margin-top: var(--space-3);
+  color: var(--color-texto-oscuro);
   font-size: var(--text-small);
+  opacity: 0.9;
 }
 
 .pie__fecha {
-  margin-top: var(--space-2);
-  color: var(--color-garua);
+  margin-top: var(--space-3);
+  color: var(--color-texto-oscuro);
   font-size: var(--text-micro);
   font-variant-numeric: tabular-nums;
+  opacity: 0.75;
 }
 
 .pie__enlaces {
   display: flex;
   gap: var(--space-4);
   font-size: var(--text-ui);
+}
+
+.pie__enlaces a {
+  color: var(--color-texto-oscuro);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.pie a:focus-visible {
+  outline: 2px solid var(--color-foco-oscuro);
+  outline-offset: 2px;
 }

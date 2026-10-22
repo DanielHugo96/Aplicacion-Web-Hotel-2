@@ -16,22 +16,27 @@ import { ApiList, CategoriaPublica, HotelPublico } from './catalog.models';
 const HOTEL: HotelPublico = {
   idHotel: 1,
   slug: 'lima-centro',
-  nombre: 'Hotel Demo Lima Centro',
-  descripcion: 'Sede de demostración',
-  direccion: 'Dirección de demostración',
+  nombre: 'Casa Sillar Lima Centro',
+  descripcion: 'Casona restaurada con patio de sillar.',
+  direccion: 'Jr. de la Unión 540, Cercado de Lima',
   ciudad: 'Lima',
-  telefono: '+51 900 000 001',
-  correoContacto: 'contacto@hotel.test',
+  telefono: '+51 1 428 6400',
+  correoContacto: 'contacto@casasillar.pe',
 };
 
 const CATEGORIA: CategoriaPublica = {
   idCategoria: 2,
   descripcion: 'Doble',
-  detalle: 'Habitación doble de demostración',
+  detalle: 'Habitación doble con cama de dos plazas o dos camas.',
   capacidad: 2,
   precioDesde: 100,
   moneda: 'PEN',
-  imagenes: [{ url: '/assets/demo/hab-102-1.jpg', alt: 'Habitación de demostración' }],
+  imagenes: [
+    {
+      url: '/assets/habitaciones/lima-centro-doble-1.jpg',
+      alt: 'Habitación doble con dos camas y ventana a la calle',
+    },
+  ],
 };
 
 describe('CatalogService', () => {
@@ -71,6 +76,26 @@ describe('CatalogService', () => {
     request.flush(response);
 
     await expect(promise).resolves.toEqual(response);
+  });
+
+  it('transporta imagenUrl e imagenAlt sin transformarlos', async () => {
+    const conImagen: HotelPublico = {
+      ...HOTEL,
+      imagenUrl: '/assets/sedes/lima-centro-fachada.jpg',
+      imagenAlt: 'Fachada de piedra de la sede de Lima Centro al atardecer',
+    };
+    const promise = firstValueFrom(service.obtenerHotel('lima-centro'));
+    const request = http.expectOne(
+      'http://localhost:8080/api/public/hoteles/lima-centro',
+    );
+    request.flush({ success: true, message: 'OK', data: conImagen, meta: {} });
+
+    await expect(promise).resolves.toMatchObject({
+      data: {
+        imagenUrl: '/assets/sedes/lima-centro-fachada.jpg',
+        imagenAlt: 'Fachada de piedra de la sede de Lima Centro al atardecer',
+      },
+    });
   });
 
   it('consulta el detalle por slug sin ids literales', async () => {

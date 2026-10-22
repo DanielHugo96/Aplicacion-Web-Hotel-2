@@ -12,19 +12,52 @@
 }
 
 .galeria {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--space-3);
 }
 
-.galeria__imagen {
+/* Imagen principal 4:3, con el alt original de la imagen del contrato. */
+.galeria__principal {
   aspect-ratio: 4 / 3;
   border: 1px solid var(--color-junta);
   border-radius: var(--radius-card);
 }
 
-.galeria__imagen:first-child {
-  grid-column: 1 / -1;
+.galeria__miniaturas {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.galeria__miniatura {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  padding: 0;
+  border: 1px solid var(--color-junta);
+  border-radius: var(--radius-control);
+  background: transparent;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.galeria__miniatura app-catalog-image {
+  width: 100%;
+  height: 100%;
+}
+
+.galeria__miniatura--activa {
+  border-color: var(--color-cochinilla);
+  box-shadow: 0 0 0 2px var(--color-cochinilla-wash);
+}
+
+.galeria__miniatura:focus-visible {
+  outline: 2px solid var(--color-cochinilla);
+  outline-offset: 2px;
 }
 
 .galeria__hueco {
@@ -38,11 +71,6 @@
   gap: var(--space-3);
 }
 
-.informacion__etiqueta {
-  color: var(--color-garua);
-  font-size: var(--text-small);
-}
-
 .informacion h1 {
   font-family: var(--font-display);
   font-size: var(--text-h2);
@@ -54,7 +82,8 @@
 }
 
 .informacion__capacidad {
-  font-weight: 500;
+  color: var(--color-garua);
+  font-size: var(--text-small);
 }
 
 .tarifa {

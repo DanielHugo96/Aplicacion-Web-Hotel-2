@@ -4,14 +4,17 @@ import { RouterLink } from '@angular/router';
 import { UiError } from '../core/api-error';
 import { CatalogService } from '../core/catalog.service';
 import { HotelPublico, MetaPage } from '../core/catalog.models';
-import { DemoImageComponent } from '../shared/demo-image.component';
+import {
+  CatalogImageComponent,
+  IMAGEN_FALLBACK,
+} from '../shared/catalog-image.component';
 import { ErrorStateComponent } from '../shared/error-state.component';
 
 const PAGE_SIZE = 20;
 
 @Component({
   selector: 'app-sedes-page',
-  imports: [RouterLink, DemoImageComponent, ErrorStateComponent],
+  imports: [RouterLink, CatalogImageComponent, ErrorStateComponent],
   templateUrl: './sedes.page.html',
   styleUrl: './sedes.page.css',
 })
@@ -25,6 +28,7 @@ export class SedesPage {
   protected readonly error = signal<UiError | null>(null);
   protected readonly pagina = signal(0);
   protected readonly tamano = PAGE_SIZE;
+  protected readonly IMAGEN_FALLBACK = IMAGEN_FALLBACK;
 
   protected readonly paginas = () => {
     const total = this.meta()?.totalElements ?? 0;
