@@ -16,22 +16,27 @@ import { ApiList, CategoriaPublica, HotelPublico } from './catalog.models';
 const HOTEL: HotelPublico = {
   idHotel: 1,
   slug: 'lima-centro',
-  nombre: 'Hotel Demo Lima Centro',
-  descripcion: 'Sede de demostración',
-  direccion: 'Dirección de demostración',
+  nombre: 'Casa Sillar Lima Centro',
+  descripcion: 'Casona restaurada con patio de sillar.',
+  direccion: 'Jr. de la Unión 540, Cercado de Lima',
   ciudad: 'Lima',
-  telefono: '+51 900 000 001',
-  correoContacto: 'contacto@hotel.test',
+  telefono: '+51 1 428 6400',
+  correoContacto: 'contacto@casasillar.pe',
 };
 
 const CATEGORIA: CategoriaPublica = {
   idCategoria: 2,
   descripcion: 'Doble',
-  detalle: 'Habitación doble de demostración',
+  detalle: 'Habitación doble con cama de dos plazas o dos camas.',
   capacidad: 2,
   precioDesde: 100,
   moneda: 'PEN',
-  imagenes: [{ url: '/assets/habitaciones/lima-centro-doble-1.jpg', alt: 'Habitación de demostración' }],
+  imagenes: [
+    {
+      url: '/assets/habitaciones/lima-centro-doble-1.jpg',
+      alt: 'Habitación doble con dos camas y ventana a la calle',
+    },
+  ],
 };
 
 describe('CatalogService', () => {

@@ -3,13 +3,22 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { UiError, validationError } from '../core/api-error';
 import { CatalogService } from '../core/catalog.service';
-import { CategoriaPublica } from '../core/catalog.models';
+import { CategoriaPublica, ImagenPublica } from '../core/catalog.models';
 import {
   CatalogImageComponent,
   IMAGEN_FALLBACK,
 } from '../shared/catalog-image.component';
 import { ErrorStateComponent } from '../shared/error-state.component';
 import { MonedaPePipe } from '../shared/moneda-pe.pipe';
+
+/** La galería de la categoría muestra como máximo cuatro imágenes. */
+const MAX_GALERIA = 4;
+
+/** Fallback cuando el contrato no entrega ninguna imagen utilizable. */
+const IMAGEN_VACIA: ImagenPublica = {
+  url: IMAGEN_FALLBACK,
+  alt: 'Imagen no disponible del tipo de habitación',
+};
 
 @Component({
   selector: 'app-categoria-detalle-page',
@@ -26,6 +35,8 @@ export class CategoriaDetallePage {
   protected readonly cargando = signal(true);
   protected readonly error = signal<UiError | null>(null);
   protected readonly slug = signal('');
+  protected readonly indicePrincipal = signal(0);
+  protected readonly MAX_GALERIA = MAX_GALERIA;
 
   protected readonly personas = (capacidad: number) =>
     capacidad === 1 ? 'Hasta 1 persona' : `Hasta ${capacidad} personas`;
@@ -40,6 +51,7 @@ export class CategoriaDetallePage {
         this.slug.set(slug);
         this.categoria.set(null);
         this.error.set(null);
+        this.indicePrincipal.set(0);
 
         if (!slug) {
           this.error.set(
@@ -73,6 +85,7 @@ export class CategoriaDetallePage {
       .subscribe({
         next: (response) => {
           this.categoria.set(response.data);
+          this.indicePrincipal.set(0);
           this.cargando.set(false);
         },
         error: (error: UiError) => {
@@ -87,15 +100,28 @@ export class CategoriaDetallePage {
     this.cargar(this.slug(), idCategoria);
   }
 
-  protected imagen(categoria: CategoriaPublica): string[] {
-    return categoria.imagenes.length > 0
-      ? categoria.imagenes.map((imagen) => imagen.url)
-      : [IMAGEN_FALLBACK];
+  /** Hasta cuatro imágenes con `alt` propio; si no hay ninguna, el fallback. */
+  protected galeria(categoria: CategoriaPublica): ImagenPublica[] {
+    const propias = categoria.imagenes
+      .filter((imagen) => imagen.url)
+      .slice(0, MAX_GALERIA);
+    return propias.length > 0 ? propias : [IMAGEN_VACIA];
   }
 
-  protected alt(categoria: CategoriaPublica, indice: number): string {
-    return (
-      categoria.imagenes[indice]?.alt ?? 'Habitación de demostración'
-    );
+  protected principal(categoria: CategoriaPublica): ImagenPublica {
+    const imagenes = this.galeria(categoria);
+    return imagenes[this.indicePrincipal()] ?? imagenes[0];
+  }
+
+  protected hayMiniaturas(categoria: CategoriaPublica): boolean {
+    return this.galeria(categoria).length > 1;
+  }
+
+  protected seleccionar(indice: number): void {
+    this.indicePrincipal.set(indice);
+  }
+
+  protected esFallback(categoria: CategoriaPublica): boolean {
+    return categoria.imagenes.filter((imagen) => imagen.url).length === 0;
   }
 }

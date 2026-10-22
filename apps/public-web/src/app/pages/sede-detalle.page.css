@@ -19,6 +19,13 @@
   max-width: 24ch;
 }
 
+/* Foto de la sede en 21:9, a sangre dentro del contenedor. */
+.cabecera-sede__foto {
+  aspect-ratio: 21 / 9;
+  margin-top: var(--space-4);
+  border-radius: var(--radius-card);
+}
+
 .datos-sede {
   display: flex;
   flex-wrap: wrap;

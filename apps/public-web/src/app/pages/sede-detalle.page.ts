@@ -48,6 +48,7 @@ export class SedeDetallePage {
   protected readonly capacidadTexto = signal('');
   protected readonly capacidadAplicada = signal<number | undefined>(undefined);
   protected readonly tamano = PAGE_SIZE;
+  protected readonly IMAGEN_FALLBACK = IMAGEN_FALLBACK;
 
   private slug = '';
 
@@ -169,6 +170,8 @@ export class SedeDetallePage {
   }
 
   protected altPrincipal(categoria: CategoriaPublica): string {
-    return categoria.imagenes[0]?.alt ?? 'Habitación de demostración';
+    return (
+      categoria.imagenes[0]?.alt ?? 'Imagen no disponible del tipo de habitación'
+    );
   }
 }

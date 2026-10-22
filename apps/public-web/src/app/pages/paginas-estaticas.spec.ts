@@ -10,7 +10,7 @@ describe('Páginas estáticas', () => {
     }).compileComponents();
   });
 
-  it('contacto no tiene formulario, no usa tel: y muestra datos demo como texto', () => {
+  it('contacto no tiene formulario ni enlaces tel:/mailto: hacia el dominio ficticio', () => {
     const fixture = TestBed.createComponent(ContactoPage);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
@@ -18,20 +18,25 @@ describe('Páginas estáticas', () => {
     expect(element.querySelector('form')).toBeNull();
     expect(element.querySelector('input, textarea, select')).toBeNull();
     expect(element.querySelector('a[href^="tel:"]')).toBeNull();
-    expect(element.querySelector('a[href^="mailto:"]')?.textContent).toContain(
-      'contacto@hotel.test',
-    );
-    expect(element.textContent).toContain('+51 900 000 001');
-    expect(element.textContent).toContain('texto no clicable');
+    expect(element.querySelector('a[href^="mailto:"]')).toBeNull();
+    expect(element.innerHTML).not.toContain('mailto:');
+    expect(element.textContent).toContain('contacto@casasillar.pe');
+    expect(element.textContent).toContain('+51 1 428 6400');
+    expect(element.textContent).toContain('texto');
+    expect(element.textContent).not.toContain('demostración');
   });
 
-  it('privacidad es un borrador enlazado a contacto', () => {
+  it('privacidad declara que la cadena y sus datos son de una presentación', () => {
     const fixture = TestBed.createComponent(PrivacidadPage);
     fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
 
-    expect(element.textContent).toContain('Borrador informativo');
-    expect(element.textContent).toContain('No es una política legal definitiva');
+    expect(element.textContent).toContain('presentación');
+    expect(element.textContent).toContain(
+      'Los nombres, direcciones, teléfonos y correos son ficticios',
+    );
+    expect(element.textContent).not.toContain('cumplimiento');
+    expect(element.textContent).not.toContain('política legal');
     expect(element.querySelector('a[href="/contacto"]')).toBeTruthy();
   });
 });

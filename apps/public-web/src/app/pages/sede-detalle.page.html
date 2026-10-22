@@ -18,6 +18,11 @@
     <header class="cabecera-sede">
       <p class="cabecera-sede__ciudad">{{ sede.ciudad }}</p>
       <h1>{{ sede.nombre }}</h1>
+      <app-catalog-image
+        class="cabecera-sede__foto"
+        [src]="sede.imagenUrl ?? IMAGEN_FALLBACK"
+        [alt]="sede.imagenAlt ?? ('Fachada de la sede ' + sede.nombre)"
+      />
       <p class="entradilla">{{ sede.descripcion }}</p>
       <dl class="datos-sede">
         <div>
