@@ -48,7 +48,7 @@ ORIGEN = "origin"
 # Ficheros de docs/plans/ que no son planes.
 NO_PLANES = {"README.md", "catalogo.md", "_plantilla.md", "_prompts.md"}
 
-# Orden canónico de docs/implementacion/orden.md §2, de T0 a T14.
+# Orden canónico de docs/implementacion/orden.md §2, de T0 a T17.
 CALENDARIO = [
     # T0
     "infra-monorepo",
@@ -90,6 +90,16 @@ CALENDARIO = [
     "front-admin-web-reportes",
     # T14
     "qa-matriz-aceptacion",
+    # T15
+    "back-hotel-presentacion-real",
+    "back-identity-presentacion-real",
+    "back-inventory-imagenes-producto",
+    "back-notification-presentacion-real",
+    # T16
+    "front-public-web-presentacion-real",
+    "front-admin-web-imagenes-panel",
+    # T17
+    "qa-matriz-lp01-imagenes",
 ]
 
 RE_CAMPO = re.compile(r"^\|\s*(?P<clave>[^|]+?)\s*\|\s*(?P<valor>.*?)\s*\|\s*$")
