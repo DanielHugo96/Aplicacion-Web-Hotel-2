@@ -151,18 +151,42 @@
 
       <div class="field" style="grid-column: 1 / -1;">
         <label for="imagenUrl">URL de la imagen</label>
-        <input
-          id="imagenUrl"
-          name="imagenUrl"
-          [(ngModel)]="imagenUrl"
-          maxlength="500"
-          placeholder="https://... o /assets/..."
-          [class.error]="campoInvalido('imagenUrl')"
-        />
-        <span class="field-help">https o /assets/, hasta 500 caracteres.</span>
-        @if (campoInvalido('imagenUrl')) {
-          <span class="field-msg" role="alert">{{ mensajeCampo('imagenUrl') }}</span>
-        }
+        <div class="campo-con-previa">
+          <div class="campo-con-previa__entrada">
+            <input
+              id="imagenUrl"
+              name="imagenUrl"
+              [ngModel]="imagenUrl"
+              (ngModelChange)="alEscribirImagen($event)"
+              maxlength="500"
+              placeholder="/assets/productos/agua-500ml.png o https://..."
+              [class.error]="campoInvalido('imagenUrl')"
+              [attr.aria-invalid]="campoInvalido('imagenUrl') ? 'true' : null"
+              aria-describedby="imagenUrl-ayuda"
+            />
+            <span id="imagenUrl-ayuda" class="field-help">https o /assets/, hasta 500 caracteres.</span>
+            @if (campoInvalido('imagenUrl')) {
+              <span class="field-msg" role="alert">{{ mensajeCampo('imagenUrl') }}</span>
+            }
+            @if (imagenRota()) {
+              <span class="field-msg" role="alert">No se pudo cargar la imagen</span>
+            }
+          </div>
+          <div class="campo-con-previa__vista">
+            @if (mostrarPrevia()) {
+              <span class="vista-previa">
+                <app-imagen-panel
+                  [src]="imagenUrl.trim()"
+                  [alt]="altPrevia()"
+                  relacion="1 / 1"
+                  (fallo)="alFallarPrevia()"
+                ></app-imagen-panel>
+              </span>
+            } @else {
+              <span class="vista-previa vacia text-small muted">Sin vista previa</span>
+            }
+          </div>
+        </div>
       </div>
 
       <div class="field" style="grid-column: 1 / -1;">
