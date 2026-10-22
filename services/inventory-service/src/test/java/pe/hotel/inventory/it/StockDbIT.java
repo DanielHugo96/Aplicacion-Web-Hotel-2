@@ -228,12 +228,14 @@ class StockDbIT {
   }
 
   private static List<String> sentenciasDeSeeds() {
+    return sentenciasDeMigracion("db/migration/V4__seeds_inventario.sql");
+  }
+
+  private static List<String> sentenciasDeMigracion(String ruta) {
     try {
       String sql =
           new String(
-              new ClassPathResource("db/migration/V4__seeds_inventario.sql")
-                  .getInputStream()
-                  .readAllBytes(),
+              new ClassPathResource(ruta).getInputStream().readAllBytes(),
               StandardCharsets.UTF_8);
       return java.util.Arrays.stream(sql.split(";"))
           .map(String::trim)
@@ -241,8 +243,52 @@ class StockDbIT {
           .filter(s -> s.lines().anyMatch(l -> !l.trim().startsWith("--") && !l.isBlank()))
           .toList();
     } catch (Exception ex) {
-      throw new IllegalStateException("no se pudo leer la migración de seeds", ex);
+      throw new IllegalStateException("no se pudo leer la migración " + ruta, ex);
     }
+  }
+
+  /**
+   * Imágenes de los productos sembrados: rutas propias en {@code /assets/productos/} y ningún resto
+   * de {@code /assets/demo/} (docs/especificacion/microservicios/inventory/base-de-datos.md#seeds).
+   */
+  @Test
+  void seedsDeProductosApuntanAAssetsProductosPropios() {
+    List<java.util.Map<String, Object>> filas =
+        jdbc.queryForList("SELECT id, imagen_url FROM producto ORDER BY id");
+
+    assertThat(filas).hasSize(3);
+    assertThat(filas)
+        .extracting(f -> String.valueOf(f.get("imagen_url")))
+        .containsExactly(
+            "/assets/productos/agua-500ml.png",
+            "/assets/productos/snack.png",
+            "/assets/productos/kit-aseo.png");
+    assertThat(jdbc.queryForObject(
+            "SELECT count(*) FROM producto WHERE imagen_url LIKE '/assets/demo/%'", Integer.class))
+        .isZero();
+  }
+
+  /** La corrección de V6 no pisa una imagen editada desde el panel: solo reconoce el valor anterior. */
+  @Test
+  void laCorreccionDeImagenesNoPisaUnaImagenEditada() {
+    String editada = "/assets/productos/agua-500ml-editorial.png";
+    migrador.update("UPDATE producto SET imagen_url = ? WHERE id = 1", editada);
+
+    for (String sentencia : sentenciasDeMigracion("db/migration/V6__seeds_productos_imagenes.sql")) {
+      migrador.update(sentencia);
+    }
+
+    assertThat(
+            jdbc.queryForObject(
+                "SELECT imagen_url FROM producto WHERE id = 1", String.class))
+        .isEqualTo(editada);
+    assertThat(
+            jdbc.queryForObject(
+                "SELECT imagen_url FROM producto WHERE id = 2", String.class))
+        .isEqualTo("/assets/productos/snack.png");
+
+    migrador.update(
+        "UPDATE producto SET imagen_url = '/assets/productos/agua-500ml.png' WHERE id = 1");
   }
 
   // ------------------------------------------------ migración y checks
