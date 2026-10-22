@@ -32,7 +32,10 @@ import pe.hotel.identity.messaging.OutboxStore;
  *
  * <p>Es idempotente por construcción: solo {@code INSERT ... ON CONFLICT DO NOTHING}, así que
  * reejecutarlo no duplica filas ni restablece claves o permisos ya modificados
- * (§ Seeds). Los datos son ficticios y no hay secretos en el repositorio: entran por entorno.
+ * (§ Seeds). La única escritura que no es un alta es el renombrado de las filas sembradas con el
+ * nombre anterior de la marca: reconoce la fila por su contenido semilla y no toca nada más
+ * (docs/implementacion/decisiones/IA-back-identity-presentacion-real-01.md). Los datos son
+ * ficticios y no hay secretos en el repositorio: entran por entorno.
  *
  * <p>El ajuste de la secuencia de {@code persona} tras los ids explícitos va en la migración V4, no
  * aquí: el usuario runtime no tiene permiso para {@code setval} sobre las secuencias.
@@ -50,17 +53,35 @@ public class DemoDataSeeder implements ApplicationRunner {
           new Object[] {2, "EMPLEADO", "Empleado"},
           new Object[] {3, "CLIENTE", "Cliente"});
 
-  /** Personas demo: id, correo, id_tipo_persona, nombre, apellido, documento y sedes. */
+  /**
+   * Personas demo: id, correo, id_tipo_persona, nombre, apellido, documento y sedes. Los nombres son
+   * los de la marca única Casa Sillar (docs/especificacion/microservicios/identity/base-de-datos.md
+   * § Seeds); id, correo, documento, rol y sedes no cambian.
+   */
   private static final List<PersonaSeed> PERSONAS =
       List.of(
-          new PersonaSeed(1, "admin@hotel.test", 1, "Demo", "Admin", "90000001", List.of()),
-          new PersonaSeed(2, "recepcion.lima@hotel.test", 2, "Demo", "Empleado Lima", "90000002", List.of(1)),
+          new PersonaSeed(1, "admin@hotel.test", 1, "Sillar", "Admin", "90000001", List.of()),
+          new PersonaSeed(2, "recepcion.lima@hotel.test", 2, "Sillar", "Recepción Lima", "90000002", List.of(1)),
           new PersonaSeed(
-              3, "recepcion.miraflores@hotel.test", 2, "Demo", "Empleado Miraflores", "90000003", List.of(2)),
+              3, "recepcion.miraflores@hotel.test", 2, "Sillar", "Recepción Miraflores", "90000003", List.of(2)),
           new PersonaSeed(
-              4, "recepcion.arequipa@hotel.test", 2, "Demo", "Empleado Arequipa", "90000004", List.of(3)),
+              4, "recepcion.arequipa@hotel.test", 2, "Sillar", "Recepción Arequipa", "90000004", List.of(3)),
           new PersonaSeed(100, "cliente.uno@hotel.test", 3, "Cliente", "Uno", "90000100", List.of()),
           new PersonaSeed(101, "cliente.dos@hotel.test", 3, "Cliente", "Dos", "90000101", List.of()));
+
+  /**
+   * Nombre y apellido con los que se sembraron las personas antes de la marca Casa Sillar, por id.
+   * Solo sirven para reconocer la fila semilla y renombrarla: un valor distinto es una edición
+   * humana y se respeta (§ Seeds: los seeds no se restablecen si ya existen).
+   */
+  private static final String NOMBRE_SEMILLA_ANTERIOR = "Demo";
+
+  private static final Map<Integer, String> APELLIDOS_SEMILLA_ANTERIORES =
+      Map.of(
+          1, "Admin",
+          2, "Empleado Lima",
+          3, "Empleado Miraflores",
+          4, "Empleado Arequipa");
 
   /**
    * Clientes de servicio con la allowlist de audiencia y scopes del contrato común
@@ -114,6 +135,8 @@ public class DemoDataSeeder implements ApplicationRunner {
       // Personas y sedes van juntas: `persona_sede.id_persona` tiene FK a `persona`, así que sembrar
       // sedes sin personas rompe el arranque por FK y la transacción de `run()` no llega a confirmar.
       sembrarPersonas();
+      // Corrige las filas que aún conservan el nombre semilla anterior, antes de cualquier snapshot.
+      renombrarPersonasSemillaAnterior();
       sembrarSedes();
       // Snapshot de bootstrap en outbox por persona (hecho global, idHotel nulo).
       encolarSnapshotsBootstrap();
@@ -160,6 +183,41 @@ public class DemoDataSeeder implements ApplicationRunner {
               persona.idTipoPersona());
     }
     log.info("seed_demo personas declaradas={} nuevas={}", PERSONAS.size(), nuevas);
+  }
+
+  /**
+   * Renombra las personas que todavía conservan el nombre y el apellido semilla anteriores a la
+   * marca Casa Sillar. Cambiar las constantes no basta: la base ya sembrada se queda con «Demo
+   * Admin», y la presentación se alimenta de esa base.
+   *
+   * <p>El {@code UPDATE} reconoce la fila por su contenido anterior ({@code nombre = 'Demo'} y el
+   * apellido exacto con el que se sembró), no por id a secas: si alguien editó el apellido desde el
+   * panel, el valor no coincide, no se toca y la edición sobrevive
+   * (docs/implementacion/decisiones/IA-back-identity-presentacion-real-01.md). {@code version} y
+   * {@code updated_at} no se tocan: la spec fija los seeds activos en version 1 y esto corrige un
+   * valor semilla mal escrito, no una mutación de negocio.
+   */
+  private void renombrarPersonasSemillaAnterior() {
+    int renombradas = 0;
+    for (PersonaSeed persona : PERSONAS) {
+      String apellidoAnterior = APELLIDOS_SEMILLA_ANTERIORES.get(persona.id());
+      if (apellidoAnterior == null) {
+        continue;
+      }
+      renombradas +=
+          jdbcTemplate.update(
+              """
+              UPDATE persona
+              SET nombre = ?, apellido = ?
+              WHERE id = ? AND nombre = ? AND apellido = ?
+              """,
+              persona.nombre(),
+              persona.apellido(),
+              persona.id(),
+              NOMBRE_SEMILLA_ANTERIOR,
+              apellidoAnterior);
+    }
+    log.info("seed_demo personas_renombradas={}", renombradas);
   }
 
   private void sembrarSedes() {
