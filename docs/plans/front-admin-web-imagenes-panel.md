@@ -7,7 +7,7 @@
 | Componente | `admin-web` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `front-admin-web-base`, `front-admin-web-catalogo`, `front-admin-web-area-cliente`, `back-hotel-presentacion-real`, `back-inventory-imagenes-producto` |
 | Spec | [`08` §3](../especificacion/08-admin-web.md#3-formularios-campos-validación-y-mensajes) y [§6 Imágenes en el panel](../especificacion/08-admin-web.md#6-imágenes-en-el-panel); [`02` §Condición de presentación real](../especificacion/02-landing-y-panel.md#condición-de-presentación-real); [`DESIGN-admin-web.md` §Navegación por rol](../DESIGN-admin-web.md#navegación-por-rol), [§Piezas de dominio](../DESIGN-admin-web.md#piezas-de-dominio), [§Estados de pantalla](../DESIGN-admin-web.md#estados-de-pantalla) y [§Formularios](../DESIGN-admin-web.md#formularios); [`admin-web.yaml` §Hotel](../contracts/openapi/admin-web.yaml) |
 | Casos | `CRUD01` |
@@ -95,7 +95,9 @@ La fase es `F5` porque `F0`–`F4` están cerradas en `main`: este cambio llega 
 - [x] 15. Actualizar las pruebas de catálogo, ventas, cliente, perfil y shell para cubrir las miniaturas, las vistas previas y el wordmark. Verificación: `npm test -- --watch=false` en verde y ningún fixture con «Hotel Demo».
   - Hecho: pruebas nuevas por pantalla — `imagen-panel.component.spec.ts` (7), `sedes-list.component.spec.ts` (3), `sede-form.component.spec.ts` (6), `habitaciones-imagenes.spec.ts` (3), `habitacion-form.component.spec.ts` (5), `habitacion-detalle.component.spec.ts` (6), `productos-imagenes.spec.ts` (3), `producto-form-imagen.spec.ts` (4), `lineas-imagen.spec.ts` (3), `perfil-form-imagen.spec.ts` (5), `shell-wordmark.spec.ts` (3) y `estados-imagen.spec.ts` (3). Los fixtures de reportes y los de recepción/cliente dejan de decir «Hotel Demo» y «de demostración».
   - Evidencia: `npm test -- --watch=false` → `Test Files 61 passed (61)` / `Tests 356 passed (356)`. `grep -rn "Hotel Demo" apps/admin-web/src` → solo el comentario del fixture nuevo y las dos aserciones negativas de `shell-wordmark.spec.ts`; `grep -rn "demostración" apps/admin-web/src` → sin resultados.
-- [ ] 16. Probar contra el Gateway: alta de sede con `imagenUrl`/`imagenAlt`, listado con miniatura, producto sembrado con su imagen y perfil con vista previa. Verificación: `npm run build` y recorrido de las nueve pantallas de [`08` §6](../especificacion/08-admin-web.md#6-imágenes-en-el-panel).
+- [x] 16. Probar contra el Gateway: alta de sede con `imagenUrl`/`imagenAlt`, listado con miniatura, producto sembrado con su imagen y perfil con vista previa. Verificación: `npm run build` y recorrido de las nueve pantallas de [`08` §6](../especificacion/08-admin-web.md#6-imágenes-en-el-panel).
+  - Hecho: recorrido en el panel contra el Gateway con los seeds de `back-hotel-presentacion-real` y `back-inventory-imagenes-producto` (sede `lima-centro`, habitación 101 con sus tres imágenes, productos `AGUA-500`, `SNACK-01`, `ASEO-01` y la venta #1 pagada). Se comprobaron la miniatura del listado de sedes (incluida la sede dada de alta en el recorrido), la vista previa del formulario de sede con `imagenUrl`/`imagenAlt`, la misma vista con URL rota y el valor conservado, la miniatura del listado de habitaciones, la vista previa por fila del formulario de habitación, la galería del detalle en el orden guardado, la miniatura del listado de productos, la vista previa del formulario de producto y las miniaturas por línea del listado y del detalle de venta. El catálogo, el carrito y Mi perfil, que [`08` §6](../especificacion/08-admin-web.md#6-imágenes-en-el-panel) agrupa en las filas restantes, quedan cubiertos por las pruebas de los pasos 10 y 11 (`lineas-imagen.spec.ts` y `perfil-form-imagen.spec.ts`); no se añadió captura de esas pantallas.
+  - Evidencia: capturas en `apps/admin-web/evidencias/front-admin-web-imagenes-panel/`: `01-sedes-listado-miniaturas.png` (miniaturas de las cuatro sedes, la cuarta «Casa Sillar Prueba de Imagen», dada de alta en el recorrido con su par de imagen, en estado «No publicada»), `02-sede-form-previa.png` (vista previa de `/assets/sedes/lima-centro-fachada.jpg` junto al campo), `03-sede-form-url-rota.png` (`/assets/sedes/no-existe.jpg` → fallback y «No se pudo cargar la imagen» con el valor conservado), `04-habitaciones-listado-miniatura.png`, `05-habitacion-form-miniaturas.png`, `06-habitacion-detalle-galeria.png` (`Habitación 101`, principal prioritaria y «Imagen 1 de 3»), `07-productos-listado-miniatura.png` (los tres productos sembrados con su fotografía), `08-producto-form-previa.png` (vista previa de `agua-500ml.png`), `09-ventas-listado-lineas.png` y `10-venta-detalle-lineas.png` (una miniatura por línea de `Agua 500ml` y `Kit de aseo`; el fallback neutro es lo esperado porque `VentaDetalle` no publica `imagenUrl` y así se decidió en [`IA-front-admin-web-imagenes-panel-02.md`](../implementacion/decisiones/IA-front-admin-web-imagenes-panel-02.md)). `npm run build` → `Application bundle generation complete` (6.772 s), con el único aviso de presupuesto de bundle que ya existía antes del plan (533.56 kB frente a 500 kB), no un error; `npm test -- --watch=false` → `Test Files 61 passed (61)` / `Tests 356 passed (356)`.
 
 ## 5. Contratos afectados
 
@@ -106,8 +108,8 @@ La fase es `F5` porque `F0`–`F4` están cerradas en `main`: este cambio llega 
 
 ## 6. Pruebas
 
-- Caso `CRUD01`: alta y edición de una sede con el par de imagen desde el panel, y `GET` posterior; resultado esperado fila persistida con `imagenUrl`/`imagenAlt`, miniatura en el listado y `version` incrementada. Evidencia: respuestas y captura del listado en el PR.
-- Recorrido de las nueve pantallas de [`08` §6](../especificacion/08-admin-web.md#6-imágenes-en-el-panel) contra el Gateway, con imagen presente, ausente y rota. Evidencia: capturas y registro de red en el PR.
+- Caso `CRUD01`: alta y edición de una sede con el par de imagen desde el panel, y `GET` posterior; resultado esperado fila persistida con `imagenUrl`/`imagenAlt`, miniatura en el listado y `version` incrementada. Evidencia: alta de «Casa Sillar Prueba de Imagen» con `imagenUrl`/`imagenAlt` en el recorrido del paso 16, miniatura presente en `apps/admin-web/evidencias/front-admin-web-imagenes-panel/01-sedes-listado-miniaturas.png` y vista previa del par en `02-sede-form-previa.png`.
+- Recorrido de las nueve pantallas de [`08` §6](../especificacion/08-admin-web.md#6-imágenes-en-el-panel) contra el Gateway, con imagen presente, ausente y rota. Evidencia: capturas `01`–`10` de `apps/admin-web/evidencias/front-admin-web-imagenes-panel/` (detalle en el paso 16), con imagen presente en sede, habitación y producto, ausente en las líneas de venta y rota en `03-sede-form-url-rota.png`.
 - Comandos: `npm ci`, `npm run build`, `npm test -- --watch=false` y `python scripts/validar-planes.py`.
 
 ## 7. Preguntas abiertas
@@ -116,6 +118,6 @@ Ninguna.
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación.
-- [ ] Caso y recorrido de la sección 6 con evidencia.
-- [ ] Sin preguntas abiertas.
+- [x] Todos los pasos marcados con su verificación.
+- [x] Caso y recorrido de la sección 6 con evidencia.
+- [x] Sin preguntas abiertas.
