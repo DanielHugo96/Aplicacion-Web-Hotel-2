@@ -43,7 +43,7 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F5 | [`back-identity-presentacion-real`](../plans/back-identity-presentacion-real.md) | T15 | `cerrado` | `back-identity-presentacion-real` | [#135](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/135) |
 | F5 | [`back-notification-presentacion-real`](../plans/back-notification-presentacion-real.md) | T15 | `cerrado` | `back-notification-presentacion-real` | [#139](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/139) |
 | F5 | [`back-inventory-imagenes-producto`](../plans/back-inventory-imagenes-producto.md) | T15 | `cerrado` | `back-inventory-imagenes-producto` | [#137](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/137) |
-| F5 | [`front-public-web-presentacion-real`](../plans/front-public-web-presentacion-real.md) | T16 | `propuesto` | — | — |
+| F5 | [`front-public-web-presentacion-real`](../plans/front-public-web-presentacion-real.md) | T16 | `cerrado` | `front-public-web-presentacion-real` | [#141](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/141) |
 | F5 | [`front-admin-web-imagenes-panel`](../plans/front-admin-web-imagenes-panel.md) | T16 | `propuesto` | — | — |
 | F5 | [`qa-matriz-lp01-imagenes`](../plans/qa-matriz-lp01-imagenes.md) | T17 | `propuesto` | — | — |
 | F2 | [`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) | — | `cerrado` | `back-arreglo-hotel-arranque` | [#76](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/76) |
