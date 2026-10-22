@@ -41,6 +41,8 @@ public class OutboxService {
       payload.put("idHotel", hotel.getId());
       payload.put("nombre", hotel.getNombre());
       payload.put("ciudad", hotel.getCiudad());
+      payload.put("imagenUrl", hotel.getImagenUrl());
+      payload.put("imagenAlt", hotel.getImagenAlt());
       payload.put("estado", hotel.getEstado());
       payload.put("publicado", hotel.getPublicado());
       payload.put("version", hotel.getVersion());

@@ -40,6 +40,13 @@ public class Hotel {
   @Column(name = "correo_contacto", nullable = false, length = 254)
   private String correoContacto;
 
+  /** Foto principal de la sede: opcional, y su descripcion viaja siempre con ella. */
+  @Column(name = "imagen_url", length = 500)
+  private String imagenUrl;
+
+  @Column(name = "imagen_alt", length = 150)
+  private String imagenAlt;
+
   @Column(name = "estado", nullable = false)
   private Boolean estado = true;
 
@@ -63,6 +70,8 @@ public class Hotel {
       String ciudad,
       String telefono,
       String correoContacto,
+      String imagenUrl,
+      String imagenAlt,
       Boolean publicado) {
     this.slug = slug;
     this.nombre = nombre;
@@ -71,6 +80,8 @@ public class Hotel {
     this.ciudad = ciudad;
     this.telefono = telefono;
     this.correoContacto = correoContacto;
+    this.imagenUrl = imagenUrl;
+    this.imagenAlt = imagenAlt;
     this.publicado = publicado;
   }
 
@@ -136,6 +147,22 @@ public class Hotel {
 
   public void setCorreoContacto(String correoContacto) {
     this.correoContacto = correoContacto;
+  }
+
+  public String getImagenUrl() {
+    return imagenUrl;
+  }
+
+  public void setImagenUrl(String imagenUrl) {
+    this.imagenUrl = imagenUrl;
+  }
+
+  public String getImagenAlt() {
+    return imagenAlt;
+  }
+
+  public void setImagenAlt(String imagenAlt) {
+    this.imagenAlt = imagenAlt;
   }
 
   public Boolean getEstado() {

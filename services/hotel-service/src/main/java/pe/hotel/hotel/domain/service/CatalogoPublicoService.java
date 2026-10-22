@@ -18,6 +18,9 @@ import pe.hotel.hotel.domain.exception.NotFoundException;
 @Service
 public class CatalogoPublicoService {
 
+  /** Tope de la galeria publica por categoria (contrato {@code CategoriaPublica.imagenes}). */
+  private static final int MAX_IMAGENES_GALERIA = 10;
+
   private static final ObjectMapper MAPPER = new ObjectMapper();
 
   @Autowired(required = false)
@@ -27,7 +30,8 @@ public class CatalogoPublicoService {
     List<Map<String, Object>> rows =
         jdbcTemplate.queryForList(
             "SELECT f.id_hotel, f.slug, f.nombre, h.descripcion, h.direccion, h.ciudad, "
-                + "h.telefono, h.correo_contacto, f.id_categoria, f.capacidad, f.precio_desde, "
+                + "h.telefono, h.correo_contacto, h.imagen_url, h.imagen_alt, "
+                + "f.id_categoria, f.capacidad, f.precio_desde, "
                 + "f.imagenes::text AS imagenes "
                 + "FROM fn_catalogo_publico(?, NULL) f "
                 + "JOIN hotel h ON h.id = f.id_hotel "
@@ -54,7 +58,9 @@ public class CatalogoPublicoService {
                   (String) first.get("direccion"),
                   (String) first.get("ciudad"),
                   (String) first.get("telefono"),
-                  (String) first.get("correo_contacto"));
+                  (String) first.get("correo_contacto"),
+                  (String) first.get("imagen_url"),
+                  (String) first.get("imagen_alt"));
             })
         .collect(Collectors.toList());
   }
@@ -122,6 +128,9 @@ public class CatalogoPublicoService {
         return out;
       }
       for (JsonNode n : node) {
+        if (out.size() == MAX_IMAGENES_GALERIA) {
+          break;
+        }
         out.add(new ImagenPublica(n.get("url").asText(), n.get("alt").asText()));
       }
     } catch (Exception ignored) {
