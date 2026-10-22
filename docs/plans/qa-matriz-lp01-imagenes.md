@@ -7,7 +7,7 @@
 | Componente | `tests` y `scripts` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `qa-matriz-aceptacion`, `back-hotel-presentacion-real`, `front-public-web-presentacion-real` |
 | Spec | [`06` §5 Matriz de aceptación funcional](../especificacion/06-migracion-y-pruebas.md#5-matriz-de-aceptación-funcional); [`hotel/api.md` §Públicas nuevas: solo lectura](../especificacion/microservicios/hotel/api.md#públicas-nuevas-solo-lectura); [`hotel/base-de-datos.md` §Verificación](../especificacion/microservicios/hotel/base-de-datos.md#verificación); [`public-web.yaml` §HotelPublico](../contracts/openapi/public-web.yaml) |
 | Casos | `LP01` |
