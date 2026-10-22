@@ -7,7 +7,7 @@
 | Componente | `admin-web` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `front-admin-web-base`, `front-admin-web-catalogo`, `front-admin-web-area-cliente`, `back-hotel-presentacion-real`, `back-inventory-imagenes-producto` |
 | Spec | [`08` §3](../especificacion/08-admin-web.md#3-formularios-campos-validación-y-mensajes) y [§6 Imágenes en el panel](../especificacion/08-admin-web.md#6-imágenes-en-el-panel); [`02` §Condición de presentación real](../especificacion/02-landing-y-panel.md#condición-de-presentación-real); [`DESIGN-admin-web.md` §Navegación por rol](../DESIGN-admin-web.md#navegación-por-rol), [§Piezas de dominio](../DESIGN-admin-web.md#piezas-de-dominio), [§Estados de pantalla](../DESIGN-admin-web.md#estados-de-pantalla) y [§Formularios](../DESIGN-admin-web.md#formularios); [`admin-web.yaml` §Hotel](../contracts/openapi/admin-web.yaml) |
 | Casos | `CRUD01` |
@@ -49,8 +49,12 @@ La fase es `F5` porque `F0`–`F4` están cerradas en `main`: este cambio llega 
 
 ## 4. Pasos
 
-- [ ] 1. Añadir `imagenUrl` e `imagenAlt` opcionales a `Hotel` y `HotelInput` y comprobar que los formularios existentes siguen compilando. Verificación: `npm run build` sin errores.
-- [ ] 2. Crear el componente compartido de imagen: `src`, `alt`, relación y prioridad como entradas, `object-fit: cover`, espacio reservado, `loading="lazy"` salvo en la imagen principal, `aria-hidden` cuando es de adorno y fallback ante `error`. Verificación: prueba unitaria del `error` y de la relación.
+- [x] 1. Añadir `imagenUrl` e `imagenAlt` opcionales a `Hotel` y `HotelInput` y comprobar que los formularios existentes siguen compilando. Verificación: `npm run build` sin errores.
+  - Hecho: `imagenUrl?: string | null` e `imagenAlt?: string | null` en `Hotel` y `HotelInput` de `core/models/catalogo.models.ts`, con los límites del contrato (500/150) anotados.
+  - Evidencia: `npm run build` → `Application bundle generation complete` (7.014 s); el único aviso es el de presupuesto de bundle que ya existía antes del cambio (512.51 kB frente a 500 kB), no un error. `npm test -- --watch=false` sigue en verde (49 archivos, 305 pruebas) con los formularios existentes compilando.
+- [x] 2. Crear el componente compartido de imagen: `src`, `alt`, relación y prioridad como entradas, `object-fit: cover`, espacio reservado, `loading="lazy"` salvo en la imagen principal, `aria-hidden` cuando es de adorno y fallback ante `error`. Verificación: prueba unitaria del `error` y de la relación.
+  - Hecho: `src/app/shared/imagen-panel.component.ts` (`app-imagen-panel`) con entradas `src`, `alt`, `relacion`, `prioritaria` y `decorativa`; `object-fit: cover`, `aspect-ratio` reservado en el contenedor, esqueleto con la misma relación durante la carga, `loading`/`fetchpriority` según prioridad, `aria-hidden` cuando es de adorno, y salida `fallo` para que el formulario muestre el texto. Fallback propio en `public/assets/fallback.svg` y constante `TEXTO_IMAGEN_ROTA`.
+  - Evidencia: `npx ng test --watch=false --include='**/imagen-panel.component.spec.ts'` → `Test Files 1 passed (1)` / `Tests 7 passed (7)`: fallback en `error` con la relación `3 / 2` intacta, `fallo` emitido una sola vez, fallback sin URL, `aria-hidden`/`alt` vacío en la de adorno, `lazy` frente a `eager`/`high`, esqueleto con relación `21 / 9` que desaparece en `load`, y reintento al cambiar la URL.
 - [ ] 3. Mostrar la miniatura de la sede en `sedes-list`, junto al nombre, con fallback cuando no hay `imagenUrl`. Verificación: prueba con sede con imagen y sin imagen; ninguna pinta un icono roto.
 - [ ] 4. Añadir al formulario de sede los campos `imagenUrl` y `imagenAlt`, la vista previa junto al campo y los mensajes «URL no permitida» y «Describe la imagen para accesibilidad» de [`08` §3](../especificacion/08-admin-web.md#3-formularios-campos-validación-y-mensajes). Verificación: una URL `http://` marca el campo con «URL no permitida»; una URL válida sin `alt` marca `imagenAlt`; un fallo de carga no impide guardar.
 - [ ] 5. Mostrar en `habitaciones-list` la miniatura de la primera imagen de `urlsImagenes`, con fallback si la galería está vacía. Verificación: prueba con galería de tres y con galería vacía.
