@@ -7,7 +7,7 @@
 | Componente | `public-web` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `front-public-web-landing`, `back-hotel-catalogo`, `back-hotel-presentacion-real` |
 | Spec | [`02` §Landing: sí puede](../especificacion/02-landing-y-panel.md#landing-sí-puede), [§Condición de presentación real](../especificacion/02-landing-y-panel.md#condición-de-presentación-real), [§Imágenes](../especificacion/02-landing-y-panel.md#imágenes), [§Textos y assets](../especificacion/02-landing-y-panel.md#textos-y-assets-public-web) y [§UX y pruebas mínimas](../especificacion/02-landing-y-panel.md#ux-y-pruebas-mínimas); [`DESIGN-public-web.md` §Navegación](../DESIGN-public-web.md#navegación), [§El hero](../DESIGN-public-web.md#el-hero), [§Fichas de sede](../DESIGN-public-web.md#fichas-de-sede), [§Fichas de categoría](../DESIGN-public-web.md#fichas-de-categoría), [§Página de detalle y galería](../DESIGN-public-web.md#página-de-detalle-y-galería), [§Estados de pantalla](../DESIGN-public-web.md#estados-de-pantalla) y [§Checklist](../DESIGN-public-web.md#checklist-antes-de-dar-por-lista-una-pantalla); [`public-web.yaml` §HotelPublico](../contracts/openapi/public-web.yaml) |
 | Casos | `LP01`, `LP02` |
@@ -85,7 +85,7 @@ La fase es `F5` porque `F0`–`F4` están cerradas en `main`: este cambio llega 
   - Hecho: `imagenPrincipal`/`altPrincipal` toman `imagenes[0]`; `.tarjeta-categoria__imagen` mantiene `aspect-ratio: 4 / 3` y el fallback es `/assets/fallback.svg` con el `alt` «Imagen no disponible del tipo de habitación».
   - Evidencia: `npx ng test --watch=false --include='**/sede-detalle.page.spec.ts'` → `9 passed (9)`, casos `usa la primera imagen de la categoría en la ficha, en 4:3` y `usa el fallback en la ficha de categoría cuando la lista viene vacía`.
 - [x] 13. Construir la galería del detalle de categoría con hasta cuatro imágenes: principal `4:3` con el `alt` original y miniaturas que cambian la principal sin recargar; sin miniaturas si no hay más de una; fallback ocupando el hueco de la principal cuando no hay ninguna. Verificación: prueba de cambio de miniatura y prueba de galería vacía.
-  - Hecho: `categoria-detalle.page.ts` recorta `imagenes` a `MAX_GALERIA = 4`, guarda el índice activo en una señal y usa `IMAGEN_VACIA` (fallback) si no hay ninguna. La principal conserva el `alt` de la imagen del contrato; las miniaturas son botones con `aria-pressed` y su propio `alt`, sin petición de red al cambiar.
+  - Hecho: `categoria-detalle.page.ts` recorta `imagenes` a `MAX_GALERIA = 4`, guarda el índice activo en una señal y usa una imagen de reserva con el fallback si no hay ninguna. La principal conserva el `alt` de la imagen del contrato; las miniaturas son botones con `aria-pressed` y su propio `alt`, sin petición de red al cambiar.
   - Evidencia: `npx ng test --watch=false --include='**/categoria-detalle.page.spec.ts'` → `5 passed (5)`: hasta cuatro imágenes con el `alt` original, el cambio de miniatura sin nueva petición (`http.expectNone`), sin miniaturas cuando solo hay una y fallback ocupando el hueco cuando la lista viene vacía.
 - [x] 14. Ajustar contacto y privacidad: los datos de la cadena se muestran como texto cuando no son operables, sin `mailto:` ni `tel:` hacia el dominio ficticio, y la política declara que la cadena y sus datos son de una presentación. Verificación: el HTML renderizado no contiene `mailto:` con `casasillar.pe` ni promesas de cumplimiento legal.
   - Hecho: contacto lista correo, teléfono y WhatsApp de la cadena y de cada sede como texto (`.texto-no-clicable`), sin ningún enlace operativo; privacidad explica qué muestra el sitio, que los datos son de una presentación, qué no hace y la procedencia de las imágenes, sin promesas legales.
@@ -93,7 +93,18 @@ La fase es `F5` porque `F0`–`F4` están cerradas en `main`: este cambio llega 
 - [x] 15. Actualizar las pruebas afectadas (componente de imagen, inicio, sedes, sede-detalle, categoria-detalle, paginas-estaticas) para que usen los textos y el componente nuevos. Verificación: `npm test -- --watch=false` en verde y ningún fixture con «demostración».
   - Hecho: los seis specs citados más `catalog.service.spec.ts` usan `app-catalog-image`, las rutas `/assets/sedes/…` y `/assets/habitaciones/…` y los datos de Casa Sillar. Los únicos «demostración» que quedan en `src` son aserciones negativas (`not.toContain`).
   - Evidencia: `npm test -- --watch=false` → `Test Files 10 passed (10)` / `Tests 44 passed (44)`. `grep -rn "demostración\|Hotel Demo" apps/public-web/src` → solo las cinco aserciones negativas de los specs, ningún fixture.
-- [ ] 16. Probar contra el Gateway con Compose y hotel-service arriba: `GET /api/public/hoteles` y el detalle de sede devuelven `imagenUrl` y la landing la pinta; la galería de categoría no queda vacía. Verificación: `npm run build` y recorrido de las cuatro pantallas con el `imagenUrl` visible en el DOM.
+- [x] 16. Probar contra el Gateway con Compose y hotel-service arriba: `GET /api/public/hoteles` y el detalle de sede devuelven `imagenUrl` y la landing la pinta; la galería de categoría no queda vacía. Verificación: `npm run build` y recorrido de las cuatro pantallas con el `imagenUrl` visible en el DOM.
+  - Hecho: infraestructura de Compose levantada (`postgres`, `kafka`, `rabbitmq`, `mailpit` sanos), `discovery-server`, `hotel-service` y `api-gateway` arrancados desde `services/` con el `.env`; build de producción servido en `http://localhost:4200` (la URL que el Gateway tiene en `allowedOrigins`) y recorrido de `/`, `/sedes`, `/sedes/lima-centro` y `/sedes/lima-centro/habitaciones/1` en Chrome.
+  - Evidencia (en `apps/public-web/evidencias/front-public-web-presentacion-real/`):
+    - `LP01-hoteles_page_0_size_20.json` — 3 sedes, cada una con `imagenUrl` `/assets/sedes/<slug>-fachada.jpg` y su `imagenAlt`.
+    - `LP01-hoteles_lima-centro.json` — detalle de sede con `imagenUrl`.
+    - `LP01-hoteles_lima-centro_categorias_page_0_size_20.json` — dos categorías con 3 imágenes cada una (galería no vacía).
+    - `LP01-hoteles_lima-centro_categorias_1.json` — detalle de categoría con `imagenes` de 3 elementos.
+    - Los cuatro con estado `200`, sin token y sin campos fuera de `HotelPublico`/`CategoriaPublica` (comprobado con script sobre los JSON).
+    - `LP01-02-inicio-1440.png`, `LP01-03-sedes-1440.png`, `LP01-04-sede-detalle-1440.png`, `LP01-05-categoria-detalle-1440.png`, `LP01-06-contacto-1440.png`, `LP01-07-privacidad-1440.png`, `LP01-01-inicio-390.png` y `LP01-08-sedes-390.png` — capturas del DOM pintado.
+    - `LP01-red.md` — registro de red: la landing pide `/api/public/...` al Gateway y las imágenes a su propio origen.
+  - Decisión de nivel 2 registrada: el build se sirve en `http://localhost:4200` porque es uno de los orígenes del `allowedOrigins` del Gateway; otro puerto provoca un bloqueo CORS del navegador que no es un defecto de la landing. Ver [`IA-front-public-web-presentacion-real-02.md`](../implementacion/decisiones/IA-front-public-web-presentacion-real-02.md).
+  - `npm run build` → `Application bundle generation complete`; `python scripts/validar-planes.py` → `0 error(es), 0 aviso(s)`.
 
 ## 5. Contratos afectados
 
@@ -105,15 +116,26 @@ La fase es `F5` porque `F0`–`F4` están cerradas en `main`: este cambio llega 
 ## 6. Pruebas
 
 - Caso `LP01`: la landing contra el Gateway consume los cuatro GET públicos y pinta `imagenUrl` de cada sede y la galería de cada categoría; resultado esperado sin token, sin campos privados y sin imágenes rotas. Evidencia: salidas `curl` de los cuatro GET y captura del DOM en el PR.
+  - Comando: `curl -s -D <headers> http://localhost:8080/api/public/{hoteles?page=0&size=20 | hoteles/lima-centro | hoteles/lima-centro/categorias?page=0&size=20 | hoteles/lima-centro/categorias/1}`.
+  - Resultado: los cuatro devuelven `200`; el listado trae las 3 sedes con `imagenUrl`/`imagenAlt`; el detalle de sede trae `imagenUrl`; las categorías traen 3 imágenes cada una; el detalle de categoría trae 3 imágenes. Ningún campo fuera del contrato público; ninguna petición con token.
+  - Salida: `apps/public-web/evidencias/front-public-web-presentacion-real/LP01-hoteles_*.json`, `LP01-*.headers`, las capturas `LP01-01…08-*.png` y el registro de red `LP01-red.md`. Recorrido con el build de producción servido en `http://localhost:4200` y `hotel-service`, `api-gateway` y la infraestructura de Compose arriba.
 - Caso `LP02`: búsqueda de `?fecha=` y `?ocupacion=` en el bundle y en las peticiones de la landing; resultado esperado ningún parámetro de disponibilidad y ningún endpoint privado. Evidencia: `grep` sobre `apps/public-web/dist` y registro de red.
+  - Comando: `grep -rn "fecha=\|ocupacion=" apps/public-web/dist/public-web/browser --include=*.js` y `grep -rnoE "/api/(auth|persona|hotel|piso|categoria|habitacion|recepcion|producto|venta|reportes)/" apps/public-web/dist/public-web/browser --include=*.js`.
+  - Resultado: sin resultados en ambas búsquedas; las únicas rutas del bundle son las públicas de hotel. En el registro de red las peticiones son los cuatro GET públicos, con `page`/`size` como únicos parámetros.
+  - Salida: `apps/public-web/evidencias/front-public-web-presentacion-real/LP02-bundle.md` y `LP01-red.md`.
 - Comandos: `npm ci`, `npm run build`, `npm test -- --watch=false` y `python scripts/validar-planes.py`.
+  - `npm ci` → instalación desde `package-lock.json` sin cambios de versión. `npm run build` → `Application bundle generation complete` (sin errores).
+  - `npm test -- --watch=false` → `Test Files 10 passed (10)` / `Tests 44 passed (44)`.
+  - `python scripts/validar-planes.py` → `39 plan(es) revisado(s); 39 previsto(s) en el catálogo; 0 error(es), 0 aviso(s)`.
 
 ## 7. Preguntas abiertas
 
-Ninguna.
+Ninguna (resuelto por IA: el recorrido de evidencia sirve el build en `http://localhost:4200`, que es
+uno de los orígenes que el Gateway ya admite; ver
+[`IA-front-public-web-presentacion-real-02.md`](../implementacion/decisiones/IA-front-public-web-presentacion-real-02.md)).
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación.
-- [ ] Casos de la sección 6 con evidencia.
-- [ ] Sin preguntas abiertas.
+- [x] Todos los pasos marcados con su verificación.
+- [x] Casos de la sección 6 con evidencia.
+- [x] Sin preguntas abiertas.

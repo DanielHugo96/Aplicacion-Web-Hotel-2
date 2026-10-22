@@ -1,0 +1,15 @@
+HTTP/1.1 200 OK
+transfer-encoding: chunked
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+X-Correlation-Id: 2a82f164-046c-4f0a-8eb4-a0a21132197f
+X-Correlation-Id: 2a82f164-046c-4f0a-8eb4-a0a21132197f
+Cache-Control: public,max-age=60
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+X-Frame-Options: DENY
+Content-Type: application/json
+Date: Thu, 22 Oct 2026 06:33:35 GMT
+Referrer-Policy: no-referrer
+
