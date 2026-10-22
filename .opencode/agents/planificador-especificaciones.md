@@ -1,7 +1,7 @@
 ---
 description: Planificador de planes a partir de especificaciones nuevas o modificadas. El orquestador le dice qué documentos de docs/especificacion (o de docs/DESIGN-*.md) cambiaron o se añadieron; el agente lee el delta, lo divide por ámbito y componente y publica uno o varios planes de ejecución en docs/plans/ con el formato de _plantilla.md, sus filas en catalogo.md, el calendario y la validación en verde. No implementa código y no mergea.
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash
+model: opencode-go/deepseek-v4.1-flash#max
 color: "#0ea5e9"
 permissions:
   # --- Zona de la campaña (estas reglas solo aplican a este agente) ---

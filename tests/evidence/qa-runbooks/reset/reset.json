@@ -1,5 +1,5 @@
 {
-  "iniciado": "2026-10-20T15:55:41.864154Z",
+  "iniciado": "2026-10-22T01:26:16.687584Z",
   "compose_up": [],
   "compose_ps": {
     "kafka": "running/healthy",
@@ -42,7 +42,7 @@
     },
     "api-gateway": {
       "status": 401,
-      "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"60101212-3b76-42ef-a4b9-e612e53d301f\"}}"
+      "body": "{\"success\":false,\"message\":\"Tu sesión expiró. Vuelve a iniciar sesión.\",\"data\":null,\"error\":{\"code\":\"UNAUTHENTICATED\",\"fields\":{}},\"meta\":{\"correlationId\":\"fde9702b-4361-40d7-af6d-0215f9ec6a94\"}}"
     }
   }
 }
