@@ -2400,7 +2400,9 @@ ENDPOINT = {
     "SEC06": "GET /api/auth/me y GET /api/hotel/listar con JWT inválido",
     "SEC07": "PUT /api/persona/actualizar/{id} y DELETE /api/persona/eliminar/{id}",
     "SEC08": "OPTIONS preflight CORS permitido y ajeno",
-    "LP01": "GET /api/public/hoteles, /hoteles/{slug}, /categorias y /categorias/{idCategoria}",
+    "LP01": ("GET /api/public/hoteles, /hoteles/{slug}, /categorias y /categorias/{idCategoria} sin token; "
+             "assert de claves de HotelPublico/CategoriaPublica con imagenUrl/imagenAlt opcionales y "
+             "par de imagen coherente por sede, e imagenes no vacío (url y alt) y ≤ 10 por categoría"),
     "LP02": "GET público con ?fecha= / ?ocupacion= + bundle de public-web",
     "CRUD01": "POST/PUT/GET/DELETE de hotel, piso, categoría, habitación y producto",
     "OCC01": "dos POST /api/recepcion/registrar simultáneos",
@@ -2441,6 +2443,11 @@ def _comando_de(caso: str) -> str:
     return COMANDO.get(prefijo, "—")
 
 
+# Casos cuya fila del informe cita además la fecha de la corrida porque su aserción se amplió
+# después de `qa-matriz-aceptacion` (hoy `LP01`, ampliado por `qa-matriz-lp01-imagenes`).
+FECHA_EN_FILA = {"LP01"}
+
+
 def _ejecutado(caso: str) -> bool:
     """Un caso está ejecutado si deja evidencia propia; `SEC07-restauracion` no es un caso."""
     ruta = EVIDENCE / f"{caso}.json"
@@ -2461,10 +2468,15 @@ def informe() -> int:
             continue
         datos = json.loads(ruta.read_text(encoding="utf-8"))
         cumple = datos.get("cumple") is True
+        marca = "✅" if cumple else "❌"
+        # La fila de los casos ampliados por otro plan lleva la fecha de su corrida; el formato de
+        # la tabla es el que fija `qa-matriz-aceptacion` §3 y no se toca.
+        if caso in FECHA_EN_FILA and datos.get("ejecutadoEn"):
+            marca = f"{marca} {str(datos['ejecutadoEn'])[:10]}"
         filas.append((caso, grupo, ENDPOINT.get(caso, "—"),
                       _comando_de(caso),
                       f"tests/evidencia/qa-matriz-aceptacion/{caso}.json",
-                      "✅" if cumple else "❌"))
+                      marca))
     ejecutados = sum(1 for c, _ in CASOS if _ejecutado(c))
     verdes = sum(1 for c, _ in CASOS if _ejecutado(c)
                  and json.loads((EVIDENCE / f"{c}.json").read_text(encoding="utf-8")).get("cumple") is True)
@@ -2891,11 +2903,57 @@ def sec() -> int:
 # ---------------------------------------------------------------------------
 
 CLAVES_HOTEL_PUBLICO = {"idHotel", "slug", "nombre", "descripcion", "direccion", "ciudad", "telefono", "correoContacto"}
+# `HotelPublico` admite la foto de sede desde `back-hotel-presentacion-real` (06 §5 y
+# `hotel/api.md` §Públicas nuevas): `imagenUrl` e `imagenAlt` son opcionales y viajan juntos, o
+# ambos nulos si la sede no tiene imagen.
+CLAVES_HOTEL_PUBLICO_OPCIONALES = {"imagenUrl", "imagenAlt"}
 CLAVES_CATEGORIA_PUBLICA = {"idCategoria", "descripcion", "detalle", "capacidad", "precioDesde", "moneda", "imagenes"}
+# Tope de la galería pública por categoría: `CategoriaPublica.imagenes` declara `maxItems: 10`.
+TOPE_GALERIA_PUBLICA = 10
+SEDES_PUBLICAS = ("lima-centro", "miraflores", "arequipa")
 
 
 def _claves(data: Any) -> set[str]:
     return set(data.keys()) if isinstance(data, dict) else set()
+
+
+def _texto_no_vacio(valor: Any) -> bool:
+    return isinstance(valor, str) and valor.strip() != ""
+
+
+def _par_imagen(datos: Any) -> dict[str, Any]:
+    """Coherencia de `imagenUrl`/`imagenAlt`: una URL con alt, o ambas nulas."""
+    if not isinstance(datos, dict):
+        return {"imagenUrl": None, "imagenAlt": None, "viaja": False, "coherente": False}
+    url, alt = datos.get("imagenUrl"), datos.get("imagenAlt")
+    if _texto_no_vacio(url):
+        coherente = _texto_no_vacio(alt)
+    else:
+        coherente = url in (None, "") and alt in (None, "")
+    return {
+        "imagenUrl": url,
+        "imagenAlt": alt,
+        "viaja": _texto_no_vacio(url),
+        "coherente": coherente,
+    }
+
+
+def _galeria(categoria: Any, tope: int = TOPE_GALERIA_PUBLICA) -> dict[str, Any]:
+    """`imagenes` no vacío, cada elemento con `url` y `alt` no vacíos, y como máximo `tope`."""
+    imagenes = categoria.get("imagenes") if isinstance(categoria, dict) else None
+    if not isinstance(imagenes, list):
+        return {"elementos": 0, "elementosCompletos": False,
+                "galeriaNoVacia": False, "galeriaAcotada": False}
+    completos = all(
+        isinstance(imagen, dict) and _texto_no_vacio(imagen.get("url")) and _texto_no_vacio(imagen.get("alt"))
+        for imagen in imagenes
+    )
+    return {
+        "elementos": len(imagenes),
+        "elementosCompletos": completos,
+        "galeriaNoVacia": len(imagenes) >= 1,
+        "galeriaAcotada": len(imagenes) <= tope,
+    }
 
 
 def lp_crud() -> int:
@@ -2921,13 +2979,56 @@ def lp_crud() -> int:
         entrada = data[0] if isinstance(data, list) and data else data
         claves = sorted(_claves(entrada))
         es_categoria = "/categorias" in ruta
-        esperadas = CLAVES_CATEGORIA_PUBLICA if es_categoria else CLAVES_HOTEL_PUBLICO
+        esperadas = CLAVES_CATEGORIA_PUBLICA if es_categoria else CLAVES_HOTEL_PUBLICO | CLAVES_HOTEL_PUBLICO_OPCIONALES
         sobrantes = sorted(set(claves) - (esperadas or set()))
         if sobrantes:
             privadas[ruta] = sobrantes
         respuestas[ruta] = {"status": r.status, "claves": claves, "cumpleEsquema": not sobrantes,
                             "bodyResumen": str(data)[:600]}
-    cumple = all(v["status"] == 200 and v["cumpleEsquema"] for v in respuestas.values())
+
+    # Par `imagenUrl`/`imagenAlt` en cada sede del listado y en el detalle: opcionales, pero si una
+    # viaja la otra no puede faltar; sin imagen, ambas nulas (`hotel/api.md` §Públicas nuevas).
+    par_sedes: dict[str, Any] = {}
+    slugs_listado: set[str] = set()
+    listado = c.http("GET", "/api/public/hoteles")
+    for sede in (listado.field("data") or []):
+        if isinstance(sede, dict):
+            slug = str(sede.get("slug"))
+            slugs_listado.add(slug)
+            par_sedes[slug] = {"origen": "/api/public/hoteles", **_par_imagen(sede)}
+    detalle = c.http("GET", "/api/public/hoteles/lima-centro")
+    datos_detalle = detalle.field("data")
+    if isinstance(datos_detalle, dict):
+        par_sedes["lima-centro-detalle"] = {
+            "origen": "/api/public/hoteles/lima-centro", **_par_imagen(datos_detalle)}
+    par_coherente = bool(par_sedes) and all(v["coherente"] for v in par_sedes.values())
+    sedes_cubiertas = sorted(slugs_listado)
+
+    # Galería por categoría: `imagenes` no vacío, cada elemento con `url` y `alt` no vacíos, ≤ 10.
+    galerias: dict[str, Any] = {}
+    for slug in SEDES_PUBLICAS:
+        listado_sede = c.http("GET", f"/api/public/hoteles/{slug}/categorias")
+        for categoria in (listado_sede.field("data") or []):
+            if isinstance(categoria, dict):
+                galerias[f"{slug}/{categoria.get('idCategoria')}"] = {
+                    "origen": f"/api/public/hoteles/{slug}/categorias",
+                    **_galeria(categoria)}
+    for categoria in (listado_categorias.field("data") or []):
+        if isinstance(categoria, dict):
+            detalle_categoria = c.http(
+                "GET", f"/api/public/hoteles/lima-centro/categorias/{categoria.get('idCategoria')}")
+            galerias[f"lima-centro/{categoria.get('idCategoria')}-detalle"] = {
+                "origen": "/api/public/hoteles/lima-centro/categorias/{idCategoria}",
+                **_galeria(detalle_categoria.field("data"))}
+    galerias_completas = bool(galerias) and all(
+        v["galeriaNoVacia"] and v["galeriaAcotada"] and v["elementosCompletos"] for v in galerias.values())
+
+    cumple = (
+        all(v["status"] == 200 and v["cumpleEsquema"] for v in respuestas.values())
+        and par_coherente
+        and len(sedes_cubiertas) == len(SEDES_PUBLICAS)
+        and galerias_completas
+    )
     save(
         "LP01",
         {
@@ -2935,7 +3036,13 @@ def lp_crud() -> int:
             "sinToken": True,
             "respuestas": respuestas,
             "clavesSobrantes": privadas,
-            "exigido": "200 en los 4 con solo claves de HotelPublico/CategoriaPublica",
+            "imagenSede": {"porSede": par_sedes, "coherente": par_coherente,
+                           "sedesConPar": sorted(sedes_cubiertas)},
+            "galeriaCategoria": {"porCategoria": galerias, "completas": galerias_completas,
+                                 "tope": TOPE_GALERIA_PUBLICA},
+            "exigido": ("200 en los 4 sin token, solo claves de HotelPublico/CategoriaPublica "
+                        "(imagenUrl/imagenAlt opcionales), par de imagen coherente por sede e "
+                        "imagenes no vacío, con url y alt, y ≤ 10 por categoría"),
             "cumple": cumple,
         },
     )

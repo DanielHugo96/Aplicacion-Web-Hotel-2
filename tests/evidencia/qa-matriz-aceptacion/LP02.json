@@ -1,6 +1,6 @@
 {
   "variantesFechaOcupacion": {
-    "/api/public/hoteles?fecha=2026-10-24": {
+    "/api/public/hoteles?fecha=2026-10-25": {
       "status": 200,
       "body": {
         "success": true,
@@ -9,36 +9,42 @@
           {
             "idHotel": 1,
             "slug": "lima-centro",
-            "nombre": "Hotel Demo Lima Centro",
-            "descripcion": "Sede de demostracion",
-            "direccion": "Direccion de demostracion",
+            "nombre": "Casa Sillar Lima Centro",
+            "descripcion": "Casona restaurada a dos cuadras de la Plaza Mayor, con patio de sillar y recepción permanente.",
+            "direccion": "Jr. de la Unión 540, Cercado de Lima",
             "ciudad": "Lima",
-            "telefono": "+51 900 000 001",
-            "correoContacto": "contacto@hotel.test"
+            "telefono": "+51 1 428 6400",
+            "correoContacto": "contacto@casasillar.pe",
+            "imagenUrl": "/assets/sedes/lima-centro-fachada.jpg",
+            "imagenAlt": "Fachada de piedra de la sede de Lima Centro al atardecer"
           },
           {
             "idHotel": 2,
             "slug": "miraflores",
-            "nombre": "Hotel Demo Miraflores",
-            "descripcion": "Sede de demostracion",
-            "direccion": "Direccion de demostracion",
+            "nombre": "Casa Sillar Miraflores",
+            "descripcion": "Casa de los años cuarenta frente al malecón de Miraflores, con jardín interior y salón de lectura.",
+            "direccion": "Av. José Larco 1105, Miraflores",
             "ciudad": "Lima",
-            "telefono": "+51 900 000 001",
-            "correoContacto": "contacto@hotel.test"
+            "telefono": "+51 1 445 2180",
+            "correoContacto": "contacto@casasillar.pe",
+            "imagenUrl": "/assets/sedes/miraflores-fachada.jpg",
+            "imagenAlt": "Fachada de la sede de Miraflores con su jardín de entrada"
           },
           {
             "idHotel": 3,
             "slug": "arequipa",
-            "nombre": "Hotel Demo Arequipa",
-            "descripcion": "Sede de demostracion",
-            "direccion": "Direccion de demostracion",
+            "nombre": "Casa Sillar Arequipa",
+            "descripcion": "Casona de sillar en el centro histórico de Arequipa, con galería de arcos y vista al Misti desde la terraza.",
+            "direccion": "Calle Mercaderes 218, Cercado de Arequipa",
             "ciudad": "Arequipa",
-            "telefono": "+51 900 000 001",
-            "correoContacto": "contacto@hotel.test"
+            "telefono": "+51 54 216 800",
+            "correoContacto": "contacto@casasillar.pe",
+            "imagenUrl": "/assets/sedes/arequipa-fachada.jpg",
+            "imagenAlt": "Fachada de sillar de la sede de Arequipa con el Misti al fondo"
           }
         ],
         "meta": {
-          "correlationId": "aa91647a-fa2d-4dec-8836-1f91cf2839a8",
+          "correlationId": "77aef142-5483-43ac-9db3-b9cade5eb4a0",
           "page": 0,
           "size": 20,
           "totalElements": 3
@@ -53,15 +59,17 @@
         "data": {
           "idHotel": 1,
           "slug": "lima-centro",
-          "nombre": "Hotel Demo Lima Centro",
-          "descripcion": "Sede de demostracion",
-          "direccion": "Direccion de demostracion",
+          "nombre": "Casa Sillar Lima Centro",
+          "descripcion": "Casona restaurada a dos cuadras de la Plaza Mayor, con patio de sillar y recepción permanente.",
+          "direccion": "Jr. de la Unión 540, Cercado de Lima",
           "ciudad": "Lima",
-          "telefono": "+51 900 000 001",
-          "correoContacto": "contacto@hotel.test"
+          "telefono": "+51 1 428 6400",
+          "correoContacto": "contacto@casasillar.pe",
+          "imagenUrl": "/assets/sedes/lima-centro-fachada.jpg",
+          "imagenAlt": "Fachada de piedra de la sede de Lima Centro al atardecer"
         },
         "meta": {
-          "correlationId": "1f2815b9-094b-45d9-b6d5-cd74526503ec"
+          "correlationId": "8d94ff1d-2649-4648-aba3-80d30cd851a1"
         }
       }
     }
@@ -69,15 +77,15 @@
   "bundle": {
     "ruta": "apps\\public-web\\dist\\public-web\\browser",
     "archivos": [
-      "chunk-4A9s8j_B.js",
-      "chunk-AplLfBld.js",
-      "chunk-BayOjm7D.js",
-      "chunk-BXhgr2IG.js",
-      "chunk-C9hX3MZb.js",
-      "chunk-D_IwY_Bu.js",
-      "chunk-Dc2_sOZZ.js",
-      "chunk-NkEmEN6w.js",
-      "main-MJLHU2S2.js"
+      "chunk-B8idDlwH.js",
+      "chunk-BIaGKzNS.js",
+      "chunk-Bw35tq2H.js",
+      "chunk-CIdfl17Y.js",
+      "chunk-CNyWVYdu.js",
+      "chunk-Ctv6E4-O.js",
+      "chunk-DoWXPuom.js",
+      "chunk-WGW5ZvcE.js",
+      "main-FL5T3KFM.js"
     ]
   },
   "hallazgos": {
@@ -88,5 +96,5 @@
   "exigido": "parámetro ignorado o 400; sin dato privado ni endpoint nuevo",
   "cumple": true,
   "caso": "LP02",
-  "ejecutadoEn": "2026-10-21T08:15:55.522633Z"
+  "ejecutadoEn": "2026-10-22T07:52:38.049965Z"
 }

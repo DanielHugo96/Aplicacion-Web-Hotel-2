@@ -3,7 +3,7 @@
     "/api/public/hoteles",
     "/api/public/hoteles/lima-centro",
     "/api/public/hoteles/lima-centro/categorias",
-    "/api/public/hoteles/lima-centro/categorias/2"
+    "/api/public/hoteles/lima-centro/categorias/1"
   ],
   "sinToken": true,
   "respuestas": {
@@ -15,12 +15,14 @@
         "descripcion",
         "direccion",
         "idHotel",
+        "imagenAlt",
+        "imagenUrl",
         "nombre",
         "slug",
         "telefono"
       ],
       "cumpleEsquema": true,
-      "bodyResumen": "[{'idHotel': 1, 'slug': 'lima-centro', 'nombre': 'Hotel Demo Lima Centro', 'descripcion': 'Sede de demostracion', 'direccion': 'Direccion de demostracion', 'ciudad': 'Lima', 'telefono': '+51 900 000 001', 'correoContacto': 'contacto@hotel.test'}, {'idHotel': 2, 'slug': 'miraflores', 'nombre': 'Hotel Demo Miraflores', 'descripcion': 'Sede de demostracion', 'direccion': 'Direccion de demostracion', 'ciudad': 'Lima', 'telefono': '+51 900 000 001', 'correoContacto': 'contacto@hotel.test'}, {'idHotel': 3, 'slug': 'arequipa', 'nombre': 'Hotel Demo Arequipa', 'descripcion': 'Sede de demostracion', 'd"
+      "bodyResumen": "[{'idHotel': 1, 'slug': 'lima-centro', 'nombre': 'Casa Sillar Lima Centro', 'descripcion': 'Casona restaurada a dos cuadras de la Plaza Mayor, con patio de sillar y recepción permanente.', 'direccion': 'Jr. de la Unión 540, Cercado de Lima', 'ciudad': 'Lima', 'telefono': '+51 1 428 6400', 'correoContacto': 'contacto@casasillar.pe', 'imagenUrl': '/assets/sedes/lima-centro-fachada.jpg', 'imagenAlt': 'Fachada de piedra de la sede de Lima Centro al atardecer'}, {'idHotel': 2, 'slug': 'miraflores', 'nombre': 'Casa Sillar Miraflores', 'descripcion': 'Casa de los años cuarenta frente al malecón de Mi"
     },
     "/api/public/hoteles/lima-centro": {
       "status": 200,
@@ -30,12 +32,14 @@
         "descripcion",
         "direccion",
         "idHotel",
+        "imagenAlt",
+        "imagenUrl",
         "nombre",
         "slug",
         "telefono"
       ],
       "cumpleEsquema": true,
-      "bodyResumen": "{'idHotel': 1, 'slug': 'lima-centro', 'nombre': 'Hotel Demo Lima Centro', 'descripcion': 'Sede de demostracion', 'direccion': 'Direccion de demostracion', 'ciudad': 'Lima', 'telefono': '+51 900 000 001', 'correoContacto': 'contacto@hotel.test'}"
+      "bodyResumen": "{'idHotel': 1, 'slug': 'lima-centro', 'nombre': 'Casa Sillar Lima Centro', 'descripcion': 'Casona restaurada a dos cuadras de la Plaza Mayor, con patio de sillar y recepción permanente.', 'direccion': 'Jr. de la Unión 540, Cercado de Lima', 'ciudad': 'Lima', 'telefono': '+51 1 428 6400', 'correoContacto': 'contacto@casasillar.pe', 'imagenUrl': '/assets/sedes/lima-centro-fachada.jpg', 'imagenAlt': 'Fachada de piedra de la sede de Lima Centro al atardecer'}"
     },
     "/api/public/hoteles/lima-centro/categorias": {
       "status": 200,
@@ -49,9 +53,9 @@
         "precioDesde"
       ],
       "cumpleEsquema": true,
-      "bodyResumen": "[{'idCategoria': 2, 'descripcion': 'Doble', 'detalle': 'Habitacion doble de demostracion', 'capacidad': 2, 'precioDesde': 100.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-102-1.jpg', 'alt': 'Habitacion de demostracion'}]}]"
+      "bodyResumen": "[{'idCategoria': 1, 'descripcion': 'Individual', 'detalle': 'Habitación individual con cama de una plaza, escritorio y baño privado.', 'capacidad': 1, 'precioDesde': 70.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/habitaciones/lima-centro-individual-1.jpg', 'alt': 'Habitación individual de la sede Lima Centro con cama de una plaza y cabecera de madera'}, {'url': '/assets/habitaciones/lima-centro-individual-2.jpg', 'alt': 'Escritorio y lámpara de lectura de la habitación individual de Lima Centro'}, {'url': '/assets/habitaciones/lima-centro-individual-3.jpg', 'alt': 'Baño privado con ducha"
     },
-    "/api/public/hoteles/lima-centro/categorias/2": {
+    "/api/public/hoteles/lima-centro/categorias/1": {
       "status": 200,
       "claves": [
         "capacidad",
@@ -63,12 +67,112 @@
         "precioDesde"
       ],
       "cumpleEsquema": true,
-      "bodyResumen": "{'idCategoria': 2, 'descripcion': 'Doble', 'detalle': 'Habitacion doble de demostracion', 'capacidad': 2, 'precioDesde': 100.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/demo/hab-102-1.jpg', 'alt': 'Habitacion de demostracion'}]}"
+      "bodyResumen": "{'idCategoria': 1, 'descripcion': 'Individual', 'detalle': 'Habitación individual con cama de una plaza, escritorio y baño privado.', 'capacidad': 1, 'precioDesde': 70.0, 'moneda': 'PEN', 'imagenes': [{'url': '/assets/habitaciones/lima-centro-individual-1.jpg', 'alt': 'Habitación individual de la sede Lima Centro con cama de una plaza y cabecera de madera'}, {'url': '/assets/habitaciones/lima-centro-individual-2.jpg', 'alt': 'Escritorio y lámpara de lectura de la habitación individual de Lima Centro'}, {'url': '/assets/habitaciones/lima-centro-individual-3.jpg', 'alt': 'Baño privado con ducha "
     }
   },
   "clavesSobrantes": {},
-  "exigido": "200 en los 4 con solo claves de HotelPublico/CategoriaPublica",
+  "imagenSede": {
+    "porSede": {
+      "lima-centro": {
+        "origen": "/api/public/hoteles",
+        "imagenUrl": "/assets/sedes/lima-centro-fachada.jpg",
+        "imagenAlt": "Fachada de piedra de la sede de Lima Centro al atardecer",
+        "viaja": true,
+        "coherente": true
+      },
+      "miraflores": {
+        "origen": "/api/public/hoteles",
+        "imagenUrl": "/assets/sedes/miraflores-fachada.jpg",
+        "imagenAlt": "Fachada de la sede de Miraflores con su jardín de entrada",
+        "viaja": true,
+        "coherente": true
+      },
+      "arequipa": {
+        "origen": "/api/public/hoteles",
+        "imagenUrl": "/assets/sedes/arequipa-fachada.jpg",
+        "imagenAlt": "Fachada de sillar de la sede de Arequipa con el Misti al fondo",
+        "viaja": true,
+        "coherente": true
+      },
+      "lima-centro-detalle": {
+        "origen": "/api/public/hoteles/lima-centro",
+        "imagenUrl": "/assets/sedes/lima-centro-fachada.jpg",
+        "imagenAlt": "Fachada de piedra de la sede de Lima Centro al atardecer",
+        "viaja": true,
+        "coherente": true
+      }
+    },
+    "coherente": true,
+    "sedesConPar": [
+      "arequipa",
+      "lima-centro",
+      "miraflores"
+    ]
+  },
+  "galeriaCategoria": {
+    "porCategoria": {
+      "lima-centro/1": {
+        "origen": "/api/public/hoteles/lima-centro/categorias",
+        "elementos": 3,
+        "elementosCompletos": true,
+        "galeriaNoVacia": true,
+        "galeriaAcotada": true
+      },
+      "lima-centro/2": {
+        "origen": "/api/public/hoteles/lima-centro/categorias",
+        "elementos": 3,
+        "elementosCompletos": true,
+        "galeriaNoVacia": true,
+        "galeriaAcotada": true
+      },
+      "miraflores/1": {
+        "origen": "/api/public/hoteles/miraflores/categorias",
+        "elementos": 3,
+        "elementosCompletos": true,
+        "galeriaNoVacia": true,
+        "galeriaAcotada": true
+      },
+      "miraflores/2": {
+        "origen": "/api/public/hoteles/miraflores/categorias",
+        "elementos": 3,
+        "elementosCompletos": true,
+        "galeriaNoVacia": true,
+        "galeriaAcotada": true
+      },
+      "arequipa/1": {
+        "origen": "/api/public/hoteles/arequipa/categorias",
+        "elementos": 3,
+        "elementosCompletos": true,
+        "galeriaNoVacia": true,
+        "galeriaAcotada": true
+      },
+      "arequipa/2": {
+        "origen": "/api/public/hoteles/arequipa/categorias",
+        "elementos": 3,
+        "elementosCompletos": true,
+        "galeriaNoVacia": true,
+        "galeriaAcotada": true
+      },
+      "lima-centro/1-detalle": {
+        "origen": "/api/public/hoteles/lima-centro/categorias/{idCategoria}",
+        "elementos": 3,
+        "elementosCompletos": true,
+        "galeriaNoVacia": true,
+        "galeriaAcotada": true
+      },
+      "lima-centro/2-detalle": {
+        "origen": "/api/public/hoteles/lima-centro/categorias/{idCategoria}",
+        "elementos": 3,
+        "elementosCompletos": true,
+        "galeriaNoVacia": true,
+        "galeriaAcotada": true
+      }
+    },
+    "completas": true,
+    "tope": 10
+  },
+  "exigido": "200 en los 4 sin token, solo claves de HotelPublico/CategoriaPublica (imagenUrl/imagenAlt opcionales), par de imagen coherente por sede e imagenes no vacío, con url y alt, y ≤ 10 por categoría",
   "cumple": true,
   "caso": "LP01",
-  "ejecutadoEn": "2026-10-21T08:15:55.447375Z"
+  "ejecutadoEn": "2026-10-22T07:52:38.025932Z"
 }

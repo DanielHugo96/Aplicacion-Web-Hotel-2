@@ -3,7 +3,7 @@
     "sede": {
       "alta": {
         "status": 201,
-        "idHotel": 5
+        "idHotel": 6
       },
       "edicion": {
         "status": 200,
@@ -18,7 +18,7 @@
       },
       "db": [
         [
-          "5",
+          "6",
           "f",
           "3"
         ]
@@ -27,7 +27,7 @@
     "piso": {
       "alta": {
         "status": 201,
-        "idPiso": 33
+        "idPiso": 34
       },
       "edicion": {
         "status": 200,
@@ -44,20 +44,20 @@
           "success": true,
           "message": "OK",
           "data": {
-            "idPiso": 33,
+            "idPiso": 34,
             "idHotel": 1,
-            "descripcion": "Piso Matriz 40AB72A7 editado",
+            "descripcion": "Piso Matriz 5B00270B editado",
             "estado": false,
             "version": 3
           },
           "meta": {
-            "correlationId": "b374f5d8-a784-40ef-918e-e5e6b3ed5edd"
+            "correlationId": "1e0aad26-39a8-4ea8-84b2-4c0267316c76"
           }
         }
       },
       "db": [
         [
-          "33",
+          "34",
           "f",
           "3"
         ]
@@ -84,14 +84,14 @@
           "message": "OK",
           "data": {
             "idCategoria": 4,
-            "descripcion": "Categoria Matriz 40AB72A7 editada",
+            "descripcion": "Categoria Matriz 5B00270B editada",
             "detalle": "Categoria de la matriz editada",
             "capacidad": 2,
             "estado": false,
             "version": 3
           },
           "meta": {
-            "correlationId": "2bb3477d-b9c9-4c3c-8578-071961fd317f"
+            "correlationId": "6aedd16e-1b1c-4b45-81fd-ccca5cc78ba0"
           }
         }
       },
@@ -125,11 +125,11 @@
           "data": {
             "idHabitacion": 304,
             "idHotel": 1,
-            "numero": "M40AB",
-            "idPiso": 33,
-            "pisoNombre": "Piso Matriz 40AB72A7 editado",
+            "numero": "M5B00",
+            "idPiso": 34,
+            "pisoNombre": "Piso Matriz 5B00270B editado",
             "idCategoria": 4,
-            "categoriaNombre": "Categoria Matriz 40AB72A7 editada",
+            "categoriaNombre": "Categoria Matriz 5B00270B editada",
             "detalle": "Habitacion de la matriz editada",
             "precio": 60.0,
             "publicada": false,
@@ -148,12 +148,12 @@
               "idRecepcion": null,
               "updatedAt": null
             },
-            "blockId": "3903d9d9-82a7-49ca-be17-cfc6dd690fea",
-            "endpoint": "/api/habitacion/operaciones/3903d9d9-82a7-49ca-be17-cfc6dd690fea",
+            "blockId": "7cc69903-bfa5-4e9a-a159-dd3904eea1c1",
+            "endpoint": "/api/habitacion/operaciones/7cc69903-bfa5-4e9a-a159-dd3904eea1c1",
             "version": 3
           },
           "meta": {
-            "correlationId": "aab717d7-29c6-466b-80a0-61bd17577e57"
+            "correlationId": "df47dd74-439e-4acf-a9fe-7a6005244d4a"
           }
         }
       },
@@ -166,7 +166,7 @@
       ],
       "operacionBaja": [
         [
-          "3903d9d9-82a7-49ca-be17-cfc6dd690fea",
+          "7cc69903-bfa5-4e9a-a159-dd3904eea1c1",
           "APLICADA"
         ]
       ]
@@ -226,5 +226,5 @@
   "exigido": "filas persistidas, version incrementada, DELETE estado=false, PUT sin If-Match 428",
   "cumple": true,
   "caso": "CRUD01",
-  "ejecutadoEn": "2026-10-21T08:16:01.905146Z"
+  "ejecutadoEn": "2026-10-22T07:52:41.734307Z"
 }
