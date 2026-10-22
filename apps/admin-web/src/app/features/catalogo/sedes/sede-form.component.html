@@ -67,6 +67,61 @@
           <span class="field-msg" role="alert">{{ mensajeCampo('descripcion') }}</span>
         }
       </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label for="imagenUrl">URL de la imagen</label>
+        <div class="campo-con-previa">
+          <div class="campo-con-previa__entrada">
+            <input
+              id="imagenUrl"
+              name="imagenUrl"
+              [ngModel]="imagenUrl"
+              (ngModelChange)="alEscribirImagen($event)"
+              maxlength="500"
+              placeholder="/assets/sedes/lima-centro-fachada.jpg o https://..."
+              [class.error]="campoInvalido('imagenUrl')"
+              [attr.aria-invalid]="campoInvalido('imagenUrl') ? 'true' : null"
+              aria-describedby="imagenUrl-ayuda"
+            />
+            <span id="imagenUrl-ayuda" class="field-help">https o /assets/, hasta 500 caracteres.</span>
+            @if (campoInvalido('imagenUrl')) {
+              <span class="field-msg" role="alert">{{ mensajeCampo('imagenUrl') }}</span>
+            }
+            @if (imagenRota()) {
+              <span class="field-msg" role="alert">No se pudo cargar la imagen</span>
+            }
+          </div>
+          <div class="campo-con-previa__vista">
+            @if (mostrarPrevia()) {
+              <span class="vista-previa">
+                <app-imagen-panel
+                  [src]="imagenUrl.trim()"
+                  [alt]="imagenAlt.trim() || 'Vista previa de la foto de la sede'"
+                  relacion="3 / 2"
+                  (fallo)="alFallarPrevia()"
+                ></app-imagen-panel>
+              </span>
+            } @else {
+              <span class="vista-previa vacia text-small muted">Sin vista previa</span>
+            }
+          </div>
+        </div>
+      </div>
+      <div class="field" style="grid-column: 1 / -1;">
+        <label for="imagenAlt">Texto alternativo de la imagen</label>
+        <input
+          id="imagenAlt"
+          name="imagenAlt"
+          [(ngModel)]="imagenAlt"
+          maxlength="150"
+          [class.error]="campoInvalido('imagenAlt')"
+          [attr.aria-invalid]="campoInvalido('imagenAlt') ? 'true' : null"
+          aria-describedby="imagenAlt-ayuda"
+        />
+        <span id="imagenAlt-ayuda" class="field-help">{{ imagenAlt.length }}/150 · Obligatorio si hay URL de imagen.</span>
+        @if (campoInvalido('imagenAlt')) {
+          <span class="field-msg" role="alert">{{ mensajeCampo('imagenAlt') }}</span>
+        }
+      </div>
       <div class="field">
         <label class="field-check"><input name="publicado" type="checkbox" [(ngModel)]="publicado" /> Publicada</label>
       </div>

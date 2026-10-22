@@ -44,7 +44,27 @@
         <tbody>
           @for (sede of sedes(); track sede.idHotel) {
             <tr>
-              <td>{{ sede.nombre }}</td>
+              <td>
+                <div class="celda-imagen">
+                  <span class="miniatura">
+                    @if (sede.imagenUrl) {
+                      <app-imagen-panel
+                        [src]="sede.imagenUrl"
+                        [alt]="sede.imagenAlt ?? ('Fachada de la sede ' + sede.nombre)"
+                        relacion="1 / 1"
+                      ></app-imagen-panel>
+                    } @else {
+                      <app-imagen-panel
+                        [src]="null"
+                        alt=""
+                        relacion="1 / 1"
+                        [decorativa]="true"
+                      ></app-imagen-panel>
+                    }
+                  </span>
+                  <span>{{ sede.nombre }}</span>
+                </div>
+              </td>
               <td class="monospace">{{ sede.slug }}</td>
               <td>{{ sede.ciudad }}</td>
               <td>{{ sede.direccion }}</td>

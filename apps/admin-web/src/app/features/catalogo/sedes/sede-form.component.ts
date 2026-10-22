@@ -6,15 +6,18 @@ import { CatalogoService } from '../../../core/services/catalogo.service';
 import { SessionService } from '../../../core/services/session.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Hotel, HotelInput } from '../../../core/models/catalogo.models';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 
 const CORREO_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SLUG_RE = /^[a-z0-9-]+$/;
+/** URL de imagen del contrato común: https o `/assets/`, ≤ 500. */
+const IMAGEN_URL_RE = /^(https:\/\/|\/assets\/)/;
 
 @Component({
   selector: 'app-sede-form',
   standalone: true,
-  imports: [FormsModule, RouterLink, ErrorBannerComponent],
+  imports: [FormsModule, RouterLink, ErrorBannerComponent, ImagenPanelComponent],
   templateUrl: './sede-form.component.html',
   styleUrl: './sede-form.component.css',
 })
@@ -40,9 +43,13 @@ export class SedeFormComponent implements OnInit {
   ciudad = '';
   telefono = '';
   correoContacto = '';
+  imagenUrl = '';
+  imagenAlt = '';
   publicado = false;
   estado = true;
   errores: Record<string, string> = {};
+  /** `true` si la vista previa de `imagenUrl` no cargó. No bloquea guardar. */
+  readonly imagenRota = signal(false);
 
   readonly actionLabel = computed(() => {
     const err = this.error();
@@ -70,6 +77,8 @@ export class SedeFormComponent implements OnInit {
       this.ciudad = h.ciudad;
       this.telefono = h.telefono;
       this.correoContacto = h.correoContacto;
+      this.imagenUrl = h.imagenUrl ?? '';
+      this.imagenAlt = h.imagenAlt ?? '';
       this.publicado = h.publicado;
       this.estado = h.estado;
     } catch (err) {
@@ -87,6 +96,28 @@ export class SedeFormComponent implements OnInit {
     return this.errores[campo] ?? '';
   }
 
+  /** La vista previa solo aparece con una URL válida del contrato. */
+  urlImagenValida(): boolean {
+    const url = this.imagenUrl.trim();
+    if (!url) return true;
+    return IMAGEN_URL_RE.test(url) && url.length <= 500;
+  }
+
+  /** `true` cuando la vista previa debe pintarse. */
+  mostrarPrevia(): boolean {
+    return !!this.imagenUrl.trim() && this.urlImagenValida();
+  }
+
+  /** Marca la miniatura como rota y conserva el valor escrito. */
+  alFallarPrevia(): void {
+    this.imagenRota.set(true);
+  }
+
+  alEscribirImagen(url: string): void {
+    this.imagenUrl = url;
+    this.imagenRota.set(false);
+  }
+
   private validar(): boolean {
     const e: Record<string, string> = {};
     if (!SLUG_RE.test(this.slug.trim()) || this.slug.trim().length > 80) {
@@ -99,6 +130,14 @@ export class SedeFormComponent implements OnInit {
     if (this.telefono.length > 20) e['telefono'] = 'Teléfono demasiado largo';
     if (!this.correoContacto.trim() || !CORREO_RE.test(this.correoContacto.trim()) || this.correoContacto.length > 254) {
       e['correoContacto'] = 'Correo inválido';
+    }
+    const imagenUrl = this.imagenUrl.trim();
+    const imagenAlt = this.imagenAlt.trim();
+    if (imagenUrl && (!IMAGEN_URL_RE.test(imagenUrl) || imagenUrl.length > 500)) {
+      e['imagenUrl'] = 'URL no permitida';
+    }
+    if (imagenUrl && (!imagenAlt || imagenAlt.length > 150)) {
+      e['imagenAlt'] = 'Describe la imagen para accesibilidad';
     }
     this.errores = e;
     return Object.keys(e).length === 0;
@@ -118,6 +157,8 @@ export class SedeFormComponent implements OnInit {
         ciudad: this.ciudad.trim(),
         telefono: this.telefono.trim(),
         correoContacto: this.correoContacto.trim(),
+        imagenUrl: this.imagenUrl.trim() || null,
+        imagenAlt: this.imagenUrl.trim() ? this.imagenAlt.trim() || null : null,
         publicado: this.publicado,
         estado: this.estado,
       };
