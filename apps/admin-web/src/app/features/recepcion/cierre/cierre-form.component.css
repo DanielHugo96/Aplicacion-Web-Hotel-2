@@ -1,5 +1,5 @@
-/* Pantalla de cierre: reutiliza tokens de DESIGN.md §10 y las clases globales
-   de panel/formulario. Solo añade la disposición de dos columnas. */
+/* Pantalla de cierre: reutiliza tokens de `DESIGN-admin-web.md` y las clases
+   globales de panel/formulario. Solo añade la disposición de dos columnas. */
 
 .cierre-grid {
   display: grid;

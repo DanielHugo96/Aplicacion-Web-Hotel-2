@@ -20,7 +20,7 @@
 
 ## Diseño frontend
 
-- [Sistema de diseño](../DESIGN.md): guía visual y de interacción de `public-web` y `admin-web` (paleta, tipografía, componentes, tokens y checklist por pantalla).
+- [Sistema de diseño](../DESIGN.md): índice del sistema visual y de interacción. La guía aplicable a cada app está en [`DESIGN-public-web.md`](../DESIGN-public-web.md) y [`DESIGN-admin-web.md`](../DESIGN-admin-web.md) (paleta, tipografía, componentes, tokens y checklist por pantalla).
 
 ## Documento por microservicio
 

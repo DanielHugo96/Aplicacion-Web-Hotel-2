@@ -349,7 +349,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma front: docs/especificacion/02-landing-y-panel.md; docs/DESIGN.md (§10 tokens y §11 checklist por pantalla); la sección de public-web en docs/contracts/README.md; de docs/contracts/openapi/public-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
+5. Norma front: docs/especificacion/02-landing-y-panel.md; docs/DESIGN-public-web.md (tokens y checklist por pantalla); la sección de public-web en docs/contracts/README.md; de docs/contracts/openapi/public-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
 Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
 
 Reglas no negociables:
@@ -361,7 +361,7 @@ Reglas no negociables:
 - Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
 - Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
 - Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Front: cita ../DESIGN.md; los pasos de UI usan los tokens (§10) y la pantalla no se cierra sin pasar el checklist (§11); no inventes colores, tipografías, componentes ni movimientos.
+- Front: cita ../DESIGN-public-web.md; los pasos de UI usan sus tokens y la pantalla no se cierra sin pasar su checklist; no inventes colores, tipografías, componentes ni movimientos.
 - Front consume el Gateway (localhost:8080); puede avanzar contra los OpenAPI con mocks, nunca contra puertos de servicios.
 - La landing es informativa: sin reserva, sin pago y sin disponibilidad garantizada.
 - No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
@@ -390,7 +390,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma front: docs/especificacion/08-admin-web.md (§5 layout y menú; roles y login) y 02-landing-y-panel.md; docs/DESIGN.md (§10 y §11); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
+5. Norma front: docs/especificacion/08-admin-web.md (§5 layout y menú; roles y login) y 02-landing-y-panel.md; docs/DESIGN-admin-web.md (tokens y checklist por pantalla); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
 Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
 
 Reglas no negociables:
@@ -402,7 +402,7 @@ Reglas no negociables:
 - Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
 - Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
 - Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Front: cita ../DESIGN.md; los pasos de UI usan los tokens (§10) y la pantalla no se cierra sin pasar el checklist (§11); no inventes colores, tipografías, componentes ni movimientos.
+- Front: cita ../DESIGN-admin-web.md; los pasos de UI usan sus tokens y la pantalla no se cierra sin pasar su checklist; no inventes colores, tipografías, componentes ni movimientos.
 - Front consume el Gateway (localhost:8080); puede avanzar contra los OpenAPI con mocks, nunca contra puertos de servicios.
 - No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
 - Si docs/plans/front-admin-web-base.md ya existe, detente y avísalo.
@@ -430,7 +430,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma front: docs/especificacion/08-admin-web.md (módulos de personas y catálogo); docs/DESIGN.md (§10 y §11); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
+5. Norma front: docs/especificacion/08-admin-web.md (módulos de personas y catálogo); docs/DESIGN-admin-web.md (tokens y checklist por pantalla); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
 Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
 
 Reglas no negociables:
@@ -442,7 +442,7 @@ Reglas no negociables:
 - Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
 - Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
 - Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Front: cita ../DESIGN.md; los pasos de UI usan los tokens (§10) y la pantalla no se cierra sin pasar el checklist (§11); no inventes colores, tipografías, componentes ni movimientos.
+- Front: cita ../DESIGN-admin-web.md; los pasos de UI usan sus tokens y la pantalla no se cierra sin pasar su checklist; no inventes colores, tipografías, componentes ni movimientos.
 - Front consume el Gateway (localhost:8080); puede avanzar contra los OpenAPI con mocks, nunca contra puertos de servicios.
 - No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
 - Si docs/plans/front-admin-web-catalogo.md ya existe, detente y avísalo.
@@ -654,7 +654,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma front: docs/especificacion/08-admin-web.md (módulo de recepción); docs/DESIGN.md (§10 y §11); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
+5. Norma front: docs/especificacion/08-admin-web.md (módulo de recepción); docs/DESIGN-admin-web.md (tokens y checklist por pantalla); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
 Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
 
 Reglas no negociables:
@@ -666,7 +666,7 @@ Reglas no negociables:
 - Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
 - Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
 - Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Front: cita ../DESIGN.md; los pasos de UI usan los tokens (§10) y la pantalla no se cierra sin pasar el checklist (§11); no inventes colores, tipografías, componentes ni movimientos.
+- Front: cita ../DESIGN-admin-web.md; los pasos de UI usan sus tokens y la pantalla no se cierra sin pasar su checklist; no inventes colores, tipografías, componentes ni movimientos.
 - Front consume el Gateway (localhost:8080); puede avanzar contra los OpenAPI con mocks, nunca contra puertos de servicios.
 - No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
 - Si docs/plans/front-admin-web-recepcion.md ya existe, detente y avísalo.
@@ -694,7 +694,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma front: docs/especificacion/08-admin-web.md (módulo de ventas); docs/DESIGN.md (§10 y §11); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
+5. Norma front: docs/especificacion/08-admin-web.md (módulo de ventas); docs/DESIGN-admin-web.md (tokens y checklist por pantalla); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
 Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
 
 Reglas no negociables:
@@ -706,7 +706,7 @@ Reglas no negociables:
 - Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
 - Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
 - Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Front: cita ../DESIGN.md; los pasos de UI usan los tokens (§10) y la pantalla no se cierra sin pasar el checklist (§11); no inventes colores, tipografías, componentes ni movimientos.
+- Front: cita ../DESIGN-admin-web.md; los pasos de UI usan sus tokens y la pantalla no se cierra sin pasar su checklist; no inventes colores, tipografías, componentes ni movimientos.
 - Front consume el Gateway (localhost:8080); puede avanzar contra los OpenAPI con mocks, nunca contra puertos de servicios.
 - No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
 - Si docs/plans/front-admin-web-ventas.md ya existe, detente y avísalo.
@@ -872,7 +872,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma front: docs/especificacion/08-admin-web.md (módulo de cierre); docs/DESIGN.md (§10 y §11); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
+5. Norma front: docs/especificacion/08-admin-web.md (módulo de cierre); docs/DESIGN-admin-web.md (tokens y checklist por pantalla); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
 Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
 
 Reglas no negociables:
@@ -884,7 +884,7 @@ Reglas no negociables:
 - Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
 - Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
 - Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Front: cita ../DESIGN.md; los pasos de UI usan los tokens (§10) y la pantalla no se cierra sin pasar el checklist (§11); no inventes colores, tipografías, componentes ni movimientos.
+- Front: cita ../DESIGN-admin-web.md; los pasos de UI usan sus tokens y la pantalla no se cierra sin pasar su checklist; no inventes colores, tipografías, componentes ni movimientos.
 - Front consume el Gateway (localhost:8080); puede avanzar contra los OpenAPI con mocks, nunca contra puertos de servicios.
 - No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
 - Si docs/plans/front-admin-web-cierre.md ya existe, detente y avísalo.
@@ -912,7 +912,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma front: docs/especificacion/08-admin-web.md (módulo de reportes); docs/DESIGN.md (§10 y §11); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
+5. Norma front: docs/especificacion/08-admin-web.md (módulo de reportes); docs/DESIGN-admin-web.md (tokens y checklist por pantalla); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
 Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
 
 Reglas no negociables:
@@ -924,7 +924,7 @@ Reglas no negociables:
 - Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
 - Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
 - Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Front: cita ../DESIGN.md; los pasos de UI usan los tokens (§10) y la pantalla no se cierra sin pasar el checklist (§11); no inventes colores, tipografías, componentes ni movimientos.
+- Front: cita ../DESIGN-admin-web.md; los pasos de UI usan sus tokens y la pantalla no se cierra sin pasar su checklist; no inventes colores, tipografías, componentes ni movimientos.
 - Front consume el Gateway (localhost:8080); puede avanzar contra los OpenAPI con mocks, nunca contra puertos de servicios.
 - No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.
 - Si docs/plans/front-admin-web-reportes.md ya existe, detente y avísalo.
@@ -952,7 +952,7 @@ Lecturas obligatorias, en este orden:
 2. docs/plans/_plantilla.md (estructura exacta de la salida).
 3. docs/plans/catalogo.md: tu fila de §1 y lo que te toca de §2–§4.
 4. docs/especificacion/03-contrato-comun.md y docs/contracts/errors.md.
-5. Norma front: docs/especificacion/08-admin-web.md §2 (límites del rol C); docs/DESIGN.md (§10 y §11); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
+5. Norma front: docs/especificacion/08-admin-web.md §2 (límites del rol C); docs/DESIGN-admin-web.md (tokens y checklist por pantalla); la sección de admin-web en docs/contracts/README.md; de docs/contracts/openapi/admin-web.yaml solo las rutas que usa; docs/especificacion/06-migracion-y-pruebas.md §4.
 Lectura dirigida: de los api.md y OpenAPI, solo las rutas y tablas que este plan toca.
 
 Reglas no negociables:
@@ -964,7 +964,7 @@ Reglas no negociables:
 - Identidad solo por JWT validado (03-contrato-comun.md); nunca cabeceras X-User-Id / X-Role / X-Hotel-Id.
 - Versiones: solo las fijadas; alcance cerrado (sin reservas, pasarela de pago, facturación, fidelización, app móvil, Kubernetes, Redis, Debezium ni Config Server).
 - Mensajería: solo los topics, comandos y grupos que el catálogo asigna a este plan.
-- Front: cita ../DESIGN.md; los pasos de UI usan los tokens (§10) y la pantalla no se cierra sin pasar el checklist (§11); no inventes colores, tipografías, componentes ni movimientos.
+- Front: cita ../DESIGN-admin-web.md; los pasos de UI usan sus tokens y la pantalla no se cierra sin pasar su checklist; no inventes colores, tipografías, componentes ni movimientos.
 - Front consume el Gateway (localhost:8080); puede avanzar contra los OpenAPI con mocks, nunca contra puertos de servicios.
 - El área de cliente no muestra nada administrativo (rol C); respeta la matriz de permisos de 08-admin-web.md.
 - No toques docs/especificacion/**, docs/contracts/errors.md, docs/plans/README.md ni docs/plans/_prompts.md; tu fila del catálogo, solo si está mal y lo justificas en el PR.

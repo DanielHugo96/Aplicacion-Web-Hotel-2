@@ -78,7 +78,7 @@ El catálogo marca el modo recomendado de cada plan. Un plan puede pasar a `open
 |---|---|---|
 | Todos | Esta norma; [`03-contrato-comun.md`](../especificacion/03-contrato-comun.md); [`errors.md`](../contracts/errors.md) | — |
 | `back` | `microservicios/<servicio>/api.md` y `base-de-datos.md`; las rutas de `contracts/openapi/<servicio>.yaml` que toca; [`05-mensajeria.md`](../especificacion/05-mensajeria.md) si emite o consume | [`04-flujos.md`](../especificacion/04-flujos.md) si toca check-in, venta, stock, cierre, limpieza o mantenimiento |
-| `front` | [`02`](../especificacion/02-landing-y-panel.md), [`08`](../especificacion/08-admin-web.md) y [`DESIGN.md`](../DESIGN.md) (paleta, tipografía, componentes, tokens y checklist); la sección de su módulo en [`contracts/README.md`](../contracts/README.md); las rutas de `admin-web.yaml` o `public-web.yaml` que usa | [`06`](../especificacion/06-migracion-y-pruebas.md) §4 (cambios de frontend) |
+| `front` | [`02`](../especificacion/02-landing-y-panel.md), [`08`](../especificacion/08-admin-web.md) y el sistema de diseño que corresponda: [`DESIGN-public-web.md`](../DESIGN-public-web.md) o [`DESIGN-admin-web.md`](../DESIGN-admin-web.md) (paleta, tipografía, componentes, tokens y checklist); la sección de su módulo en [`contracts/README.md`](../contracts/README.md); las rutas de `admin-web.yaml` o `public-web.yaml` que usa | [`06`](../especificacion/06-migracion-y-pruebas.md) §4 (cambios de frontend) |
 | `infra` | [`01`](../especificacion/01-arquitectura.md); [`gateway-eureka-docker.md`](../especificacion/infraestructura/gateway-eureka-docker.md); [`configuracion.md`](../especificacion/infraestructura/configuracion.md) | [`06`](../especificacion/06-migracion-y-pruebas.md) §2 (orden de implementación) |
 | `qa` | [`06`](../especificacion/06-migracion-y-pruebas.md); [`runbooks.md`](../especificacion/infraestructura/runbooks.md) | Contratos de los flujos que prueba |
 | Modo `openspec` | La sección de `04-flujos.md` o `05-mensajeria.md` que describe la máquina de estados o la entrega | Los JSON Schema del flujo en [`contracts/events/`](../contracts/events/) |
@@ -104,7 +104,7 @@ Secciones, en este orden: 1 Objetivo · 2 Alcance · 3 Contexto · 4 Pasos · 5 
 
 - **Pasos**: de 1 a 20 tareas `- [ ]`, cada una con su forma de verificación. Un plan que necesita más de 20 se divide en dos planes con su dependencia.
 - **Preguntas abiertas**: decisiones que la spec no toma. Vacía si no hay ninguna. Mientras tenga contenido, el plan no se ejecuta.
-- **Front**: el campo Spec cita [`../DESIGN.md`](../DESIGN.md); los pasos de UI usan sus tokens (§10) y una pantalla no se cierra sin pasar su checklist (§11).
+- **Front**: el campo Spec cita [`../DESIGN-public-web.md`](../DESIGN-public-web.md) o [`../DESIGN-admin-web.md`](../DESIGN-admin-web.md) según la app; los pasos de UI usan sus tokens y una pantalla no se cierra sin pasar su checklist.
 
 ## 6. Contrato con la ejecutora
 
@@ -246,7 +246,7 @@ de arreglo al agente `planificador-arreglos`.
 - **La spec manda.** Un plan no corrige la spec. Si falta algo, lo registra como pregunta abierta. Los cambios de spec van en un PR propio que aprueba una persona.
 - **La identidad nunca se propaga por headers** (`X-User-Id`, `X-Role`, `X-Hotel-Id`). Cada servicio la obtiene del JWT validado (algoritmo, issuer, audience, exp y scope), según [`03-contrato-comun.md`](../especificacion/03-contrato-comun.md). No usar ejemplos antiguos que propagaban esos headers.
 - **Formatos, mensajes y validaciones** salen de [`02`](../especificacion/02-landing-y-panel.md), [`08`](../especificacion/08-admin-web.md) y [`errors.md`](../contracts/errors.md). El plan no los redefine.
-- **Diseño del front.** Los planes `front-*` planifican con [`../DESIGN.md`](../DESIGN.md): quien planifica cita las secciones que aplican y quien ejecuta no inventa colores, tipografías, componentes ni movimientos fuera de ese sistema. Ante conflicto, manda la spec.
+- **Diseño del front.** Los planes `front-*` planifican con [`../DESIGN-public-web.md`](../DESIGN-public-web.md) o [`../DESIGN-admin-web.md`](../DESIGN-admin-web.md) según la app: quien planifica cita las secciones que aplican y quien ejecuta no inventa colores, tipografías, componentes ni movimientos fuera de ese sistema. Ante conflicto, manda la spec.
 - **Casos de aceptación.** Un plan cita los IDs de [06](../especificacion/06-migracion-y-pruebas.md) que cubre, y el catálogo asigna cada caso a un plan. Nada se marca como ejecutado por estar escrito.
 - **Mensajería.** Cada topic, comando y grupo de consumidor tiene el dueño que fija el catálogo. Un plan no implementa un consumidor que el catálogo asigna a otro.
 - **Front.** Consume el Gateway (`localhost:8080`) y se cierra con integración real. Puede avanzar contra `contracts/openapi/*.yaml` con mocks, nunca contra puertos de servicios.

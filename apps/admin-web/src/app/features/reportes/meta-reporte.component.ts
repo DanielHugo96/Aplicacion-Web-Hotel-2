@@ -7,7 +7,7 @@ import { MetaReporte } from '../../core/models/reportes.models';
  * legacy): banner ámbar cuando la meta trae `degraded: true`, con `updatedAt` y
  * `bootstrapComplete` siempre visibles. No bloquea la vista y nunca promete
  * frescura absoluta: «Datos eventualmente consistentes» es el texto canónico
- * de `DESIGN.md` §8.
+ * de `DESIGN-admin-web.md` (mensajes de vacío y avisos).
  */
 @Component({
   selector: 'app-meta-reporte',
