@@ -145,6 +145,7 @@ humana: quien ejecuta un plan a mano sigue las reglas 5, 6 y 9 tal cual.
 |---|---|
 | Orquestador | Conduce **un** plan. No elige el orden: lo recibe ya calculado. Delega, da por validado y hace el merge. Si `main` está roto, encarga un plan de arreglo. |
 | Planificador de arreglos | Cuando `main` está roto por un plan ya `cerrado`, o hace falta refactorizar antes de seguir, reproduce el fallo y redacta un plan `<ámbito>-arreglo-<tema>` con evidencia. No implementa, no elige el orden y no mergea. |
+| Planificador de especificaciones | Cuando la especificación cambia, lee el delta, lo divide por ámbito y componente y redacta uno o varios planes `<ámbito>-<tema>` con su fila de catálogo y su tanda de calendario. No implementa, no elige el orden y no mergea. |
 | Ejecutora | Implementa los pasos de **un** plan, se valida a sí misma y lo deja `cerrado`. No sabe qué plan va después, ni mergea, ni pregunta. |
 | Ejecutora de respaldo | Como la ejecutora, pero de **cualquier** ámbito y sobre MiniMax M3.1 Flash Free. Entra cuando DeepSeek se queda sin cuota o sin créditos, para que la campaña no se pare. |
 
