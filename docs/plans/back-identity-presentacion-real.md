@@ -7,7 +7,7 @@
 | Componente | `identity-service` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-identity-personas` |
 | Spec | [`identity/base-de-datos.md` §Seeds](../especificacion/microservicios/identity/base-de-datos.md#seeds); [`02` §Condición de presentación real](../especificacion/02-landing-y-panel.md#condición-de-presentación-real); [`07` §Actualización 2026-10-21](../especificacion/07-revision-y-arranque.md#actualización-2026-10-21--presentación-real-e-imágenes-visibles) |
 | Casos | `—` |
