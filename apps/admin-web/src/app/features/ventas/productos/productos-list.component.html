@@ -65,6 +65,7 @@
         <thead>
           <tr>
             <th scope="col">SKU</th>
+            <th scope="col">Imagen</th>
             <th scope="col">Nombre</th>
             <th scope="col" class="num">Precio</th>
             <th scope="col" class="num">Cantidad</th>
@@ -78,6 +79,24 @@
           @for (p of productos(); track p.idProducto) {
             <tr>
               <td class="monospace">{{ p.sku }}</td>
+              <td>
+                <span class="miniatura">
+                  @if (p.imagenUrl) {
+                    <app-imagen-panel
+                      [src]="p.imagenUrl"
+                      [alt]="altProducto(p)"
+                      relacion="1 / 1"
+                    ></app-imagen-panel>
+                  } @else {
+                    <app-imagen-panel
+                      [src]="null"
+                      alt=""
+                      relacion="1 / 1"
+                      [decorativa]="true"
+                    ></app-imagen-panel>
+                  }
+                </span>
+              </td>
               <td>{{ p.nombre }}</td>
               <td class="num">{{ p.precio | money }}</td>
               <td class="num">{{ p.cantidad }}</td>

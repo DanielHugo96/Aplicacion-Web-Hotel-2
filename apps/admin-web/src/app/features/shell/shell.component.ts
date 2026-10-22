@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { SessionService } from '../../core/services/session.service';
@@ -26,6 +26,11 @@ export class ShellComponent {
   readonly rol = this.session.rol;
   readonly persona = this.session.persona;
   readonly collapsed = signal(false);
+
+  /** Nombre accesible del wordmark según el área que se está viendo. */
+  readonly tituloArea = computed(() =>
+    this.rol() === 'CLIENTE' ? 'área de cliente' : 'panel'
+  );
 
   readonly menu: MenuItem[] = [
     { label: 'Inicio', path: '/app/inicio', roles: ['ADMIN', 'EMPLEADO'] },

@@ -1,1 +1,33 @@
 /* Los estilos comunes viven en src/styles.css (tokens del sistema). */
+
+.campo-con-previa {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: var(--space-3);
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .campo-con-previa {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.campo-con-previa__entrada {
+  min-width: 0;
+}
+
+.vista-previa {
+  display: block;
+  width: 100%;
+}
+
+.vista-previa.vacia {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 3 / 2;
+  border: 1px dashed var(--color-junta);
+  border-radius: var(--radius-control);
+  background: var(--color-sillar-piedra);
+}

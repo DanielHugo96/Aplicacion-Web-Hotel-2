@@ -8,6 +8,7 @@ import { ClienteService } from '../../../core/services/cliente.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 import { PaginationComponent } from '../../../ui/pagination/pagination.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 /**
  * `/mi-estadia/catalogo`: catálogo privado de la sede de la estadía ACTIVA.
@@ -17,7 +18,7 @@ import { PaginationComponent } from '../../../ui/pagination/pagination.component
 @Component({
   selector: 'app-catalogo-cliente',
   standalone: true,
-  imports: [RouterLink, ErrorBannerComponent, MoneyPipe, PaginationComponent],
+  imports: [RouterLink, ErrorBannerComponent, MoneyPipe, PaginationComponent, ImagenPanelComponent],
   templateUrl: './catalogo-cliente.component.html',
   styleUrl: './catalogo-cliente.component.css',
 })

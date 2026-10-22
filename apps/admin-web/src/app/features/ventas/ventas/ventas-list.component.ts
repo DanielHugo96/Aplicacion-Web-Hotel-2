@@ -10,6 +10,7 @@ import { SessionService } from '../../../core/services/session.service';
 import { VentasService } from '../../../core/services/ventas.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 import { PaginationComponent } from '../../../ui/pagination/pagination.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 const ESPERA_SONDEO_MS = 2000;
 const OPERACION_TERMINAL: EstadoOperacionVenta[] = ['CONFIRMADA', 'RECHAZADA', 'CANCELADA'];
@@ -36,8 +37,25 @@ function esperar(ms: number): Promise<void> {
     PaginationComponent,
     MoneyPipe,
     PeTimestampPipe,
+    ImagenPanelComponent,
   ],
   templateUrl: './ventas-list.component.html',
+  styles: [
+    `
+      .celda-productos {
+        display: flex;
+        align-items: center;
+        gap: var(--space-2);
+        min-width: 0;
+      }
+
+      .miniatura {
+        display: block;
+        flex: 0 0 auto;
+        width: 32px;
+      }
+    `,
+  ],
 })
 export class VentasListComponent implements OnDestroy {
   private readonly ventasService = inject(VentasService);
@@ -54,6 +72,15 @@ export class VentasListComponent implements OnDestroy {
 
   estado: EstadoVenta | '' = '';
   estadoOperacion: EstadoOperacionVenta | '' = '';
+
+  /** Hasta tres líneas de la venta para la columna de miniaturas. */
+  primerasLineas(v: Venta): Venta['detalles'] {
+    return (v.detalles ?? []).slice(0, 3);
+  }
+
+  restantesLineas(v: Venta): number {
+    return Math.max(0, (v.detalles ?? []).length - 3);
+  }
 
   private destruido = false;
   private readonly sondeos = new Set<string>();

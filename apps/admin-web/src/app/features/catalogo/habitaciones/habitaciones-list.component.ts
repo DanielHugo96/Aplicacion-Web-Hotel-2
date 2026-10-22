@@ -7,7 +7,7 @@ import { RecepcionService } from '../../../core/services/recepcion.service';
 import { SedeContextService } from '../../../core/services/sede-context.service';
 import { SessionService } from '../../../core/services/session.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { Categoria, EstadoFisico, Habitacion } from '../../../core/models/catalogo.models';
+import { Categoria, EstadoFisico, Habitacion, ImagenHabitacion } from '../../../core/models/catalogo.models';
 import {
   OperacionHabitacion,
   ResultadoOperacionHabitacion,
@@ -18,6 +18,7 @@ import { PaginationComponent } from '../../../ui/pagination/pagination.component
 import { ConfirmDialogComponent } from '../../../ui/confirm-dialog/confirm-dialog.component';
 import { PendingBannerComponent } from '../../../ui/pending-banner/pending-banner.component';
 import { MoneyPipe } from '../../../core/pipes/money.pipe';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 @Component({
   selector: 'app-habitaciones-list',
@@ -29,6 +30,7 @@ import { MoneyPipe } from '../../../core/pipes/money.pipe';
     ConfirmDialogComponent,
     PendingBannerComponent,
     MoneyPipe,
+    ImagenPanelComponent,
   ],
   templateUrl: './habitaciones-list.component.html',
   styleUrl: './habitaciones-list.component.css',
@@ -139,6 +141,21 @@ export class HabitacionesListComponent implements OnDestroy {
 
   editar(habitacion: Habitacion): void {
     this.router.navigateByUrl(`/app/habitaciones/${habitacion.idHabitacion}/editar`);
+  }
+
+  /** Ruta del detalle con la galería completa (paso 8). */
+  verDetalle(habitacion: Habitacion): void {
+    this.router.navigateByUrl(`/app/habitaciones/${habitacion.idHabitacion}`);
+  }
+
+  /** Galería ordenada por `orden`, como la guarda el contrato. */
+  galeria(h: Habitacion): ImagenHabitacion[] {
+    return [...(h.urlsImagenes ?? [])].sort((a, b) => Number(a.orden) - Number(b.orden));
+  }
+
+  /** Miniatura del listado: la primera imagen de la galería. */
+  primeraImagen(h: Habitacion): ImagenHabitacion | null {
+    return this.galeria(h)[0] ?? null;
   }
 
   claseFisica(h: Habitacion): string {

@@ -8,6 +8,7 @@ import { ClienteContextService } from '../../../core/services/cliente-context.se
 import { ClienteService } from '../../../core/services/cliente.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 import { PaginationComponent } from '../../../ui/pagination/pagination.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 /**
  * `/mis-ventas`: el contrato no publica un listado global para C, así que se
@@ -24,6 +25,7 @@ import { PaginationComponent } from '../../../ui/pagination/pagination.component
     MoneyPipe,
     PeTimestampPipe,
     PaginationComponent,
+    ImagenPanelComponent,
   ],
   templateUrl: './mis-ventas.component.html',
   styleUrl: './mis-ventas.component.css',
@@ -38,6 +40,15 @@ export class MisVentasComponent implements OnInit {
   readonly pagina = signal(0);
   readonly total = computed(() => this.ventas().length);
   readonly size = 20;
+
+  /** Hasta tres líneas de la venta para la columna de miniaturas. */
+  primerasLineas(v: Venta): Venta['detalles'] {
+    return (v.detalles ?? []).slice(0, 3);
+  }
+
+  restantesLineas(v: Venta): number {
+    return Math.max(0, (v.detalles ?? []).length - 3);
+  }
 
   readonly visibles = computed(() => {
     const desde = this.pagina() * this.size;

@@ -41,10 +41,25 @@
   align-self: center;
 }
 
-.brand-name {
+.brand-word {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.28em;
+  white-space: nowrap;
+}
+
+.brand-word__casa {
   font-family: var(--font-display);
+  font-weight: 400;
   font-size: var(--text-h3);
-  letter-spacing: 0.01em;
+  color: var(--color-cochinilla);
+}
+
+.brand-word__sillar {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: var(--text-h3);
+  color: var(--color-tinta);
 }
 
 .brand-tag {

@@ -1,1 +1,14 @@
 /* Los estilos comunes viven en src/styles.css (tokens del sistema). */
+
+.celda-imagen {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.miniatura {
+  display: block;
+  flex: 0 0 auto;
+  width: 44px;
+}

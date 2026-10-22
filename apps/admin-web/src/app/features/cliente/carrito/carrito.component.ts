@@ -8,6 +8,7 @@ import { ClienteContextService } from '../../../core/services/cliente-context.se
 import { ClienteService } from '../../../core/services/cliente.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 interface ErrorLinea {
   message: string;
@@ -33,7 +34,7 @@ interface Pendiente {
 @Component({
   selector: 'app-carrito-cliente',
   standalone: true,
-  imports: [RouterLink, ErrorBannerComponent, MoneyPipe, PeTimestampPipe],
+  imports: [RouterLink, ErrorBannerComponent, MoneyPipe, PeTimestampPipe, ImagenPanelComponent],
   templateUrl: './carrito.component.html',
   styleUrl: './carrito.component.css',
 })

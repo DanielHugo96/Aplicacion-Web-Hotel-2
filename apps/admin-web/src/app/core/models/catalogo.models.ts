@@ -94,6 +94,10 @@ export interface Hotel {
   ciudad: string;
   telefono: string;
   correoContacto: string;
+  /** Opcional en el contrato: `null` cuando la sede no tiene foto. */
+  imagenUrl?: string | null;
+  /** Obligatorio si hay `imagenUrl` (≤ 150). */
+  imagenAlt?: string | null;
   estado: boolean;
   publicado: boolean;
   version: number;
@@ -107,6 +111,8 @@ export interface HotelInput {
   ciudad: string;
   telefono: string;
   correoContacto: string;
+  imagenUrl?: string | null;
+  imagenAlt?: string | null;
   publicado: boolean;
   estado: boolean;
 }

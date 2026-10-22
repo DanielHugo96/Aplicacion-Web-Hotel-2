@@ -5,6 +5,7 @@ import { CatalogoService } from '../../../core/services/catalogo.service';
 import { SessionService } from '../../../core/services/session.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { Hotel } from '../../../core/models/catalogo.models';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 import { PaginationComponent } from '../../../ui/pagination/pagination.component';
 import { ConfirmDialogComponent } from '../../../ui/confirm-dialog/confirm-dialog.component';
@@ -12,7 +13,7 @@ import { ConfirmDialogComponent } from '../../../ui/confirm-dialog/confirm-dialo
 @Component({
   selector: 'app-sedes-list',
   standalone: true,
-  imports: [ErrorBannerComponent, PaginationComponent, ConfirmDialogComponent],
+  imports: [ErrorBannerComponent, PaginationComponent, ConfirmDialogComponent, ImagenPanelComponent],
   templateUrl: './sedes-list.component.html',
   styleUrl: './sedes-list.component.css',
 })

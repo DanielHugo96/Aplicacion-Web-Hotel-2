@@ -11,6 +11,7 @@ import { VentasService, etagDeVersion } from '../../../core/services/ventas.serv
 import { ConfirmDialogComponent } from '../../../ui/confirm-dialog/confirm-dialog.component';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
 import { PaginationComponent } from '../../../ui/pagination/pagination.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 /**
  * `/app/productos`: productos de la sede seleccionada en el topbar. A muta
@@ -22,6 +23,10 @@ import { PaginationComponent } from '../../../ui/pagination/pagination.component
  * Baja, reactivación, asignación y ajuste releen el producto para enviar el
  * `If-Match` real de la versión de la sede; ningún cuerpo incluye `cantidad`
  * salvo el ajuste, que la cambia solo por `delta` y motivo.
+ *
+ * La miniatura sale de `imagenUrl`; el `alt` se compone con el nombre porque
+ * el contrato de `inventory` no tiene `imagenAlt` (ver
+ * `IA-front-admin-web-imagenes-panel-01.md`).
  */
 @Component({
   selector: 'app-productos-list',
@@ -32,8 +37,17 @@ import { PaginationComponent } from '../../../ui/pagination/pagination.component
     ErrorBannerComponent,
     PaginationComponent,
     MoneyPipe,
+    ImagenPanelComponent,
   ],
   templateUrl: './productos-list.component.html',
+  styles: [
+    `
+      .miniatura {
+        display: block;
+        width: 44px;
+      }
+    `,
+  ],
 })
 export class ProductosListComponent {
   private readonly ventas = inject(VentasService);
@@ -131,6 +145,11 @@ export class ProductosListComponent {
 
   bajoStock(p: Producto): boolean {
     return p.cantidad <= p.umbralBajo;
+  }
+
+  /** `alt` de la miniatura: el contrato de inventory no tiene `imagenAlt`. */
+  altProducto(p: Producto): string {
+    return `Producto ${p.nombre}`;
   }
 
   nuevo(): void {

@@ -11,6 +11,7 @@ import { PeTimestampPipe } from '../../../core/pipes/timestamp.pipe';
 import { ClienteContextService } from '../../../core/services/cliente-context.service';
 import { ClienteService } from '../../../core/services/cliente.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 /**
  * `/mis-ventas/:id`: detalle propio con líneas inmutables. `medioPago` nulo se
@@ -20,7 +21,7 @@ import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.comp
 @Component({
   selector: 'app-venta-detalle',
   standalone: true,
-  imports: [RouterLink, ErrorBannerComponent, MoneyPipe, PeTimestampPipe],
+  imports: [RouterLink, ErrorBannerComponent, MoneyPipe, PeTimestampPipe, ImagenPanelComponent],
   templateUrl: './venta-detalle.component.html',
   styleUrl: './venta-detalle.component.css',
 })

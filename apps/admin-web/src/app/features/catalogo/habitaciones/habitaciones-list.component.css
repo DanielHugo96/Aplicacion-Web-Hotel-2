@@ -1,1 +1,6 @@
 /* Los estilos comunes viven en src/styles.css (tokens del sistema). */
+
+.miniatura {
+  display: block;
+  width: 64px;
+}

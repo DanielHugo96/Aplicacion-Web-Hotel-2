@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { Component, EventEmitter, Input, Output, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ApiUiError, parseApiError } from '../../core/api-error';
 import { API_PATHS } from '../../core/api.config';
@@ -6,6 +6,7 @@ import { AuthService } from '../../core/services/auth.service';
 import { ETagCacheService } from '../../core/services/etag-cache.service';
 import { Persona, SessionService } from '../../core/services/session.service';
 import { ErrorBannerComponent } from '../../ui/error-banner/error-banner.component';
+import { ImagenPanelComponent } from '../../shared/imagen-panel.component';
 import { PasswordChangeComponent } from '../password-change/password-change.component';
 
 const FOTO_URL_RE = /^(https:\/\/|\/assets\/)/;
@@ -15,11 +16,21 @@ const FOTO_URL_RE = /^(https:\/\/|\/assets\/)/;
  * C). Envía solo `nombre`, `apellido` y `fotoUrl`; el `If-Match` y la
  * `Idempotency-Key` los pone el interceptor. 412 no sobrescribe: recarga.
  * 428 se resuelve recargando el recurso antes de reenviar.
+ *
+ * La foto actual se pinta aunque no se esté editando el campo y la nueva se
+ * previsualiza en cuanto la URL es válida; un fallo de carga deja el valor
+ * escrito y muestra el texto junto al campo, sin bloquear el guardado
+ * ([`08` §6](../../../../docs/especificacion/08-admin-web.md#6-imágenes-en-el-panel)).
  */
 @Component({
   selector: 'app-perfil-form',
   standalone: true,
-  imports: [FormsModule, PasswordChangeComponent, ErrorBannerComponent],
+  imports: [
+    FormsModule,
+    PasswordChangeComponent,
+    ErrorBannerComponent,
+    ImagenPanelComponent,
+  ],
   templateUrl: './perfil-form.component.html',
   styleUrl: './perfil-form.component.css',
 })
@@ -39,6 +50,8 @@ export class PerfilFormComponent {
   error: ApiUiError | null = null;
   etag: string | null = null;
   ok = false;
+  /** `true` cuando la vista previa de `fotoUrl` no cargó. */
+  readonly fotoRota = signal(false);
   private recargadoPorPrecondicion = false;
 
   ngOnInit(): void {
@@ -48,6 +61,27 @@ export class PerfilFormComponent {
   fotoValida(): boolean {
     if (!this.fotoUrl) return true;
     return FOTO_URL_RE.test(this.fotoUrl) && this.fotoUrl.length <= 500;
+  }
+
+  /** `true` cuando hay una URL de foto válida que previsualizar. */
+  mostrarFoto(): boolean {
+    const url = this.fotoUrl.trim();
+    return !!url && FOTO_URL_RE.test(url) && url.length <= 500;
+  }
+
+  /** Nombre accesible de la foto: el de la persona, nunca la URL. */
+  altFoto(): string {
+    const nombre = `${this.nombre} ${this.apellido}`.trim();
+    return nombre ? `Foto de ${nombre}` : 'Foto de perfil';
+  }
+
+  alFallarFoto(): void {
+    this.fotoRota.set(true);
+  }
+
+  alEscribirFoto(url: string): void {
+    this.fotoUrl = url;
+    this.fotoRota.set(false);
   }
 
   formularioValido(): boolean {
@@ -144,5 +178,6 @@ export class PerfilFormComponent {
     this.nombre = this.persona.nombre ?? '';
     this.apellido = this.persona.apellido ?? '';
     this.fotoUrl = this.persona.fotoUrl ?? '';
+    this.fotoRota.set(false);
   }
 }

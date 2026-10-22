@@ -31,6 +31,7 @@
         <thead>
           <tr>
             <th scope="col">Venta</th>
+            <th scope="col">Productos</th>
             <th scope="col">Fecha</th>
             <th scope="col">Pago</th>
             <th scope="col">Operación</th>
@@ -42,6 +43,24 @@
           @for (v of visibles(); track v.idVenta) {
             <tr>
               <td class="monospace">#{{ v.idVenta }}</td>
+              <td>
+                <div class="celda-productos">
+                  @for (linea of primerasLineas(v); track linea.idDetalleVenta) {
+                    <span class="miniatura" [attr.title]="linea.nombreProducto">
+                      <app-imagen-panel
+                        [src]="linea.imagenUrl"
+                        [alt]="'Producto ' + linea.nombreProducto"
+                        relacion="1 / 1"
+                      ></app-imagen-panel>
+                    </span>
+                  } @empty {
+                    <span class="text-small muted">Sin líneas</span>
+                  }
+                  @if (restantesLineas(v) > 0) {
+                    <span class="text-small muted">+{{ restantesLineas(v) }}</span>
+                  }
+                </div>
+              </td>
               <td class="table-nums">{{ v.fechaCreacion | peTimestamp }}</td>
               <td>
                 <span [class]="'pill ' + pagoClase(v.estado)">{{ pagoEtiqueta(v.estado) }}</span>

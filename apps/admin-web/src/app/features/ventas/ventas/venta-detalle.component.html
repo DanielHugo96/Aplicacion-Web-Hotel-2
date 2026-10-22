@@ -106,7 +106,18 @@
           <tbody>
             @for (linea of v.detalles; track linea.idDetalleVenta) {
               <tr>
-                <td>{{ linea.nombreProducto }}</td>
+                <td>
+                  <div class="celda-producto">
+                    <span class="miniatura">
+                      <app-imagen-panel
+                        [src]="linea.imagenUrl"
+                        [alt]="'Producto ' + linea.nombreProducto"
+                        relacion="1 / 1"
+                      ></app-imagen-panel>
+                    </span>
+                    <span>{{ linea.nombreProducto }}</span>
+                  </div>
+                </td>
                 <td class="num">{{ linea.cantidad }}</td>
                 <td class="num">{{ linea.precioUnitario | money }}</td>
                 <td class="num">{{ linea.subTotal | money }}</td>

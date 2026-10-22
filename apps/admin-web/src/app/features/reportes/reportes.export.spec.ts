@@ -20,7 +20,7 @@ const filas: FilaReporte[] = [
 
 const opciones = {
   titulo: 'Ventas por producto',
-  subtitulo: 'Hotel Demo Lima · del 2026-09-01 al 2026-10-20',
+  subtitulo: 'Casa Sillar Lima Centro · del 2026-09-01 al 2026-10-20',
   columnas,
   filas,
 };

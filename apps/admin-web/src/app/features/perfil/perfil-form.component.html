@@ -52,23 +52,45 @@
 
     <div class="field">
       <label for="pfFotoUrl">URL de foto</label>
-      <input
-        id="pfFotoUrl"
-        [(ngModel)]="fotoUrl"
-        name="fotoUrl"
-        [class.error]="campoInvalido('fotoUrl') || !fotoValida()"
-        [attr.aria-invalid]="campoInvalido('fotoUrl') || !fotoValida() ? 'true' : null"
-        [attr.aria-describedby]="'pfFotoAyuda'"
-        maxlength="500"
-      />
-      <span id="pfFotoAyuda" class="field-help">
-        URL permitida: https:// o /assets/ (máximo 500 caracteres).
-      </span>
-      @if (campoInvalido('fotoUrl')) {
-        <span class="field-msg" role="alert">{{ mensajeCampo('fotoUrl') }}</span>
-      } @else if (!fotoValida() && fotoUrl.length > 0) {
-        <span class="field-msg" role="alert">URL no permitida.</span>
-      }
+      <div class="campo-con-foto">
+        <div class="campo-con-foto__entrada">
+          <input
+            id="pfFotoUrl"
+            [(ngModel)]="fotoUrl"
+            (ngModelChange)="alEscribirFoto($event)"
+            name="fotoUrl"
+            [class.error]="campoInvalido('fotoUrl') || !fotoValida()"
+            [attr.aria-invalid]="campoInvalido('fotoUrl') || !fotoValida() ? 'true' : null"
+            [attr.aria-describedby]="'pfFotoAyuda'"
+            maxlength="500"
+          />
+          <span id="pfFotoAyuda" class="field-help">
+            URL permitida: https:// o /assets/ (máximo 500 caracteres).
+          </span>
+          @if (campoInvalido('fotoUrl')) {
+            <span class="field-msg" role="alert">{{ mensajeCampo('fotoUrl') }}</span>
+          } @else if (!fotoValida() && fotoUrl.length > 0) {
+            <span class="field-msg" role="alert">URL no permitida.</span>
+          }
+          @if (fotoRota()) {
+            <span class="field-msg" role="alert">No se pudo cargar la imagen</span>
+          }
+        </div>
+        <div class="campo-con-foto__vista">
+          @if (mostrarFoto()) {
+            <span class="foto-previa">
+              <app-imagen-panel
+                [src]="fotoUrl.trim()"
+                [alt]="altFoto()"
+                relacion="1 / 1"
+                (fallo)="alFallarFoto()"
+              ></app-imagen-panel>
+            </span>
+          } @else {
+            <span class="foto-previa vacia text-small muted">Sin foto</span>
+          }
+        </div>
+      </div>
     </div>
 
     <button class="btn btn-primary" type="submit" [disabled]="loading || !formularioValido()">

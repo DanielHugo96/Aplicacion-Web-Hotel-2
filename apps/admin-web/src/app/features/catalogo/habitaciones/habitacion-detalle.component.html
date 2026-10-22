@@ -1,0 +1,109 @@
+<div class="page">
+  <div class="page-head">
+    <div>
+      <p class="sub breadcrumb"><a routerLink="/app/habitaciones">Habitaciones</a> / {{ titulo() }}</p>
+      <h1>{{ titulo() }}</h1>
+      <p class="sub">Galería completa en el orden guardado.</p>
+    </div>
+    <div class="toolbar-actions">
+      <button class="btn btn-secondary" type="button" (click)="editar()" [disabled]="!habitacion()">
+        Editar habitación
+      </button>
+      <a class="btn btn-secondary" routerLink="/app/habitaciones">Volver al listado</a>
+    </div>
+  </div>
+
+  <app-error-banner
+    [error]="error()"
+    [actionLabel]="actionLabel()"
+    (action)="accionError()"
+  ></app-error-banner>
+
+  @if (cargando()) {
+    <div class="detalle" role="status" aria-label="Cargando habitación">
+      <div class="detalle__galeria">
+        <div class="skeleton skeleton-principal"></div>
+        <div class="skeleton skeleton-row"></div>
+      </div>
+      <div class="detalle__datos">
+        <div class="skeleton skeleton-row"></div>
+        <div class="skeleton skeleton-row"></div>
+        <div class="skeleton skeleton-row"></div>
+      </div>
+    </div>
+  } @else if (habitacion(); as h) {
+    <section class="detalle" aria-labelledby="galeria-titulo">
+      <div class="detalle__galeria">
+        <h2 id="galeria-titulo" class="sr-only">Galería de {{ titulo() }}</h2>
+        @if (galeria().length > 0) {
+          <figure class="detalle__figura">
+            <app-imagen-panel
+              [src]="galeria()[0].url"
+              [alt]="galeria()[0].alt"
+              relacion="4 / 3"
+              [prioritaria]="true"
+            ></app-imagen-panel>
+            <figcaption class="text-small muted">
+              {{ galeria()[0].alt }} · Imagen 1 de {{ galeria().length }}
+            </figcaption>
+          </figure>
+          @if (galeria().length > 1) {
+            <ul class="detalle__tira" aria-label="Resto de la galería en el orden guardado">
+              @for (imagen of galeria().slice(1); track imagen.url + imagen.orden) {
+                <li>
+                  <app-imagen-panel
+                    [src]="imagen.url"
+                    [alt]="imagen.alt"
+                    relacion="4 / 3"
+                  ></app-imagen-panel>
+                  <span class="sr-only">{{ imagen.alt }}</span>
+                </li>
+              }
+            </ul>
+          }
+        } @else {
+          <div class="empty" role="status">
+            <p>Aún no hay imágenes en la galería</p>
+            <span class="text-small">Añade imágenes desde la edición de la habitación.</span>
+          </div>
+        }
+      </div>
+
+      <div class="detalle__datos">
+        <dl class="resumen">
+          <div>
+            <dt>Sede</dt>
+            <dd class="monospace">#{{ h.idHotel }}</dd>
+          </div>
+          <div>
+            <dt>Piso</dt>
+            <dd>{{ h.pisoNombre ?? ('Piso ' + h.idPiso) }}</dd>
+          </div>
+          <div>
+            <dt>Categoría</dt>
+            <dd>{{ h.categoriaNombre ?? ('Categoría ' + h.idCategoria) }}</dd>
+          </div>
+          <div>
+            <dt>Precio por noche</dt>
+            <dd class="num">{{ h.precio | money }}</dd>
+          </div>
+          <div>
+            <dt>Publicada</dt>
+            <dd>
+              <span [class]="'pill ' + (h.publicada ? 'pill-ok' : 'pill-archivado')">
+                {{ h.publicada ? 'Publicada' : 'No publicada' }}
+              </span>
+            </dd>
+          </div>
+          <div>
+            <dt>Estado físico</dt>
+            <dd>
+              <span class="pill pill-archivado">{{ h.estadoFisico?.descripcion }}</span>
+            </dd>
+          </div>
+        </dl>
+        <p class="text-small muted">{{ h.detalle }}</p>
+      </div>
+    </section>
+  }
+</div>

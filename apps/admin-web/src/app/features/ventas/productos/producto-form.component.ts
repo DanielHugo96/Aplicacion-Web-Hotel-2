@@ -8,6 +8,7 @@ import { SessionService } from '../../../core/services/session.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { VentasService, etagDeVersion } from '../../../core/services/ventas.service';
 import { ErrorBannerComponent } from '../../../ui/error-banner/error-banner.component';
+import { ImagenPanelComponent } from '../../../shared/imagen-panel.component';
 
 const URL_PERMITIDA = /^(https:\/\/|\/assets\/)/;
 
@@ -20,12 +21,52 @@ const URL_PERMITIDA = /^(https:\/\/|\/assets\/)/;
  * `PUT /api/producto/actualizar/{id}?idHotel=` con `If-Match` del ETag,
  * `productoVersion` en el cuerpo y sin `cantidad` (la cantidad solo cambia por
  * venta o ajuste). 412 y 428 se resuelven recargando, nunca sobrescribiendo.
+ *
+ * La vista previa de `imagenUrl` se pinta en cuanto la URL es válida; un fallo
+ * de carga no es un error de validación y no impide guardar.
  */
 @Component({
   selector: 'app-producto-form',
   standalone: true,
-  imports: [FormsModule, RouterLink, ErrorBannerComponent],
+  imports: [FormsModule, RouterLink, ErrorBannerComponent, ImagenPanelComponent],
   templateUrl: './producto-form.component.html',
+  styles: [
+    `
+      .campo-con-previa {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 160px;
+        gap: var(--space-3);
+        align-items: start;
+      }
+
+      @media (max-width: 640px) {
+        .campo-con-previa {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .campo-con-previa__entrada {
+        min-width: 0;
+      }
+
+      .vista-previa {
+        display: block;
+        width: 100%;
+      }
+
+      .vista-previa.vacia {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        aspect-ratio: 1 / 1;
+        border: 1px dashed var(--color-junta);
+        border-radius: var(--radius-control);
+        background: var(--color-sillar-piedra);
+        text-align: center;
+        padding: var(--space-1);
+      }
+    `,
+  ],
 })
 export class ProductoFormComponent implements OnInit {
   private readonly ventas = inject(VentasService);
@@ -45,6 +86,8 @@ export class ProductoFormComponent implements OnInit {
   readonly errores = signal<Record<string, string>>({});
   readonly producto = signal<Producto | null>(null);
   readonly etag = signal<string | null>(null);
+  /** `true` si la vista previa de `imagenUrl` no cargó. No bloquea guardar. */
+  readonly imagenRota = signal(false);
 
   sku = '';
   nombre = '';
@@ -112,6 +155,32 @@ export class ProductoFormComponent implements OnInit {
 
   mensajeCampo(campo: string): string {
     return this.errores()[campo] ?? '';
+  }
+
+  /** La vista previa solo aparece con una URL válida del contrato. */
+  urlImagenValida(): boolean {
+    const url = this.imagenUrl.trim();
+    if (!url) return true;
+    return URL_PERMITIDA.test(url) && url.length <= 500;
+  }
+
+  mostrarPrevia(): boolean {
+    return !!this.imagenUrl.trim() && this.urlImagenValida();
+  }
+
+  /** `alt` de la vista previa: el nombre que el usuario está escribiendo. */
+  altPrevia(): string {
+    const nombre = this.nombre.trim();
+    return nombre ? `Producto ${nombre}` : 'Vista previa de la imagen del producto';
+  }
+
+  alFallarPrevia(): void {
+    this.imagenRota.set(true);
+  }
+
+  alEscribirImagen(url: string): void {
+    this.imagenUrl = url;
+    this.imagenRota.set(false);
   }
 
   accionError(): void {

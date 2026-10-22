@@ -108,6 +108,14 @@ export interface VentaDetalle {
   idDetalleVenta: number;
   idProducto: number;
   nombreProducto: string;
+  /**
+   * Snapshot de la imagen del producto. El contrato (`VentaDetalle` de
+   * `admin-web.yaml` y `sales.yaml`) todavía no lo publica: se declara
+   * opcional para pintar la miniatura en cuanto el servicio lo emita y caer al
+   * fallback neutro mientras no llegue (ver
+   * `IA-front-admin-web-imagenes-panel-02.md`).
+   */
+  imagenUrl?: string | null;
   cantidad: number;
   precioUnitario: number;
   subTotal: number;

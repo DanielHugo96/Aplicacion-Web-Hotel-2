@@ -117,6 +117,8 @@ export interface VentaDetalle {
   idDetalleVenta: number;
   idProducto: number;
   nombreProducto: string;
+  /** Ver `ventas.models.ts`: opcional hasta que el contrato lo publique. */
+  imagenUrl?: string | null;
   cantidad: number;
   precioUnitario: number;
   subTotal: number;
