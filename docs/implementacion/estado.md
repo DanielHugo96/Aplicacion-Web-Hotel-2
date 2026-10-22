@@ -6,6 +6,9 @@ Cada plan ejecutado se registra aquí en un PR `docs:` aparte, después de que s
 Así varias PRs de implementación no chocan en esta tabla. El reclamo de un plan en curso vive en su rama y en su
 PR en borrador (ver [`README.md` §3](README.md#3-cómo-se-implementa-un-plan)).
 
+La tabla lista **todos** los planes, no solo los cerrados: los que aún no se han ejecutado figuran con su
+`Estado en main` real (`propuesto`) y `—` en rama y PR, para que se vea de un vistazo qué falta por implementar.
+
 Los **planes de arreglo** (`<ámbito>-arreglo-<tema>`, norma §6.11.5) también se registran aquí cuando se
 cierran, con la fase del plan reparado y tanda `—`.
 
@@ -36,6 +39,13 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F4 | [`front-admin-web-cierre`](../plans/front-admin-web-cierre.md) | T12 | `cerrado` | `front-admin-web-cierre` | [#121](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/121) |
 | F4 | [`front-admin-web-reportes`](../plans/front-admin-web-reportes.md) | T13 | `cerrado` | `front-admin-web-reportes` | [#123](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/123) |
 | F5 | [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md) | T14 | `cerrado` | `qa-matriz-aceptacion` | [#125](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/125) |
+| F5 | [`back-hotel-presentacion-real`](../plans/back-hotel-presentacion-real.md) | T15 | `propuesto` | — | — |
+| F5 | [`back-identity-presentacion-real`](../plans/back-identity-presentacion-real.md) | T15 | `propuesto` | — | — |
+| F5 | [`back-notification-presentacion-real`](../plans/back-notification-presentacion-real.md) | T15 | `propuesto` | — | — |
+| F5 | [`back-inventory-imagenes-producto`](../plans/back-inventory-imagenes-producto.md) | T15 | `propuesto` | — | — |
+| F5 | [`front-public-web-presentacion-real`](../plans/front-public-web-presentacion-real.md) | T16 | `propuesto` | — | — |
+| F5 | [`front-admin-web-imagenes-panel`](../plans/front-admin-web-imagenes-panel.md) | T16 | `propuesto` | — | — |
+| F5 | [`qa-matriz-lp01-imagenes`](../plans/qa-matriz-lp01-imagenes.md) | T17 | `propuesto` | — | — |
 | F2 | [`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) | — | `cerrado` | `back-arreglo-hotel-arranque` | [#76](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/76) |
 | F1 | [`back-arreglo-audiencia-maquina`](../plans/back-arreglo-audiencia-maquina.md) | — | `cerrado` | `back-arreglo-audiencia-maquina` | [#79](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/79) |
 | F2 | [`back-arreglo-hotel-catalogo-admin`](../plans/back-arreglo-hotel-catalogo-admin.md) | — | `cerrado` | `back-arreglo-hotel-catalogo-admin` | [#92](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/92) |
