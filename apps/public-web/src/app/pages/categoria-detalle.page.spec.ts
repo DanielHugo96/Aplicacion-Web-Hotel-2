@@ -31,7 +31,7 @@ const CATEGORIA: CategoriaPublica = {
   precioDesde: 70,
   moneda: 'PEN',
   imagenes: [
-    { url: '/assets/demo/hab-101-1.jpg', alt: 'Habitación de demostración' },
+    { url: '/assets/habitaciones/lima-centro-individual-1.jpg', alt: 'Habitación de demostración' },
   ],
 };
 
@@ -85,7 +85,7 @@ describe('CategoriaDetallePage', () => {
     const element = fixture.nativeElement as HTMLElement;
 
     expect(element.querySelector('h1')?.textContent).toContain('Individual');
-    expect(element.querySelectorAll('app-demo-image').length).toBe(1);
+    expect(element.querySelectorAll('app-catalog-image').length).toBe(1);
     expect(element.querySelector('img')?.getAttribute('alt')).toBe(
       'Habitación de demostración',
     );

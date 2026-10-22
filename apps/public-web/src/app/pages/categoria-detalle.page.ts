@@ -4,13 +4,16 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { UiError, validationError } from '../core/api-error';
 import { CatalogService } from '../core/catalog.service';
 import { CategoriaPublica } from '../core/catalog.models';
-import { DemoImageComponent } from '../shared/demo-image.component';
+import {
+  CatalogImageComponent,
+  IMAGEN_FALLBACK,
+} from '../shared/catalog-image.component';
 import { ErrorStateComponent } from '../shared/error-state.component';
 import { MonedaPePipe } from '../shared/moneda-pe.pipe';
 
 @Component({
   selector: 'app-categoria-detalle-page',
-  imports: [RouterLink, DemoImageComponent, ErrorStateComponent, MonedaPePipe],
+  imports: [RouterLink, CatalogImageComponent, ErrorStateComponent, MonedaPePipe],
   templateUrl: './categoria-detalle.page.html',
   styleUrl: './categoria-detalle.page.css',
 })
@@ -87,7 +90,7 @@ export class CategoriaDetallePage {
   protected imagen(categoria: CategoriaPublica): string[] {
     return categoria.imagenes.length > 0
       ? categoria.imagenes.map((imagen) => imagen.url)
-      : ['/assets/demo/placeholder.svg'];
+      : [IMAGEN_FALLBACK];
   }
 
   protected alt(categoria: CategoriaPublica, indice: number): string {

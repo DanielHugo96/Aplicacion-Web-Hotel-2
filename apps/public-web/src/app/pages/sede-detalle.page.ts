@@ -8,7 +8,10 @@ import {
   HotelPublico,
   MetaPage,
 } from '../core/catalog.models';
-import { DemoImageComponent } from '../shared/demo-image.component';
+import {
+  CatalogImageComponent,
+  IMAGEN_FALLBACK,
+} from '../shared/catalog-image.component';
 import { ErrorStateComponent } from '../shared/error-state.component';
 import { MonedaPePipe } from '../shared/moneda-pe.pipe';
 
@@ -18,7 +21,7 @@ const PAGE_SIZE = 20;
   selector: 'app-sede-detalle-page',
   imports: [
     RouterLink,
-    DemoImageComponent,
+    CatalogImageComponent,
     ErrorStateComponent,
     MonedaPePipe,
   ],
@@ -162,7 +165,7 @@ export class SedeDetallePage {
   }
 
   protected imagenPrincipal(categoria: CategoriaPublica): string {
-    return categoria.imagenes[0]?.url ?? '/assets/demo/placeholder.svg';
+    return categoria.imagenes[0]?.url ?? IMAGEN_FALLBACK;
   }
 
   protected altPrincipal(categoria: CategoriaPublica): string {

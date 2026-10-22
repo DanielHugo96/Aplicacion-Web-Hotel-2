@@ -29,7 +29,7 @@
     <div class="detalle">
       <section class="galeria" aria-label="Galería de la habitación">
         @for (url of imagen(tipo); track url; let i = $index) {
-          <app-demo-image
+          <app-catalog-image
             class="galeria__imagen"
             [src]="url"
             [alt]="alt(tipo, i)"

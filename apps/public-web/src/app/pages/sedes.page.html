@@ -30,10 +30,10 @@
       <ul class="rejilla" role="list">
         @for (hotel of hoteles(); track hotel.idHotel) {
           <li class="tarjeta-sede">
-            <app-demo-image
+            <app-catalog-image
               class="tarjeta-sede__imagen"
-              src="/assets/demo/sede.svg"
-              [alt]="'Sede de demostración: ' + hotel.nombre"
+              [src]="hotel.imagenUrl ?? IMAGEN_FALLBACK"
+              [alt]="hotel.imagenAlt ?? ('Fachada de la sede ' + hotel.nombre)"
             />
             <div class="tarjeta-sede__cuerpo">
               <p class="tarjeta-sede__ciudad">{{ hotel.ciudad }}</p>

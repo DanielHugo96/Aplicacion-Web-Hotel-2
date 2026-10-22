@@ -34,7 +34,7 @@ const CATEGORIAS: CategoriaPublica[] = [
     precioDesde: 70,
     moneda: 'PEN',
     imagenes: [
-      { url: '/assets/demo/hab-101-1.jpg', alt: 'Habitación de demostración' },
+      { url: '/assets/habitaciones/lima-centro-individual-1.jpg', alt: 'Habitación de demostración' },
     ],
   },
   {
@@ -45,7 +45,7 @@ const CATEGORIAS: CategoriaPublica[] = [
     precioDesde: 100,
     moneda: 'PEN',
     imagenes: [
-      { url: '/assets/demo/hab-102-1.jpg', alt: 'Habitación de demostración' },
+      { url: '/assets/habitaciones/lima-centro-doble-1.jpg', alt: 'Habitación de demostración' },
     ],
   },
 ];

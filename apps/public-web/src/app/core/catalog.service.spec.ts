@@ -31,7 +31,7 @@ const CATEGORIA: CategoriaPublica = {
   capacidad: 2,
   precioDesde: 100,
   moneda: 'PEN',
-  imagenes: [{ url: '/assets/demo/hab-102-1.jpg', alt: 'Habitación de demostración' }],
+  imagenes: [{ url: '/assets/habitaciones/lima-centro-doble-1.jpg', alt: 'Habitación de demostración' }],
 };
 
 describe('CatalogService', () => {
