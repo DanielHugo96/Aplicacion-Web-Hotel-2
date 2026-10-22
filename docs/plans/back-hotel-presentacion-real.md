@@ -7,7 +7,7 @@
 | Componente | `hotel-service` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-hotel-catalogo`, `back-hotel-operaciones` |
 | Spec | [`hotel/api.md` §Públicas nuevas: solo lectura](../especificacion/microservicios/hotel/api.md#públicas-nuevas-solo-lectura) y [§DTO](../especificacion/microservicios/hotel/api.md#dto); [`hotel/base-de-datos.md` §Tablas](../especificacion/microservicios/hotel/base-de-datos.md#tablas), [§DDL de referencia](../especificacion/microservicios/hotel/base-de-datos.md#ddl-de-referencia), [§Procedimientos](../especificacion/microservicios/hotel/base-de-datos.md#procedimientos), [§Seeds deterministas](../especificacion/microservicios/hotel/base-de-datos.md#seeds-deterministas) y [§Verificación](../especificacion/microservicios/hotel/base-de-datos.md#verificación); [`02` §Condición de presentación real](../especificacion/02-landing-y-panel.md#condición-de-presentación-real) y [§Imágenes](../especificacion/02-landing-y-panel.md#imágenes); [`03` §Límites de campos comunes](../especificacion/03-contrato-comun.md#límites-de-campos-comunes); [`08` §6](../especificacion/08-admin-web.md#6-imágenes-en-el-panel) |
 | Casos | `LP01`, `CRUD01` |
