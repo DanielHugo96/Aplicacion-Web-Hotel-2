@@ -42,7 +42,7 @@ La fase es `F5` porque `F0`–`F4` están cerradas en `main`: este cambio llega 
 
 ## 4. Pasos
 
-- [x] 1. Crear `V901__notification_plantillas_presentacion.sql` en `db/seed/dev/` con un `UPDATE` por `(tipo, version)` para las tres plantillas. Verificación: Flyway aplica `V901` sobre una `notification_db` sembrada sin error de checksum. Evidencia: reinicio del servicio en `dev` → `Successfully validated 7 migrations` y `Successfully applied 1 migration to schema "public", now at version v901` (`tests/evidence/qa-runbooks/_runtime/notification-service.log`, línea 5787); `select version, description, success from flyway_schema_history` devuelve la fila `901 | notification plantillas presentacion | t`.
+- [x] 1. Crear `V901__notification_plantillas_presentacion.sql` en `db/seed/dev/` con un `UPDATE` por `(tipo, version)` para las tres plantillas. Verificación: Flyway aplica `V901` sobre una `notification_db` sembrada sin error de checksum. Evidencia: `select version, description, success from flyway_schema_history` devuelve la fila `901 | notification plantillas presentacion | t` (transcrito en §6) y el arranque del worker en `dev` registra `Successfully validated 7 migrations` y `Successfully applied 1 migration to schema "public", now at version v901`.
 - [x] 2. Escribir los cuerpos nuevos conservando las variables de cada plantilla (`{{nombre}}` en las tres; `{{hotel}}`, `{{idRecepcion}}`, `{{fechaSalida}}` en CHECKIN; `{{hotel}}`, `{{idRecepcion}}`, `{{totalAlojamiento}}`, `{{totalConsumos}}` en CHECKOUT) y el pie obligatorio. Verificación: `SELECT tipo, subject FROM template WHERE version = 1` devuelve «Bienvenido a Casa Sillar», «Estadía registrada» y «Salida registrada»; ningún cuerpo contiene «demo» ni «demostración». Evidencia: consulta en §6; `python scripts/validar-planes.py` y `PlantillasPresentacionTest` (5 casos, 0 fallos) comprueban los marcadores exactos, el pie y la ausencia de la marca de demostración.
 - [x] 3. Comprobar el envío real. Verificación: con Compose arriba y el worker en `dev`, completar un check-in de prueba y abrir `http://localhost:8025` (Mailpit): el asunto y el pie del correo son los nuevos y los valores de las variables aparecen escapados y completos. Evidencia: tres envíos reales (registro público, check-in y cierre) con sus jobs en `ENVIADA` y el texto recibido en Mailpit, transcritos en §6.
 - [x] 4. Ejecutar la verificación canónica. Verificación: `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS`, `python scripts/validar-contratos.py --base origin/main` no detecta retiradas y `python scripts/validar-planes.py` da 0 errores. Evidencia: `BUILD SUCCESS` de los diez módulos (`notification-service SUCCESS [14.661 s]`, `Total time: 05:21 min`); `scripts/validar-contratos.py` → «Los contratos solo se han ampliado. Correcto.»; `scripts/validar-planes.py` → «39 plan(es) revisado(s); 39 previsto(s) en el catálogo; 0 error(es), 0 aviso(s)».
@@ -95,10 +95,24 @@ CHECKIN | Estadía registrada /  / Hola {{nombre}}, /  / Tu check-in en {{hotel}
 CHECKOUT | Salida registrada /  / Hola {{nombre}}, /  / Tu salida de {{hotel}} quedó registrada (estadía {{idRecepcion}}). / Total de alojamiento: {{totalAlojamiento}}. / Total de consumos: {{totalConsumos}}. /  / Notificación automática de la cadena; no es un comprobante fiscal. /
 ```
 
-La migración quedó aplicada sin error de checksum: `flyway_schema_history` tiene
-`901 | notification plantillas presentacion | t` y el arranque registró
-`Successfully validated 7 migrations` + `Successfully applied 1 migration to schema "public", now at
-version v901` en `tests/evidence/qa-runbooks/_runtime/notification-service.log`.
+La migración quedó aplicada sin error de checksum:
+
+```
+ version |             description              | success
+---------+--------------------------------------+---------
+ 1       | api idempotency                      | t
+ 2       | outbox inbox                         | t
+ 3       | audit log                            | t
+ 4       | notification job template            | t
+ 5       | notification procedimientos          | t
+ 900     | notification plantillas              | t
+ 901     | notification plantillas presentacion | t
+(7 rows)
+```
+
+(consulta `select version, description, success from flyway_schema_history order by installed_rank`),
+y el arranque del worker en `dev` registra `Successfully validated 7 migrations` y `Successfully
+applied 1 migration to schema "public", now at version v901`.
 
 **2. Envío real.** Los tres correos salieron por las rutas de la spec y quedaron `ENVIADA` con un
 solo intento (`select tipo, estado, attempts, sent_at from notification_job`: BIENVENIDA, CHECKIN y
