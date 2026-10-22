@@ -68,6 +68,8 @@ Rollback ANTES de nuevas escrituras: restaurar rutas al monolito preservado. DES
 - Cierre muestra desglose y “no volver a cobrar” si está en recuperación.
 - Quitar social login, reserva futura y CRUD de códigos fijos del MVP.
 - DELETE de maestros baja lógica y ventas anulación; texto de UI preciso.
+- Fuera la marca de demostración: la cadena se llama igual en landing, panel, área de cliente, correos y seeds.
+- Las imágenes se ven, no solo se enlazan: sedes, habitaciones, productos y perfil muestran la imagen en pantalla, con `alt` y fallback neutro.
 
 ## 5. Matriz de aceptación funcional
 
@@ -99,7 +101,7 @@ Columnas: **ID | Precondición/datos de entrada | Acción exacta (endpoint o eve
 | SEC06 | JWT con firma ajena o `aud` incorrecta | `GET /api/auth/me` y `GET /api/hotel/listar` | 401 en cada servicio | Respuestas por servicio |
 | SEC07 | Dos ADMIN activos (1 y 2) | PUT `actualizar/2` {estado:false} y DELETE `eliminar/1` simultáneos | Exactamente uno 200 y uno 409 `LAST_ADMIN_PROTECTED`; queda ≥ 1 ADMIN activo con clave | Respuestas + `persona` (estado, clave_hash) |
 | SEC08 | Origen permitido http://localhost:4200 | Preflight con `If-Match`/`Idempotency-Key`; respuesta con ETag/Location/Retry-After; origen http://evil.test | Preflight permitido; headers legibles; origen ajeno sin `Access-Control-Allow-Origin` | Respuestas preflight/reales |
-| LP01 | Sin token | Los 4 GET públicos (hoteles, detalle, categorías, detalle categoría) | 200 en los 4; solo campos de HotelPublico/CategoriaPublica (assert de claves) | Respuestas + JSON Schema |
+| LP01 | Sin token | Los 4 GET públicos (hoteles, detalle, categorías, detalle categoría) | 200 en los 4; solo campos de HotelPublico/CategoriaPublica (assert de claves), incluidas `imagenUrl`/`imagenAlt` opcionales y `imagenes` no vacío por categoría | Respuestas + JSON Schema |
 | LP02 | Bundle de public-web | Buscar `?fecha=` u ocupación; revisar bundle | Parámetro ignorado o 400; sin dato privado alguno; sin endpoint nuevo | Respuestas + inspección de bundle |
 | CRUD01 | Token A | Alta y edición de sede, piso, categoría, habitación y producto; GET y DELETE después | Filas persistidas; `version` incrementa en cada edición; DELETE deja `estado=false`; PUT sin `If-Match` 428 | GET posteriores + DB |
 | OCC01 | Habitación 101 libre; clientes 100 y 101 | Dos `POST /api/recepcion/registrar` simultáneos a 101 | Uno 201; el otro 409 `ROOM_OCCUPIED`; una sola fila ACTIVA por habitación | Respuestas + índice único + `recepcion` |

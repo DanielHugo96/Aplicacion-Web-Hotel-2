@@ -76,7 +76,7 @@ La base de datos de un servicio solo la modifica ese servicio. Un PostgreSQL loc
   - Compose espera a que PostgreSQL esté sano (`healthcheck` + `depends_on: service_healthy`) antes de arrancar cada servicio.
 - JPA solo valida el esquema: `ddl-auto=validate`; no `update`.
 - Kafka 4.3.1 en KRaft (solo KRaft desde 4.0), un nodo para desarrollo; RabbitMQ 4.3.6 con management; Mailpit para correos de demo. Pinear tags/digests de imagen, no `latest`.
-- Docker Compose: sí. Infraestructura en contenedores desde el inicio; Java/Angular en IDE durante desarrollo; perfil completo en contenedores para demostración.
+- Docker Compose: sí. Infraestructura en contenedores desde el inicio; Java/Angular en IDE durante desarrollo; perfil completo en contenedores para la presentación.
 - Sin Kubernetes, service mesh, Redis, Debezium ni servidor de configuración en el MVP.
 
 ## 5. Decisiones de negocio
@@ -99,7 +99,7 @@ La base de datos de un servicio solo la modifica ese servicio. Un PostgreSQL loc
 
 ## 6. Dinero, fechas y estados
 
-PEN, `numeric(12,2)`/BigDecimal; nunca double. Precios de catálogo finales de demostración; no se modelan impuestos ni comprobantes fiscales. Fechas operativas en America/Lima; timestamps con offset ISO-8601 y almacenamiento timestamptz UTC.
+PEN, `numeric(12,2)`/BigDecimal; nunca double. Precios de catálogo finales de la cadena; no se modelan impuestos ni comprobantes fiscales. Fechas operativas en America/Lima; timestamps con offset ISO-8601 y almacenamiento timestamptz UTC.
 
 Alojamiento: noches = max(1, días entre fechaEntrada y fechaSalida prevista); tarifa guardada al check-in; precioInicial = noches × tarifa. Cambiar fechaSalida antes del cierre recalcula el alojamiento con esa tarifa; se rechaza una reducción que deje precioInicial por debajo del adelanto. Penalidad manual explícita y auditada, nunca inferida de un monto arbitrario del cliente.
 

@@ -53,6 +53,16 @@
               "type": "string",
               "description": "Ciudad de la sede."
             },
+            "imagenUrl": {
+              "type": ["string", "null"],
+              "maxLength": 500,
+              "description": "Foto principal de la sede; https de la lista permitida o /assets/. Nula si la sede no tiene imagen."
+            },
+            "imagenAlt": {
+              "type": ["string", "null"],
+              "maxLength": 150,
+              "description": "Texto alternativo de imagenUrl; no nulo cuando hay imagen."
+            },
             "estado": {
               "type": "boolean",
               "description": "false en una baja; el snapshot de baja conserva el resto de campos."
@@ -84,8 +94,10 @@
       "correlationId": "22222222-2222-4222-8222-222222222222",
       "payload": {
         "idHotel": 1,
-        "nombre": "Hotel Demo Lima Centro",
+        "nombre": "Casa Sillar Lima Centro",
         "ciudad": "Lima",
+        "imagenUrl": "/assets/sedes/lima-centro-fachada.jpg",
+        "imagenAlt": "Fachada de piedra de la sede de Lima Centro al atardecer",
         "estado": true,
         "publicado": true,
         "version": 1

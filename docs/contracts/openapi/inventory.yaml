@@ -63,7 +63,7 @@ paths:
                     sku: AGUA-500
                     nombre: Agua 500ml
                     detalle: Botella de agua de 500 ml
-                    imagenUrl: /assets/demo/producto-agua.png
+                    imagenUrl: /assets/productos/agua-500ml.png
                     idHotel: 1
                     precio: 3.50
                     cantidad: 20
@@ -132,7 +132,7 @@ paths:
               sku: AGUA-500
               nombre: Agua 500ml
               detalle: Botella de agua de 500 ml
-              imagenUrl: /assets/demo/producto-agua.png
+              imagenUrl: /assets/productos/agua-500ml.png
               idHotel: 1
               precio: 3.50
               cantidadInicial: 20
@@ -152,7 +152,7 @@ paths:
                   sku: AGUA-500
                   nombre: Agua 500ml
                   detalle: Botella de agua de 500 ml
-                  imagenUrl: /assets/demo/producto-agua.png
+                  imagenUrl: /assets/productos/agua-500ml.png
                   idHotel: 1
                   precio: 3.50
                   cantidad: 20
@@ -199,7 +199,7 @@ paths:
             example:
               nombre: Agua 500ml
               detalle: Botella de agua de 500 ml
-              imagenUrl: /assets/demo/producto-agua.png
+              imagenUrl: /assets/productos/agua-500ml.png
               precio: 3.50
               umbralBajo: 5
               estado: true

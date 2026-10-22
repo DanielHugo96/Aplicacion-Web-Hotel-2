@@ -9,7 +9,7 @@ El sistema de diseño está partido en dos documentos, uno por aplicación. Este
 | `apps/public-web` | [`DESIGN-public-web.md`](DESIGN-public-web.md) | Landing: inicio, sedes, detalle de sede, detalle de categoría, contacto, privacidad |
 | `apps/admin-web` | [`DESIGN-admin-web.md`](DESIGN-admin-web.md) | Panel administrativo (ADMIN, EMPLEADO) y área de cliente (CLIENTE) |
 
-**Concepto compartido: "Sillar y tinta".** Superficies color piedra, texto tinta, acento carmín cochinilla y azul noche para las superficies oscuras de navegación. La landing vende con fotografía y aire; el panel trabaja con datos y densidad. Una misma marca, dos registros.
+**Concepto compartido: "Sillar y tinta".** Superficies color piedra, texto tinta, acento carmín cochinilla y azul noche para las superficies oscuras de navegación. La landing vende con fotografía y aire; el panel trabaja con datos y densidad. Una misma marca, dos registros: **Casa Sillar**.
 
 ## Qué documento aplica
 

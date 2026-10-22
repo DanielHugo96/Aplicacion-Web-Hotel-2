@@ -16,7 +16,7 @@ IDs comerciales: entero positivo de 32 bits, compatible con Integer actual; IDs 
 | `telefono` | ≤ 20 | hotel (HotelInput.telefono) |
 | `descripcion` | ≤ 300 | hotel (sede, piso), inventory (motivo de ajuste) |
 | `detalle` | ≤ 500 | hotel (categoría, habitación), inventory (producto), reception (observacion), cierre (motivoPenalidad) |
-| URL (`fotoUrl`, `imagenUrl`, `urlsImagenes[].url`) | ≤ 500 | alineado con `foto_url` de identity; https allowlist o `/assets/` |
+| URL (`fotoUrl`, `imagenUrl`, `imagenAlt`, `urlsImagenes[].url`) | ≤ 500 la URL, ≤ 150 el alt | alineado con `foto_url` de identity; https allowlist o `/assets/`. Toda URL de imagen viaja con su `alt`: una sin descripción se rechaza con 400 |
 | `clave` | 12–72 bytes UTF-8 | identity; nunca truncar silenciosamente (BCrypt no acepta más) |
 
 Los strings se recortan (trim) y se validan en backend; exceder un límite devuelve 400 `VALIDATION_ERROR` con el campo en `error.fields`. Las columnas varchar de las tablas de cada servicio respetan estos máximos. Otros límites (nombre, SKU, motivo) ya están declarados en su propia tabla o DTO.

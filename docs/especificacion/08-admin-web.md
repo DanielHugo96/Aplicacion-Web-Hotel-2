@@ -70,6 +70,8 @@ Límites del área C: no hace check-in/check-out, no paga ventas (ni marca PAGAD
 | Hotel | descripcion | ≤ 300 | “Máximo 300 caracteres” |
 | Hotel | telefono | ≤ 20 | “Teléfono demasiado largo” |
 | Hotel | correoContacto | Correo ≤ 254 | “Correo inválido” |
+| Hotel | imagenUrl | URL https de la lista permitida o `/assets/`, ≤ 500 | “URL no permitida” |
+| Hotel | imagenAlt | Requerido si hay `imagenUrl`; ≤ 150 | “Describe la imagen para accesibilidad” |
 | Hotel | publicado, estado | Booleanos; baja/inactivación sin habitaciones activas | “No se puede dar de baja mientras tenga elementos activos.” |
 | Piso | idHotel | Requerido | “Selecciona la sede” |
 | Piso | descripcion | Requerida, ≤ 80, única por sede | “Ya existe un piso con esa descripción” |
@@ -81,6 +83,7 @@ Límites del área C: no hace check-in/check-out, no paga ventas (ni marca PAGAD
 | Habitación | detalle | Requerido, ≤ 500 | “Máximo 500 caracteres” |
 | Habitación | precio | > 0, 2 decimales | “El precio debe ser mayor que 0” |
 | Habitación | urlsImagenes | ≤ 10; url https o `/assets/` (≤ 500); alt ≤ 150; orden único | “Máximo 10 imágenes” / “URL no permitida” |
+| Habitación | vista previa de `urlsImagenes` | Cada fila muestra la miniatura de la URL ya escrita; una URL inválida o rota muestra el fallback neutro sin borrar el valor | “No se pudo cargar la imagen” |
 | Mantenimiento | motivo | Requerido, 1..300 | “Indica el motivo” |
 | Limpieza (completar) | cleaningCycleId | Fijo desde el listado; `If-Match` de la tarea | “La tarea cambió: recarga el listado” |
 | Check-in | idCliente | Buscador exacto de Cliente activo | “Cliente no encontrado: créalo primero” |
@@ -97,6 +100,7 @@ Límites del área C: no hace check-in/check-out, no paga ventas (ni marca PAGAD
 | Anular check-in | motivo | Requerido, 1..300; solo ACTIVA sin ventas admitidas ni cierre | “No se puede anular: hay consumos o un cierre en curso.” |
 | Producto (alta) | sku | Requerido, ≤ 40, único global | “Ese SKU ya está registrado” |
 | Producto | nombre, detalle, imagenUrl | ≤ 120 / 500 / 500 | “Máximo 500 caracteres” |
+| Producto | vista previa de `imagenUrl` | Muestra la imagen junto al campo en cuanto la URL es válida; si falla, fallback neutro con el texto “No se pudo cargar la imagen” y el valor se conserva | “No se pudo cargar la imagen” |
 | Producto | idHotel, precio, cantidadInicial, umbralBajo | Requeridos; precio > 0; cantidades ≥ 0 | “El precio debe ser mayor que 0” |
 | Ajuste de stock | delta | Entero ≠ 0 | “El delta no puede ser 0” |
 | Ajuste de stock | motivo | Requerido, 1..300 | “Indica el motivo del ajuste” |
@@ -106,6 +110,7 @@ Límites del área C: no hace check-in/check-out, no paga ventas (ni marca PAGAD
 | Reportes | inicio, fin | Requeridos; inicio < fin; rango ≤ 366 días; ocupación en medianoche Lima | “El rango no puede superar 366 días” |
 | Mi perfil | nombre, apellido | Requeridos, ≤ 100 | “Ingresa tu nombre” |
 | Mi perfil | fotoUrl | https allowlist o `/assets/`, ≤ 500 | “URL no permitida” |
+| Mi perfil | vista previa de `fotoUrl` | Muestra la foto actual y la nueva en cuanto la URL es válida; si falla, fallback neutro sin borrar el valor | “No se pudo cargar la imagen” |
 | Cambiar clave | claveActual | Requerida | “Ingresa tu contraseña actual” |
 | Cambiar clave | claveNueva | 12–72 bytes UTF-8; distinta de la actual | “La contraseña debe tener entre 12 y 72 bytes (caracteres UTF-8)” |
 
@@ -143,3 +148,27 @@ Límites del área C: no hace check-in/check-out, no paga ventas (ni marca PAGAD
 | Mi perfil / mi estadía / mis ventas / carrito | Sí | Sí | Solo lo propio |
 
 Los guards ocultan secciones, pero el backend es la autoridad: un enlace oculto no sustituye un 403/404 real.
+
+## 6. Imágenes en el panel
+
+Regla común: **una URL de imagen nunca se muestra sola**. Donde el contrato expone una imagen, el panel la muestra en pantalla; la URL es solo el dato de entrada.
+
+| Pantalla | Qué se muestra | Regla |
+|---|---|---|
+| Sedes (listado) | Miniatura de la sede junto al nombre | Si no hay `imagenUrl`, hueco con el fallback neutro del sistema, nunca un icono roto |
+| Sede (alta/edición) | Campo `imagenUrl` con vista previa al lado y campo `imagenAlt` | La vista previa aparece al escribir una URL válida; si falla, fallback neutro y el valor se conserva |
+| Habitaciones (listado) | Miniatura de la primera imagen de la galería | Sin imágenes: fallback neutro |
+| Habitación (alta/edición) | Cada fila de `urlsImagenes` con su miniatura, `alt` y orden | Vista previa por fila; reordenar cambia el orden visual de las miniaturas |
+| Habitación (detalle) | Galería completa en el orden guardado | Relación fija; sin saltos de layout al cargar |
+| Productos (listado) | Miniatura del producto | Sin imagen: fallback neutro |
+| Producto (alta/edición) | Campo `imagenUrl` con vista previa | Igual que la sede |
+| Catálogo, carrito y ventas (A/E/C) | Miniatura del producto en cada línea | Se toma `imagenUrl` del contrato de la venta; si es nula, fallback neutro |
+| Mi perfil (A/E/C) | Foto actual con vista previa de la nueva | Igual que la sede |
+
+Reglas de comportamiento:
+
+- **Sin descarga ni subida:** el panel no sube archivos ni descarga imágenes en nombre del usuario. Se limita a mostrar la URL que el contrato acepta. La imagen se sirve desde `/assets/` del front o desde una URL https de la lista permitida.
+- **Validación por campo:** la URL se valida con la regla del contrato común antes de enviar; un fallo de carga no es un error de validación y no bloquea el guardado.
+- **Accesibilidad:** toda miniatura lleva `alt`; la de adorno se marca `aria-hidden`. La imagen ampliada o la galería se anuncian con su nombre accesible.
+- **Rendimiento:** miniaturas con carga diferida y relación reservada; la imagen grande del detalle carga con prioridad alta.
+- **Estados:** carga con esqueleto de la misma relación; error con el fallback neutro y, si el campo es editable, el texto “No se pudo cargar la imagen” junto a él.

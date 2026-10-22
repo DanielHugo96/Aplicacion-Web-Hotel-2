@@ -40,11 +40,11 @@ Envelope/headers completos en [mensajería](../../05-mensajeria.md). Esquemas de
 ```
 
 ```json
-{"idPersona":100,"idRecepcion":1001,"destinatario":"cliente.uno@hotel.test","nombre":"Cliente Uno","hotel":"Hotel Demo Lima Centro","fechaSalida":"2026-10-05","templateVersion":1}
+{"idPersona":100,"idRecepcion":1001,"destinatario":"cliente.uno@hotel.test","nombre":"Cliente Uno","hotel":"Casa Sillar Lima Centro","fechaSalida":"2026-10-05","templateVersion":1}
 ```
 
 ```json
-{"idPersona":100,"idRecepcion":1001,"destinatario":"cliente.uno@hotel.test","nombre":"Cliente Uno","hotel":"Hotel Demo Lima Centro","totalAlojamiento":70.00,"totalConsumos":7.00,"templateVersion":1}
+{"idPersona":100,"idRecepcion":1001,"destinatario":"cliente.uno@hotel.test","nombre":"Cliente Uno","hotel":"Casa Sillar Lima Centro","totalAlojamiento":70.00,"totalConsumos":7.00,"templateVersion":1}
 ```
 
 idHotel en envelope obligatorio para checkin/checkout, null bienvenida. No aceptar campos secretos ni plantillas desconocidas.
