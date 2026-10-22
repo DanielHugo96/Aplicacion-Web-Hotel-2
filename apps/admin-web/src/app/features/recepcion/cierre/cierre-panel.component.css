@@ -1,5 +1,6 @@
 /* El bloque reutiliza las clases de panel/datos del detalle; solo añade el
-   diálogo con motivo y el resalte de penalidad. Tokens de DESIGN.md §10. */
+   diálogo con motivo y el resalte de penalidad. Tokens de
+   `DESIGN-admin-web.md`. */
 
 .panel-head {
   display: flex;

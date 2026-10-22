@@ -2,7 +2,8 @@ import { Component, Input } from '@angular/core';
 import { PeTimestampPipe } from '../../core/pipes/timestamp.pipe';
 
 /**
- * Banner persistente de operación 202 (§4 y §8 de `DESIGN.md`). No es éxito:
+ * Banner persistente de operación 202 (`DESIGN-admin-web.md`, componentes y
+ * protocolo de estados). No es éxito:
  * permanece visible con spinner hasta que el polling confirma el estado
  * terminal y muestra “Actualizado …” en cada reintento. `aria-live` anuncia el
  * avance sin robar el foco.

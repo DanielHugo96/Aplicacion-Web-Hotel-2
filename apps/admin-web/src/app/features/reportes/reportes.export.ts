@@ -7,9 +7,9 @@
  * No se añade ninguna dependencia: el PDF se compone con objetos PDF 1.4 y las
  * fuentes base Helvetica/Helvetica-Bold (sin incrustar), y el Excel es
  * SpreadsheetML 2003 (`.xls`), que Excel y LibreOffice abren. Ambos llevan
- * encabezados legibles en escala de grises (`DESIGN.md` §9: las tablas
- * exportadas no dependen del color) y exactamente las columnas y filas que la
- * tabla muestra.
+ * encabezados legibles en escala de grises (`DESIGN-admin-web.md`, componentes:
+ * las tablas exportadas no dependen del color) y exactamente las columnas y
+ * filas que la tabla muestra.
  */
 
 export interface ColumnaReporte {

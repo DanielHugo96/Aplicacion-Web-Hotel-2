@@ -4,7 +4,7 @@ Inventario de los planes previstos, con sus dependencias, dueños de mensajes, e
 
 ## 1. Planes
 
-Los planes `front-*` planifican con [`../DESIGN.md`](../DESIGN.md) (sistema de diseño v1.0): tokens, componentes y checklist por pantalla. El validador exige que cada plan de front lo cite.
+Los planes `front-*` planifican con el sistema de diseño de su app —[`../DESIGN-public-web.md`](../DESIGN-public-web.md) o [`../DESIGN-admin-web.md`](../DESIGN-admin-web.md), índice en [`../DESIGN.md`](../DESIGN.md) (v2.0): tokens, componentes y checklist por pantalla. El validador exige que cada plan de front lo cite. Los planes ya cerrados que citan `../DESIGN.md` v1.0 se conservan como registro de lo ejecutado.
 
 | Fase | Plan | Ámbito | Modo | Depende de | Contenido |
 |---|---|---|---|---|---|

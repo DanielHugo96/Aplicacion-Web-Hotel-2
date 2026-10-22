@@ -233,8 +233,15 @@ def revisar_plan(archivo, planes, casos06, topics, grupos, comandos, rutas, erro
         error(donde, f"Estado inválido: «{v('Estado')}»")
     if v("Modo") == "openspec" and not v("Change").startswith("openspec/changes/"):
         error(donde, "modo openspec exige Change: openspec/changes/<plan>/")
-    if ambito == "front" and "DESIGN.md" not in texto:
-        error(donde, "los planes front deben citar ../DESIGN.md (sistema de diseño)")
+    if ambito == "front" and not any(
+        doc in texto
+        for doc in ("DESIGN-public-web.md", "DESIGN-admin-web.md", "DESIGN.md")
+    ):
+        error(
+            donde,
+            "los planes front deben citar ../DESIGN-public-web.md o "
+            "../DESIGN-admin-web.md (sistema de diseño de su app)",
+        )
 
     deps = set(re.findall(r"`([a-z0-9-]+)`", cab.get("Depende de", "")))
     for d in sorted(deps):
