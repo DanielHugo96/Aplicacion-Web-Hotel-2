@@ -7,7 +7,7 @@
 | Componente | `public-web` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `front-public-web-landing`, `back-hotel-catalogo`, `back-hotel-presentacion-real` |
 | Spec | [`02` §Landing: sí puede](../especificacion/02-landing-y-panel.md#landing-sí-puede), [§Condición de presentación real](../especificacion/02-landing-y-panel.md#condición-de-presentación-real), [§Imágenes](../especificacion/02-landing-y-panel.md#imágenes), [§Textos y assets](../especificacion/02-landing-y-panel.md#textos-y-assets-public-web) y [§UX y pruebas mínimas](../especificacion/02-landing-y-panel.md#ux-y-pruebas-mínimas); [`DESIGN-public-web.md` §Navegación](../DESIGN-public-web.md#navegación), [§El hero](../DESIGN-public-web.md#el-hero), [§Fichas de sede](../DESIGN-public-web.md#fichas-de-sede), [§Fichas de categoría](../DESIGN-public-web.md#fichas-de-categoría), [§Página de detalle y galería](../DESIGN-public-web.md#página-de-detalle-y-galería), [§Estados de pantalla](../DESIGN-public-web.md#estados-de-pantalla) y [§Checklist](../DESIGN-public-web.md#checklist-antes-de-dar-por-lista-una-pantalla); [`public-web.yaml` §HotelPublico](../contracts/openapi/public-web.yaml) |
 | Casos | `LP01`, `LP02` |
