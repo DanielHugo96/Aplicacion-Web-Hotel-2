@@ -93,6 +93,24 @@ services:
       retries: 30
       start_period: 20s
 
+  # Herramienta de observación de demo: se levanta siempre con el resto de la
+  # infraestructura, sin `profiles`, igual que Mailpit (plan infra-kafka-ui).
+  # Solo lectura: no altera topics, retención ni consumidores.
+  kafka-ui:
+    image: kafbat/kafka-ui:v1.3.0
+    restart: unless-stopped
+    environment:
+      KAFKA_CLUSTERS_0_NAME: hotel
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    ports:
+      # 8091 en loopback: el 8080 del host es del Gateway.
+      - "127.0.0.1:8091:8080"
+    networks:
+      - backend
+    depends_on:
+      kafka:
+        condition: service_healthy
+
   rabbitmq:
     image: rabbitmq:4.3.6-management
     restart: unless-stopped
