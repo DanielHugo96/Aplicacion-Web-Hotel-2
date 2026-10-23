@@ -20,11 +20,12 @@ Reemplaza la lista general de variables de [gateway-eureka-docker.md](gateway-eu
 | `hotel.security.machine.client-id/secret` | `SERVICE_CLIENT_ID`, `SERVICE_CLIENT_SECRET` | — | Token máquina; solo servicios que llaman `/internal/**` |
 | `hotel.feign.connect-timeout-ms` | `FEIGN_CONNECT_TIMEOUT_MS` | `2000` | |
 | `hotel.feign.read-timeout-ms` | `FEIGN_READ_TIMEOUT_MS` | `5000` | `10000` en lecturas de reportes |
-| `resilience4j.circuitbreaker.sliding-window-size` | `CB_WINDOW_SIZE` | `10` | 10 llamadas |
-| `resilience4j.circuitbreaker.failure-rate-threshold` | `CB_FAILURE_RATE` | `50` | Umbral de fallo % |
-| `resilience4j.circuitbreaker.minimum-number-of-calls` | `CB_MIN_CALLS` | `5` | Mínimo para evaluar |
-| `resilience4j.circuitbreaker.wait-duration-in-open-state` | `CB_OPEN_MS` | `10000` | 10s abierto |
-| `resilience4j.circuitbreaker.permitted-number-of-calls-in-half-open-state` | `CB_HALF_OPEN_CALLS` | `3` | Pruebas en half-open |
+| `resilience4j.circuitbreaker.configs.default.sliding-window-size` | `CB_WINDOW_SIZE` | `10` | 10 llamadas |
+| `resilience4j.circuitbreaker.configs.default.failure-rate-threshold` | `CB_FAILURE_RATE` | `50` | Umbral de fallo % |
+| `resilience4j.circuitbreaker.configs.default.minimum-number-of-calls` | `CB_MIN_CALLS` | `5` | Mínimo para evaluar |
+| `resilience4j.circuitbreaker.configs.default.wait-duration-in-open-state` | `CB_OPEN_MS` | `10000` | 10s abierto |
+| `resilience4j.circuitbreaker.configs.default.permitted-number-of-calls-in-half-open-state` | `CB_HALF_OPEN_CALLS` | `3` | Pruebas en half-open |
+| `resilience4j.timelimiter.configs.default.timeout-duration` | `CB_TIMEOUT_MS` | `6000` | TimeLimiter del breaker. Debe superar el read-timeout de Feign (5000 ms) para que el breaker no corte antes que la propia llamada. El default de Resilience4j es **1 s**, que abortaría llamadas sanas. |
 | `hotel.outbox.poll-interval-ms` | `OUTBOX_POLL_INTERVAL_MS` | `5000` | Poller cada 5s |
 | `hotel.outbox.batch-size` | `OUTBOX_BATCH_SIZE` | `50` | Filas por ciclo |
 | `hotel.outbox.alert-attempts` | `OUTBOX_ALERT_ATTEMPTS` | `10` | Alerta si `attempts` supera el valor |
@@ -32,6 +33,8 @@ Reemplaza la lista general de variables de [gateway-eureka-docker.md](gateway-eu
 | `hotel.inbox.retention-days` | `INBOX_RETENTION_DAYS` | `30` | Alineada con idempotencia |
 | `hotel.demo.password` | `DEMO_PASSWORD` | — | Solo seeds; sin ella no se siembran usuarios |
 | `logging.level.root` | `LOG_LEVEL` | `INFO` | Logs estructurados con `service`, `correlationId`, `eventId`/`commandId` |
+
+Las propiedades de Resilience4j viven bajo `resilience4j.circuitbreaker.configs.default.*` y `resilience4j.timelimiter.configs.default.*`, **no** en claves de primer nivel: en Resilience4j 2.3.0 las claves de primer nivel se descartan en silencio y el breaker corre con los defaults de la librería (ventana 100, mínimo 100 llamadas), con lo que nunca se abriría. El breaker de Feign se construye con un id derivado de `Feign.configKey(...)` alfanumerizado, así que la configuración por instancia no es viable: se usa `configs.default`, que `CommonCircuitBreakerConfigurationProperties.findCircuitBreakerProperties(id)` aplica como fallback y que `CircuitBreakerRegistry.getDefaultConfig()` consume. Los **valores no cambian**: 10 / 50 / 5 / 10000 / 3.
 
 ## Por servicio
 
@@ -80,6 +83,8 @@ Todo servicio expone liveness (proceso vivo) y readiness (DB arriba), según [`0
 | discovery-server | — (proceso) | Registro efímero se reconstruye |
 
 El Gateway no publica `/actuator/**`; los health internos solo se consumen en red privada.
+
+El estado del circuit breaker es diagnóstico interno y se consulta en el puerto de gestión del servicio que lo declara, **nunca por el Gateway**. Para la demo lo declara solo `hotel-service`, que expone `circuitbreakers` y `circuitbreakerevents` en `localhost:8082` (perfil local). El resto sigue exponiendo solo `health`.
 
 ## Flyway y seeds
 
