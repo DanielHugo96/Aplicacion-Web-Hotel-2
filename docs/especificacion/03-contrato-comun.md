@@ -81,7 +81,7 @@ Scopes:
 - identity e inventory → hotel `hoteles:read`.
 - reporting/notification → ninguna API de negocio en operación normal.
 
-Feign connect timeout 2s, read timeout 5s como valores iniciales (10s en lecturas de reportes); circuit breaker con ventana deslizante de 10 llamadas, umbral de fallo 50%, mínimo 5 llamadas para evaluar, apertura 10s y 3 llamadas de prueba en half-open. No retry ciego POST; reintentar solo con misma clave/id de negocio. No mantener transacción SQL abierta durante llamada remota.
+Feign connect timeout 2s, read timeout 5s como valores iniciales (10s en lecturas de reportes); circuit breaker con ventana deslizante de 10 llamadas, umbral de fallo 50%, mínimo 5 llamadas para evaluar, apertura 10s y 3 llamadas de prueba en half-open. La configuración del circuit breaker vive en `resilience4j.circuitbreaker.configs.default.*` y `resilience4j.timelimiter.configs.default.*`, no en claves de primer nivel, y quien lo declara expone `circuitbreakers` en su puerto de gestión para diagnóstico. La política de negocio del 202 `PREPARANDO` **no cambia**: cuando el breaker está abierto, `hotel-service` sigue respondiendo 202 `PREPARANDO` con `Retry-After`, porque el `blockId` es durable y lo recupera RB3; el circuit breaker **no** introduce un 503 nuevo en esa ruta. No retry ciego POST; reintentar solo con misma clave/id de negocio. No mantener transacción SQL abierta durante llamada remota.
 
 ## Persistencia transversal
 

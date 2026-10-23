@@ -52,6 +52,7 @@ BD/procedimientos/seeds: ninguno. Registro efímero se reconstruye por clientes.
 | rabbitmq | 5672 / 15672 | 127.0.0.1:5673 / 15673 |
 | kafka KRaft | 9092 interno / 29092 externo | 127.0.0.1:29092 |
 | mailpit | SMTP 1025 / UI 8025 | 127.0.0.1:1025 / 8025 |
+| kafka-ui | 8080 | 127.0.0.1:8091 |
 | discovery-server | 8761 | 127.0.0.1:8761 |
 | api-gateway | 8080 | 127.0.0.1:8080 |
 | identity/hotel/reception | 8081 / 8082 / 8083 | solo perfil debug, localhost |
@@ -59,6 +60,8 @@ BD/procedimientos/seeds: ninguno. Registro efímero se reconstruye por clientes.
 | admin-web / public-web | 80 / 80 | 127.0.0.1:4200 / 4300 |
 
 Puertos son diseño, no verificación de disponibilidad. Evitar conflicto con ejercicios previos; override de Compose si están ocupados.
+
+Kafka UI es **herramienta de observación de demo**, no una pieza del MVP; se levanta siempre con el resto de la infraestructura (sin `profiles`), igual que Mailpit, porque la sustentación necesita ver los mensajes sin pasos extra. No altera topics, retención ni consumidores.
 
 `infra`: PostgreSQL, brokers y Mailpit; apps desde IDE. `full`: todo en contenedores. Una red privada backend; reverse proxy/Gateway publicados; volúmenes con nombres para PostgreSQL, Kafka y Rabbit. Healthchecks y reintento de clientes; depends_on por sí solo no garantiza readiness.
 

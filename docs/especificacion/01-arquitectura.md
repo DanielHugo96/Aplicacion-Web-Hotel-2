@@ -75,7 +75,7 @@ La base de datos de un servicio solo la modifica ese servicio. Un PostgreSQL loc
   - Seeds de demo en `db/seed`, activos solo con perfiles no productivos (`dev`, `demo`). Nunca se activan en producción.
   - Compose espera a que PostgreSQL esté sano (`healthcheck` + `depends_on: service_healthy`) antes de arrancar cada servicio.
 - JPA solo valida el esquema: `ddl-auto=validate`; no `update`.
-- Kafka 4.3.1 en KRaft (solo KRaft desde 4.0), un nodo para desarrollo; RabbitMQ 4.3.6 con management; Mailpit para correos de demo. Pinear tags/digests de imagen, no `latest`.
+- Kafka 4.3.1 en KRaft (solo KRaft desde 4.0), un nodo para desarrollo; RabbitMQ 4.3.6 con management; Mailpit para correos de demo; Kafka UI (`kafbat/kafka-ui`, versión fijada sin `latest`) para inspeccionar topics y mensajes durante la demo. Pinear tags/digests de imagen, no `latest`.
 - Docker Compose: sí. Infraestructura en contenedores desde el inicio; Java/Angular en IDE durante desarrollo; perfil completo en contenedores para la presentación.
 - Sin Kubernetes, service mesh, Redis, Debezium ni servidor de configuración en el MVP.
 

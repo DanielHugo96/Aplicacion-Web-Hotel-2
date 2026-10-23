@@ -145,4 +145,4 @@ No marcar tests de esta tabla como pasados solo por existir el documento. El có
 
 ## 7. Entregables de implementación
 
-OpenAPI por servicio y JSON Schemas de mensajes; migraciones/seed scripts separados; Dockerfiles/Compose con healthchecks; colecciones Postman; evidencia de matriz; README de arranque; informe/presentación exigidos por la guía académica. Sin secretos, dumps personales, target/node_modules ni metadatos de IDE.
+OpenAPI por servicio y JSON Schemas de mensajes; migraciones/seed scripts separados; Dockerfiles/Compose con healthchecks; colecciones Postman; **colección Postman del ciclo de vida del circuit breaker (`tests/postman/`), con evidencia de CLOSED → OPEN → HALF_OPEN → CLOSED**; evidencia de matriz; README de arranque; informe/presentación exigidos por la guía académica. Sin secretos, dumps personales, target/node_modules ni metadatos de IDE.
