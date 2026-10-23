@@ -81,7 +81,9 @@ management:
   endpoints:
     web:
       exposure:
-        include: health
+        # circuitbreakers y circuitbreakerevents son diagnostico interno del breaker de Feign;
+        # se consultan en el puerto de gestion del servicio, nunca a traves del Gateway.
+        include: health,circuitbreakers,circuitbreakerevents
   endpoint:
     health:
       probes:
@@ -132,9 +134,22 @@ hotel:
       consumer-group: ${MESSAGING_KAFKA_CONSUMER_GROUP:hotel-ocupacion-v1}
 
 resilience4j:
+  # En Resilience4j 2.3.0 las claves de primer nivel se descartan en silencio: el breaker correria
+  # con los defaults de la libreria (ventana 100, minimo 100 llamadas) y nunca se abriria en la
+  # demo de cinco llamadas. El id de Feign se deriva de Feign.configKey(...) alfanumerizado, asi
+  # que la configuracion por instancia no es viable: configs.default es el respaldo que aplica
+  # findCircuitBreakerProperties(id) y que consume CircuitBreakerRegistry.getDefaultConfig().
   circuitbreaker:
-    sliding-window-size: ${CB_WINDOW_SIZE:10}
-    failure-rate-threshold: ${CB_FAILURE_RATE:50}
-    minimum-number-of-calls: ${CB_MIN_CALLS:5}
-    wait-duration-in-open-state: ${CB_OPEN_MS:10000}
-    permitted-number-of-calls-in-half-open-state: ${CB_HALF_OPEN_CALLS:3}
+    configs:
+      default:
+        sliding-window-size: ${CB_WINDOW_SIZE:10}
+        failure-rate-threshold: ${CB_FAILURE_RATE:50}
+        minimum-number-of-calls: ${CB_MIN_CALLS:5}
+        wait-duration-in-open-state: ${CB_OPEN_MS:10000}
+        permitted-number-of-calls-in-half-open-state: ${CB_HALF_OPEN_CALLS:3}
+  # TimeLimiter del breaker de Feign. Debe superar el read-timeout de Feign (5000 ms): su default
+  # de 1 s abortaria como timeout llamadas sanas y abriria el breaker sin que reception fallara.
+  timelimiter:
+    configs:
+      default:
+        timeout-duration: ${CB_TIMEOUT_MS:6000}

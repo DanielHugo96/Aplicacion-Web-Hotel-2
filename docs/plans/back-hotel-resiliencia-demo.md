@@ -7,7 +7,7 @@
 | Componente | `hotel-service` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `back-hotel-operaciones`, `back-plataforma-comunes` |
 | Spec | [`configuracion.md` § Comunes a todos los servicios](../especificacion/infraestructura/configuracion.md#comunes-a-todos-los-servicios) y [§ Health y readiness por servicio](../especificacion/infraestructura/configuracion.md#health-y-readiness-por-servicio); [`03-contrato-comun.md` § Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio) y [§ Salud, readiness y resiliencia](../especificacion/03-contrato-comun.md#salud-readiness-y-resiliencia); [`hotel/api.md` § Habitaciones y físico](../especificacion/microservicios/hotel/api.md#habitaciones-y-físico); [`06` §7 Entregables](../especificacion/06-migracion-y-pruebas.md#7-entregables-de-implementación); [`errors.md`](../contracts/errors.md) |
 | Casos | `—` |
@@ -49,11 +49,11 @@ Este plan no decide nada nuevo: aplica una configuración que la spec ya fija y 
 
 ## 4. Pasos
 
-- [ ] 1. Mover las cinco claves de `resilience4j.circuitbreaker.*` a `resilience4j.circuitbreaker.configs.default.*` sin cambiar ningún valor ni el nombre de sus variables de entorno. Verificación: `grep -n "resilience4j" -A 14 services/hotel-service/src/main/resources/application.yml` muestra las cinco claves bajo `configs.default` y ninguna clave de breaker en primer nivel.
-- [ ] 2. Añadir `resilience4j.timelimiter.configs.default.timeout-duration` con `${CB_TIMEOUT_MS:6000}`. Verificación: la misma salida del paso 1 muestra el bloque `timelimiter` con `configs.default.timeout-duration` y el default 6000.
-- [ ] 3. Ampliar `management.endpoints.web.exposure.include` de `health` a `health,circuitbreakers,circuitbreakerevents`. Verificación: `grep -n "include" -A 1 services/hotel-service/src/main/resources/application.yml` devuelve los tres nombres.
-- [ ] 4. Añadir al `SecurityConfig` las dos rutas de diagnóstico como `permitAll` justo después de las rutas de salud, sin tocar ninguna otra regla de autorización. Verificación: `grep -n "requestMatchers" -A 3 services/hotel-service/src/main/java/pe/hotel/hotel/platform/SecurityConfig.java` muestra las rutas del breaker como permitidas y las reglas del catálogo público, de las rutas internas y la denegación por defecto intactas.
-- [ ] 5. Añadir una prueba que fije el contrato de configuración: los cinco valores del breaker, el `timeout-duration` en 6000 y la exposición de los dos endpoints. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl hotel-service test` en verde.
+- [x] 1. Mover las cinco claves de `resilience4j.circuitbreaker.*` a `resilience4j.circuitbreaker.configs.default.*` sin cambiar ningún valor ni el nombre de sus variables de entorno. Verificación: `grep -n "resilience4j" -A 14 services/hotel-service/src/main/resources/application.yml` muestra las cinco claves bajo `configs.default` y ninguna clave de breaker en primer nivel.
+- [x] 2. Añadir `resilience4j.timelimiter.configs.default.timeout-duration` con `${CB_TIMEOUT_MS:6000}`. Verificación: la misma salida del paso 1 muestra el bloque `timelimiter` con `configs.default.timeout-duration` y el default 6000.
+- [x] 3. Ampliar `management.endpoints.web.exposure.include` de `health` a `health,circuitbreakers,circuitbreakerevents`. Verificación: `grep -n "include" -A 1 services/hotel-service/src/main/resources/application.yml` devuelve los tres nombres.
+- [x] 4. Añadir al `SecurityConfig` las dos rutas de diagnóstico como `permitAll` justo después de las rutas de salud, sin tocar ninguna otra regla de autorización. Verificación: `grep -n "requestMatchers" -A 3 services/hotel-service/src/main/java/pe/hotel/hotel/platform/SecurityConfig.java` muestra las rutas del breaker como permitidas y las reglas del catálogo público, de las rutas internas y la denegación por defecto intactas.
+- [x] 5. Añadir una prueba que fije el contrato de configuración: los cinco valores del breaker, el `timeout-duration` en 6000 y la exposición de los dos endpoints. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl hotel-service test` en verde.
 - [ ] 6. Arrancar el stack y comprobar la exposición: `curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8082/actuator/circuitbreakers`. Verificación: 200 y cuerpo JSON con `circuitBreakers` (antes del cambio era 404 y, sin el permiso, 401).
 - [ ] 7. Confirmar que el breaker nace CLOSED y anotar el id que reporta. Verificación: la misma salida trae `"state":"CLOSED"` y el id derivado de la clave de Feign de `ReceptionClient`; se registra el id literal en §6. No se renombra el breaker para «mejorar» la demo: el id lo fija Feign.
 - [ ] 8. Confirmar que existen al menos seis habitaciones libres para la reproducción. Verificación: `SELECT id_habitacion, numero FROM habitacion WHERE estado ORDER BY id_habitacion LIMIT 10;` devuelve al menos seis filas sin operación vigente.
