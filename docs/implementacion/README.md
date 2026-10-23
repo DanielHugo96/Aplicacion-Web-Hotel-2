@@ -117,7 +117,7 @@ lee solo el nivel raíz, así que este índice es la vista agrupada.
   [`front-admin-web-cierre`](../plans/front-admin-web-cierre.md) ·
   [`front-admin-web-reportes`](../plans/front-admin-web-reportes.md) ·
   [`front-admin-web-area-cliente`](../plans/front-admin-web-area-cliente.md)
-- **F5 · Aceptación (9):** [`qa-runbooks`](../plans/qa-runbooks.md) ·
+- **F5 · Aceptación (12):** [`qa-runbooks`](../plans/qa-runbooks.md) ·
   [`qa-matriz-aceptacion`](../plans/qa-matriz-aceptacion.md) ·
   [`back-hotel-presentacion-real`](../plans/back-hotel-presentacion-real.md) ·
   [`back-identity-presentacion-real`](../plans/back-identity-presentacion-real.md) ·
@@ -127,19 +127,26 @@ lee solo el nivel raíz, así que este índice es la vista agrupada.
   [`front-admin-web-imagenes-panel`](../plans/front-admin-web-imagenes-panel.md) ·
   [`qa-matriz-lp01-imagenes`](../plans/qa-matriz-lp01-imagenes.md)
 
+Planes de la demo de circuit breaker (T18–T19, añadidos por la enmienda de especificación del
+PR #148): [`back-hotel-resiliencia-demo`](../plans/back-hotel-resiliencia-demo.md) ·
+[`infra-kafka-ui`](../plans/infra-kafka-ui.md) ·
+[`qa-postman-circuit-breaker`](../plans/qa-postman-circuit-breaker.md)
+
 **Por ámbito**
 
-- **infra (3):** `infra-monorepo`, `infra-compose`, `infra-gateway-eureka`
-- **back (16):** `back-plataforma-comunes`, `back-plataforma-mensajeria`, `back-identity-auth`,
+- **infra (4):** `infra-monorepo`, `infra-compose`, `infra-gateway-eureka`, `infra-kafka-ui`
+- **back (17):** `back-plataforma-comunes`, `back-plataforma-mensajeria`, `back-identity-auth`,
   `back-identity-personas`, `back-hotel-catalogo`, `back-reception-operacion`, `back-hotel-operaciones`,
   `back-inventory-stock`, `back-sales-ventas`, `back-reception-cierre`, `back-notification-worker`,
   `back-reporting-proyecciones`, `back-hotel-presentacion-real`, `back-identity-presentacion-real`,
-  `back-notification-presentacion-real`, `back-inventory-imagenes-producto`
+  `back-notification-presentacion-real`, `back-inventory-imagenes-producto`,
+  `back-hotel-resiliencia-demo`
 - **front (10):** `front-public-web-landing`, `front-admin-web-base`, `front-admin-web-catalogo`,
   `front-admin-web-recepcion`, `front-admin-web-ventas`, `front-admin-web-cierre`,
   `front-admin-web-reportes`, `front-admin-web-area-cliente`, `front-public-web-presentacion-real`,
   `front-admin-web-imagenes-panel`
-- **qa (3):** `qa-runbooks`, `qa-matriz-aceptacion`, `qa-matriz-lp01-imagenes`
+- **qa (4):** `qa-runbooks`, `qa-matriz-aceptacion`, `qa-matriz-lp01-imagenes`,
+  `qa-postman-circuit-breaker`
 
 Si entra un plan nuevo, su enlace se añade aquí en el mismo PR que lo planifica.
 

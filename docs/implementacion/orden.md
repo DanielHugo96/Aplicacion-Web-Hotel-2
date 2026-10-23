@@ -34,6 +34,8 @@ libre. La tanda es la referencia para saber qué puede ir a la vez, no una barre
 | **T15** | `back-hotel-presentacion-real` ‖ `back-identity-presentacion-real` ‖ `back-inventory-imagenes-producto` ‖ `back-notification-presentacion-real` | hotel-catalogo y hotel-operaciones; identity-personas; inventory-stock; notification-worker |
 | **T16** | `front-public-web-presentacion-real` ‖ `front-admin-web-imagenes-panel` | hotel-presentacion-real; para el panel además base, catalogo y area-cliente |
 | **T17** | `qa-matriz-lp01-imagenes` | qa-matriz-aceptacion, hotel-presentacion-real y public-web-presentacion-real |
+| **T18** | `back-hotel-resiliencia-demo` ‖ `infra-kafka-ui` | hotel-operaciones y plataforma-comunes; infra-compose |
+| **T19** | `qa-postman-circuit-breaker` | back-hotel-resiliencia-demo e infra-kafka-ui |
 
 Notas de lectura:
 
@@ -53,7 +55,7 @@ los planes no dependan entre sí.
 | Zona | Planes que la tocan | Regla |
 |---|---|---|
 | `apps/admin-web/**` | `front-admin-web-base`, `-catalogo`, `-recepcion`, `-ventas`, `-area-cliente`, `-cierre`, `-reportes` | **Una a la vez.** Orden de la cola: base → catalogo → area-cliente → recepcion → ventas → cierre → reportes. Si el siguiente no está listo, toma el siguiente que sí lo esté. |
-| `tests/**` y `scripts/**` | `qa-runbooks`, `qa-matriz-aceptacion` | **Una a la vez:** runbooks primero, matriz después. |
+| `tests/**` y `scripts/**` | `qa-runbooks`, `qa-matriz-aceptacion`, `qa-postman-circuit-breaker` | **Una a la vez:** runbooks primero, matriz después. |
 | `services/*-service/**` (plataforma) | `back-plataforma-comunes`, `back-plataforma-mensajeria` | Tocan los siete servicios: ningún otro plan de servicio abierto mientras estén abiertos. Las dependencias ya lo garantizan. |
 | `services/<servicio>-service/**` | cada `back-*` de servicio | **Un plan abierto por servicio.** Ya se cumple en el calendario. |
 
@@ -64,7 +66,7 @@ planes:
 
 | Archivo | Orden |
 |---|---|
-| `infra/compose.yaml` | `infra-monorepo` → `infra-compose` → `infra-gateway-eureka` |
+| `infra/compose.yaml` | `infra-monorepo` → `infra-compose` → `infra-gateway-eureka` → `infra-kafka-ui` |
 | `contracts/openapi/hotel.yaml` | `back-hotel-catalogo` → `back-hotel-operaciones` |
 | `contracts/openapi/reception.yaml` | `back-reception-operacion` → `back-reception-cierre` |
 | `contracts/openapi/admin-web.yaml` | `front-admin-web-base` → `front-admin-web-reportes` |
