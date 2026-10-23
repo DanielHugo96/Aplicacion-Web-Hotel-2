@@ -36,6 +36,30 @@ permissions:
   - action: edit
     resource: "docs/contracts/**"
     effect: allow
+  # --- Excepción acotada: /demo-presentacion ---
+  # La spec la cambia una persona, no un agente. La única excepción es el comando
+  # /demo-presentacion (Fase 1), y solo sobre estos cinco documentos y sus
+  # secciones enumeradas en el comando. No se amplía a docs/especificacion/**:
+  # cualquier otro documento de la spec sigue denegado.
+  - action: edit
+    resource: "docs/especificacion/infraestructura/configuracion.md"
+    effect: allow
+  - action: edit
+    resource: "docs/especificacion/infraestructura/gateway-eureka-docker.md"
+    effect: allow
+  - action: edit
+    resource: "docs/especificacion/01-arquitectura.md"
+    effect: allow
+  - action: edit
+    resource: "docs/especificacion/03-contrato-comun.md"
+    effect: allow
+  - action: edit
+    resource: "docs/especificacion/06-migracion-y-pruebas.md"
+    effect: allow
+  # Guion de la sustentación que produce la Fase 5 del comando.
+  - action: edit
+    resource: "docs/demo-circuit-breaker.md"
+    effect: allow
   - action: read
     resource: ".env"
     effect: deny
