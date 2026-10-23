@@ -46,6 +46,9 @@ cierran, con la fase del plan reparado y tanda `—`.
 | F5 | [`front-public-web-presentacion-real`](../plans/front-public-web-presentacion-real.md) | T16 | `cerrado` | `front-public-web-presentacion-real` | [#141](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/141) |
 | F5 | [`front-admin-web-imagenes-panel`](../plans/front-admin-web-imagenes-panel.md) | T16 | `cerrado` | `front-admin-web-imagenes-panel` | [#143](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/143) |
 | F5 | [`qa-matriz-lp01-imagenes`](../plans/qa-matriz-lp01-imagenes.md) | T17 | `cerrado` | `qa-matriz-lp01-imagenes` | [#145](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/145) |
+| F5 | [`back-hotel-resiliencia-demo`](../plans/back-hotel-resiliencia-demo.md) | T18 | `cerrado` | `back-hotel-resiliencia-demo` | [#150](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/150) |
+| F5 | [`infra-kafka-ui`](../plans/infra-kafka-ui.md) | T18 | `propuesto` | — | — |
+| F5 | [`qa-postman-circuit-breaker`](../plans/qa-postman-circuit-breaker.md) | T19 | `propuesto` | — | — |
 | F2 | [`back-arreglo-hotel-arranque`](../plans/back-arreglo-hotel-arranque.md) | — | `cerrado` | `back-arreglo-hotel-arranque` | [#76](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/76) |
 | F1 | [`back-arreglo-audiencia-maquina`](../plans/back-arreglo-audiencia-maquina.md) | — | `cerrado` | `back-arreglo-audiencia-maquina` | [#79](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/79) |
 | F2 | [`back-arreglo-hotel-catalogo-admin`](../plans/back-arreglo-hotel-catalogo-admin.md) | — | `cerrado` | `back-arreglo-hotel-catalogo-admin` | [#92](https://github.com/DanielHugo96/Aplicacion-Web-Hotel-2/pull/92) |
