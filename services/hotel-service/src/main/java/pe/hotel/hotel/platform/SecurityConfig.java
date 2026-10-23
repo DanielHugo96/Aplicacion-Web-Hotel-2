@@ -60,6 +60,13 @@ public class SecurityConfig {
                     // Salud: liveness y readiness no requieren token.
                     .requestMatchers("/actuator/health", "/actuator/health/**")
                     .permitAll()
+                    // Diagnóstico del circuit breaker: se consulta en el puerto de gestión del
+                    // propio servicio para la demo, nunca a través del Gateway.
+                    .requestMatchers("/actuator/circuitbreakers", "/actuator/circuitbreakers/**")
+                    .permitAll()
+                    .requestMatchers(
+                        "/actuator/circuitbreakerevents", "/actuator/circuitbreakerevents/**")
+                    .permitAll()
                     // Catálogo público: solo lectura sin token.
                     .requestMatchers("/api/public/**")
                     .permitAll()

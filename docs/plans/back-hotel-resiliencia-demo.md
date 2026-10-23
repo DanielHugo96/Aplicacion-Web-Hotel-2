@@ -7,7 +7,7 @@
 | Componente | `hotel-service` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `cerrado` |
 | Depende de | `back-hotel-operaciones`, `back-plataforma-comunes` |
 | Spec | [`configuracion.md` § Comunes a todos los servicios](../especificacion/infraestructura/configuracion.md#comunes-a-todos-los-servicios) y [§ Health y readiness por servicio](../especificacion/infraestructura/configuracion.md#health-y-readiness-por-servicio); [`03-contrato-comun.md` § Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio) y [§ Salud, readiness y resiliencia](../especificacion/03-contrato-comun.md#salud-readiness-y-resiliencia); [`hotel/api.md` § Habitaciones y físico](../especificacion/microservicios/hotel/api.md#habitaciones-y-físico); [`06` §7 Entregables](../especificacion/06-migracion-y-pruebas.md#7-entregables-de-implementación); [`errors.md`](../contracts/errors.md) |
 | Casos | `—` |
@@ -49,23 +49,23 @@ Este plan no decide nada nuevo: aplica una configuración que la spec ya fija y 
 
 ## 4. Pasos
 
-- [ ] 1. Mover las cinco claves de `resilience4j.circuitbreaker.*` a `resilience4j.circuitbreaker.configs.default.*` sin cambiar ningún valor ni el nombre de sus variables de entorno. Verificación: `grep -n "resilience4j" -A 14 services/hotel-service/src/main/resources/application.yml` muestra las cinco claves bajo `configs.default` y ninguna clave de breaker en primer nivel.
-- [ ] 2. Añadir `resilience4j.timelimiter.configs.default.timeout-duration` con `${CB_TIMEOUT_MS:6000}`. Verificación: la misma salida del paso 1 muestra el bloque `timelimiter` con `configs.default.timeout-duration` y el default 6000.
-- [ ] 3. Ampliar `management.endpoints.web.exposure.include` de `health` a `health,circuitbreakers,circuitbreakerevents`. Verificación: `grep -n "include" -A 1 services/hotel-service/src/main/resources/application.yml` devuelve los tres nombres.
-- [ ] 4. Añadir al `SecurityConfig` las dos rutas de diagnóstico como `permitAll` justo después de las rutas de salud, sin tocar ninguna otra regla de autorización. Verificación: `grep -n "requestMatchers" -A 3 services/hotel-service/src/main/java/pe/hotel/hotel/platform/SecurityConfig.java` muestra las rutas del breaker como permitidas y las reglas del catálogo público, de las rutas internas y la denegación por defecto intactas.
-- [ ] 5. Añadir una prueba que fije el contrato de configuración: los cinco valores del breaker, el `timeout-duration` en 6000 y la exposición de los dos endpoints. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl hotel-service test` en verde.
-- [ ] 6. Arrancar el stack y comprobar la exposición: `curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8082/actuator/circuitbreakers`. Verificación: 200 y cuerpo JSON con `circuitBreakers` (antes del cambio era 404 y, sin el permiso, 401).
-- [ ] 7. Confirmar que el breaker nace CLOSED y anotar el id que reporta. Verificación: la misma salida trae `"state":"CLOSED"` y el id derivado de la clave de Feign de `ReceptionClient`; se registra el id literal en §6. No se renombra el breaker para «mejorar» la demo: el id lo fija Feign.
-- [ ] 8. Confirmar que existen al menos seis habitaciones libres para la reproducción. Verificación: `SELECT id_habitacion, numero FROM habitacion WHERE estado ORDER BY id_habitacion LIMIT 10;` devuelve al menos seis filas sin operación vigente.
-- [ ] 9. Con reception arriba, un mantenimiento correcto sobre una habitación libre. Verificación: 200 con `blockId` en la respuesta; es la llamada que deja el breaker funcionando antes de la caída.
-- [ ] 10. Detener reception y hacer cinco mantenimientos sobre **cinco habitaciones distintas**, con `Idempotency-Key` distinta en cada uno. Verificación: cinco respuestas 202 con `Location` y `Retry-After`; ninguna 409. Si alguna devuelve `409 ROOM_OPERATION_IN_PROGRESS`, se limpió mal la tanda: repetir con otra habitación.
-- [ ] 11. Leer el estado tras la quinta llamada fallida. Verificación: `curl -s http://localhost:8082/actuator/circuitbreakers` devuelve `"state":"OPEN"`, `failureRate` ≥ 50 y `bufferedCalls` 5.
-- [ ] 12. Hacer una sexta llamada sobre una habitación más. Verificación: 202 con `Location` y `Retry-After` (no 503), `notPermittedCalls` sube a 1 y `bufferedCalls` sigue en 5: la llamada de red no se intentó.
-- [ ] 13. Esperar 10 s y volver a leer. Verificación: `"state":"HALF_OPEN"` y `permittedCalls` con las llamadas de prueba en curso o completadas (el límite es 3).
-- [ ] 14. Levantar reception y hacer hasta tres llamadas correctas sobre habitaciones libres. Verificación: 200 con `blockId` en las que admita reception; la siguiente lectura devuelve `"state":"CLOSED"` y `bufferedCalls` reiniciado.
-- [ ] 15. Comprobar que `OperacionHabitacionService` no cambió y que el 202 sigue igual. Verificación: `git diff --stat main -- services/hotel-service/src/main/java/pe/hotel/hotel/domain/service/` no muestra cambios, y las respuestas de los pasos 10 y 12 conservan código 202, `Location` y `Retry-After`.
-- [ ] 16. Dejar en §6 la evidencia literal del ciclo: los seis `curl` (estado inicial, tras la quinta, tras la sexta, half-open, tras las correctas) con sus códigos HTTP y el id del breaker. Verificación: §6 contiene las salidas pegadas y no solo la descripción del resultado.
-- [ ] 17. Ejecutar la verificación canónica del backend. Verificación: `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS` y `python scripts/validar-planes.py` sale con 0 errores.
+- [x] 1. Mover las cinco claves de `resilience4j.circuitbreaker.*` a `resilience4j.circuitbreaker.configs.default.*` sin cambiar ningún valor ni el nombre de sus variables de entorno. Verificación: `grep -n "resilience4j" -A 14 services/hotel-service/src/main/resources/application.yml` muestra las cinco claves bajo `configs.default` y ninguna clave de breaker en primer nivel.
+- [x] 2. Añadir `resilience4j.timelimiter.configs.default.timeout-duration` con `${CB_TIMEOUT_MS:6000}`. Verificación: la misma salida del paso 1 muestra el bloque `timelimiter` con `configs.default.timeout-duration` y el default 6000.
+- [x] 3. Ampliar `management.endpoints.web.exposure.include` de `health` a `health,circuitbreakers,circuitbreakerevents`. Verificación: `grep -n "include" -A 1 services/hotel-service/src/main/resources/application.yml` devuelve los tres nombres.
+- [x] 4. Añadir al `SecurityConfig` las dos rutas de diagnóstico como `permitAll` justo después de las rutas de salud, sin tocar ninguna otra regla de autorización. Verificación: `grep -n "requestMatchers" -A 3 services/hotel-service/src/main/java/pe/hotel/hotel/platform/SecurityConfig.java` muestra las rutas del breaker como permitidas y las reglas del catálogo público, de las rutas internas y la denegación por defecto intactas.
+- [x] 5. Añadir una prueba que fije el contrato de configuración: los cinco valores del breaker, el `timeout-duration` en 6000 y la exposición de los dos endpoints. Verificación: `bash scripts/mvn.sh -f services/pom.xml -pl hotel-service test` en verde.
+- [x] 6. Arrancar el stack y comprobar la exposición: `curl -s -o /dev/null -w '%{http_code}\n' http://localhost:8082/actuator/circuitbreakers`. Verificación: 200 y cuerpo JSON con `circuitBreakers` (antes del cambio era 404 y, sin el permiso, 401).
+- [x] 7. Confirmar que el breaker nace CLOSED y anotar el id que reporta. Verificación: la misma salida trae `"state":"CLOSED"` y el id derivado de la clave de Feign de `ReceptionClient`; se registra el id literal en §6. No se renombra el breaker para «mejorar» la demo: el id lo fija Feign.
+- [x] 8. Confirmar que existen al menos seis habitaciones libres para la reproducción. Verificación: `SELECT id_habitacion, numero FROM habitacion WHERE estado ORDER BY id_habitacion LIMIT 10;` devuelve al menos seis filas sin operación vigente.
+- [x] 9. Con reception arriba, un mantenimiento correcto sobre una habitación libre. Verificación: 200 con `blockId` en la respuesta; es la llamada que deja el breaker funcionando antes de la caída.
+- [x] 10. Detener reception y hacer cinco mantenimientos sobre **cinco habitaciones distintas**, con `Idempotency-Key` distinta en cada uno. Verificación: cinco respuestas 202 con `Location` y `Retry-After`; ninguna 409. Si alguna devuelve `409 ROOM_OPERATION_IN_PROGRESS`, se limpió mal la tanda: repetir con otra habitación.
+- [x] 11. Leer el estado tras la quinta llamada fallida. Verificación: `curl -s http://localhost:8082/actuator/circuitbreakers` devuelve `"state":"OPEN"`, `failureRate` ≥ 50 y `bufferedCalls` 5.
+- [x] 12. Hacer una sexta llamada sobre una habitación más. Verificación: 202 con `Location` y `Retry-After` (no 503), `notPermittedCalls` sube a 1 y `bufferedCalls` sigue en 5: la llamada de red no se intentó.
+- [x] 13. Esperar 10 s y volver a leer. Verificación: `"state":"HALF_OPEN"` y `permittedCalls` con las llamadas de prueba en curso o completadas (el límite es 3). *Nota de la corrida: la lectura de solo lectura a los 10 s sigue en OPEN; la librería evalúa la transición en la primera llamada posterior, y ahí se lee HALF_OPEN. Queda registrado en §6.1 y en [`IA-back-hotel-resiliencia-demo-01`](../implementacion/decisiones/IA-back-hotel-resiliencia-demo-01.md).*
+- [x] 14. Levantar reception y hacer hasta tres llamadas correctas sobre habitaciones libres. Verificación: 200 con `blockId` en las que admita reception; la siguiente lectura devuelve `"state":"CLOSED"` y `bufferedCalls` reiniciado.
+- [x] 15. Comprobar que `OperacionHabitacionService` no cambió y que el 202 sigue igual. Verificación: `git diff --stat main -- services/hotel-service/src/main/java/pe/hotel/hotel/domain/service/` no muestra cambios, y las respuestas de los pasos 10 y 12 conservan código 202, `Location` y `Retry-After`.
+- [x] 16. Dejar en §6 la evidencia literal del ciclo: los seis `curl` (estado inicial, tras la quinta, tras la sexta, half-open, tras las correctas) con sus códigos HTTP y el id del breaker. Verificación: §6 contiene las salidas pegadas y no solo la descripción del resultado.
+- [x] 17. Ejecutar la verificación canónica del backend. Verificación: `bash scripts/mvn.sh -f services/pom.xml verify` termina en `BUILD SUCCESS` y `python scripts/validar-planes.py` sale con 0 errores.
 
 ## 5. Contratos afectados
 
@@ -86,14 +86,270 @@ Evidencia en esta sección del plan: la ejecutora pega las salidas literales de 
 - Cierre: con reception arriba y hasta tres llamadas correctas, `"state":"CLOSED"`.
 - Comandos canónicos: los de la sección «Verificación» del `README.md` raíz (`bash scripts/mvn.sh -f services/pom.xml verify`) y `python scripts/validar-planes.py`.
 
+### 6.1 Corrida literal — 2026-10-23 17:20:08 -0500
+
+Stack: `discovery-server` (8761), `identity-service` (8081), `hotel-service` (8082) y `reception-service`
+(8083) levantados con `spring-boot:run` vía `scripts/mvn.sh`; PostgreSQL, Kafka y RabbitMQ de
+`infra/compose.yaml` ya arriba. Las llamadas al mantenimiento se hacen **contra `hotel-service`
+directamente en 8082**, no por el Gateway, porque el diagnóstico del breaker vive en el puerto de
+gestión del propio servicio.
+
+Dos preparaciones, dichas explícitamente para que la evidencia no engañe:
+
+1. `hotel-service` se arranca con `OPERACION_RECOVERY_INTERVAL_MS=600000` (valor de entorno de la
+   corrida; el default del servicio, 15000 ms, no cambia en el código). El job RB3 reintenta las
+   operaciones PREPARANDO cada 15 s y ese tráfico extra movería los contadores del breaker en mitad
+   de la demo.
+2. Entre el paso 9 y el paso 10 se reinicia `hotel-service`. La llamada sana del paso 9 demuestra que
+   el breaker funciona con reception arriba, pero deja 1 llamada en la ventana de 10; reiniciar deja
+   la ventana vacía para que los cinco fallos del paso 10 se cuenten desde cero, como fijan los
+   valores publicados (mínimo 5). Es preparación de la corrida, no una vuelta de tuerca a los valores.
+
+**Paso 6 — exposición** (antes del cambio el endpoint no existía para el cliente: 404/401):
+
+```text
+$ curl -s -o /dev/null -w '%{http_code}' http://localhost:8082/actuator/circuitbreakers
+200
+$ curl -s -o /dev/null -w '%{http_code}' http://localhost:8082/actuator/circuitbreakerevents
+200
+$ curl -s -o /dev/null -w '%{http_code}' http://localhost:8082/actuator/health/liveness
+200
+$ curl -s -o /dev/null -w '%{http_code}' http://localhost:8082/api/hotel/listar    # sin token
+401
+```
+
+**Paso 7 — id del breaker y nacimiento CLOSED.** El id lo fija Feign
+(`Feign.configKey(...)` alfanumerizado) y es `ReceptionClientbloquearintBloqueoRequest`. Con el
+registro recién arrancado está vacío porque el breaker se crea con la primera llamada:
+
+```text
+### PASO 7 · el breaker nace CLOSED (aún sin llamadas: el id aparece con la primera)
+{
+  "circuitBreakers": {}
+}
+```
+
+**Paso 8 — habitaciones libres:**
+
+```text
+id_habitacion | numero
+          101 | 101
+          102 | 102
+          201 | 101
+          202 | 102
+          301 | 101
+          302 | 102
+```
+
+**Paso 9 — mantenimiento correcto con reception arriba:**
+
+```text
+POST /api/habitacion/101/mantenimiento -> HTTP 200 {'etag': '"12"'}
+  blockId=d0de67ad-cfde-48be-83ca-ead46b1468de version=12 estadoFisico=MANTENIMIENTO
+PUT /api/habitacion/101/mantenimiento-completado -> HTTP 200 (libera la habitación)
+estado tras la llamada sana:
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 1,
+      "failedCalls": 0,
+      "failureRate": "-1.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 0,
+      "slowCallRate": "-1.0%",
+      "slowCallRateThreshold": "100.0%",
+      "slowCalls": 0,
+      "slowFailedCalls": 0,
+      "state": "CLOSED"
+    }
+  }
+}
+```
+
+**Paso 10 — reception detenido y cinco mantenimientos sobre cinco habitaciones distintas**
+(`102`, `201`, `202`, `301`, `302`; `Idempotency-Key` distinta en cada uno). Ninguna respuesta es
+`409`:
+
+```text
+reception-service detenido (puerto 8083 abierto = False)
+
+POST /api/habitacion/102/mantenimiento -> HTTP 202 {'location': '/api/habitacion/operaciones/9b2cf0c0-f948-4868-b66d-c8ea11c97add', 'retry-after': '2'}
+POST /api/habitacion/201/mantenimiento -> HTTP 202 {'location': '/api/habitacion/operaciones/fb67c23c-64da-45f5-8e19-184f2439fcd5', 'retry-after': '2'}
+POST /api/habitacion/202/mantenimiento -> HTTP 202 {'location': '/api/habitacion/operaciones/f1f05e31-cd1c-4df1-ac61-b883edd91b88', 'retry-after': '2'}
+POST /api/habitacion/301/mantenimiento -> HTTP 202 {'location': '/api/habitacion/operaciones/9e245e41-3e18-4723-a450-b64c7a01fdf3', 'retry-after': '2'}
+POST /api/habitacion/302/mantenimiento -> HTTP 202 {'location': '/api/habitacion/operaciones/0602329c-a728-487e-a1cf-df87df6579bb', 'retry-after': '2'}
+```
+
+**Paso 11 — tras la quinta llamada fallida, el breaker está abierto.** `bufferedCalls` 5,
+`failedCalls` 5, `failureRate` 100 % (umbral 50 %):
+
+```text
+### PASO 11 · estado tras la quinta llamada fallida
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 5,
+      "failedCalls": 5,
+      "failureRate": "100.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 0,
+      "slowCallRate": "0.0%",
+      "slowCallRateThreshold": "100.0%",
+      "slowCalls": 0,
+      "slowFailedCalls": 0,
+      "state": "OPEN"
+    }
+  }
+}
+```
+
+**Paso 12 — sexta llamada sobre otra habitación (101): 202, no 503, y sin red.** `notPermittedCalls`
+sube a 1 y `bufferedCalls` se queda en 5: la llamada de red no se intentó.
+
+```text
+### PASO 12 · sexta llamada sobre otra habitación (101)
+POST /api/habitacion/101/mantenimiento -> HTTP 202 {'location': '/api/habitacion/operaciones/2c4cd303-40ca-496f-8aad-96cc32b9d808', 'retry-after': '2'}
+estado tras la sexta llamada:
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 5,
+      "failedCalls": 5,
+      "failureRate": "100.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 1,
+      "slowCallRate": "0.0%",
+      "slowCallRateThreshold": "100.0%",
+      "slowCalls": 0,
+      "slowFailedCalls": 0,
+      "state": "OPEN"
+    }
+  }
+}
+```
+
+**Paso 13 — a los 10 s.** Aquí hay que ser exacto: la **lectura de solo lectura** a los 10 s sigue
+devolviendo OPEN porque en Resilience4j 2.3.0 el paso a HALF_OPEN no es un reloj que cambie el
+estado consultado (`OpenState.getState()` devuelve siempre OPEN), sino que se evalúa en
+`OpenState.tryAcquirePermission()` **cuando llega una llamada** y el intervalo ya venció. No se
+activó `automatic-transition-from-open-to-half-open-enabled`: la spec no lo fija y añadirlo sería
+inventar configuración (decisión en
+[`IA-back-hotel-resiliencia-demo-01`](../implementacion/decisiones/IA-back-hotel-resiliencia-demo-01.md)).
+La transición se ve, literalmente, en la primera lectura posterior a una llamada:
+
+```text
+### PASO 13 · esperar 10 s y volver a leer
+estado a los 10 s (esperados 10.5 s):
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 5,
+      "failedCalls": 5,
+      "failureRate": "100.0%",
+      ...
+      "notPermittedCalls": 1,
+      ...
+      "state": "OPEN"
+    }
+  }
+}
+```
+
+**Paso 14 — levantar reception y hasta tres llamadas correctas.** La primera llamada consumida
+después de los 10 s ya muestra HALF_OPEN; la tercera completa la prueba y devuelve el breaker a
+CLOSED con `bufferedCalls` reiniciado a 0. `permittedCalls` en half-open es 3 (el valor publicado)
+y se ve en `bufferedCalls` 1 → 2 → cierre:
+
+```text
+reception-service arriba (puerto 8083 abierto = True)
+
+POST /api/habitacion/102/mantenimiento -> HTTP 200 {'etag': '"4"'}
+  blockId=48d6b1fa-a677-44ef-94a3-afc4eea8ffbc version=4
+  estado del breaker:
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 1,
+      "failedCalls": 0,
+      "failureRate": "-1.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 0,
+      ...
+      "state": "HALF_OPEN"
+    }
+  }
+}
+
+POST /api/habitacion/201/mantenimiento -> HTTP 200 {'etag': '"4"'}
+  blockId=d77ddc00-dc4f-4650-90ca-3647b8cd5be8 version=4
+  estado del breaker:
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 2,
+      "failedCalls": 0,
+      ...
+      "state": "HALF_OPEN"
+    }
+  }
+}
+
+POST /api/habitacion/202/mantenimiento -> HTTP 200 {'etag': '"4"'}
+  blockId=998dbda8-a96f-4ddd-ba90-da21c0c42445 version=4
+  estado del breaker:
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 0,
+      "failedCalls": 0,
+      "failureRate": "-1.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 0,
+      ...
+      "state": "CLOSED"
+    }
+  }
+}
+```
+
+**Cierre — estado final:**
+
+```text
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 0,
+      "failedCalls": 0,
+      "failureRate": "-1.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 0,
+      "slowCallRate": "-1.0%",
+      "slowCallRateThreshold": "100.0%",
+      "slowCalls": 0,
+      "slowFailedCalls": 0,
+      "state": "CLOSED"
+    }
+  }
+}
+```
+
+**Paso 15 — el 202 sigue igual.** `git diff --stat main -- services/hotel-service/src/main/java/pe/hotel/hotel/domain/service/`
+no devuelve nada, y las respuestas de los pasos 10 y 12 conservan `202`, `Location` y `Retry-After`
+(arriba). El circuit breaker no introduce un 503 en esa ruta.
+
+**Comandos canónicos:** `bash scripts/mvn.sh -f services/pom.xml verify` → `BUILD SUCCESS` en los
+nueve módulos; `python scripts/validar-planes.py` → `42 plan(es) revisado(s); … 0 error(es), 0 aviso(s)`.
+
 ## 7. Preguntas abiertas
 
 Ninguna. La spec fija la ubicación de la configuración, los valores, la variable nueva y el puerto de diagnóstico; el comportamiento del 202 ya está publicado y este plan lo declara invariante.
 
+Ninguna (resuelto por IA: el `curl` de solo lectura a los 10 s sigue devolviendo OPEN porque Resilience4j 2.3.0 evalúa la transición a HALF_OPEN en la primera llamada posterior al intervalo y no por reloj; se lee HALF_OPEN en esa llamada y **no** se activa el planificador automático, que la spec no fija. Detalle en [`IA-back-hotel-resiliencia-demo-01`](../implementacion/decisiones/IA-back-hotel-resiliencia-demo-01.md)).
+
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación.
-- [ ] Las salidas literales del ciclo CLOSED → OPEN → HALF_OPEN → CLOSED están en §6.
-- [ ] `bash scripts/mvn.sh -f services/pom.xml verify` en verde y `python scripts/validar-planes.py` con 0 errores.
-- [ ] `OperacionHabitacionService` y los otros seis servicios sin cambios.
-- [ ] Sin preguntas abiertas.
+- [x] Todos los pasos marcados con su verificación.
+- [x] Las salidas literales del ciclo CLOSED → OPEN → HALF_OPEN → CLOSED están en §6.
+- [x] `bash scripts/mvn.sh -f services/pom.xml verify` en verde y `python scripts/validar-planes.py` con 0 errores.
+- [x] `OperacionHabitacionService` y los otros seis servicios sin cambios.
+- [x] Sin preguntas abiertas.
