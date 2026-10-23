@@ -7,7 +7,7 @@
 | Componente | `infra` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `propuesto` |
+| Estado | `en curso` |
 | Depende de | `infra-compose` |
 | Spec | [`gateway-eureka-docker.md` § Compose y puertos propuestos](../especificacion/infraestructura/gateway-eureka-docker.md#compose-y-puertos-propuestos); [`01-arquitectura.md` § 4. Stack](../especificacion/01-arquitectura.md#4-stack); [`configuracion.md` § Comunes a todos los servicios](../especificacion/infraestructura/configuracion.md#comunes-a-todos-los-servicios); [`06` §7 Entregables](../especificacion/06-migracion-y-pruebas.md#7-entregables-de-implementación) |
 | Casos | `—` |
