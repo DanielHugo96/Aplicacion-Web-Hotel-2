@@ -7,7 +7,7 @@
 | Componente | `infra` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `infra-compose` |
 | Spec | [`gateway-eureka-docker.md` § Compose y puertos propuestos](../especificacion/infraestructura/gateway-eureka-docker.md#compose-y-puertos-propuestos); [`01-arquitectura.md` § 4. Stack](../especificacion/01-arquitectura.md#4-stack); [`configuracion.md` § Comunes a todos los servicios](../especificacion/infraestructura/configuracion.md#comunes-a-todos-los-servicios); [`06` §7 Entregables](../especificacion/06-migracion-y-pruebas.md#7-entregables-de-implementación) |
 | Casos | `—` |
@@ -72,10 +72,10 @@ Este plan no decide nada de negocio: aplica la fila de puertos y la imagen que l
   Ejecutado: `hotel-kafka-ui-1 Up ... 127.0.0.1:8091->8080/tcp`; `curl` devolvió `200`.
 - [x] 9. Comprobar el contenido: abrir `http://localhost:8091` y verificar que el clúster `hotel` lista los topics de [`05-mensajeria.md`](../especificacion/05-mensajeria.md) que ya existan en el broker. Verificación: la lista incluye al menos `hotel.habitacion.v1` y `reception.recepcion.v1` con sus particiones.
 
-  Ejecutado: `GET http://localhost:8091/api/clusters` devuelve el clúster `hotel` en `online` y `GET http://localhost:8091/api/clusters/hotel/topics` lista 8 topics, incluidos `hotel.habitacion.v1` (partición 0, `offsetMax: 15`) y `reception.recepcion.v1` (partición 0, `offsetMax: 0`). Salida literal en §6.
+  Ejecutado: `GET http://localhost:8091/api/clusters` devuelve el clúster `hotel` en `online` y `GET http://localhost:8091/api/clusters/hotel/topics` lista los 7 topics de dominio, incluidos `hotel.habitacion.v1` (partición 0, `offsetMax: 15`) y `reception.recepcion.v1` (partición 0, `offsetMax: 0`). Salida literal en §6.
 - [x] 10. Si la lista sale vacía porque aún no hay mensajes, generar uno: un check-in por Postman contra el entorno local, y confirmar que el topic de recepción aparece con al menos un registro. Verificación: el topic muestra el offset incrementado en la UI.
 
-  No aplica: la lista del paso 9 no está vacía (8 topics, `hotel.habitacion.v1` con offset 15). La condición del paso no se da, así que no se genera ningún check-in ni se toca ningún servicio.
+  No aplica: la lista del paso 9 no está vacía (7 topics de dominio, `hotel.habitacion.v1` con offset 15). La condición del paso no se da, así que no se genera ningún check-in ni se toca ningún servicio.
 - [x] 11. Comprobar que no se tocó nada más: `git diff --stat main -- infra/compose.yaml` solo suma el bloque de `kafka-ui`. Verificación: ningún healthcheck, volumen ni red existente aparece modificado en el diff.
 
   Ejecutado: `infra/compose.yaml | 18 ++++++++++++++++++` y `1 file changed, 18 insertions(+)`. No hay líneas eliminadas ni modificadas; ningún healthcheck, volumen ni red existente cambia.
@@ -115,14 +115,26 @@ Evidencia recogida en la ejecución del 2026-10-23, sobre la rama `infra-kafka-u
     "readOnly":false,"version":"Unknown","features":["TOPIC_DELETION"]}]
   ```
 
-  `curl -s http://localhost:8091/api/clusters/hotel/topics` lista ocho topics con su partición 0 y su `offsetMax`; los dos que exige el plan:
+  `curl -s http://localhost:8091/api/clusters/hotel/topics` lista los siete topics de dominio con su partición 0 y su `offsetMax`; los dos que exige el plan:
+
+  ```
+  hotel.habitacion.v1     1  15
+  hotel.sede.v1           1   0
+  identity.persona.v1     1  12
+  inventory.movimiento.v1 1   0
+  inventory.stock.v1      1   9
+  reception.recepcion.v1  1   0
+  sales.venta.v1          1   0
+  ```
+
+  El clúster informa `topicCount: 8` porque cuenta también los topics internos de Kafka. Los dos que el plan exige, con su partición y offsets:
 
   ```
   hotel.habitacion.v1     partitionCount:1  partitions:[{partition:0, leader:1, offsetMin:0, offsetMax:15}]
   reception.recepcion.v1  partitionCount:1  partitions:[{partition:0, leader:1, offsetMin:0, offsetMax:0}]
   ```
 
-  El resto de la lista: `hotel.sede.v1` (0), `identity.persona.v1` (12), `inventory.movimiento.v1` (0), `inventory.stock.v1` (9), `sales.venta.v1` (0) y los topics internos de Kafka. La UI muestra el clúster `hotel` con el broker `kafka:9092` y los topics con particiones y offsets. El paso 10 no aplica: no había lista vacía.
+  La UI muestra el clúster `hotel` con el broker `kafka:9092` y los topics con particiones y offsets. El paso 10 no aplica: no había lista vacía.
 
 - **Aislamiento:** `docker ps --format '{{.Names}}\t{{.Status}}\t{{.Ports}}'`:
 
