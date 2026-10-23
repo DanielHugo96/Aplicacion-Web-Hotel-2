@@ -100,6 +100,11 @@ CALENDARIO = [
     "front-admin-web-imagenes-panel",
     # T17
     "qa-matriz-lp01-imagenes",
+    # T18
+    "back-hotel-resiliencia-demo",
+    "infra-kafka-ui",
+    # T19
+    "qa-postman-circuit-breaker",
 ]
 
 RE_CAMPO = re.compile(r"^\|\s*(?P<clave>[^|]+?)\s*\|\s*(?P<valor>.*?)\s*\|\s*$")
