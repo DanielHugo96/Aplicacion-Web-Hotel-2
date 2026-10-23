@@ -1,0 +1,1406 @@
+{
+  "info": {
+    "_postman_id": "44444444-4444-4444-8444-444444444014",
+    "name": "Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "# Colección `circuit-breaker` — ciclo del circuit breaker de hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)\n\n## Qué cubre\nSecuencia CB-01 → CB-10 sobre hotel-service a través del Gateway (`{{baseUrl}}`, puerto 8080), con diagnóstico del breaker en el puerto de gestión (`http://localhost:8082/actuator/circuitbreakers`, **nunca** por el Gateway):\n\n- CB-01: `POST /api/auth/login` — guarda `{{token}}` (contrato identity).\n- CB-02: `POST /api/habitacion/{id}/mantenimiento` sobre `{{idHabitacionA}}` con reception arriba → 200 con `blockId`; luego `PUT /api/habitacion/{id}/mantenimiento-completado` para liberarla (If-Match + Idempotency-Key).\n- CB-03: actuator → `CLOSED`.\n- CB-04: reception **detenido**, cinco `POST /api/habitacion/{id}/mantenimiento` sobre `{{idHabitacionB}}`…`{{idHabitacionF}}` → cada uno 202 con `Location` y `Retry-After`; `{{blockId}}` del `Location` de la primera.\n- CB-05: actuator → `OPEN` (la prueba del ciclo).\n- CB-06: otra llamada sobre `{{idHabitacionG}}` con breaker abierto → 202 (no 503) y sigue `OPEN`.\n- CB-07: pausa de 10 s, llamada de sonda sobre `{{idHabitacionA}}` y actuator → `HALF_OPEN`.\n- CB-08: reception **arriba**, hasta tres mantenimientos sobre habitaciones libres → 200 con `blockId`.\n- CB-09: actuator → `CLOSED`.\n- CB-10: `GET /api/habitacion/operaciones/{{blockId}}` → `APLICADA` con el mismo `blockId`.\n\n## Precondición y guion manual\n- Entorno `Hotel-local` cargado; `{{correoDemo}}` y `{{claveDemo}}` rellenados localmente (nunca se versionan) y `{{idHabitacionA}}`…`{{idHabitacionG}}` apuntando a habitaciones libres de la sede.\n- **Postman no puede apagar servicios.** Reception se apaga y levanta fuera de Postman; el guion es manual y la colección lo asume:\n  - Apagar: `docker compose -f infra/compose.yaml --env-file .env stop reception-service`\n  - Levantar: `docker compose -f infra/compose.yaml --env-file .env start reception-service`\n  - Si reception corre en el IDE: `taskkill /PID <pid> /F` (obtener `<pid>` del proceso de reception en el IDE).\n- Puntos de parada del guion: reception ARRIBA para CB-01..CB-03; DETENIDO para CB-04..CB-07; ARRIBA de nuevo para CB-08..CB-10.\n\n## Por qué cinco habitaciones distintas\nEn CB-04 cada una de las cinco llamadas va sobre una habitación libre distinta porque el índice único parcial `uq_operacion_vigente` (`V5__hotel_operaciones.sql`) sobre `operacion_habitacion(id_habitacion)` rechaza una segunda operación sobre la misma habitación con `409 ROOM_OPERATION_IN_PROGRESS` **antes de llegar a Feign**. Ese 409 no cuenta como fallo del breaker y detendría la secuencia; usar habitaciones distintas evita que una operación vigente bloquee las siguientes.\n\n## Qué demuestra la evidencia\nLa evidencia es la **transición de estado** del breaker leída en `GET http://localhost:8082/actuator/circuitbreakers`, **no el cronómetro**: con reception detenido la conexión se rechaza en milisegundos, así que los tiempos de respuesta no demuestran nada. La colección lee el estado antes (CLOSED), durante (OPEN) y después (HALF_OPEN, luego CLOSED).\n\n## Decisión de nivel 2 registrada\n`docs/implementacion/decisiones/IA-back-hotel-resiliencia-demo-01.md`: en Resilience4j 2.3.0 el paso OPEN → HALF_OPEN no es un reloj; la lectura de solo lectura a los 10 s sigue en `OPEN` y la transición se evalúa cuando llega una llamada tras el intervalo (`OpenState.tryAcquirePermission`). Por eso CB-07 ejecuta primero una llamada de sonda y **después** aserta `HALF_OPEN`. No se activa `automatic-transition-from-open-to-half-open-enabled`: la spec no lo fija y añadirlo sería inventar configuración.\n\n## Contrato\n`docs/contracts/openapi/hotel.yaml` (`iniciarMantenimiento`, `completarMantenimiento`, `consultarOperacionHabitacion`, `buscarHabitacion`) y `docs/contracts/openapi/identity.yaml` (`/api/auth/login`). Los endpoints de gestión de hotel-service no forman parte del contrato del Gateway; se usan solo para diagnóstico del breaker.\n"
+  },
+  "item": [
+    {
+      "name": "CB-01",
+      "description": "## Qué cubre\n- `POST {{baseUrl}}/api/auth/login` — login público; 200 con `data.token`; guarda el token en `{{token}}` (solo en memoria del entorno local, nunca se versiona).\n\n## Precondición\nEntorno `Hotel-local` cargado con `{{correoDemo}}/{{claveDemo}}` rellenados localmente (sin commitear).\n\n## Orden\n1. CB-01 (pobla `{{token}}`, consumido por CB-02 en adelante).\n\nContrato: `docs/contracts/openapi/identity.yaml` (`/api/auth/login` 200 `ApiSingleAuth`).",
+      "item": [
+        {
+          "name": "CB-01 POST /api/auth/login — guarda {{token}}",
+          "description": "Login público sobre el Gateway. 200 esperado (contrato identity). Guarda data.token en la variable de entorno {{token}}.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoDemo}}\",\n  \"clave\": \"{{claveDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-01 Login responde 200 (contrato identity: POST /api/auth/login)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"CB-01 Guarda data.token en {{token}} (solo en memoria del entorno local)\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"token\");",
+                  "  pm.expect(json.data.token).to.be.a(\"string\").that.is.not.empty;",
+                  "  pm.environment.set(\"token\", json.data.token);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-02",
+      "description": "## Qué cubre\n- `GET /api/habitacion/buscar/{{idHabitacionA}}` — lee la `version` vigente para el `If-Match`.\n- `POST /api/habitacion/{{idHabitacionA}}/mantenimiento` — reception ARRIBA → 200 con `blockId` (gate BLOQUEADA, CAS aplicado en el request).\n- `PUT /api/habitacion/{{idHabitacionA}}/mantenimiento-completado` — libera la habitación (If-Match con la versión devuelta + Idempotency-Key fija).\n\n## Precondición\n{{token}} poblado (CB-01 ejecutado). Reception ARRIBA.\n\n## Orden\n1. Buscar {{idHabitacionA}} → fija {{versionA}}.\n2. Mantenimiento → 200, anota {{blockIdCb02}} y la nueva {{versionA}}.\n3. Liberar (mantenimiento-completado) → 200, para no dejar la habitación ocupada.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`, `completarMantenimiento`).",
+      "item": [
+        {
+          "name": "CB-02.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}}",
+          "description": "Detalle de habitación (A/E). 200 esperado. Guarda data.version en {{versionA}} para el If-Match del mantenimiento.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionA}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionA}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-02.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel: GET /api/habitacion/buscar/{id})\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionA\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-02 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — 200 con blockId",
+          "description": "Iniciar mantenimiento (A). 200 esperado con reception arriba: gate BLOQUEADA y CAS PREPARANDO → APLICADA en el request; el cuerpo trae blockId y version. Headers: Authorization, Idempotency-Key, If-Match ({{versionA}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111102"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionA}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Verificación del ciclo del circuit breaker: mantenimiento preventivo (CB-02).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionA}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionA}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-02 Mantenimiento {{idHabitacionA}} responde 200 (gate BLOQUEADA; CAS aplicado en el request)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "});",
+                  "pm.test(\"CB-02 Anota {{blockIdCb02}} y la nueva versión de {{idHabitacionA}}\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set(\"blockIdCb02\", json.data.blockId);",
+                  "  pm.environment.set(\"versionA\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-02.2 PUT /api/habitacion/{{idHabitacionA}}/mantenimiento-completado — libera",
+          "description": "Completar mantenimiento (A). 200 esperado. Libera el gate y deja el físico en LISTA. Headers: Authorization, Idempotency-Key, If-Match ({{versionA}} tras el mantenimiento). Cuerpo: { blockId: {{blockIdCb02}} }.",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111103"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionA}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"blockId\": \"{{blockIdCb02}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionA}}/mantenimiento-completado",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionA}}",
+                "mantenimiento-completado"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-02.2 Liberar {{idHabitacionA}} responde 200 (mantenimiento completado, físico en LISTA)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\");",
+                  "  pm.expect(json.data.blockId).to.eql(pm.environment.get(\"blockIdCb02\"));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-03",
+      "description": "## Qué cubre\n- `GET http://localhost:8082/actuator/circuitbreakers` — lectura del estado del breaker (puerto de gestión de hotel-service, nunca el Gateway).\n\n## Precondición\n{{token}} poblado. Reception ARRIBA. CB-01 y CB-02 ejecutados (breaker en CLOSED tras llamadas con éxito).\n\n## Orden\n1. CB-03: aserta que el breaker `{{breakerId}}` está en CLOSED.\n\nContrato: diagnóstico de gestión de hotel-service (`configuracion.md` § Health y readiness por servicio); fuera del contrato del Gateway.",
+      "item": [
+        {
+          "name": "CB-03 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED",
+          "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker reportado por Feign ({{breakerId}}) está en CLOSED.",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/actuator/circuitbreakers"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-03 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"CB-03 El breaker {{breakerId}} está en CLOSED\", function () {",
+                  "  const json = pm.response.json();",
+                  "  const lista = (json && json.circuitBreakers) || (Array.isArray(json) ? json : []);",
+                  "  const breaker = lista.find(function (b) { return b && b.name === pm.environment.get(\"breakerId\"); });",
+                  "  pm.expect(breaker).to.not.be.undefined(\"Breaker \" + pm.environment.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(lista.map(function (b) { return b ? b.name + \":\" + b.state : \"?\"; })));",
+                  "  pm.expect(breaker.state).to.eql(\"CLOSED\");",
+                  "  pm.environment.set(\"breakerEstado\", breaker.state);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-04",
+      "description": "## Qué cubre\nCinco `POST /api/habitacion/{id}/mantenimiento`, uno por petición, sobre `{{idHabitacionB}}`…`{{idHabitacionF}}`, cada uno con `Idempotency-Key` distinta. Reception DETENIDO → cada uno devuelve 202 con `Location` y `Retry-After` (operación PREPARANDO, nunca 503). El script guarda en {{blockId}} el blockId del `Location` de la primera ({{idHabitacionB}}).\n\n## Precondición\n{{token}} poblado. Reception DETENIDO antes de esta carpeta:\n`docker compose -f infra/compose.yaml --env-file .env stop reception-service`\n(su opuesto: `... start reception-service`; en IDE: `taskkill /PID <pid> /F`).\n\n## Por qué cinco habitaciones distintas\nEl índice único parcial `uq_operacion_vigente` (`V5__hotel_operaciones.sql`) rechaza una segunda operación sobre la misma habitación con `409 ROOM_OPERATION_IN_PROGRESS` antes de Feign; ese 409 no es fallo del breaker. Por eso cada llamada va sobre una habitación libre distinta.\n\n## Orden\nBuscar + mantener sobre B, C, D, E y F (una pareja por habitación). {{blockId}} queda con el valor de la primera.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`; respuesta 202 `AcceptedOp` con headers `Location` y `Retry-After`).",
+      "item": [
+        {
+          "name": "CB-04.1 GET /api/habitacion/buscar/{{idHabitacionB}} — fija {{versionB}}",
+          "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionB}} para el If-Match.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionB}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionB}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04.1 Buscar {{idHabitacionB}} responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionB\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202",
+          "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After` (operación PREPARANDO, el circuit breaker no introduce 503). Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionB}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111104"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionB}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionB}}).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionB}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionB}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04 Mantenimiento {{idHabitacionB}} responde 202 (operación PREPARANDO)\", function () {",
+                  "  pm.response.to.have.status(202);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                  "});",
+                  "pm.test(\"CB-04 {{idHabitacionB}} trae los headers Location y Retry-After\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                  "});",
+                  "pm.test(\"CB-04 Guarda {{blockId}} del Location de la primera operación ({{idHabitacionB}})\", function () {",
+                  "  if (pm.environment.get(\"blockId\") === \"\") {",
+                  "    const location = pm.response.headers.get(\"Location\") || \"\";",
+                  "    const match = location.match(/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/);",
+                  "    if (match) {",
+                  "      pm.environment.set(\"blockId\", match[1]);",
+                  "    }",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04.2 GET /api/habitacion/buscar/{{idHabitacionC}} — fija {{versionC}}",
+          "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionC}} para el If-Match.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionC}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionC}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04.2 Buscar {{idHabitacionC}} responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionC\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202",
+          "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionC}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111105"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionC}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionC}}).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionC}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionC}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04 Mantenimiento {{idHabitacionC}} responde 202 (operación PREPARANDO)\", function () {",
+                  "  pm.response.to.have.status(202);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                  "});",
+                  "pm.test(\"CB-04 {{idHabitacionC}} trae los headers Location y Retry-After\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04.3 GET /api/habitacion/buscar/{{idHabitacionD}} — fija {{versionD}}",
+          "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionD}} para el If-Match.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionD}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionD}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04.3 Buscar {{idHabitacionD}} responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionD\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202",
+          "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionD}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111106"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionD}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionD}}).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionD}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionD}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04 Mantenimiento {{idHabitacionD}} responde 202 (operación PREPARANDO)\", function () {",
+                  "  pm.response.to.have.status(202);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                  "});",
+                  "pm.test(\"CB-04 {{idHabitacionD}} trae los headers Location y Retry-After\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04.4 GET /api/habitacion/buscar/{{idHabitacionE}} — fija {{versionE}}",
+          "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionE}} para el If-Match.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionE}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionE}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04.4 Buscar {{idHabitacionE}} responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionE\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202",
+          "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionE}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111107"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionE}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionE}}).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionE}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionE}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04 Mantenimiento {{idHabitacionE}} responde 202 (operación PREPARANDO)\", function () {",
+                  "  pm.response.to.have.status(202);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                  "});",
+                  "pm.test(\"CB-04 {{idHabitacionE}} trae los headers Location y Retry-After\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04.5 GET /api/habitacion/buscar/{{idHabitacionF}} — fija {{versionF}}",
+          "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionF}} para el If-Match.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionF}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionF}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04.5 Buscar {{idHabitacionF}} responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionF\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202",
+          "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionF}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111108"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionF}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionF}}).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionF}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionF}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-04 Mantenimiento {{idHabitacionF}} responde 202 (operación PREPARANDO)\", function () {",
+                  "  pm.response.to.have.status(202);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                  "});",
+                  "pm.test(\"CB-04 {{idHabitacionF}} trae los headers Location y Retry-After\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-05",
+      "description": "## Qué cubre\n- `GET http://localhost:8082/actuator/circuitbreakers` — 200 y el breaker `{{breakerId}}` está en `OPEN`.\n\n## Precondición\nReception DETENIDO. CB-04 ejecutado (cinco fallos contra reception).\n\n## Orden\n1. CB-05: aserta OPEN. Esta es la prueba del ciclo; si sigue CLOSED, la prueba falla con el mensaje de que la tanda no alcanzó el mínimo de llamadas.\n\nContrato: diagnóstico de gestión de hotel-service (fuera del contrato del Gateway). `03-contrato-comun.md` § Servicio a servicio: con breaker abierto, hotel-service sigue devolviendo 202 PREPARANDO, nunca 503 en esta ruta de negocio.",
+      "item": [
+        {
+          "name": "CB-05 GET http://localhost:8082/actuator/circuitbreakers — estado OPEN",
+          "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker {{breakerId}} está en OPEN (la prueba del ciclo).",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/actuator/circuitbreakers"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-05 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"CB-05 El breaker {{breakerId}} está en OPEN (la prueba del ciclo)\", function () {",
+                  "  const json = pm.response.json();",
+                  "  const lista = (json && json.circuitBreakers) || (Array.isArray(json) ? json : []);",
+                  "  const breaker = lista.find(function (b) { return b && b.name === pm.environment.get(\"breakerId\"); });",
+                  "  pm.expect(breaker).to.not.be.undefined(\"Breaker \" + pm.environment.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(lista.map(function (b) { return b ? b.name + \":\" + b.state : \"?\"; })));",
+                  "  pm.expect(breaker.state).to.eql(\"OPEN\", \"El breaker sigue CLOSED tras cinco llamadas con reception detenido: la tanda no alcanzó el mínimo de fallos para abrir el breaker.\");",
+                  "  pm.environment.set(\"breakerEstado\", breaker.state);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-06",
+      "description": "## Qué cubre\n- `POST /api/habitacion/{{idHabitacionG}}/mantenimiento` — reception DETENIDO, breaker abierto → 202 con `Location` y `Retry-After` (no 503).\n- `GET http://localhost:8082/actuator/circuitbreakers` — el estado sigue `OPEN`.\n\n## Precondición\n{{token}} poblado. Reception DETENIDO. CB-05 en verde (breaker en OPEN).\n\n## Orden\n1. Buscar {{idHabitacionG}} → fija {{versionG}}.\n2. Mantenimiento sobre {{idHabitacionG}} → 202 con Location y Retry-After.\n3. Actuator → el breaker {{breakerId}} sigue en OPEN.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`); diagnóstico de gestión de hotel-service.",
+      "item": [
+        {
+          "name": "CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}",
+          "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionG}} para el If-Match.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionG}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionG}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-06.1 Buscar {{idHabitacionG}} responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionG\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto",
+          "description": "Iniciar mantenimiento (A). Reception DETENIDO y breaker OPEN → 202 esperado con `Location` y `Retry-After` (no 503). Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionG}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111109"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionG}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Sonda de prueba con breaker abierto (CB-06).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionG}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionG}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-06 Mantenimiento {{idHabitacionG}} responde 202 (breaker abierto, no 503)\", function () {",
+                  "  pm.response.to.have.status(202);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                  "});",
+                  "pm.test(\"CB-06 {{idHabitacionG}} trae los headers Location y Retry-After\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-06.2 GET http://localhost:8082/actuator/circuitbreakers — el estado sigue OPEN",
+          "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker {{breakerId}} sigue en OPEN tras la sexta llamada.",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/actuator/circuitbreakers"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-06.2 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"CB-06.2 El breaker {{breakerId}} sigue en OPEN\", function () {",
+                  "  const json = pm.response.json();",
+                  "  const lista = (json && json.circuitBreakers) || (Array.isArray(json) ? json : []);",
+                  "  const breaker = lista.find(function (b) { return b && b.name === pm.environment.get(\"breakerId\"); });",
+                  "  pm.expect(breaker).to.not.be.undefined(\"Breaker \" + pm.environment.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(lista.map(function (b) { return b ? b.name + \":\" + b.state : \"?\"; })));",
+                  "  pm.expect(breaker.state).to.eql(\"OPEN\");",
+                  "  pm.environment.set(\"breakerEstado\", breaker.state);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-07",
+      "description": "## Qué cubre\n- Pausa manual de 10 s (reception sigue DETENIDO).\n- `POST /api/habitacion/{{idHabitacionA}}/mantenimiento` — llamada de sonda → 202 (el breaker permite la llamada tras el intervalo de open-state).\n- `GET http://localhost:8082/actuator/circuitbreakers` — 200 y el breaker está en `HALF_OPEN`.\n\n## Precondición\n{{token}} poblado. Reception DETENIDO. CB-06 en verde (breaker en OPEN).\n\n## Decisión de nivel 2 (`docs/implementacion/decisiones/IA-back-hotel-resiliencia-demo-01.md`)\nEn Resilience4j 2.3.0 el paso OPEN → HALF_OPEN no es un reloj: la lectura de solo lectura a los 10 s sigue en `OPEN` mientras no llegue una llamada, y la transición se evalúa en `OpenState.tryAcquirePermission()` cuando llega una llamada tras el intervalo. Por este orden:\n1. Pausar 10 s (manual, documentado aquí; nunca como aserción de tiempo de respuesta).\n2. Llamada de sonda (CB-07.2) → dispara la evaluación y pasa a HALF_OPEN.\n3. Lectura del actuator (CB-07.3) → aserta HALF_OPEN.\nNo se activa `automatic-transition-from-open-to-half-open-enabled` (la spec no lo fija).\n\n## Orden\n1. Pausa manual de 10 s.\n2. Buscar {{idHabitacionA}} → fija {{versionA}} ({{idHabitacionA}} fue liberada en CB-02).\n3. Sonda → 202.\n4. Actuator → HALF_OPEN.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`); diagnóstico de gestión de hotel-service.",
+      "item": [
+        {
+          "name": "CB-07.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}} (tras pausa de 10 s)",
+          "description": "Detalle de habitación. 200 esperado. Ejecutar tras la pausa manual de 10 s. Guarda data.version en {{versionA}} para el If-Match de la sonda.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionA}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionA}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-07.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionA\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-07.2 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — llamada de sonda → 202",
+          "description": "Iniciar mantenimiento (A). Reception DETENIDO, breaker en transición tras el intervalo → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionA}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111110"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionA}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Llamada de sonda tras intervalo de open-state (CB-07).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionA}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionA}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-07.2 Sonda {{idHabitacionA}} responde 202 (breaker permite la llamada tras el intervalo)\", function () {",
+                  "  pm.response.to.have.status(202);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                  "});",
+                  "pm.test(\"CB-07.2 {{idHabitacionA}} trae los headers Location y Retry-After\", function () {",
+                  "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                  "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-07.3 GET http://localhost:8082/actuator/circuitbreakers — estado HALF_OPEN",
+          "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker {{breakerId}} está en HALF_OPEN tras la llamada de sonda (lectura de solo lectura a los 10 s, sin sonda, seguiría en OPEN).",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/actuator/circuitbreakers"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-07.3 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"CB-07.3 El breaker {{breakerId}} está en HALF_OPEN (tras la sonda de los 10 s)\", function () {",
+                  "  const json = pm.response.json();",
+                  "  const lista = (json && json.circuitBreakers) || (Array.isArray(json) ? json : []);",
+                  "  const breaker = lista.find(function (b) { return b && b.name === pm.environment.get(\"breakerId\"); });",
+                  "  pm.expect(breaker).to.not.be.undefined(\"Breaker \" + pm.environment.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(lista.map(function (b) { return b ? b.name + \":\" + b.state : \"?\"; })));",
+                  "  pm.expect(breaker.state).to.eql(\"HALF_OPEN\");",
+                  "  pm.environment.set(\"breakerEstado\", breaker.state);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-08",
+      "description": "## Qué cubre\nHasta tres `POST /api/habitacion/{id}/mantenimiento` sobre habitaciones libres con reception ARRIBA → 200 con `blockId` en cada una que reception admita; se anota cuántas hicieron falta para ver CLOSED en CB-09.\n\n## Precondición\n{{token}} poblado. Reception LEVANTADO antes de esta carpeta:\n`docker compose -f infra/compose.yaml --env-file .env start reception-service`\n(si se detuvo por IDE, volver a lanzar el proceso de reception).\n\n## Qué habitación usar\nEn este punto del ciclo ninguna de A-G está garantizada libre: B-F y G dejaron operaciones PREPARANDO en CB-04/CB-06, y A en la sonda de CB-07. Usar {{idHabitacionH}} (o {{idHabitacionI}}/{{idHabitacionJ}}) poblada desde el flujo de catálogo, o liberar {{idHabitacionA}} con `PUT /api/habitacion/{{idHabitacionA}}/mantenimiento-completado` (blockId de la sonda de CB-07, If-Match e Idempotency-Key).\n\n## Orden\nRepetir esta petición hasta tres veces sobre habitaciones libres distintas; cada 200 con blockId cuenta hacia el cierre del breaker.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`).",
+      "item": [
+        {
+          "name": "CB-08.1 GET /api/habitacion/buscar/{{idHabitacionH}} — fija {{versionH}} (habitación libre)",
+          "description": "Detalle de habitación libre. 200 esperado. Guarda data.version en {{versionH}} para el If-Match del mantenimiento de CB-08.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionH}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacionH}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-08.1 Buscar {{idHabitacionH}} responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "  pm.environment.set(\"versionH\", String(json.data.version));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-08 POST /api/habitacion/{{idHabitacionH}}/mantenimiento — 200 con blockId",
+          "description": "Iniciar mantenimiento (A). Reception ARRIBA → 200 esperado (gate BLOQUEADA, CAS aplicado en el request). Repetir hasta tres veces sobre habitaciones libres distintas. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionH}}).",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "11111111-1111-4111-8111-111111111111"
+              },
+              {
+                "key": "If-Match",
+                "value": "{{versionH}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"motivo\": \"Mantenimiento de verificación de cierre del breaker (CB-08).\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionH}}/mantenimiento",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "{{idHabitacionH}}",
+                "mantenimiento"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-08 Mantenimiento {{idHabitacionH}} responde 200 (reception arriba; breaker en HALF_OPEN admite la llamada)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.empty;",
+                  "  pm.expect(json.data).to.have.property(\"version\").that.is.not.empty;",
+                  "});",
+                  "pm.test(\"CB-08 Anota el blockId del mantenimiento que cerró el breaker\", function () {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set(\"blockIdCb08\", json.data.blockId);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-09",
+      "description": "## Qué cubre\n- `GET http://localhost:8082/actuator/circuitbreakers` — 200 y el breaker `{{breakerId}}` está en `CLOSED` (llamadas con éxito tras la reapertura de reception cerraron el breaker).\n\n## Precondición\n{{token}} poblado. Reception ARRIBA. CB-08 ejecutado (al menos una llamada con éxito en HALF_OPEN).\n\n## Orden\n1. CB-09: aserta CLOSED.\n\nContrato: diagnóstico de gestión de hotel-service (fuera del contrato del Gateway).",
+      "item": [
+        {
+          "name": "CB-09 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED",
+          "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker {{breakerId}} volvió a CLOSED tras llamadas con éxito en HALF_OPEN.",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "http://localhost:8082/actuator/circuitbreakers"
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-09 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test(\"CB-09 El breaker {{breakerId}} está en CLOSED\", function () {",
+                  "  const json = pm.response.json();",
+                  "  const lista = (json && json.circuitBreakers) || (Array.isArray(json) ? json : []);",
+                  "  const breaker = lista.find(function (b) { return b && b.name === pm.environment.get(\"breakerId\"); });",
+                  "  pm.expect(breaker).to.not.be.undefined(\"Breaker \" + pm.environment.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(lista.map(function (b) { return b ? b.name + \":\" + b.state : \"?\"; })));",
+                  "  pm.expect(breaker.state).to.eql(\"CLOSED\");",
+                  "  pm.environment.set(\"breakerEstado\", breaker.state);",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CB-10",
+      "description": "## Qué cubre\n- `GET /api/habitacion/operaciones/{{blockId}}` — 200, `data.estado` igual a `APLICADA` y `data.blockId` igual al `{{blockId}}` guardado en CB-04 (operación de la primera habitación del ciclo, retomada por el job tras levantar reception).\n\n## Precondición\n{{token}} poblado. {{blockId}} poblado (CB-04 ejecutado). Reception ARRIBA (el job reintenta la operación PREPARANDO con el mismo blockId).\n\n## Orden\n1. CB-10: polling de la operación; aserta APLICADA con el mismo blockId.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`consultarOperacionHabitacion`; 200 `ApiSingleOperacionHabitacion`).",
+      "item": [
+        {
+          "name": "CB-10 GET /api/habitacion/operaciones/{{blockId}} — estado APLICADA",
+          "description": "Consultar operación administrativa (A). 200 esperado. Aserta data.blockId igual a {{blockId}} (guardado del Location de CB-04) y data.estado igual a APLICADA.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/operaciones/{{blockId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "operaciones",
+                "{{blockId}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"CB-10 Operaciones {{blockId}} responden 200 (contrato hotel: GET /api/habitacion/operaciones/{blockId})\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"blockId\").that.eql(pm.environment.get(\"blockId\"));",
+                  "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"APLICADA\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": []
+}

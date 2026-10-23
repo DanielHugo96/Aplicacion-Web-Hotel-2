@@ -1,0 +1,163 @@
+{
+  "info": {
+    "_postman_id": "22222222-2222-4222-8222-222222222002",
+    "name": "Catálogo hotelero — sedes, habitaciones y detalle",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "# Flujo: catálogo hotelero (hotel)\n\n## Qué cubre\n- `GET {{baseUrl}}/api/hotel/listar` — sedes de alcance; 200. Anota `{{idHotel}}` de la primera sede.\n- `GET {{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}` — habitaciones de la sede; 200. Anota la primera habitación con `ocupacion.estadoEstadia === \"LIBRE\"` en `{{idHabitacion}}`.\n- `GET {{baseUrl}}/api/habitacion/buscar/{{idHabitacion}}` — detalle de la habitación; 200.\n\n## Precondición\n`{{token}}` vigente: ejecutar primero la colección `identidad` (login + me). Todas las peticiones van con `Authorization: Bearer {{token}}`.\n\n## Orden de ejecución\n1. `GET /api/hotel/listar` → fija `{{idHotel}}`.\n2. `GET /api/habitacion/listar?idHotel=...` → fija `{{idHabitacion}}` (primera LIBRE).\n3. `GET /api/habitacion/buscar/{id}` → depende de `{{idHabitacion}}` del paso 2.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`listarHoteles`, `listarHabitaciones`, `buscarHabitacion`). Todas 200.\n"
+  },
+  "item": [
+    {
+      "name": "GET /api/hotel/listar — sedes de alcance",
+      "description": "Listar sedes (A/E). 200 esperado. Guarda data[0].idHotel en {{idHotel}}.",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/hotel/listar",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "hotel",
+            "listar"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Listar sedes responde 200 (contrato hotel)\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  const json = pm.response.json();",
+              "  pm.expect(json).to.have.property(\"data\");",
+              "  pm.expect(json.data).to.be.an(\"array\").that.is.not.empty;",
+              "});",
+              "pm.test(",
+              "  \"Anota {{idHotel}} con la primera sede\",",
+              "  function () {",
+              "    const data = pm.response.json().data || [];",
+              "    if (data.length > 0) {",
+              "      pm.environment.set(\"idHotel\", String(data[0].idHotel));",
+              "    }",
+              "  }",
+              ");"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/habitacion/listar?idHotel= — habitaciones de la sede",
+      "description": "Listar habitaciones por sede. 200 esperado. Guarda la primera habitación con ocupacion.estadoEstadia === 'LIBRE' en {{idHabitacion}}.",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "habitacion",
+            "listar"
+          ],
+          "query": [
+            {
+              "key": "idHotel",
+              "value": "{{idHotel}}"
+            }
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Listar habitaciones responde 200 (contrato hotel)\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  const json = pm.response.json();",
+              "  pm.expect(json).to.have.property(\"data\");",
+              "  pm.expect(json.data).to.be.an(\"array\").that.is.not.empty;",
+              "});",
+              "pm.test(",
+              "  \"Anota {{idHabitacion}} con la primera habitación LIBRE\",",
+              "  function () {",
+              "    const data = pm.response.json().data || [];",
+              "    const libre = data.find(function (h) {",
+              "      return h && h.ocupacion && h.ocupacion.estadoEstadia === \"LIBRE\";",
+              "    });",
+              "    pm.expect(libre).to.not.be.undefined, \"Al menos una habitación debe estar LIBRE para el flujo\";",
+              "    if (libre) {",
+              "      pm.environment.set(\"idHabitacion\", String(libre.idHabitacion));",
+              "    }",
+              "  }",
+              ");"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /api/habitacion/buscar/{id} — detalle de habitación",
+      "description": "Detalle de una habitación (A/E). 200 esperado. Depende de {{idHabitacion}} anotado en la petición anterior.",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{token}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacion}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "habitacion",
+            "buscar",
+            "{{idHabitacion}}"
+          ]
+        }
+      },
+      "response": [],
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Detalle de habitación responde 200 (contrato hotel)\", function () {",
+              "  pm.response.to.have.status(200);",
+              "  const json = pm.response.json();",
+              "  pm.expect(json).to.have.property(\"data\");",
+              "  pm.expect(json.data).to.have.property(\"idHabitacion\");",
+              "});"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "variable": []
+}
