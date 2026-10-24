@@ -7,7 +7,7 @@
 | Componente | `tests` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `cerrado` |
+| Estado | `en curso` |
 | Depende de | `back-hotel-resiliencia-demo`, `infra-kafka-ui` |
 | Spec | [`06` §7 Entregables](../especificacion/06-migracion-y-pruebas.md#7-entregables-de-implementación); [`configuracion.md` § Health y readiness por servicio](../especificacion/infraestructura/configuracion.md#health-y-readiness-por-servicio); [`03-contrato-comun.md` § Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio) y [§ Headers](../especificacion/03-contrato-comun.md#headers); [`hotel/api.md` § Habitaciones y físico](../especificacion/microservicios/hotel/api.md#habitaciones-y-físico); [`runbooks.md`](../especificacion/infraestructura/runbooks.md) |
 | Casos | `—` |
