@@ -1,0 +1,132 @@
+EVIDENCIA — qa-postman-circuit-breaker, pasos 8-20 (colección circuit-breaker)
+=============================================================================
+Plan: docs/plans/qa-postman-circuit-breaker.md (ámbito qa, fase F5, modo directo)
+Rama: qa-postman-circuit-breaker
+Fecha: 2026-10-23
+
+-------------------------------------------------------------------------------
+1) VALIDACIÓN DE JSON (python json.load sobre tests/postman/circuit-breaker.postman_collection.json)
+-------------------------------------------------------------------------------
+Comando ejecutado: python -c "import json; json.load(open('tests/postman/circuit-breaker.postman_collection.json', encoding='utf-8'))"
+más comprobaciones de estructura sobre el objeto parseado.
+
+Resultado:
+  OK   circuit-breaker.postman_collection.json  (schema v2.1.0)
+
+Comprobaciones adicionales superadas:
+  - info.schema = https://schema.getpostman.com/json/collection/v2.1.0/collection.json
+  - 10 carpetas de nivel raíz: CB-01, CB-02, CB-03, CB-04, CB-05, CB-06, CB-07, CB-08, CB-09, CB-10 (en ese orden).
+  - 26 peticiones en total; todas con evento `test` y al menos una `pm.test`.
+  - Peticiones del actuator con URL literal `http://localhost:8082/actuator/circuitbreakers` (puerto de gestión de hotel-service, nunca el Gateway): CB-03, CB-05, CB-06.2, CB-07.3, CB-09.
+  - Cada petición de mantenimiento lleva `Idempotency-Key` (UUID fijo y distinto por petición) e `If-Match` con `{{versionX}}` leído de `GET /api/habitacion/buscar/{id}` ejecutado justo antes en la misma carpeta.
+  - Descripción de la carpeta raíz incluye: por qué cinco habitaciones distintas (índice `uq_operacion_vigente`, `V5__hotel_operaciones.sql`: repetir habitación devuelve `409 ROOM_OPERATION_IN_PROGRESS` antes de Feign y no cuenta como fallo del breaker); que la evidencia es la transición de estado en `/actuator/circuitbreakers`, no el cronómetro; los comandos literales `docker compose -f infra/compose.yaml --env-file .env stop reception-service` y su opuesto `start`, y la alternativa `taskkill /PID <pid> /F` para reception en el IDE; que Postman no puede apagar servicios (guion manual, la colección lo asume); y la cita a la decisión de nivel 2 `docs/implementacion/decisiones/IA-back-hotel-resiliencia-demo-01.md` (Resilience4j 2.3.0: OPEN → HALF_OPEN no es reloj, se evalúa al llegar una llamada tras el intervalo; sin `automatic-transition-from-open-to-half-open-enabled`).
+
+-------------------------------------------------------------------------------
+2) ARCHIVOS CREADOS / MODIFICADOS (tests/postman/)
+-------------------------------------------------------------------------------
+  - tests/postman/circuit-breaker.postman_collection.json  (nueva colección CB-01 a CB-10)
+
+-------------------------------------------------------------------------------
+3) INVENTARIO DE PETICIONES (en orden de ejecución) Y pm.test DE CADA UNA
+-------------------------------------------------------------------------------
+CB-01 (carpeta CB-01, 1 petición)
+  - CB-01 POST /api/auth/login — guarda {{token}}
+    pm.test: responde 200 (contrato identity: POST /api/auth/login).
+    pm.test: guarda data.token en {{token}} (solo en memoria del entorno local).
+
+CB-02 (carpeta CB-02, 3 peticiones)
+  - CB-02.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}}
+    pm.test: responde 200 (contrato hotel); anota data.version en {{versionA}}.
+  - CB-02 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — 200 con blockId
+    pm.test: responde 200 (gate BLOQUEADA; CAS aplicado en el request); body trae blockId y version.
+    pm.test: anota {{blockIdCb02}} y la nueva {{versionA}}.
+  - CB-02.2 PUT /api/habitacion/{{idHabitacionA}}/mantenimiento-completado — libera
+    pm.test: responde 200; data.blockId igual a {{blockIdCb02}}.
+
+CB-03 (carpeta CB-03, 1 petición)
+  - CB-03 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED
+    pm.test: responde 200.
+    pm.test: el breaker {{breakerId}} está en CLOSED (falla con mensaje descriptivo si no se lista).
+
+CB-04 (carpeta CB-04, 10 peticiones: buscar + mantenimiento × 5 habitaciones)
+  - CB-04.1..CB-04.5 GET /api/habitacion/buscar/{{idHabitacionB..F}} — fijan {{versionB..F}}
+    pm.test: responden 200; anotan data.version en {{versionB..F}}.
+  - CB-04 POST /api/habitacion/{{idHabitacionB..F}}/mantenimiento — 202 (una por petición)
+    pm.test: responden 202 (operación PREPARANDO); body trae blockId y estado PREPARANDO.
+    pm.test: traen headers Location y Retry-After.
+    pm.test (sobre {{idHabitacionB}}, la primera): guarda {{blockId}} del Location (UUID del último segmento).
+    Idempotency-Key distinta en cada una.
+
+CB-05 (carpeta CB-05, 1 petición)
+  - CB-05 GET http://localhost:8082/actuator/circuitbreakers — estado OPEN (la prueba del ciclo)
+    pm.test: responde 200.
+    pm.test: el breaker {{breakerId}} está en OPEN; si sigue CLOSED, falla con el mensaje de que la tanda no alcanzó el mínimo de llamadas.
+
+CB-06 (carpeta CB-06, 3 peticiones)
+  - CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}
+    pm.test: responde 200; anota data.version en {{versionG}}.
+  - CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto
+    pm.test: responde 202 (no 503); trae Location y Retry-After; estado PREPARANDO.
+  - CB-06.2 GET http://localhost:8082/actuator/circuitbreakers — el estado sigue OPEN
+    pm.test: responde 200; el breaker {{breakerId}} sigue en OPEN.
+
+CB-07 (carpeta CB-07, 3 peticiones tras pausa manual de 10 s)
+  - CB-07.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}} (tras la pausa)
+    pm.test: responde 200; anota data.version en {{versionA}}.
+  - CB-07.2 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — llamada de sonda → 202
+    pm.test: responde 202 (breaker permite la llamada tras el intervalo); trae Location y Retry-After.
+  - CB-07.3 GET http://localhost:8082/actuator/circuitbreakers — estado HALF_OPEN
+    pm.test: responde 200; el breaker {{breakerId}} está en HALF_OPEN tras la sonda.
+    Nota (documentada en la descripción de la carpeta, decisión IA-back-hotel-resiliencia-demo-01):
+    la lectura de solo lectura a los 10 s sin sonda seguiría en OPEN; la transición se evalúa al llegar
+    la llamada de sonda, y después se aserta HALF_OPEN. No se activa automatic-transition-from-open-to-half-open-enabled.
+
+CB-08 (carpeta CB-08, 2 peticiones sobre habitación libre; repetir hasta 3 veces)
+  - CB-08.1 GET /api/habitacion/buscar/{{idHabitacionH}} — fija {{versionH}}
+    pm.test: responde 200; anota data.version en {{versionH}}.
+  - CB-08 POST /api/habitacion/{{idHabitacionH}}/mantenimiento — 200 con blockId
+    pm.test: responde 200 (reception arriba; breaker en HALF_OPEN admite la llamada); body trae blockId y version.
+    pm.test: anota {{blockIdCb08}}.
+    Nota (documentada en la descripción de la carpeta): usar habitación libre en este punto del ciclo
+    ({{idHabitacionH}}/{{idHabitacionI}}/{{idHabitacionJ}} pobladas desde catálogo, o liberar {{idHabitacionA}}
+    con PUT .../mantenimiento-completado); anotar cuántas llamadas hicieron falta para llegar a CLOSED en CB-09.
+
+CB-09 (carpeta CB-09, 1 petición)
+  - CB-09 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED
+    pm.test: responde 200; el breaker {{breakerId}} está en CLOSED.
+
+CB-10 (carpeta CB-10, 1 petición)
+  - CB-10 GET /api/habitacion/operaciones/{{blockId}} — estado APLICADA
+    pm.test: responde 200 (contrato hotel: GET /api/habitacion/operaciones/{blockId}); data.blockId igual a {{blockId}} (guardado en CB-04); data.estado igual a APLICADA.
+
+-------------------------------------------------------------------------------
+4) SECRETOS
+-------------------------------------------------------------------------------
+Comando ejecutado: grep -iE "bearer|password|secret|sk-|eyJ" sobre tests/postman/circuit-breaker.postman_collection.json
+Resultado: SIN HALLAZGOS de secretos ni credenciales en valores. Aparece "Bearer {{token}}" solo como referencia a variable de entorno (el valor viaja vacío en el archivo versionado y se popula con el login de CB-01) y menciones descriptivas ("sin secretos", "nunca se versionan"). No hay tokens ni contraseñas reales versionados.
+El entorno Hotel-local.postman_environment.json lleva {{token}} y {{claveDemo}} vacíos (ya verificado en la tanda de pasos 1-7, archivo 01-colecciones-flujo.txt).
+
+-------------------------------------------------------------------------------
+5) EJECUCIÓN EN VIVO (PASOS 18 Y 19)
+-------------------------------------------------------------------------------
+No se ejecutó la secuencia en vivo en esta sesión. No hay hotel-service, api-gateway ni
+reception-service levantados (docker compose muestra solo contenedores de infraestructura:
+postgres, kafka, rabbitmq, mailpit, kafka-ui), por lo que no es posible correr CB-01..CB-10
+contra localhost:8080 ni leer localhost:8082/actuator/circuitbreakers, capturar el run de
+Postman ni las cuatro transiciones (cerrado, abierto, half-open, cerrado).
+npx newman --version → 6.2.3 (disponible), pero la corrida requiere el cluster local completo
+y el apagado/encendido manual de reception-service:
+  docker compose -f infra/compose.yaml --env-file .env stop reception-service
+  docker compose -f infra/compose.yaml --env-file .env start reception-service
+  (alternativa en IDE: taskkill /PID <pid> /F)
+No se inventan salidas. Los pasos 18 y 19 permanecen sin marcar en el plan hasta que la
+tanda de cierre ejecute el guion completo; no se marca ningún paso antes de verificar.
+
+-------------------------------------------------------------------------------
+6) VERIFICACIÓN CANÓNICA (PASO 20)
+-------------------------------------------------------------------------------
+Comando ejecutado: python scripts/validar-planes.py
+Resultado: 42 plan(es) revisado(s); 42 previsto(s) en el catálogo; 0 error(es), 0 aviso(s).
+Árbol tests/postman/: seis colecciones (identidad, catalogo-hotelero, recepcion, ventas,
+reportes, circuit-breaker) + Hotel-local.postman_environment.json + .gitkeep;
+sin archivos fuera de las seis colecciones y el entorno.

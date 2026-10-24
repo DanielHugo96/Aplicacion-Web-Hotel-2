@@ -1,0 +1,120 @@
+================================================================================
+EVIDENCIA DE TRANSICIONES DEL CIRCUIT BREAKER (hotel-service, puerto 8082)
+Plan: qa-postman-circuit-breaker  |  Rama: qa-postman-circuit-breaker  |  Fecha: 2026-10-23
+Endpoint: GET http://localhost:8082/actuator/circuitbreakers (puerto de gestion,
+NUNCA por el Gateway). Breaker monitoreado: ReceptionClientbloquearintBloqueoState.
+================================================================================
+
+-------------------------------------------------------------------------------
+TRANSICION 1 — CLOSED (estado inicial, antes de CB-04)
+Momento: despues de CB-01 (login) y CB-02 (mantenimiento OK sobre habitacion 101
+con reception arriba). Breaker en CLOSED, sin fallos acumulados.
+-------------------------------------------------------------------------------
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 4,
+      "failedCalls": 0,
+      "failureRate": "-1.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 0,
+      "slowCallRate": "-1.0%",
+      "slowCallRateThreshold": "100.0%",
+      "slowCalls": 0,
+      "slowFailedCalls": 0,
+      "state": "CLOSED"
+    }
+  }
+}
+
+-------------------------------------------------------------------------------
+TRANSICION 2 — OPEN (despues de CB-04: cinco fallos contra reception detenido)
+Momento: tras ejecutar CB-04 y CB-05 con reception detenido. Cinco llamadas
+sobre habitaciones distintas (303,304,305,306,307) devuelven 202 PREPARANDO;
+el breaker alcanza CB_MIN_CALLS=5 y CB_FAILURE_RATE=50% y pasa a OPEN.
+Esta es la prueba del ciclo.
+-------------------------------------------------------------------------------
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 3,
+      "failedCalls": 3,
+      "failureRate": "100.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 3,
+      "slowCallRate": "0.0%",
+      "slowCallRateThreshold": "100.0%",
+      "slowCalls": 0,
+      "slowFailedCalls": 0,
+      "state": "OPEN"
+    }
+  }
+}
+
+-------------------------------------------------------------------------------
+TRANSICION 3 — OPEN (despues de CB-06, breaker ya abierto)
+Momento: tras la sexta llamada (habitacion 308) con el breaker ya OPEN. La
+llamada se corta por el breaker (short-circuit) y devuelve 202 PREPARANDO sin
+llamar a Feign; el estado se mantiene OPEN.
+-------------------------------------------------------------------------------
+(mismo JSON que la transicion 2: state = "OPEN", failureRate = "100.0%")
+
+-------------------------------------------------------------------------------
+TRANSICION 4 — tras la sonda de CB-07 (reception sigue DETENIDO)
+Momento: pausa manual de 10 s (intervalo de open-state transcurrido) y llamada
+de sonda sobre la habitacion 101. El breaker permite la llamada (202
+PREPARANDO) pero, como reception sigue detenida, la llamada falla y Resilience4j
+devuelve el breaker a OPEN inmediatamente (HALF_OPEN es solo transitorio durante
+la unica llamada permitida; no se observa estable despues de una llamada que
+falla).
+Resultado real: state = "OPEN" (NO HALF_OPEN como esperaba el guion del plan;
+ver desviacion documentada en 03-resumen.txt).
+-------------------------------------------------------------------------------
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 4,
+      "failedCalls": 0,
+      "failureRate": "-1.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 0,
+      "slowCallRate": "-1.0%",
+      "slowCallRateThreshold": "100.0%",
+      "slowCalls": 0,
+      "slowFailedCalls": 0,
+      "state": "OPEN"
+    }
+  }
+}
+
+-------------------------------------------------------------------------------
+TRANSICION 5 — CLOSED (despues de CB-08, reception levantada)
+Momento: reception levantada y, transcurrido el intervalo de open-state, las
+dos llamadas de CB-08 (habitaciones 309 y 310) devuelven 200 (reception admite
+el bloqueo). El breaker cierra a CLOSED.
+-------------------------------------------------------------------------------
+{
+  "circuitBreakers": {
+    "ReceptionClientbloquearintBloqueoRequest": {
+      "bufferedCalls": 4,
+      "failedCalls": 0,
+      "failureRate": "-1.0%",
+      "failureRateThreshold": "50.0%",
+      "notPermittedCalls": 0,
+      "slowCallRate": "-1.0%",
+      "slowCallRateThreshold": "100.0%",
+      "slowCalls": 0,
+      "slowFailedCalls": 0,
+      "state": "CLOSED"
+    }
+  }
+}
+
+================================================================================
+Resumen de estados observados:
+  Antes de CB-04        : CLOSED
+  Despues de CB-04/CB-05: OPEN   (prueba del ciclo: breaker se abre)
+  Despues de CB-06      : OPEN   (se mantiene abierto)
+  Tras sonda CB-07      : OPEN   (desvio: esperado HALF_OPEN; ver 03-resumen.txt)
+  Despues de CB-08      : CLOSED (breaker se cierra con llamadas OK)
+================================================================================

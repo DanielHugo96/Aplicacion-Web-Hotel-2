@@ -1,0 +1,80 @@
+EVIDENCIA — qa-postman-circuit-breaker, pasos 1-7 (colecciones de flujo)
+=====================================================================
+Plan: docs/plans/qa-postman-circuit-breaker.md (ámbito qa, fase F5)
+Rama: qa-postman-circuit-breaker
+Fecha: 2026-10-23
+
+1) VALIDACIÓN DE JSON (python json.load sobre los 6 archivos de tests/postman/)
+--------------------------------------------------------------------------------
+Comando ejecutado: validación con json.load de cada archivo + comprobaciones de
+estructura (schema v2.1.0, descripción de carpeta raíz, pm.test en cada petición,
+entorno sin secretos, baseUrl=http://localhost:8080, token/claveDemo/idHabitacion*
+vacíos).
+
+Resultado:
+  OK   Hotel-local.postman_environment.json  (2947 bytes)
+  OK   identidad.postman_collection.json     (3963 bytes)
+  OK   catalogo-hotelero.postman_collection.json  (6122 bytes)
+  OK   recepcion.postman_collection.json     (4766 bytes)
+  OK   ventas.postman_collection.json        (8877 bytes)
+  OK   reportes.postman_collection.json      (4557 bytes)
+
+Comprobaciones adicionales superadas:
+  - Entorno Hotel-local: baseUrl=http://localhost:8080; token=""; claveDemo="";
+    idHabitacion e idHabitacionA..G vacíos; sin cadenas tipo bearer/password/secret
+    en valores (grep -i bearer|password|secret sin hallazgos en valores).
+  - Las 5 colecciones: schema
+    https://schema.getpostman.com/json/collection/v2.1.0/collection.json;
+    descripción de carpeta raíz con flujo, precondición y orden de ejecución;
+    pm.test en cada petición verificando el código esperado del contrato;
+    uso exclusivo de {{baseUrl}} (Gateway, puerto 8080);
+    sin secretos ni tokens versionados.
+
+2) ARCHIVOS CREADOS (tests/postman/)
+--------------------------------------------------------------------------------
+  - identidad.postman_collection.json
+  - catalogo-hotelero.postman_collection.json
+  - recepcion.postman_collection.json
+  - ventas.postman_collection.json
+  - reportes.postman_collection.json
+
+Archivo conservado sin modificaciones (ya cumplía el paso 1):
+  - Hotel-local.postman_environment.json (entorno Hotel-local, sin secretos)
+
+3) RUTAS USADA DE CADA CONTRATO (docs/contracts/openapi/*.yaml)
+--------------------------------------------------------------------------------
+identidad (identity.yaml):
+  - POST {{baseUrl}}/api/auth/login  -> 200, cuerpo {correo,clave}, guarda data.token en {{token}}
+  - GET  {{baseUrl}}/api/auth/me     -> 200, Authorization: Bearer {{token}}
+
+catalogo-hotelero (hotel.yaml):
+  - GET {{baseUrl}}/api/hotel/listar              -> 200, anota {{idHotel}} (data[0].idHotel)
+  - GET {{baseUrl}}/api/habitacion/listar?idHotel=... -> 200, anota primera LIBRE en {{idHabitacion}}
+  - GET {{baseUrl}}/api/habitacion/buscar/{{idHabitacion}} -> 200
+
+recepcion (reception.yaml):
+  - POST {{baseUrl}}/api/recepcion/registrar -> 201, CheckIn {idHotel,idCliente,idHabitacion,fechaSalida,adelanto,medioPago,observacion?}, Idempotency-Key, anota data.idRecepcion en {{idRecepcion}}
+  - GET  {{baseUrl}}/api/recepcion/listar?idHotel=... -> 200
+
+ventas (sales.yaml):
+  - POST {{baseUrl}}/api/carrito/agregar?idRecepcion=&idProducto=&cantidad=1 -> 200, Idempotency-Key, anota data.idCarrito
+  - GET  {{baseUrl}}/api/carrito/listar/{{idRecepcion}} -> 200
+  - POST {{baseUrl}}/api/venta -> 201 o 202, VentaAlta {idRecepcion,detalles[{idProducto,cantidad}]}, Idempotency-Key, anota data.idVenta y data.version
+  - PUT  {{baseUrl}}/api/venta/{{idVenta}} -> 200 o 202, {estado:"PAGADO",medioPago:"EFECTIVO"}, If-Match + Idempotency-Key
+
+reportes (reporting.yaml, rutas del Gateway):
+  - GET {{baseUrl}}/api/reportes/dashboard?idHotel=... -> 200 con meta de consistencia eventual, o 503 (REPORTING_NOT_READY / REPORTING_UNAVAILABLE) válido
+  - GET {{baseUrl}}/api/reportes/ventas?idHotel=&inicio=&fin= (ISO-8601 con offset) -> 200, o 503 si la proyección no es utilizable
+
+4) NOTAS
+--------------------------------------------------------------------------------
+- El circuito del breaker (colección circuit-breaker, pasos 8-20 del plan) NO se
+  toca en esta tanda; lo hace otra tanda.
+- {{baseUrl}} apunta al Gateway (http://localhost:8080). El diagnóstico del
+  breaker (localhost:8082/actuator) solo se usa en la colección circuit-breaker,
+  fuera de este alcance.
+- Los Idempotency-Key son UUID fijos por petición (reejecutar con la misma clave
+  no duplica efectos, contrato sales/reception/hotel).
+- Ejecución en vivo contra el cluster local: pendiente de levantar los servicios
+  (docker compose) y ejecutar las colecciones en ese orden; las aserciones de
+  estado (200/201/202/503) ya están codificadas en cada pm.test.

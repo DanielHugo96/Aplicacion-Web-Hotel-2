@@ -1,0 +1,355 @@
+================================================================================
+EVIDENCIA DE EJECUCION — coleccion circuit-breaker (newman, ejecutado por tramos)
+Plan: qa-postman-circuit-breaker  |  Rama: qa-postman-circuit-breaker  |  Fecha: 2026-10-23
+Entorno: Hotel-local (baseUrl=http://localhost:8080).
+Nota: {{claveDemo}} se pasa vía --env-var (no se versiona). Los IDs de habitacion
+se poblaron en el entorno antes de correr (A=101, B=303, C=304, D=305, E=306,
+F=307, G=308, H=309, I=310).
+================================================================================
+
+-------------------------------------------------------------------------------
+TRAMO 1: CB-01, CB-02, CB-03  (reception ARRIBA)
+Comando: npx newman run ... --folder CB-01 --folder CB-02 --folder CB-03
+-------------------------------------------------------------------------------
+(node:26592) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-01
+└ CB-01 POST /api/auth/login — guarda {{token}}
+  POST http://localhost:8080/api/auth/login [200 OK, 1.4kB, 110ms]
+  √  CB-01 Login responde 200 (contrato identity: POST /api/auth/login)
+  √  CB-01 Guarda data.token en {{token}} (solo en memoria del entorno local)
+
+□ CB-02
+└ CB-02.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}}
+  GET http://localhost:8080/api/habitacion/buscar/101 [200 OK, 1.65kB, 17ms]
+  √  CB-02.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel: GET /api/habitacion/buscar/{id})
+
+└ CB-02 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — 200 con blockId
+  POST http://localhost:8080/api/habitacion/101/mantenimiento [200 OK, 1.75kB, 124ms]
+  √  CB-02 Mantenimiento {{idHabitacionA}} responde 200 (gate BLOQUEADA; CAS aplicado en el request)
+  √  CB-02 Anota {{blockIdCb02}} y la nueva versión de {{idHabitacionA}}
+
+└ CB-02.2 PUT /api/habitacion/{{idHabitacionA}}/mantenimiento-completado — libera
+  PUT http://localhost:8080/api/habitacion/101/mantenimiento-completado [200 OK, 1.64kB, 30ms]
+  √  CB-02.2 Liberar {{idHabitacionA}} responde 200 (mantenimiento completado, físico en LISTA)
+
+□ CB-03
+└ CB-03 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 693B, 4ms]
+  √  CB-03 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-03 El breaker {{breakerId}} está en CLOSED
+
+┌─────────────────────────┬───────────────────┬──────────────────┐
+│                         │          executed │           failed │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              iterations │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│                requests │                 5 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│            test-scripts │                 5 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│      prerequest-scripts │                 0 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              assertions │                 8 │                0 │
+├─────────────────────────┴───────────────────┴──────────────────┤
+│ total run duration: 709ms                                      │
+├────────────────────────────────────────────────────────────────┤
+│ total data received: 4.63kB (approx)                           │
+├────────────────────────────────────────────────────────────────┤
+│ average response time: 57ms [min: 4ms, max: 124ms, s.d.: 49ms] │
+└────────────────────────────────────────────────────────────────┘
+
+-------------------------------------------------------------------------------
+ACCION MANUAL: detener reception (taskkill /PID 11840 /F) -> PID 11840 terminado
+               verificar recepcion abajo (health 000 en 8083)
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+TRAMO 2: CB-04, CB-05, CB-06  (reception DETENIDO)
+Comando: npx newman run ... --folder CB-04 --folder CB-05 --folder CB-06
+-------------------------------------------------------------------------------
+(node:22260) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-04
+└ CB-04.1 GET /api/habitacion/buscar/{{idHabitacionB}} — fija {{versionB}}
+  GET http://localhost:8080/api/habitacion/buscar/303 [200 OK, 1.26kB, 31ms]
+  √  CB-04.1 Buscar {{idHabitacionB}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/303/mantenimiento [202 Accepted, 842B, 57ms]
+  √  CB-04 Mantenimiento {{idHabitacionB}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionB}} trae los headers Location y Retry-After
+  √  CB-04 Guarda {{blockId}} del Location de la primera operación ({{idHabitacionB}})
+
+└ CB-04.2 GET /api/habitacion/buscar/{{idHabitacionC}} — fija {{versionC}}
+  GET http://localhost:8080/api/habitacion/buscar/304 [200 OK, 1.17kB, 13ms]
+  √  CB-04.2 Buscar {{idHabitacionC}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/304/mantenimiento [202 Accepted, 842B, 21ms]
+  √  CB-04 Mantenimiento {{idHabitacionC}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionC}} trae los headers Location y Retry-After
+
+└ CB-04.3 GET /api/habitacion/buscar/{{idHabitacionD}} — fija {{versionD}}
+  GET http://localhost:8080/api/habitacion/buscar/305 [200 OK, 1.16kB, 11ms]
+  √  CB-04.3 Buscar {{idHabitacionD}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/305/mantenimiento [202 Accepted, 842B, 22ms]
+  √  CB-04 Mantenimiento {{idHabitacionD}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionD}} trae los headers Location y Retry-After
+
+└ CB-04.4 GET /api/habitacion/buscar/{{idHabitacionE}} — fija {{versionE}}
+  GET http://localhost:8080/api/habitacion/buscar/306 [200 OK, 1.16kB, 31ms]
+  √  CB-04.4 Buscar {{idHabitacionE}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/306/mantenimiento [202 Accepted, 842B, 49ms]
+  √  CB-04 Mantenimiento {{idHabitacionE}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionE}} trae los headers Location y Retry-After
+
+└ CB-04.5 GET /api/habitacion/buscar/{{idHabitacionF}} — fija {{versionF}}
+  GET http://localhost:8080/api/habitacion/buscar/307 [200 OK, 1.16kB, 14ms]
+  √  CB-04.5 Buscar {{idHabitacionF}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/307/mantenimiento [202 Accepted, 842B, 28ms]
+  √  CB-04 Mantenimiento {{idHabitacionF}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionF}} trae los headers Location y Retry-After
+
+□ CB-05
+└ CB-05 GET http://localhost:8082/actuator/circuitbreakers — estado OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 690B, 5ms]
+  √  CB-05 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-05 El breaker {{breakerId}} está en OPEN (la prueba del ciclo)
+
+□ CB-06
+└ CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}
+  GET http://localhost:8080/api/habitacion/buscar/308 [200 OK, 1.16kB, 10ms]
+  √  CB-06.1 Buscar {{idHabitacionG}} responde 200 (contrato hotel)
+
+└ CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto
+  POST http://localhost:8080/api/habitacion/308/mantenimiento [202 Accepted, 842B, 21ms]
+  √  CB-06 Mantenimiento {{idHabitacionG}} responde 202 (breaker abierto, no 503)
+  √  CB-06 {{idHabitacionG}} trae los headers Location y Retry-After
+
+└ CB-06.2 GET http://localhost:8082/actuator/circuitbreakers — el estado sigue OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 690B, 3ms]
+  √  CB-06.2 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-06.2 El breaker {{breakerId}} sigue en OPEN
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │               14 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │               14 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │               23 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 1505ms                                    │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 5.87kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 22ms [min: 3ms, max: 57ms, s.d.: 15ms] │
+└───────────────────────────────────────────────────────────────┘
+
+-------------------------------------------------------------------------------
+ACCION MANUAL: pausa de 10 s (CB_OPEN_MS=10000) con reception sigue DETENIDO
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+TRAMO 3: CB-07 (reception DETENIDO, llamada de sonda tras la pausa)
+Comando: npx newman run ... --folder CB-07
+-------------------------------------------------------------------------------
+(node:15136) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-07
+└ CB-07.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}} (tras pausa de 10 s)
+  GET http://localhost:8080/api/habitacion/buscar/101 [200 OK, 1.65kB, 39ms]
+  √  CB-07.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel)
+
+└ CB-07.2 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — llamada de sonda → 202
+  POST http://localhost:8080/api/habitacion/101/mantenimiento [202 Accepted, 842B, 24ms]
+  √  CB-07.2 Sonda {{idHabitacionA}} responde 202 (breaker permite la llamada tras el intervalo)
+  √  CB-07.2 {{idHabitacionA}} trae los headers Location y Retry-After
+
+└ CB-07.3 GET http://localhost:8082/actuator/circuitbreakers — estado HALF_OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 691B, 4ms]
+  √  CB-07.3 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  1. CB-07.3 El breaker {{breakerId}} está en HALF_OPEN (tras la sonda de los 10 s)
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                3 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                3 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                5 │                1 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 283ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 1.63kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 22ms [min: 4ms, max: 39ms, s.d.: 14ms] │
+└───────────────────────────────────────────────────────────────┘
+
+[31m  # [39m[31m failure        [39m[31m detail                                                                                         [39m
+[90m    [39m[90m                [39m[90m                                                                                                [39m
+ 1.  AssertionError  CB-07.3 El breaker {{breakerId}} está en HALF_OPEN (tras la sonda de los 10 s)                 
+                     expected 'OPEN' to deeply equal 'HALF_OPEN'                                                    
+                     at assertion:1 in test-script                                                                  
+                     inside "CB-07 / CB-07.3 GET http://localhost:8082/actuator/circuitbreakers — estado HALF_OPEN" 
+
+-------------------------------------------------------------------------------
+ACCION MANUAL: levantar reception (mvn spring-boot:run de reception-service,
+               PID 28820) y esperar a que transcurra el intervalo de open-state
+-------------------------------------------------------------------------------
+
+-------------------------------------------------------------------------------
+TRAMO 4: CB-08 (2 ejecuciones: habitacion 309 y habitacion 310), CB-09, CB-10
+           (reception ARRIBA)
+Comando: npx newman run ... --folder CB-08  (con --env-var idHabitacionH=309)
+         npx newman run ... --folder CB-08  (con --env-var idHabitacionH=310)
+         npx newman run ... --folder CB-09 --folder CB-10
+-------------------------------------------------------------------------------
+
+########## CB-08 — ejecucion 1 (habitacion 309) ##########
+(node:29008) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-08
+└ CB-08.1 GET /api/habitacion/buscar/{{idHabitacionH}} — fija {{versionH}} (habitación libre)
+  GET http://localhost:8080/api/habitacion/buscar/309 [200 OK, 1.16kB, 36ms]
+  √  CB-08.1 Buscar {{idHabitacionH}} responde 200 (contrato hotel)
+
+└ CB-08 POST /api/habitacion/{{idHabitacionH}}/mantenimiento — 200 con blockId
+  POST http://localhost:8080/api/habitacion/309/mantenimiento [200 OK, 1.27kB, 41ms]
+  √  CB-08 Mantenimiento {{idHabitacionH}} responde 200 (reception arriba; breaker en HALF_OPEN admite la llamada)
+  √  CB-08 Anota el blockId del mantenimiento que cerró el breaker
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                2 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                2 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                3 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 212ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 1.38kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 38ms [min: 36ms, max: 41ms, s.d.: 2ms] │
+└───────────────────────────────────────────────────────────────┘
+
+########## CB-08 — ejecucion 2 (habitacion 310) ##########
+(node:17828) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-08
+└ CB-08.1 GET /api/habitacion/buscar/{{idHabitacionH}} — fija {{versionH}} (habitación libre)
+  GET http://localhost:8080/api/habitacion/buscar/310 [200 OK, 1.16kB, 33ms]
+  √  CB-08.1 Buscar {{idHabitacionH}} responde 200 (contrato hotel)
+
+└ CB-08 POST /api/habitacion/{{idHabitacionH}}/mantenimiento — 200 con blockId
+  POST http://localhost:8080/api/habitacion/310/mantenimiento [200 OK, 1.27kB, 52ms]
+  √  CB-08 Mantenimiento {{idHabitacionH}} responde 200 (reception arriba; breaker en HALF_OPEN admite la llamada)
+  √  CB-08 Anota el blockId del mantenimiento que cerró el breaker
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                2 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                2 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                3 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 243ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 1.38kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 42ms [min: 33ms, max: 52ms, s.d.: 9ms] │
+└───────────────────────────────────────────────────────────────┘
+
+########## CB-09 y CB-10 ##########
+(node:6344) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-09
+└ CB-09 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 693B, 23ms]
+  √  CB-09 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-09 El breaker {{breakerId}} está en CLOSED
+
+□ CB-10
+└ CB-10 GET /api/habitacion/operaciones/{{blockId}} — estado APLICADA
+  GET http://localhost:8080/api/habitacion/operaciones/1223a2d5-b344-443c-9555-fe806bcec5df [200 OK, 733B, 39ms]
+  1. CB-10 Operaciones {{blockId}} responden 200 (contrato hotel: GET /api/habitacion/operaciones/{blockId})
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                2 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                2 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                3 │                1 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 195ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 498B (approx)                            │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 31ms [min: 23ms, max: 39ms, s.d.: 8ms] │
+└───────────────────────────────────────────────────────────────┘
+
+[31m  # [39m[31m failure        [39m[31m detail                                                                                                  [39m
+[90m    [39m[90m                [39m[90m                                                                                                         [39m
+ 1.  AssertionError  CB-10 Operaciones {{blockId}} responden 200 (contrato hotel: GET /api/habitacion/operaciones/{blockId}) 
+                     expected 'RECHAZADA' to deeply equal 'APLICADA'                                                         
+                     at assertion:0 in test-script                                                                           
+                     inside "CB-10 / CB-10 GET /api/habitacion/operaciones/{{blockId}} — estado APLICADA"                    

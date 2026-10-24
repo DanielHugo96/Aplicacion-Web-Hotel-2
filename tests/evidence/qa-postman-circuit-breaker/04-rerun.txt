@@ -1,0 +1,855 @@
+================================================================================
+EVIDENCIA DE EJECUCION — coleccion circuit-breaker (newman, ejecutado por tramos)
+Plan: qa-postman-circuit-breaker  |  Rama: qa-postman-circuit-breaker
+Fecha: 2026-10-23
+Entorno: Hotel-local (baseUrl=http://localhost:8080), fichero Hotel-local.postman_environment.json
+         (sin secretos; claveDemo se pasa solo por --env-var, nunca se versiona).
+IDs de habitacion en el entorno: A=101, B=312, C=313, D=305, E=306, F=307,
+                                 G=308, H=309, I=310, J=311 (reserva).
+Breaker: {{breakerId}} = ReceptionClientbloquearintBloqueoRequest (puerto 8082).
+================================================================================
+
+=== TRAMO 1: CB-01, CB-02, CB-03 (reception ARRIBA, PID 28820) ===
+Comando: npx newman run tests/postman/circuit-breaker.postman_collection.json -e tests/postman/Hotel-local.postman_environment.json --folder CB-01 --folder CB-02 --folder CB-03 --env-var claveDemo=...
+(node:10644) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-01
+└ CB-01 POST /api/auth/login — guarda {{token}}
+  POST http://localhost:8080/api/auth/login [200 OK, 1.4kB, 131ms]
+  √  CB-01 Login responde 200 (contrato identity: POST /api/auth/login)
+  √  CB-01 Guarda data.token en {{token}} (solo en memoria del entorno local)
+
+□ CB-02
+└ CB-02.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}}
+  GET http://localhost:8080/api/habitacion/buscar/101 [200 OK, 1.65kB, 20ms]
+  √  CB-02.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel: GET /api/habitacion/buscar/{id})
+
+└ CB-02 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — 200 con blockId
+  POST http://localhost:8080/api/habitacion/101/mantenimiento [200 OK, 1.75kB, 161ms]
+  √  CB-02 Mantenimiento {{idHabitacionA}} responde 200 (gate BLOQUEADA; CAS aplicado en el request)
+  √  CB-02 Anota {{blockIdCb02}} y la nueva versión de {{idHabitacionA}}
+
+└ CB-02.2 PUT /api/habitacion/{{idHabitacionA}}/mantenimiento-completado — libera
+  PUT http://localhost:8080/api/habitacion/101/mantenimiento-completado [200 OK, 1.64kB, 34ms]
+  √  CB-02.2 Liberar {{idHabitacionA}} responde 200 (mantenimiento completado, físico en LISTA)
+
+□ CB-03
+└ CB-03 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 691B, 4ms]
+  √  CB-03 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-03 El breaker {{breakerId}} está en CLOSED
+
+┌─────────────────────────┬───────────────────┬──────────────────┐
+│                         │          executed │           failed │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              iterations │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│                requests │                 5 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│            test-scripts │                 5 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│      prerequest-scripts │                 0 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              assertions │                 8 │                0 │
+├─────────────────────────┴───────────────────┴──────────────────┤
+│ total run duration: 770ms                                      │
+├────────────────────────────────────────────────────────────────┤
+│ total data received: 4.62kB (approx)                           │
+├────────────────────────────────────────────────────────────────┤
+│ average response time: 70ms [min: 4ms, max: 161ms, s.d.: 63ms] │
+└────────────────────────────────────────────────────────────────┘
+=== TRAMO 2: CB-04, CB-05, CB-06 (reception DETENIDO) ===
+Comando: npx newman run ... --folder CB-04 --folder CB-05 --folder CB-06 --env-var token=... claveDemo=...
+(node:21120) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-04
+└ CB-04.1 GET /api/habitacion/buscar/{{idHabitacionB}} — fija {{versionB}}
+  GET http://localhost:8080/api/habitacion/buscar/312 [401 Unauthorized, 536B, 74ms]
+  1. CB-04.1 Buscar {{idHabitacionB}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/312/mantenimiento [401 Unauthorized, 536B, 3ms]
+  2. CB-04 Mantenimiento {{idHabitacionB}} responde 202 (operación PREPARANDO)
+  3. CB-04 {{idHabitacionB}} trae los headers Location y Retry-After
+  √  CB-04 Guarda {{blockId}} del Location de la primera operación ({{idHabitacionB}})
+
+└ CB-04.2 GET /api/habitacion/buscar/{{idHabitacionC}} — fija {{versionC}}
+  GET http://localhost:8080/api/habitacion/buscar/313 [401 Unauthorized, 536B, 4ms]
+  4. CB-04.2 Buscar {{idHabitacionC}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/313/mantenimiento [401 Unauthorized, 536B, 2ms]
+  5. CB-04 Mantenimiento {{idHabitacionC}} responde 202 (operación PREPARANDO)
+  6. CB-04 {{idHabitacionC}} trae los headers Location y Retry-After
+  7. CB-04 {{idHabitacionC}} guarda blockIdCb04C del cuerpo
+
+└ CB-04.3 GET /api/habitacion/buscar/{{idHabitacionD}} — fija {{versionD}}
+  GET http://localhost:8080/api/habitacion/buscar/305 [401 Unauthorized, 536B, 2ms]
+  8. CB-04.3 Buscar {{idHabitacionD}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/305/mantenimiento [401 Unauthorized, 536B, 1ms]
+  9. CB-04 Mantenimiento {{idHabitacionD}} responde 202 (operación PREPARANDO)
+ 10. CB-04 {{idHabitacionD}} trae los headers Location y Retry-After
+ 11. CB-04 {{idHabitacionD}} guarda blockIdCb04D del cuerpo
+
+└ CB-04.4 GET /api/habitacion/buscar/{{idHabitacionE}} — fija {{versionE}}
+  GET http://localhost:8080/api/habitacion/buscar/306 [401 Unauthorized, 536B, 2ms]
+ 12. CB-04.4 Buscar {{idHabitacionE}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/306/mantenimiento [401 Unauthorized, 536B, 2ms]
+ 13. CB-04 Mantenimiento {{idHabitacionE}} responde 202 (operación PREPARANDO)
+ 14. CB-04 {{idHabitacionE}} trae los headers Location y Retry-After
+ 15. CB-04 {{idHabitacionE}} guarda blockIdCb04E del cuerpo
+
+└ CB-04.5 GET /api/habitacion/buscar/{{idHabitacionF}} — fija {{versionF}}
+  GET http://localhost:8080/api/habitacion/buscar/307 [401 Unauthorized, 536B, 3ms]
+ 16. CB-04.5 Buscar {{idHabitacionF}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/307/mantenimiento [401 Unauthorized, 536B, 3ms]
+ 17. CB-04 Mantenimiento {{idHabitacionF}} responde 202 (operación PREPARANDO)
+ 18. CB-04 {{idHabitacionF}} trae los headers Location y Retry-After
+ 19. CB-04 {{idHabitacionF}} guarda blockIdCb04F del cuerpo
+
+□ CB-05
+└ CB-05 GET http://localhost:8082/actuator/circuitbreakers — estado OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 691B, 4ms]
+  √  CB-05 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+ 20. CB-05 El breaker {{breakerId}} está en OPEN (la prueba del ciclo)
+
+□ CB-06
+└ CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}
+  GET http://localhost:8080/api/habitacion/buscar/308 [401 Unauthorized, 536B, 2ms]
+ 21. CB-06.1 Buscar {{idHabitacionG}} responde 200 (contrato hotel)
+
+└ CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto
+  POST http://localhost:8080/api/habitacion/308/mantenimiento [401 Unauthorized, 536B, 2ms]
+ 22. CB-06 Mantenimiento {{idHabitacionG}} responde 202 (breaker abierto, no 503)
+ 23. CB-06 {{idHabitacionG}} trae los headers Location y Retry-After
+ 24. CB-06 {{idHabitacionG}} guarda {{blockIdCb06}} del cuerpo
+
+└ CB-06.2 GET http://localhost:8082/actuator/circuitbreakers — el estado sigue OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 691B, 3ms]
+  √  CB-06.2 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+ 25. CB-06.2 El breaker {{breakerId}} sigue en OPEN
+
+┌─────────────────────────┬──────────────────┬─────────────────┐
+│                         │         executed │          failed │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│              iterations │                1 │               0 │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│                requests │               14 │               0 │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│            test-scripts │               14 │               0 │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│      prerequest-scripts │                0 │               0 │
+├─────────────────────────┼──────────────────┼─────────────────┤
+│              assertions │               28 │              25 │
+├─────────────────────────┴──────────────────┴─────────────────┤
+│ total run duration: 1308ms                                   │
+├──────────────────────────────────────────────────────────────┤
+│ total data received: 2.94kB (approx)                         │
+├──────────────────────────────────────────────────────────────┤
+│ average response time: 7ms [min: 1ms, max: 74ms, s.d.: 18ms] │
+└──────────────────────────────────────────────────────────────┘
+
+[31m   # [39m[31m failure        [39m[31m detail                                                                                                                                                                       [39m
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 01.  AssertionError  CB-04.1 Buscar {{idHabitacionB}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.1 GET /api/habitacion/buscar/{{idHabitacionB}} — fija {{versionB}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 02.  AssertionError  CB-04 Mantenimiento {{idHabitacionB}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 03.  AssertionError  CB-04 {{idHabitacionB}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 04.  AssertionError  CB-04.2 Buscar {{idHabitacionC}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.2 GET /api/habitacion/buscar/{{idHabitacionC}} — fija {{versionC}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 05.  AssertionError  CB-04 Mantenimiento {{idHabitacionC}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 06.  AssertionError  CB-04 {{idHabitacionC}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 07.  TypeError       CB-04 {{idHabitacionC}} guarda blockIdCb04C del cuerpo                                                                                                                       
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 08.  AssertionError  CB-04.3 Buscar {{idHabitacionD}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.3 GET /api/habitacion/buscar/{{idHabitacionD}} — fija {{versionD}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 09.  AssertionError  CB-04 Mantenimiento {{idHabitacionD}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 10.  AssertionError  CB-04 {{idHabitacionD}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 11.  TypeError       CB-04 {{idHabitacionD}} guarda blockIdCb04D del cuerpo                                                                                                                       
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 12.  AssertionError  CB-04.4 Buscar {{idHabitacionE}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.4 GET /api/habitacion/buscar/{{idHabitacionE}} — fija {{versionE}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 13.  AssertionError  CB-04 Mantenimiento {{idHabitacionE}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 14.  AssertionError  CB-04 {{idHabitacionE}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 15.  TypeError       CB-04 {{idHabitacionE}} guarda blockIdCb04E del cuerpo                                                                                                                       
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 16.  AssertionError  CB-04.5 Buscar {{idHabitacionF}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.5 GET /api/habitacion/buscar/{{idHabitacionF}} — fija {{versionF}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 17.  AssertionError  CB-04 Mantenimiento {{idHabitacionF}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 18.  AssertionError  CB-04 {{idHabitacionF}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 19.  TypeError       CB-04 {{idHabitacionF}} guarda blockIdCb04F del cuerpo                                                                                                                       
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 20.  AssertionError  CB-05 El breaker {{breakerId}} está en OPEN (la prueba del ciclo)                                                                                                            
+                      El breaker sigue CLOSED tras cinco llamadas con reception detenido: la tanda no alcanzó el mínimo de fallos para abrir el breaker.: expected 'CLOSED' to deeply equal 'OPEN' 
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-05 / CB-05 GET http://localhost:8082/actuator/circuitbreakers — estado OPEN"                                                                                      
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 21.  AssertionError  CB-06.1 Buscar {{idHabitacionG}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 22.  AssertionError  CB-06 Mantenimiento {{idHabitacionG}} responde 202 (breaker abierto, no 503)                                                                                                 
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto"                                                                           
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 23.  AssertionError  CB-06 {{idHabitacionG}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto"                                                                           
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 24.  TypeError       CB-06 {{idHabitacionG}} guarda {{blockIdCb06}} del cuerpo                                                                                                                    
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto"                                                                           
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 25.  AssertionError  CB-06.2 El breaker {{breakerId}} sigue en OPEN                                                                                                                               
+                      expected 'CLOSED' to deeply equal 'OPEN'                                                                                                                                     
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06.2 GET http://localhost:8082/actuator/circuitbreakers — el estado sigue OPEN"                                                                           
+=== TRAMO 2 (reintento, reception DETENIDO) ===
+Comando: npx newman run ... --folder CB-04 --folder CB-05 --folder CB-06 --env-var token=<token> claveDemo=...
+(node:15984) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-04
+└ CB-04.1 GET /api/habitacion/buscar/{{idHabitacionB}} — fija {{versionB}}
+  GET http://localhost:8080/api/habitacion/buscar/312 [401 Unauthorized, 536B, 24ms]
+  1. CB-04.1 Buscar {{idHabitacionB}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/312/mantenimiento [401 Unauthorized, 536B, 3ms]
+  2. CB-04 Mantenimiento {{idHabitacionB}} responde 202 (operación PREPARANDO)
+  3. CB-04 {{idHabitacionB}} trae los headers Location y Retry-After
+  √  CB-04 Guarda {{blockId}} del Location de la primera operación ({{idHabitacionB}})
+
+└ CB-04.2 GET /api/habitacion/buscar/{{idHabitacionC}} — fija {{versionC}}
+  GET http://localhost:8080/api/habitacion/buscar/313 [401 Unauthorized, 536B, 3ms]
+  4. CB-04.2 Buscar {{idHabitacionC}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/313/mantenimiento [401 Unauthorized, 536B, 2ms]
+  5. CB-04 Mantenimiento {{idHabitacionC}} responde 202 (operación PREPARANDO)
+  6. CB-04 {{idHabitacionC}} trae los headers Location y Retry-After
+  7. CB-04 {{idHabitacionC}} guarda blockIdCb04C del cuerpo
+
+└ CB-04.3 GET /api/habitacion/buscar/{{idHabitacionD}} — fija {{versionD}}
+  GET http://localhost:8080/api/habitacion/buscar/305 [401 Unauthorized, 536B, 3ms]
+  8. CB-04.3 Buscar {{idHabitacionD}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/305/mantenimiento [401 Unauthorized, 536B, 2ms]
+  9. CB-04 Mantenimiento {{idHabitacionD}} responde 202 (operación PREPARANDO)
+ 10. CB-04 {{idHabitacionD}} trae los headers Location y Retry-After
+ 11. CB-04 {{idHabitacionD}} guarda blockIdCb04D del cuerpo
+
+└ CB-04.4 GET /api/habitacion/buscar/{{idHabitacionE}} — fija {{versionE}}
+  GET http://localhost:8080/api/habitacion/buscar/306 [401 Unauthorized, 536B, 2ms]
+ 12. CB-04.4 Buscar {{idHabitacionE}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/306/mantenimiento [401 Unauthorized, 536B, 2ms]
+ 13. CB-04 Mantenimiento {{idHabitacionE}} responde 202 (operación PREPARANDO)
+ 14. CB-04 {{idHabitacionE}} trae los headers Location y Retry-After
+ 15. CB-04 {{idHabitacionE}} guarda blockIdCb04E del cuerpo
+
+└ CB-04.5 GET /api/habitacion/buscar/{{idHabitacionF}} — fija {{versionF}}
+  GET http://localhost:8080/api/habitacion/buscar/307 [401 Unauthorized, 536B, 3ms]
+ 16. CB-04.5 Buscar {{idHabitacionF}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/307/mantenimiento [401 Unauthorized, 536B, 3ms]
+ 17. CB-04 Mantenimiento {{idHabitacionF}} responde 202 (operación PREPARANDO)
+ 18. CB-04 {{idHabitacionF}} trae los headers Location y Retry-After
+ 19. CB-04 {{idHabitacionF}} guarda blockIdCb04F del cuerpo
+
+□ CB-05
+└ CB-05 GET http://localhost:8082/actuator/circuitbreakers — estado OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 691B, 5ms]
+  √  CB-05 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+ 20. CB-05 El breaker {{breakerId}} está en OPEN (la prueba del ciclo)
+
+□ CB-06
+└ CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}
+  GET http://localhost:8080/api/habitacion/buscar/308 [401 Unauthorized, 536B, 2ms]
+ 21. CB-06.1 Buscar {{idHabitacionG}} responde 200 (contrato hotel)
+
+└ CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto
+  POST http://localhost:8080/api/habitacion/308/mantenimiento [401 Unauthorized, 536B, 3ms]
+ 22. CB-06 Mantenimiento {{idHabitacionG}} responde 202 (breaker abierto, no 503)
+ 23. CB-06 {{idHabitacionG}} trae los headers Location y Retry-After
+ 24. CB-06 {{idHabitacionG}} guarda {{blockIdCb06}} del cuerpo
+
+└ CB-06.2 GET http://localhost:8082/actuator/circuitbreakers — el estado sigue OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 691B, 3ms]
+  √  CB-06.2 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+ 25. CB-06.2 El breaker {{breakerId}} sigue en OPEN
+
+┌─────────────────────────┬─────────────────┬─────────────────┐
+│                         │        executed │          failed │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              iterations │               1 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│                requests │              14 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│            test-scripts │              14 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│      prerequest-scripts │               0 │               0 │
+├─────────────────────────┼─────────────────┼─────────────────┤
+│              assertions │              28 │              25 │
+├─────────────────────────┴─────────────────┴─────────────────┤
+│ total run duration: 1226ms                                  │
+├─────────────────────────────────────────────────────────────┤
+│ total data received: 2.94kB (approx)                        │
+├─────────────────────────────────────────────────────────────┤
+│ average response time: 4ms [min: 2ms, max: 24ms, s.d.: 5ms] │
+└─────────────────────────────────────────────────────────────┘
+
+[31m   # [39m[31m failure        [39m[31m detail                                                                                                                                                                       [39m
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 01.  AssertionError  CB-04.1 Buscar {{idHabitacionB}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.1 GET /api/habitacion/buscar/{{idHabitacionB}} — fija {{versionB}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 02.  AssertionError  CB-04 Mantenimiento {{idHabitacionB}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 03.  AssertionError  CB-04 {{idHabitacionB}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 04.  AssertionError  CB-04.2 Buscar {{idHabitacionC}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.2 GET /api/habitacion/buscar/{{idHabitacionC}} — fija {{versionC}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 05.  AssertionError  CB-04 Mantenimiento {{idHabitacionC}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 06.  AssertionError  CB-04 {{idHabitacionC}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 07.  TypeError       CB-04 {{idHabitacionC}} guarda blockIdCb04C del cuerpo                                                                                                                       
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 08.  AssertionError  CB-04.3 Buscar {{idHabitacionD}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.3 GET /api/habitacion/buscar/{{idHabitacionD}} — fija {{versionD}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 09.  AssertionError  CB-04 Mantenimiento {{idHabitacionD}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 10.  AssertionError  CB-04 {{idHabitacionD}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 11.  TypeError       CB-04 {{idHabitacionD}} guarda blockIdCb04D del cuerpo                                                                                                                       
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 12.  AssertionError  CB-04.4 Buscar {{idHabitacionE}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.4 GET /api/habitacion/buscar/{{idHabitacionE}} — fija {{versionE}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 13.  AssertionError  CB-04 Mantenimiento {{idHabitacionE}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 14.  AssertionError  CB-04 {{idHabitacionE}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 15.  TypeError       CB-04 {{idHabitacionE}} guarda blockIdCb04E del cuerpo                                                                                                                       
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 16.  AssertionError  CB-04.5 Buscar {{idHabitacionF}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04.5 GET /api/habitacion/buscar/{{idHabitacionF}} — fija {{versionF}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 17.  AssertionError  CB-04 Mantenimiento {{idHabitacionF}} responde 202 (operación PREPARANDO)                                                                                                    
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 18.  AssertionError  CB-04 {{idHabitacionF}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 19.  TypeError       CB-04 {{idHabitacionF}} guarda blockIdCb04F del cuerpo                                                                                                                       
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-04 / CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202"                                                                                            
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 20.  AssertionError  CB-05 El breaker {{breakerId}} está en OPEN (la prueba del ciclo)                                                                                                            
+                      El breaker sigue CLOSED tras cinco llamadas con reception detenido: la tanda no alcanzó el mínimo de fallos para abrir el breaker.: expected 'CLOSED' to deeply equal 'OPEN' 
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-05 / CB-05 GET http://localhost:8082/actuator/circuitbreakers — estado OPEN"                                                                                      
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 21.  AssertionError  CB-06.1 Buscar {{idHabitacionG}} responde 200 (contrato hotel)                                                                                                               
+                      expected response to have status code 200 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}"                                                                                    
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 22.  AssertionError  CB-06 Mantenimiento {{idHabitacionG}} responde 202 (breaker abierto, no 503)                                                                                                 
+                      expected response to have status code 202 but got 401                                                                                                                        
+                      at assertion:0 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto"                                                                           
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 23.  AssertionError  CB-06 {{idHabitacionG}} trae los headers Location y Retry-After                                                                                                              
+                      expected false to be true                                                                                                                                                    
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto"                                                                           
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 24.  TypeError       CB-06 {{idHabitacionG}} guarda {{blockIdCb06}} del cuerpo                                                                                                                    
+                      Cannot read properties of null (reading 'blockId')                                                                                                                           
+                      at assertion:2 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto"                                                                           
+[90m     [39m[90m                [39m[90m                                                                                                                                                                              [39m
+ 25.  AssertionError  CB-06.2 El breaker {{breakerId}} sigue en OPEN                                                                                                                               
+                      expected 'CLOSED' to deeply equal 'OPEN'                                                                                                                                     
+                      at assertion:1 in test-script                                                                                                                                                
+                      inside "CB-06 / CB-06.2 GET http://localhost:8082/actuator/circuitbreakers — el estado sigue OPEN"                                                                           
+=== TRAMO 2 (reintento 2, reception DETENIDO) ===
+(node:11832) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-04
+└ CB-04.1 GET /api/habitacion/buscar/{{idHabitacionB}} — fija {{versionB}}
+  GET http://localhost:8080/api/habitacion/buscar/312 [200 OK, 1.16kB, 69ms]
+  √  CB-04.1 Buscar {{idHabitacionB}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/312/mantenimiento [202 Accepted, 842B, 30ms]
+  √  CB-04 Mantenimiento {{idHabitacionB}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionB}} trae los headers Location y Retry-After
+  √  CB-04 Guarda {{blockId}} del Location de la primera operación ({{idHabitacionB}})
+
+└ CB-04.2 GET /api/habitacion/buscar/{{idHabitacionC}} — fija {{versionC}}
+  GET http://localhost:8080/api/habitacion/buscar/313 [200 OK, 1.15kB, 17ms]
+  √  CB-04.2 Buscar {{idHabitacionC}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/313/mantenimiento [202 Accepted, 842B, 28ms]
+  √  CB-04 Mantenimiento {{idHabitacionC}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionC}} trae los headers Location y Retry-After
+  √  CB-04 {{idHabitacionC}} guarda blockIdCb04C del cuerpo
+
+└ CB-04.3 GET /api/habitacion/buscar/{{idHabitacionD}} — fija {{versionD}}
+  GET http://localhost:8080/api/habitacion/buscar/305 [200 OK, 1.16kB, 16ms]
+  √  CB-04.3 Buscar {{idHabitacionD}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/305/mantenimiento [202 Accepted, 842B, 23ms]
+  √  CB-04 Mantenimiento {{idHabitacionD}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionD}} trae los headers Location y Retry-After
+  √  CB-04 {{idHabitacionD}} guarda blockIdCb04D del cuerpo
+
+└ CB-04.4 GET /api/habitacion/buscar/{{idHabitacionE}} — fija {{versionE}}
+  GET http://localhost:8080/api/habitacion/buscar/306 [200 OK, 1.16kB, 13ms]
+  √  CB-04.4 Buscar {{idHabitacionE}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/306/mantenimiento [202 Accepted, 842B, 19ms]
+  √  CB-04 Mantenimiento {{idHabitacionE}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionE}} trae los headers Location y Retry-After
+  √  CB-04 {{idHabitacionE}} guarda blockIdCb04E del cuerpo
+
+└ CB-04.5 GET /api/habitacion/buscar/{{idHabitacionF}} — fija {{versionF}}
+  GET http://localhost:8080/api/habitacion/buscar/307 [200 OK, 1.16kB, 11ms]
+  √  CB-04.5 Buscar {{idHabitacionF}} responde 200 (contrato hotel)
+
+└ CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202
+  POST http://localhost:8080/api/habitacion/307/mantenimiento [202 Accepted, 842B, 22ms]
+  √  CB-04 Mantenimiento {{idHabitacionF}} responde 202 (operación PREPARANDO)
+  √  CB-04 {{idHabitacionF}} trae los headers Location y Retry-After
+  √  CB-04 {{idHabitacionF}} guarda blockIdCb04F del cuerpo
+
+□ CB-05
+└ CB-05 GET http://localhost:8082/actuator/circuitbreakers — estado OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 691B, 5ms]
+  √  CB-05 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-05 El breaker {{breakerId}} está en OPEN (la prueba del ciclo)
+
+□ CB-06
+└ CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}
+  GET http://localhost:8080/api/habitacion/buscar/308 [200 OK, 1.16kB, 10ms]
+  √  CB-06.1 Buscar {{idHabitacionG}} responde 200 (contrato hotel)
+
+└ CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto
+  POST http://localhost:8080/api/habitacion/308/mantenimiento [202 Accepted, 842B, 19ms]
+  √  CB-06 Mantenimiento {{idHabitacionG}} responde 202 (breaker abierto, no 503)
+  √  CB-06 {{idHabitacionG}} trae los headers Location y Retry-After
+  √  CB-06 {{idHabitacionG}} guarda {{blockIdCb06}} del cuerpo
+
+└ CB-06.2 GET http://localhost:8082/actuator/circuitbreakers — el estado sigue OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 691B, 2ms]
+  √  CB-06.2 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-06.2 El breaker {{breakerId}} sigue en OPEN
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │               14 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │               14 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │               28 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 1494ms                                    │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 5.75kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 20ms [min: 2ms, max: 69ms, s.d.: 15ms] │
+└───────────────────────────────────────────────────────────────┘
+=== ACCION MANUAL: pausa de 10 s (intervalo open-state), reception sigue DETENIDO ===
+=== ACCION MANUAL: levantar reception (mvn spring-boot:run, segundo plano) ===
+reception lanzado en segundo plano, PID 5525
+=== ACCION MANUAL: pausa de 10 s con breaker en OPEN (reception sigue DETENIDO) ===
+=== ACCION MANUAL: levantar reception (mvn spring-boot:run, segundo plano) ===
+reception lanzado PID 5731
+=== ACCION MANUAL: levantar reception (PID nuevo) ===
+mvn lanzado PID 5918
+=== TRAMO 3: CB-07 (reception ARRIBA, sonda inmediatamente tras levantar) ===
+Comando: npx newman run ... --folder CB-07 --env-var token=<fresh> ...
+(node:19132) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-07
+└ CB-07.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}} (tras pausa de 10 s)
+  GET http://localhost:8080/api/habitacion/buscar/101 [200 OK, 1.65kB, 49ms]
+  √  CB-07.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel)
+
+└ CB-07.2 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — llamada de sonda → 200
+  POST http://localhost:8080/api/habitacion/101/mantenimiento [202 Accepted, 842B, 49ms]
+  1. CB-07.2 Sonda {{idHabitacionA}} responde 200 (reception arriba; operación aplicada en el request)
+  √  CB-07.2 {{idHabitacionA}} guarda {{blockIdCb07}} del cuerpo de la sonda
+
+└ CB-07.3 GET http://localhost:8082/actuator/circuitbreakers — estado HALF_OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 696B, 6ms]
+  √  CB-07.3 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-07.3 El breaker {{breakerId}} está en HALF_OPEN (tras la sonda de los 10 s)
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                3 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                3 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │                5 │                1 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 354ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 1.64kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 34ms [min: 6ms, max: 49ms, s.d.: 20ms] │
+└───────────────────────────────────────────────────────────────┘
+
+[31m  # [39m[31m failure        [39m[31m detail                                                                                                 [39m
+[90m    [39m[90m                [39m[90m                                                                                                        [39m
+ 1.  AssertionError  CB-07.2 Sonda {{idHabitacionA}} responde 200 (reception arriba; operación aplicada en el request)      
+                     expected response to have status code 200 but got 202                                                  
+                     at assertion:0 in test-script                                                                          
+                     inside "CB-07 / CB-07.2 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — llamada de sonda → 200" 
+=== TRAMO 3: CB-07 (reception ARRIBA, sonda inmediata tras levantar; breaker OPEN) ===
+(node:15764) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-07
+└ CB-07.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}} (tras pausa de 10 s)
+  GET http://localhost:8080/api/habitacion/buscar/101 [200 OK, 1.65kB, 34ms]
+  √  CB-07.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel)
+
+└ CB-07.2 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — llamada de sonda → 200
+  POST http://localhost:8080/api/habitacion/101/mantenimiento [200 OK, 1.75kB, 122ms]
+  √  CB-07.2 Sonda {{idHabitacionA}} responde 200 (reception arriba; operación aplicada en el request)
+  √  CB-07.2 {{idHabitacionA}} guarda {{blockIdCb07}} del cuerpo de la sonda
+
+└ CB-07.3 GET http://localhost:8082/actuator/circuitbreakers — estado HALF_OPEN
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 696B, 4ms]
+  √  CB-07.3 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-07.3 El breaker {{breakerId}} está en HALF_OPEN (tras la sonda de los 10 s)
+
+┌─────────────────────────┬───────────────────┬──────────────────┐
+│                         │          executed │           failed │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              iterations │                 1 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│                requests │                 3 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│            test-scripts │                 3 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│      prerequest-scripts │                 0 │                0 │
+├─────────────────────────┼───────────────────┼──────────────────┤
+│              assertions │                 5 │                0 │
+├─────────────────────────┴───────────────────┴──────────────────┤
+│ total run duration: 395ms                                      │
+├────────────────────────────────────────────────────────────────┤
+│ total data received: 2.63kB (approx)                           │
+├────────────────────────────────────────────────────────────────┤
+│ average response time: 53ms [min: 4ms, max: 122ms, s.d.: 50ms] │
+└────────────────────────────────────────────────────────────────┘
+=== TRAMO 4: CB-08, CB-09, CB-10 (reception ARRIBA, breaker HALF_OPEN tras sonda) ===
+(node:9352) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-08
+└ CB-08.1 GET /api/habitacion/buscar/{{idHabitacionH}} — fija {{versionH}} (habitación libre)
+  GET http://localhost:8080/api/habitacion/buscar/309 [200 OK, 1.16kB, 35ms]
+  √  CB-08.1 Buscar {{idHabitacionH}} responde 200 (contrato hotel)
+
+└ CB-08.2 POST /api/habitacion/{{idHabitacionH}}/mantenimiento — 200 con blockId
+  POST http://localhost:8080/api/habitacion/309/mantenimiento [200 OK, 1.27kB, 45ms]
+  √  CB-08.2 Mantenimiento {{idHabitacionH}} responde 200 (reception arriba; 2ª permitida en HALF_OPEN)
+  √  CB-08 Anota el blockId del mantenimiento que cerró el breaker
+  √  CB-08.2 {{idHabitacionH}} guarda {{blockIdCb08H}} del cuerpo
+
+└ CB-08.3 GET /api/habitacion/buscar/{{idHabitacionI}} — fija {{versionI}} (habitación libre)
+  GET http://localhost:8080/api/habitacion/buscar/309 [200 OK, 1.27kB, 13ms]
+  √  CB-08.1 Buscar {{idHabitacionI}} responde 200 (contrato hotel)
+
+└ CB-08.4 POST /api/habitacion/{{idHabitacionI}}/mantenimiento — 200 con blockId
+  POST http://localhost:8080/api/habitacion/309/mantenimiento [409 Conflict, 733B, 23ms]
+  1. CB-08.2 Mantenimiento {{idHabitacionI}} responde 200 (reception arriba; 2ª permitida en HALF_OPEN)
+  2. CB-08 Anota el blockId del mantenimiento que cerró el breaker
+  3. CB-08.2 {{idHabitacionI}} guarda {{blockIdCb08I}} del cuerpo
+
+□ CB-09
+└ CB-09 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 696B, 6ms]
+  √  CB-09 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  4. CB-09 El breaker {{breakerId}} está en CLOSED
+
+□ CB-10
+└ CB-10 GET /api/habitacion/operaciones/{{blockId}} — estado APLICADA
+  GET http://localhost:8080/api/habitacion/operaciones/8e39fb5b-ba46-4ff7-8d11-474292908ae2 [200 OK, 732B, 9ms]
+  √  CB-10 Operaciones {{blockId}} responden 200 con estado APLICADA (contrato hotel: GET /api/habitacion/operaciones/{blockId})
+  GET http://localhost:8080/api/habitacion/operaciones/8e39fb5b-ba46-4ff7-8d11-474292908ae2 [200 OK, 732B, 11ms]
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                7 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                6 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │               11 │                4 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 621ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 3.06kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 20ms [min: 6ms, max: 45ms, s.d.: 13ms] │
+└───────────────────────────────────────────────────────────────┘
+
+[31m  # [39m[31m failure        [39m[31m detail                                                                                             [39m
+[90m    [39m[90m                [39m[90m                                                                                                    [39m
+ 1.  AssertionError  CB-08.2 Mantenimiento {{idHabitacionI}} responde 200 (reception arriba; 2ª permitida en HALF_OPEN) 
+                     expected response to have status code 200 but got 409                                              
+                     at assertion:0 in test-script                                                                      
+                     inside "CB-08 / CB-08.4 POST /api/habitacion/{{idHabitacionI}}/mantenimiento — 200 con blockId"    
+[90m    [39m[90m                [39m[90m                                                                                                    [39m
+ 2.  TypeError       CB-08 Anota el blockId del mantenimiento que cerró el breaker                                      
+                     Cannot read properties of undefined (reading 'blockId')                                            
+                     at assertion:1 in test-script                                                                      
+                     inside "CB-08 / CB-08.4 POST /api/habitacion/{{idHabitacionI}}/mantenimiento — 200 con blockId"    
+[90m    [39m[90m                [39m[90m                                                                                                    [39m
+ 3.  TypeError       CB-08.2 {{idHabitacionI}} guarda {{blockIdCb08I}} del cuerpo                                       
+                     Cannot read properties of undefined (reading 'blockId')                                            
+                     at assertion:2 in test-script                                                                      
+                     inside "CB-08 / CB-08.4 POST /api/habitacion/{{idHabitacionI}}/mantenimiento — 200 con blockId"    
+[90m    [39m[90m                [39m[90m                                                                                                    [39m
+ 4.  AssertionError  CB-09 El breaker {{breakerId}} está en CLOSED                                                      
+                     expected 'HALF_OPEN' to deeply equal 'CLOSED'                                                      
+                     at assertion:1 in test-script                                                                      
+                     inside "CB-09 / CB-09 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED"          
+=== TRAMO 4 (repeticion, tras arreglar URLs y liberar 309) ===
+(node:24292) [DEP0176] DeprecationWarning: fs.F_OK is deprecated, use fs.constants.F_OK instead
+(Use `node --trace-deprecation ...` to show where the warning was created)
+newman
+
+Circuit breaker — hotel-service (CLOSED → OPEN → HALF_OPEN → CLOSED)
+
+□ CB-08
+└ CB-08.1 GET /api/habitacion/buscar/{{idHabitacionH}} — fija {{versionH}} (habitación libre)
+  GET http://localhost:8080/api/habitacion/buscar/309 [200 OK, 1.16kB, 31ms]
+  √  CB-08.1 Buscar {{idHabitacionH}} responde 200 (contrato hotel)
+
+└ CB-08.2 POST /api/habitacion/{{idHabitacionH}}/mantenimiento — 200 con blockId
+  POST http://localhost:8080/api/habitacion/309/mantenimiento [200 OK, 1.27kB, 48ms]
+  √  CB-08.2 Mantenimiento {{idHabitacionH}} responde 200 (reception arriba; 2ª permitida en HALF_OPEN)
+  √  CB-08 Anota el blockId del mantenimiento que cerró el breaker
+  √  CB-08.2 {{idHabitacionH}} guarda {{blockIdCb08H}} del cuerpo
+
+└ CB-08.3 GET /api/habitacion/buscar/{{idHabitacionI}} — fija {{versionI}} (habitación libre)
+  GET http://localhost:8080/api/habitacion/buscar/310 [200 OK, 1.16kB, 11ms]
+  √  CB-08.1 Buscar {{idHabitacionI}} responde 200 (contrato hotel)
+
+└ CB-08.4 POST /api/habitacion/{{idHabitacionI}}/mantenimiento — 200 con blockId
+  POST http://localhost:8080/api/habitacion/310/mantenimiento [200 OK, 1.27kB, 35ms]
+  √  CB-08.2 Mantenimiento {{idHabitacionI}} responde 200 (reception arriba; 2ª permitida en HALF_OPEN)
+  √  CB-08 Anota el blockId del mantenimiento que cerró el breaker
+  √  CB-08.2 {{idHabitacionI}} guarda {{blockIdCb08I}} del cuerpo
+
+□ CB-09
+└ CB-09 GET http://localhost:8082/actuator/circuitbreakers — estado CLOSED
+  GET http://localhost:8082/actuator/circuitbreakers [200 OK, 693B, 4ms]
+  √  CB-09 Actuator responde 200: GET http://localhost:8082/actuator/circuitbreakers
+  √  CB-09 El breaker {{breakerId}} está en CLOSED
+
+□ CB-10
+└ CB-10 GET /api/habitacion/operaciones/{{blockId}} — estado APLICADA
+  GET http://localhost:8080/api/habitacion/operaciones/8e39fb5b-ba46-4ff7-8d11-474292908ae2 [200 OK, 732B, 16ms]
+  √  CB-10 Operaciones {{blockId}} responden 200 con estado APLICADA (contrato hotel: GET /api/habitacion/operaciones/{blockId})
+  GET http://localhost:8080/api/habitacion/operaciones/8e39fb5b-ba46-4ff7-8d11-474292908ae2 [200 OK, 732B, 9ms]
+
+┌─────────────────────────┬──────────────────┬──────────────────┐
+│                         │         executed │           failed │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              iterations │                1 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│                requests │                7 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│            test-scripts │                6 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│      prerequest-scripts │                0 │                0 │
+├─────────────────────────┼──────────────────┼──────────────────┤
+│              assertions │               11 │                0 │
+├─────────────────────────┴──────────────────┴──────────────────┤
+│ total run duration: 662ms                                     │
+├───────────────────────────────────────────────────────────────┤
+│ total data received: 3.47kB (approx)                          │
+├───────────────────────────────────────────────────────────────┤
+│ average response time: 22ms [min: 4ms, max: 48ms, s.d.: 15ms] │
+└───────────────────────────────────────────────────────────────┘

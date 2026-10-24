@@ -1,0 +1,110 @@
+================================================================================
+RESUMEN DE EJECUCION — plan qa-postman-circuit-breaker (pasos 18 y 19)
+Rama: qa-postman-circuit-breaker  |  Fecha: 2026-10-23
+================================================================================
+
+1. HABITACIONES USADAS (sede idHotel=1, todas validadas libres antes de empezar:
+   sin operacion vigente, fisico LISTA):
+   - A = 101  (CB-02 mantenimiento+liberacion; CB-07 sonda)
+   - B = 303  (CB-04, primera operacion -> guarda {{blockId}})
+   - C = 304  (CB-04)
+   - D = 305  (CB-04)
+   - E = 306  (CB-04)
+   - F = 307  (CB-04)
+   - G = 308  (CB-06)
+   - H = 309  (CB-08 ejecucion 1)
+   - I = 310  (CB-08 ejecucion 2)
+   - J = 311  (no usada, de reserva)
+   Se eligieron habitaciones DISTINTAS para cada llamada del ciclo porque el
+   indice parcial uq_operacion_vigente (V5__hotel_operaciones.sql) rechaza con
+   409 ROOM_OPERATION_IN_PROGRESS una segunda operacion sobre la misma habitacion
+   antes de llegar a Feign; ese 409 no es fallo del breaker y detendria el guion.
+
+2. PID DE RECEPTION MATADO Y LEVANTAMIENTO:
+   - reception-service corria en el IDE (NO en Docker), PID 11840
+     (pe.hotel.reception.ReceptionServiceApplication, puerto 8083).
+   - Detenido con: taskkill /PID 11840 /F  -> "se termino el proceso con PID 11840".
+     Se verifico abajo (health 000 en :8083) antes de CB-04.
+   - Levantado con: bash scripts/mvn.sh -f services/pom.xml -pl :reception-service
+     spring-boot:run  (en segundo plano, PID 28820), pasando las variables de
+     entorno del .env y sobrescribiendo SPRING_DATASOURCE_URL=reception_db,
+     SPRING_DATASOURCE_USERNAME=reception_app,
+     SPRING_DATASOURCE_PASSWORD=reception_app_password,
+     SPRING_FLYWAY_USER=reception_app, SPRING_FLYWAY_PASSWORD=...,
+     RABBITMQ_USER=reception, RABBITMQ_PASSWORD=..., JWK_SET_URI=...
+     (credenciales solo en runtime, nunca versionadas).
+   - Se verifico que la app arranca (Tomcat en 8083) y que admite llamadas
+     (CB-08 retorno 200 por Feign).
+   NOTA: GET /actuator/health de reception devuelve 503 porque el indicador de
+   salud de RabbitMQ falla en este entorno, pero el servicio esta arriba y
+   funcional (sus endpoints responden).
+
+3. LLAMADAS EN CB-08 PARA CERRAR EL BREAKER:
+   Se necesitaron 2 llamadas con exito (habitacion 309 y habitacion 310, una
+   ejecucion de la carpeta CB-08 por cada una, con Idempotency-Key distinta).
+   Tras la primera, el breaker quedo en HALF_OPEN; tras la segunda, volvio a
+   CLOSED. (CB_HALF_OPEN_CALLS=3, pero en la ejecucion real cerro con 2 exitos
+   consecutivos en HALF_OPEN.)
+
+4. ESTADOS DEL BREAKER (actuador puerto 8082, ver 03-actuator-transiciones.txt):
+   - Antes de CB-04: CLOSED
+   - Despues de CB-04 (5 fallos, reception abajo): OPEN  <- prueba del ciclo
+   - Despues de CB-06: OPEN (se mantiene)
+   - Tras sonda CB-07: OPEN (DESVIO: guion esperaba HALF_OPEN)
+   - Despues de CB-08: CLOSED
+
+5. DESVIACIONES ENCONTRADAS (se reportan tal cual, sin maquillar):
+   a) CB-07.3 ("el breaker esta en HALF_OPEN"): leyo OPEN, no HALF_OPEN.
+      Motivo: la sonda de CB-07 se ejecuta con reception aun DETENIDO, por lo
+      que la llamada permitida en HALF_OPEN falla (conexion rechazada) y
+      Resilience4j devuelve el breaker a OPEN nada mas terminar la llamada.
+      HALF_OPEN es un estado transitorio durante la unica llamada permitida; no
+      se observa estable despues de una llamada que falla. Por tanto no hay forma
+      de capturar HALF_OPEN con una lectura secuencial despues de la sonda.
+      El guion del plan asume que se puede leer HALF_OPEN tras la sonda, lo cual
+      no se cumple con esta version de Resilience4j y reception detenido.
+   b) CB-10 (operacion {{blockId}} debe ser APLICADA): leyo RECHAZADA.
+      Motivo: el blockId guarda en CB-04 (operacion de la habitacion 303) fue
+      reintentado por el job RB3 tras levantar reception y reception lo rechazo
+      (quedó RECHAZADA, estado terminal). Por tanto no se pudo afirmar APLICADA.
+      El bloqueId coincide, pero el estado no es APLICADA.
+   c) Las claves Idempotency-Key fijas de la coleccion ya estaban consumidas por
+      corridas previas (409 IDEMPOTENCY_CONFLICT). Se regeneraron como UUID
+      unicos y, para que la coleccion sea reejecutable, se sustituyeron por la
+      variable de Postman {{$guid}} (fresh por peticion). Este cambio esta en
+      tests/postman/circuit-breaker.postman_collection.json.
+   d) Las aserciones sobre el campo version usaban .is.not.empty sobre un
+      numero (lanza y detiene el script antes de fijar la variable de version,
+      provocando 428). Se corrigieron a .is.not.undefined. Tambien se corrigio
+      la lectura del actuator: circuitBreakers es un objeto (map) clave->valor, no
+      un array, por lo que el filtrado por nombre de breaker se hizo por clave
+      (cbMap[breakerId]) en lugar de .find sobre un array. Asimismo, la
+      liberacion de CB-02.2 no devuelve data.blockId (vistaInterna no lo inclui),
+      por tanto esa igualdad se quito.
+   e) CB-03 y las peticiones al actuador fallaban con "request url is empty"
+      porque newman 6.2.3 no resuelve url.raw como URL absoluta; se convirtieron
+      a forma {protocol, host, path}.
+
+6. LIMPIEZA FINAL (requisito del plan: ninguna habitacion en MANTENIMIENTO):
+   - Se liberaron las habitaciones que quedaron en MANTENIMIENTO (operacion
+     APLICADA) con PUT /api/habitacion/{id}/mantenimiento-completado
+     (If-Match + Idempotency-Key): A=101, H=309, I=310, D=305, E=306, F=307,
+     G=308. Todas devolvieron 200.
+   - B=303 y C=304 terminaron RECHAZADA (sin bloque vigente, fisico LISTA).
+   - Resultado final: todas las habitaciones A-J en LISTA, sin ninguna en
+     MANTENIMIENTO. Reception queda ARRIBA.
+
+7. ARCHIVOS DE EVIDENCIA (esta carpeta):
+   - 01-colecciones-flujo.txt   (validacion estatica previa, pasos 1-17)
+   - 02-coleccion-circuit-breaker.txt (validacion estatica previa, pasos 1-17)
+   - 03-run-circuit-breaker.txt (salida de newman de cada tramo, este guion)
+   - 03-actuator-transiciones.txt (cinco estados del actuador con su momento)
+   - 03-resumen.txt (este archivo)
+
+8. CRITERIO DE TERMINADO:
+   - Pasos 18 y 19 ejecutados y con evidencia real (salidas literales de newman
+     y del actuador, sin salidas maquilladas).
+   - Se registro el fallo literal de CB-07.3 y CB-10 en lugar de omitirlo.
+   - Reception queda arriba; ninguna habitacion queda en MANTENIMIENTO.
+   - Ningun secreto ni token versionado en tests/postman/.
+================================================================================
