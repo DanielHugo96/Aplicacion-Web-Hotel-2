@@ -1,0 +1,23 @@
+EVIDENCIA FINAL DE LA DEMO — verificacion del orquestador
+Fecha: vie., 23 de oct. de 2026 07:54:55 p. m.
+Rama: main (post-merge de #148, #149, #150, #151, #152, #153, #154, #155)
+
+=== VERIFICACION CANONICA ===
+bash scripts/mvn.sh -f services/pom.xml -pl :hotel-service -am -q verify  -> BUILD SUCCESS (exit 0)
+python scripts/validar-planes.py            -> 42 planes, 0 errores, 1 aviso (HALF_OPEN vs errors.md)
+python scripts/validar-contratos.py --base origin/main -> contratos solo ampliados (exit 0)
+docker compose -f infra/compose.yaml --env-file .env config --quiet -> exit 0
+
+=== PRUEBA MANUAL MINIMA ===
+Paso 1: GET http://localhost:8082/actuator/circuitbreakers -> state CLOSED (registro vacio al arrancar)
+Paso 2: reception detenido (taskkill del PID de ReceptionServiceApplication)
+Paso 3: cinco mantenimientos sobre 305,306,307,308,309 -> 202 con Location y Retry-After=2
+Paso 4: GET actuator -> OPEN, bufferedCalls=5, failureRate=100.0%
+Paso 5: a los 10 s la lectura de solo lectura sigue OPEN (la transicion no es un reloj);
+        se levanta reception y una sonda sobre 310 -> 200 y el actuator pasa a HALF_OPEN;
+        dos llamadas sanas mas (311, 312) -> 200 y el actuator queda CLOSED con bufferedCalls=0
+Paso 6: http://localhost:8091 -> 200; cluster hotel online, 9 topics, hotel.habitacion.v1 offsetMax=65
+Paso 7: GET /api/habitacion/operaciones/fffb584d-... -> APLICADA (RB3 recupero los cinco 202)
+
+=== JSON FINAL DEL BREAKER ===
+{"circuitBreakers":{"ReceptionClientbloquearintBloqueoRequest":{"bufferedCalls":5,"failedCalls":0,"failureRate":"0.0%","failureRateThreshold":"50.0%","notPermittedCalls":0,"slowCallRate":"0.0%","slowCallRateThreshold":"100.0%","slowCalls":0,"slowFailedCalls":0,"state":"CLOSED"}}}
