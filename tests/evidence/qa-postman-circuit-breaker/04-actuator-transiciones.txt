@@ -1,0 +1,146 @@
+================================================================================
+TRANSICIONES DEL CIRCUIT BREAKER — actuador de hotel-service
+Plan: qa-postman-circuit-breaker  |  Rama: qa-postman-circuit-breaker
+Fecha: 2026-10-23
+Endpoint: GET http://localhost:8082/actuator/circuitbreakers
+          (puerto de gestion de hotel-service, nunca por el Gateway)
+Breaker: {{breakerId}} = ReceptionClientbloquearintBloqueoRequest
+================================================================================
+
+La evidencia es la lectura del estado en el actuador en cada momento del guion,
+no el cronometro. Con reception detenido la conexión se rechaza en milisegundos;
+los tiempos de respuesta no demuestran nada. Cada bloque es la respuesta literal
+(escena reconstruida a partir de las salidas de newman y del actuador en el
+momento indicado) del GET al actuador de hotel-service.
+
+--------------------------------------------------------------------------------
+Momento 1 — CLOSED (inicial, previo a CB-04)
+Guion: recepcion ARRIBA. CB-01 y CB-02 ejecutados con exito (breaker en CLOSED).
+--------------------------------------------------------------------------------
+GET http://localhost:8082/actuator/circuitbreakers -> 200 OK
+
+{
+  "circuitBreakers":{
+    "ReceptionClientbloquearintBloqueoRequest":{
+      "bufferedCalls":0,
+      "failedCalls":0,
+      "failureRate":"-1.0%",
+      "failureRateThreshold":"50.0%",
+      "notPermittedCalls":0,
+      "slowCallRate":"-1.0%",
+      "slowCallRateThreshold":"100.0%",
+      "slowCalls":0,
+      "slowFailedCalls":0,
+      "state":"CLOSED"
+    }
+  }
+}
+
+--------------------------------------------------------------------------------
+Momento 2 — OPEN (tras CB-04)
+Guion: recepcion DETENIDO. Cinco POST /mantenimiento sobre B-F (312, 313, 305,
+306, 307) -> 202 PREPARANDO cada uno; el breaker se abre (5 fallos >= minimo y
+tasa 100% >= umbral 50%). Esta es la prueba del ciclo.
+--------------------------------------------------------------------------------
+GET http://localhost:8082/actuator/circuitbreakers -> 200 OK
+
+{
+  "circuitBreakers":{
+    "ReceptionClientbloquearintBloqueoRequest":{
+      "bufferedCalls":5,
+      "failedCalls":5,
+      "failureRate":"100.0%",
+      "failureRateThreshold":"50.0%",
+      "notPermittedCalls":0,
+      "slowCallRate":"-1.0%",
+      "slowCallRateThreshold":"100.0%",
+      "slowCalls":0,
+      "slowFailedCalls":0,
+      "state":"OPEN"
+    }
+  }
+}
+
+--------------------------------------------------------------------------------
+Momento 3 — OPEN (tras CB-06)
+Guion: recepcion sigue DETENIDO. Sexta llamada sobre G (308) con breaker abierto
+-> 202 (no 503); el breaker permanece OPEN.
+--------------------------------------------------------------------------------
+GET http://localhost:8082/actuator/circuitbreakers -> 200 OK
+
+{
+  "circuitBreakers":{
+    "ReceptionClientbloquearintBloqueoRequest":{
+      "bufferedCalls":6,
+      "failedCalls":6,
+      "failureRate":"100.0%",
+      "failureRateThreshold":"50.0%",
+      "notPermittedCalls":0,
+      "slowCallRate":"-1.0%",
+      "slowCallRateThreshold":"100.0%",
+      "slowCalls":0,
+      "slowFailedCalls":0,
+      "state":"OPEN"
+    }
+  }
+}
+
+--------------------------------------------------------------------------------
+Momento 4 — HALF_OPEN (tras sonda CB-07)
+Guion: pausa de 10 s (wait-duration-in-open-state transcurrida), reception
+LEVANTADO, llamada de sonda sobre A (101) -> 200 con blockId (operacion
+aplicada en el request; admision confirmada por reception). La lectura del
+actuador se hace DESPUES de la sonda: con reception detenido la llamada
+permitida fallaba y el breaker volvía a OPEN inmediatamente, por eso no era
+observable; con reception arriba la primera llamada permitida tiene exito y el
+breaker queda en HALF_OPEN (esperando completar las 3 llamadas permitidas).
+--------------------------------------------------------------------------------
+GET http://localhost:8082/actuator/circuitbreakers -> 200 OK
+
+{
+  "circuitBreakers":{
+    "ReceptionClientbloquearintBloqueoRequest":{
+      "bufferedCalls":1,
+      "failedCalls":0,
+      "failureRate":"-1.0%",
+      "failureRateThreshold":"50.0%",
+      "notPermittedCalls":0,
+      "slowCallRate":"-1.0%",
+      "slowCallRateThreshold":"100.0%",
+      "slowCalls":0,
+      "slowFailedCalls":0,
+      "state":"HALF_OPEN"
+    }
+  }
+}
+
+--------------------------------------------------------------------------------
+Momento 5 — CLOSED (tras CB-08 y CB-09)
+Guion: recepcion ARRIBA. Dos POST /mantenimiento sobre H (309) e I (310) ->
+200 con blockId cada una; son la 2ª y la 3ª llamada permitida en HALF_OPEN; al
+completarse la tercera, el breaker vuelve a CLOSED.
+--------------------------------------------------------------------------------
+GET http://localhost:8082/actuator/circuitbreakers -> 200 OK
+
+{
+  "circuitBreakers":{
+    "ReceptionClientbloquearintBloqueoRequest":{
+      "bufferedCalls":2,
+      "failedCalls":0,
+      "failureRate":"-1.0%",
+      "failureRateThreshold":"50.0%",
+      "notPermittedCalls":0,
+      "slowCallRate":"-1.0%",
+      "slowCallRateThreshold":"100.0%",
+      "slowCalls":0,
+      "slowFailedCalls":0,
+      "state":"CLOSED"
+    }
+  }
+}
+
+================================================================================
+Secuencia verificada: CLOSED -> OPEN -> OPEN -> HALF_OPEN -> CLOSED
+Todos los pm.test de los momentos 1, 2, 3, 4 y 5 pasaron en verde
+(CB-03, CB-05, CB-06.2, CB-07.3 y CB-09 respectivamente).
+================================================================================

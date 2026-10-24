@@ -1382,7 +1382,7 @@
               }
             ],
             "url": {
-              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionH}}",
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionI}}",
               "host": [
                 "{{baseUrl}}"
               ],
@@ -1390,7 +1390,7 @@
                 "api",
                 "habitacion",
                 "buscar",
-                "{{idHabitacionH}}"
+                "{{idHabitacionI}}"
               ]
             }
           },
@@ -1446,14 +1446,14 @@
               }
             },
             "url": {
-              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionH}}/mantenimiento",
+              "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionI}}/mantenimiento",
               "host": [
                 "{{baseUrl}}"
               ],
               "path": [
                 "api",
                 "habitacion",
-                "{{idHabitacionH}}",
+                "{{idHabitacionI}}",
                 "mantenimiento"
               ]
             }

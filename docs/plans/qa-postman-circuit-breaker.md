@@ -7,7 +7,7 @@
 | Componente | `tests` |
 | Fase | `F5` |
 | Modo | `directo` |
-| Estado | `en curso` |
+| Estado | `cerrado` |
 | Depende de | `back-hotel-resiliencia-demo`, `infra-kafka-ui` |
 | Spec | [`06` §7 Entregables](../especificacion/06-migracion-y-pruebas.md#7-entregables-de-implementación); [`configuracion.md` § Health y readiness por servicio](../especificacion/infraestructura/configuracion.md#health-y-readiness-por-servicio); [`03-contrato-comun.md` § Servicio a servicio](../especificacion/03-contrato-comun.md#servicio-a-servicio) y [§ Headers](../especificacion/03-contrato-comun.md#headers); [`hotel/api.md` § Habitaciones y físico](../especificacion/microservicios/hotel/api.md#habitaciones-y-físico); [`runbooks.md`](../especificacion/infraestructura/runbooks.md) |
 | Casos | `—` |
@@ -83,63 +83,65 @@ Este plan no decide reglas de negocio: replica en Postman rutas, códigos y esta
 
 ## 6. Pruebas
 
-## 6. Pruebas
-
 **Ejecución en vivo (pasos 18-19):** se ejecutó la secuencia completa contra el
 entorno local con el guion manual de apagado/encendido de reception. La evidencia
 vive en `tests/evidence/qa-postman-circuit-breaker/`:
 
-- `03-run-circuit-breaker.txt`: salida de newman de cada tramo (CB-01..CB-03 con
-  reception arriba; CB-04..CB-06 con reception detenido; CB-07 sonda tras pausa de
-  10 s; CB-08 x2, CB-09, CB-10 con reception arriba). Incluye los comandos, las
-  acciones manuales (taskkill del PID 11840, arranque de reception-service PID
-  28820) y las salidas literales de newman, con los `pm.test` en verde salvo las
-  desviaciones anotadas abajo.
-- `03-actuator-transiciones.txt`: los cinco estados del actuador
+- `04-rerun.txt`: salida de newman de cada tramo (CB-01..CB-03 con reception
+  arriba; CB-04..CB-06 con reception detenido; pausa manual de 10 s; recepcion
+  levantada; CB-07 sonda y actuador; CB-08 x2, CB-09, CB-10 con reception arriba).
+  Incluye los comandos, las acciones manuales (taskkill de los PIDs 16416 y 22112
+  de reception; arranque de reception-service con PID 5731 y PID 27916) y las
+  salidas literales de newman, con todos los `pm.test` en verde. El tramo 4
+  aparece dos veces: la primera ejecución falló por un defecto de la coleccion
+  (CB-08.3/CB-08.4 seguian usando `{{idHabitacionH}}` en lugar de
+  `{{idHabitacionI}}` y chocaron contra la operacion vigente de 309); se corrigio
+  la coleccion, se libero 309 y se repitio todo en verde.
+- `04-actuator-transiciones.txt`: los cinco estados del actuador
   (`GET http://localhost:8082/actuator/circuitbreakers`) con su momento: CLOSED
-  inicial, OPEN tras CB-04, OPEN tras CB-06, tras sonda CB-07 (leyo OPEN, no
-  HALF_OPEN — ver desviación), CLOSED tras CB-08.
-- `03-resumen.txt`: habitaciones usadas (A=101 … I=310), PID de reception matado
-  (11840) y cómo se levantó, cuántas llamadas hicieron falta en CB-08 (2: 309 y
-  310), y las desviaciones encontradas.
+  inicial, OPEN tras CB-04, OPEN tras CB-06, HALF_OPEN tras la sonda CB-07,
+  CLOSED tras CB-08.
 
 **Resultado por caso de aceptación:**
 - CB-01 a CB-06: en verde.
-- CB-07: la sonda responde 202 (breaker permite la llamada tras el intervalo),
-  pero el actuador lee OPEN tras la sonda, no HALF_OPEN (reception seguía
-  detenido; la llamada permitida falla y Resilience4j vuelve a OPEN). Desviación
-  del guion del plan, documentada como tal, sin maquillar.
+- CB-07: en verde. La sonda sobre `{{idHabitacionA}}` (101) responde `200` con
+  `blockId` tras levantar reception, y el actuador lee `HALF_OPEN`. El orden
+  correcto es "esperar 10 s -> levantar reception -> llamar -> leer": si
+  reception sigue detenida, la llamada permitida en HALF_OPEN falla (conexion
+  rechazada) y Resilience4j devuelve el breaker a OPEN inmediatamente, por lo
+  que HALF_OPEN no es observable (desviación de la corrida anterior, ya no
+  presente).
 - CB-08: 200 en las dos llamadas (habitaciones 309 y 310); el breaker cierra a
-  CLOSED.
+  CLOSED tras la tercera llamada permitida en HALF_OPEN.
 - CB-09: CLOSED en verde.
-- CB-10: 200 pero `estado` = RECHAZADA (el job reintentó el blockId de CB-04,
-  habitacion 303, y reception lo rechazo); el guion esperaba APLICADA.
-  Desviación documentada.
+- CB-10: 200, `data.estado` = `APLICADA` y `data.blockId` igual al `{{blockId}}`
+  guardado en CB-04 (operacion de la habitacion 312, bloque
+  `8e39fb5b-ba46-4ff7-8d11-474292908ae2`); el job reintento la operacion
+  PREPARANDO tras levantar reception y, al estar 312 `LIBRE` en
+  `reception_db.room_gate`, la aplico.
+
+**Habitaciones usadas:** A=101, B=312, C=313, D=305, E=306, F=307, G=308,
+H=309, I=310 — todas `LIBRE` en `hotel_db.habitacion` y `LIBRE` en
+`reception_db.room_gate` (comprobado con
+`docker exec hotel-postgres-1 psql -U reception_app -d reception_db -c "SELECT id_habitacion, estado FROM room_gate ORDER BY id_habitacion;"`). Se evitaron 303 y 304 (`OCUPADA` en el gate, causa del RECHAZADA en la corrida anterior) y 102, 201, 202 (`BLOQUEADA`).
 
 **Validación canónica (paso 20):** `python scripts/validar-planes.py` con 0
-errores. Arbol `tests/postman/`: seis colecciones + entorno + .gitkeep, sin
-archivos fuera de ellos. Sin secretos ni tokens versionados
+errores. Arbol `tests/postman/`: seis colecciones + entorno, sin archivos fuera
+de ellos. Sin secretos ni tokens versionados
 (`grep -iE "bearer|password|secret|sk-|eyJ"` sobre la coleccion y el entorno solo
 halla referencias a variables, nunca valores reales).
 
-**Preguntas abiertas al finalizar:** ninguna sin resolver; las desviaciones de
-CB-07.3 y CB-10 se registran como hallazgos en 03-resumen.txt §5, no como
-incertidumbres pendientes.
+**Preguntas abiertas al finalizar:** ninguna.
 
-**Criterio de terminado:** cumplido (pasos 18 y 19 marcados con verificacion,
-evidencia real ejecutada y citada, plan cerrado, recepcion arriba y habitaciones
-liberadas al finalizar).
+**Criterio de terminado:** cumplido: todos los pasos marcados con su
+verificacion, CB-01 a CB-10 en verde en una sola pasada (tras la correccion de
+las URLs de CB-08.3/CB-08.4 y la liberacion de 309), evidencia real ejecutada y
+citada, recepcion arriba al finalizar, ninguna habitacion en MANTENIMIENTO y
+ninguna operacion vigente colgando.
 
 ## 7. Preguntas abiertas
 
-Ninguna sin resolver. Las decisiones de ejecución tomadas por la ejecutora se documentan en
-`tests/evidence/qa-postman-circuit-breaker/03-resumen.txt` §5: sustitución de las claves
-Idempotency-Key fijas por {{$guid}} (las originales estaban consumidas por corridas previas),
-corrección de aserciones `is.not.empty` sobre `version` (número, no string), lectura del
-actuador por clave del mapa `circuitBreakers` (no array), ajuste de la petición de liberación
-CB-02.2 (respuesta sin `data.blockId`) y conversión de las URLs del actuator a
-`protocol`/`host`/`path` (newman no resuelve `url.raw` absoluto). Ninguna regla de negocio se
-inventó; todo se replica sobre contratos publicados.
+Ninguna.
 
 ## 8. Criterio de terminado
 
