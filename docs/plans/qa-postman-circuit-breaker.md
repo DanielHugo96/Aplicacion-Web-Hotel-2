@@ -145,8 +145,8 @@ Ninguna.
 
 ## 8. Criterio de terminado
 
-- [ ] Todos los pasos marcados con su verificación.
-- [ ] Las seis colecciones y el entorno importan y corren contra el entorno local completo.
-- [ ] CB-01 a CB-10 en verde en una sola pasada, con evidencia en `tests/evidence/qa-postman-circuit-breaker/`.
-- [ ] Ningún secreto ni token versionado en `tests/postman/`.
-- [ ] Sin preguntas abiertas.
+- [x] Todos los pasos marcados con su verificación.
+- [x] Las seis colecciones y el entorno importan y corren contra el entorno local completo.
+- [x] CB-01 a CB-10 en verde en una sola pasada, con evidencia en `tests/evidence/qa-postman-circuit-breaker/`.
+- [x] Ningún secreto ni token versionado en `tests/postman/`.
+- [x] Sin preguntas abiertas.
