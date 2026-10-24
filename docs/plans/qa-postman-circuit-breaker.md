@@ -21,9 +21,9 @@
 
 **Entra:** la zona `tests/postman/` y `tests/evidence/`:
 
-- `tests/postman/Hotel-local.postman_environment.json`: variables `{{baseUrl}}`, `{{token}}`, `{{idHabitacion}}` y las habitaciones del ciclo (`{{idHabitacionA}}`…`{{idHabitacionG}}`). Sin secretos: el token nunca se escribe en el archivo, se obtiene con login.
-- Una colección por flujo: `identidad`, `catalogo-hotelero`, `recepcion`, `ventas` y `reportes`, cada una con sus peticiones y una `description` de carpeta que dice qué flujo cubre y su precondición.
-- `tests/postman/circuit-breaker.postman_collection.json`: la secuencia CB-01 a CB-10 con `pm.test` y carpetas descritas.
+- `tests/postman/Hotel-local.postman_environment.json`: solo los valores de conexión y credenciales (`{{baseUrl}}`, `{{hotelActuatorUrl}}`, `{{correoDemo}}`, `{{claveDemo}}`, ids de los seeds). Sin secretos: el token nunca se escribe en el archivo, se obtiene con login.
+- `tests/postman/Hotel.postman_collection.json`: **una sola colección** con una carpeta por flujo (`00 · Preparación`, `01 · Identidad`, `02 · Catálogo hotelero`, `03 · Recepción`, `04 · Ventas`, `05 · Reportes`) y tres tramos del ciclo del breaker (`06`, `07`, `08`). Cada carpeta lleva su `description` con flujo, precondición y orden.
+- La secuencia CB-01 a CB-10 con `pm.test`, repartida en los tramos 1 (reception arriba), 2 (reception detenido) y 3 (reception arriba otra vez).
 - `tests/evidence/qa-postman-circuit-breaker/`: salida de la corrida y capturas de la transición.
 - Este plan y su fila en `docs/plans/catalogo.md`.
 
@@ -72,7 +72,7 @@ Este plan no decide reglas de negocio: replica en Postman rutas, códigos y esta
 - [x] 17. CB-09 y CB-10: leer el actuator (CLOSED) y `GET /api/habitacion/operaciones/{blockId}` con el `blockId` guardado en la variable. Verificación: estado `CLOSED` y la operación del primer `blockId` en `APLICADA` con el mismo `blockId`.
 - [x] 18. Correr la secuencia completa contra el entorno local con el guion manual de apagado y encendido de reception. Verificación: CB-01 a CB-10 ejecutados (ver 03-run-circuit-breaker.txt; CB-07.3 y CB-10 con desviaciones documentadas en 03-resumen.txt §5).
 - [x] 19. Guardar la evidencia: run de newman y capturas del actuador en `tests/evidence/qa-postman-circuit-breaker/`. Verificación: la carpeta contiene 03-run-circuit-breaker.txt, 03-actuator-transiciones.txt y 03-resumen.txt, sin tokens visibles.
-- [x] 20. Ejecutar la verificación canónica. Verificación: `python scripts/validar-planes.py` con 0 errores y el árbol `tests/postman/` sin archivos fuera de las seis colecciones y el entorno.
+- [x] 20. Ejecutar la verificación canónica. Verificación: `python scripts/validar-planes.py` con 0 errores y el árbol `tests/postman/` sin archivos fuera de la colección única, el entorno y su README (decisión [`IA-qa-postman-coleccion-unica-01`](../implementacion/decisiones/IA-qa-postman-coleccion-unica-01.md)).
 
 ## 5. Contratos afectados
 
@@ -126,8 +126,8 @@ H=309, I=310 — todas `LIBRE` en `hotel_db.habitacion` y `LIBRE` en
 `docker exec hotel-postgres-1 psql -U reception_app -d reception_db -c "SELECT id_habitacion, estado FROM room_gate ORDER BY id_habitacion;"`). Se evitaron 303 y 304 (`OCUPADA` en el gate, causa del RECHAZADA en la corrida anterior) y 102, 201, 202 (`BLOQUEADA`).
 
 **Validación canónica (paso 20):** `python scripts/validar-planes.py` con 0
-errores. Arbol `tests/postman/`: seis colecciones + entorno, sin archivos fuera
-de ellos. Sin secretos ni tokens versionados
+errores. Arbol `tests/postman/`: una colección + entorno + README, sin archivos
+fuera de ellos. Sin secretos ni tokens versionados
 (`grep -iE "bearer|password|secret|sk-|eyJ"` sobre la coleccion y el entorno solo
 halla referencias a variables, nunca valores reales).
 
@@ -146,7 +146,7 @@ Ninguna.
 ## 8. Criterio de terminado
 
 - [x] Todos los pasos marcados con su verificación.
-- [x] Las seis colecciones y el entorno importan y corren contra el entorno local completo.
+- [x] La colección única y el entorno importan y corren contra el entorno local completo (una sola importación, carpetas en orden).
 - [x] CB-01 a CB-10 en verde en una sola pasada, con evidencia en `tests/evidence/qa-postman-circuit-breaker/`.
 - [x] Ningún secreto ni token versionado en `tests/postman/`.
 - [x] Sin preguntas abiertas.

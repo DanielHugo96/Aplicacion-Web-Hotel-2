@@ -1,0 +1,3961 @@
+{
+  "info": {
+    "_postman_id": "35804722-cd64-5644-bfca-a88c35bde91c",
+    "name": "Hotel — API completa",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "# Hotel — colección única de la API\n\nTodas las rutas del proyecto en una sola colección, por carpetas. Cada petición conserva sus `pm.test` y guarda lo que produce en variables de la colección, así que funciona aunque no haya ningún entorno activo en Postman.\n\n## Puertos\n| Puerto | Qué es |\n|---|---|\n| 8080 | `api-gateway`, único punto de entrada de la API (`{{baseUrl}}`) |\n| 8082 | `hotel-service`; su actuator publica el estado del breaker (`{{hotelActuatorUrl}}`) |\n| 8081–8087 | identity, hotel, reception, inventory, sales, reporting y notification (solo perfil debug) |\n| 8761 | discovery-server |\n\nSe usa `127.0.0.1` y no `localhost`: el Gateway de `infra/compose.yaml` publica solo IPv4 y en Windows `localhost` resuelve primero a `[::1]`, que rechaza la conexión.\n\n## Carpetas\n1. **00 · Preparación** — entorno, habitaciones del ciclo y habitación del check-in.\n2. **01 · Identidad** — login y sesión propia.\n3. **02 · Catálogo hotelero** — sedes, habitaciones y detalle.\n4. **03 · Recepción** — check-in inmediato y listado de estadías.\n5. **04 · Ventas** — catálogo de la sede, carrito, alta y pago manual.\n6. **05 · Reportes** — dashboard y ventas pagadas del mes en curso.\n7. **06 · Circuit breaker — tramo 1** — CB-01 a CB-03, con reception arriba.\n8. **07 · Circuit breaker — tramo 2** — CB-04 a CB-06, con reception detenido.\n9. **08 · Circuit breaker — tramo 3** — CB-07 a CB-10, con reception arriba otra vez.\n\n## Precondición\nStack local arriba y registrado en Eureka. Rellenar `claveDemo` con la `DEMO_PASSWORD` de tu `.env` (no se versiona); el resto de variables tiene valor por defecto en la colección.\n\n## Cómo ejecutarla\n```bash\n# Flujo funcional (00 a 05)\nnpx newman run tests/postman/Hotel.postman_collection.json \\\n  -e tests/postman/Hotel-local.postman_environment.json\n\n# Ciclo del breaker, por tramos (ver la descripción de cada tramo)\nnpx newman run tests/postman/Hotel.postman_collection.json \\\n  -e tests/postman/Hotel-local.postman_environment.json \\\n  --folder '06 · Circuit breaker — tramo 1 (reception ARRIBA)'\n```\n\n## Diagnóstico rápido\n- `connection refused` en `[::1]`: hay un entorno ajeno seleccionado o se usa `localhost`. 00.1 lo detecta y muestra el nombre del entorno activo.\n- `401 INVALID_CREDENTIALS`: `claveDemo` vacía o distinta de `DEMO_PASSWORD`.\n- `409 ROOM_OPERATION_IN_PROGRESS`: la habitación tiene una operación vigente; 00.3 la libera.\n- `409 IDEMPOTENCY_CONFLICT`: clave de idempotencia reutilizada con otro payload; 00.1 reinicia las claves en cada corrida."
+  },
+  "item": [
+    {
+      "name": "00 · Preparación",
+      "description": "## Qué cubre\nDeja el stack listo para el resto de la colección, sin pasos ocultos:\n- **00.1 Login** — valida el entorno activo y `{{claveDemo}}`, y guarda `{{token}}`.\n- **00.2 Asegurar habitaciones** — crea, solo si faltan, las habitaciones `901`…`909` del ciclo del breaker y la `940` del check-in.\n- **00.3 Liberar el ciclo** — completa los mantenimientos vigentes (`blockId` de una corrida anterior) y anula los check-ins de prueba.\n- **00.4 Elegir habitación del check-in** — fija `{{idHabitacion}}` con una habitación LISTA, sin bloqueo y sin estadía activa.\n\n## Por qué hay que liberar\n`OperacionHabitacionRepository.existsVigente` considera vigente toda operación en `PREPARANDO` o `APLICADA`, y `HabitacionService.toView` publica su `blockId`. Una habitación con `blockId` rechaza cualquier mantenimiento nuevo con `409 ROOM_OPERATION_IN_PROGRESS` antes de llegar a reception. 00.3 las deja limpias.\n\n## Orden\n00.1 → 00.2 → 00.3 → 00.4, y después `01 · Identidad` en adelante. Es idempotente.",
+      "item": [
+        {
+          "name": "00.1 POST /api/auth/login — valida el entorno y guarda {{token}}",
+          "description": "Login (contrato identity). Valida que el entorno activo no sea ajeno y que {{claveDemo}} este rellena; guarda {{token}}. Si identity limita los intentos (429) conserva el token previo.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoDemo}}\",\n  \"clave\": \"{{claveDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Causa habitual del 'connection refused': un entorno ajeno seleccionado en Postman con",
+                  "// otro {{baseUrl}} (p. ej. un puerto que este proyecto no usa). La coleccion no depende del",
+                  "// entorno: trae sus propios valores y solo necesita claveDemo.",
+                  "pm.test('El {{baseUrl}} activo apunta al Gateway local', function () {",
+                  "  const baseUrl = String(pm.variables.get('baseUrl') || '').trim();",
+                  "  const env = pm.environment.name ? pm.environment.name : '(sin entorno)';",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + '. Define baseUrl.').to.not.be.empty;",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + ' -> baseUrl=' + baseUrl",
+                  "    + '. Usa http://127.0.0.1:8080: el Gateway publica solo IPv4 y en Windows'",
+                  "    + ' localhost resuelve primero a [::1], que rechaza la conexion.').to.not.match(/localhost/i);",
+                  "});",
+                  "pm.test('{{claveDemo}} esta rellena (no se versiona)', function () {",
+                  "  pm.expect(String(pm.variables.get('claveDemo') || '').trim(),",
+                  "    'Rellena claveDemo con la DEMO_PASSWORD de tu .env').to.not.be.empty;",
+                  "});",
+                  "",
+                  "// identity limita a 5 intentos/min por IP+cuenta (contrato identity: 429 RATE_LIMITED).",
+                  "// Si esta llamada recibe 429 se conserva el {{token}} que ya habia.",
+                  "pm.test('Login responde 200 o 429 (limite de identity)', function () {",
+                  "  pm.expect([200, 429], '429 = 5 intentos/min por IP+cuenta').to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Deja un {{token}} utilizable', function () {",
+                  "  const cuerpo = pm.response.json() || {};",
+                  "  if (pm.response.code === 200) {",
+                  "    pm.expect(cuerpo.data).to.have.property('token');",
+                  "    pm.collectionVariables.set('token', cuerpo.data.token);",
+                  "  } else {",
+                  "    pm.expect(String(pm.variables.get('token') || ''),",
+                  "      'Sin token previo: espera un minuto y repite la corrida').to.not.be.empty;",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.2 GET /api/habitacion/listar — asegura las habitaciones",
+          "description": "Crea las habitaciones 901…909 (ciclo del breaker) y 940 (check-in) si no existen, con Idempotency-Key, primer piso y primera categoría de la base.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}&page=0&size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ---------- utilidades compartidas por los scripts de esta coleccion ----------",
+                  "function hSend(opts) {",
+                  "  return new Promise(function (resolve) {",
+                  "    pm.sendRequest(opts, function (err, res) { resolve({ err: err, res: res }); });",
+                  "  });",
+                  "}",
+                  "function hAuth() {",
+                  "  return { Authorization: 'Bearer ' + pm.variables.get('token') };",
+                  "}",
+                  "function hJson() {",
+                  "  const h = hAuth();",
+                  "  h['Content-Type'] = 'application/json';",
+                  "  return h;",
+                  "}",
+                  "function hGuid() {",
+                  "  return pm.variables.replaceIn('{{$guid}}');",
+                  "}",
+                  "",
+                  "pm.test('Listar habitaciones responde 200 (contrato hotel)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Asegura las habitaciones del ciclo y la del check-in', function (done) {",
+                  "  (async function () {",
+                  "    try {",
+                  "      const baseUrl = pm.variables.get('baseUrl');",
+                  "      const idHotel = Number(pm.variables.get('idHotel'));",
+                  "      const requeridas = [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\", \"940\"];",
+                  "      const existentes = {};",
+                  "      (pm.response.json().data || []).forEach(function (h) { existentes[String(h.numero)] = h; });",
+                  "      const faltan = requeridas.filter(function (n) { return !existentes[n]; });",
+                  "      if (faltan.length > 0) {",
+                  "        const pisos = await hSend({ url: baseUrl + '/api/piso/listar?idHotel=' + idHotel + '&size=100', method: 'GET', header: hAuth() });",
+                  "        if (pisos.err) { throw new Error('GET /api/piso/listar: ' + pisos.err); }",
+                  "        const listaPisos = (pisos.res.json() || {}).data || [];",
+                  "        pm.expect(listaPisos.length, 'La sede ' + idHotel + ' necesita al menos un piso').to.be.above(0);",
+                  "        const categorias = await hSend({ url: baseUrl + '/api/categoria/listar?size=100', method: 'GET', header: hAuth() });",
+                  "        if (categorias.err) { throw new Error('GET /api/categoria/listar: ' + categorias.err); }",
+                  "        const listaCategorias = (categorias.res.json() || {}).data || [];",
+                  "        pm.expect(listaCategorias.length, 'Hacen falta categorias globales').to.be.above(0);",
+                  "        for (const numero of faltan) {",
+                  "          const r = await hSend({",
+                  "            url: baseUrl + '/api/habitacion/registrar',",
+                  "            method: 'POST',",
+                  "            header: Object.assign(hJson(), { 'Idempotency-Key': hGuid() }),",
+                  "            body: { mode: 'raw', raw: JSON.stringify({",
+                  "              idHotel: idHotel,",
+                  "              numero: numero,",
+                  "              idPiso: listaPisos[0].idPiso,",
+                  "              idCategoria: listaCategorias[0].idCategoria,",
+                  "              detalle: 'Habitacion de la coleccion Postman del hotel',",
+                  "              precio: 70.00,",
+                  "              publicada: false,",
+                  "              urlsImagenes: []",
+                  "            }) }",
+                  "          });",
+                  "        if (r.err) { throw new Error('POST /api/habitacion/registrar ' + numero + ': ' + r.err); }",
+                  "        // 409 DUPLICATE_RESOURCE: el numero ya existe activo en la sede (otra corrida).",
+                  "        pm.expect([201, 409], 'POST /api/habitacion/registrar ' + numero + ' -> ' + r.res.code).to.include(r.res.code);",
+                  "        }",
+                  "      }",
+                  "      const lista = await hSend({ url: baseUrl + '/api/habitacion/listar?idHotel=' + idHotel + '&page=0&size=100', method: 'GET', header: hAuth() });",
+                  "      if (lista.err) { throw new Error('GET /api/habitacion/listar: ' + lista.err); }",
+                  "      const todas = {};",
+                  "      ((lista.res.json() || {}).data || []).forEach(function (h) { todas[String(h.numero)] = h; });",
+                  "      const sinCrear = requeridas.filter(function (n) { return !todas[n]; });",
+                  "      pm.expect(sinCrear, 'No se pudieron asegurar: ' + sinCrear.join(', ')).to.be.empty;",
+                  "      [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\"].forEach(function (numero, i) {",
+                  "        pm.collectionVariables.set('idHabitacion' + [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\"][i], String(todas[numero].idHabitacion));",
+                  "      });",
+                  "      pm.collectionVariables.set('idHabitacionLibre', String(todas[\"940\"].idHabitacion));",
+                  "      done();",
+                  "    } catch (e) { done(e); }",
+                  "  })();",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.3 GET /api/habitacion/listar — libera el ciclo del breaker",
+          "description": "Completa el mantenimiento de cada habitación con blockId vigente y anula los check-ins de prueba (observación «Check-in de prueba QA»).",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}&page=0&size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ---------- utilidades compartidas por los scripts de esta coleccion ----------",
+                  "function hSend(opts) {",
+                  "  return new Promise(function (resolve) {",
+                  "    pm.sendRequest(opts, function (err, res) { resolve({ err: err, res: res }); });",
+                  "  });",
+                  "}",
+                  "function hAuth() {",
+                  "  return { Authorization: 'Bearer ' + pm.variables.get('token') };",
+                  "}",
+                  "function hJson() {",
+                  "  const h = hAuth();",
+                  "  h['Content-Type'] = 'application/json';",
+                  "  return h;",
+                  "}",
+                  "function hGuid() {",
+                  "  return pm.variables.replaceIn('{{$guid}}');",
+                  "}",
+                  "",
+                  "pm.test('Deja libre el ciclo del breaker y sin check-ins de prueba', function (done) {",
+                  "  (async function () {",
+                  "    try {",
+                  "      const baseUrl = pm.variables.get('baseUrl');",
+                  "      const idHotel = Number(pm.variables.get('idHotel'));",
+                  "      let liberadas = 0;",
+                  "      for (const sufijo of [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\"]) {",
+                  "        const id = pm.variables.get('idHabitacion' + sufijo);",
+                  "        if (!id) { continue; }",
+                  "        const detalle = await hSend({ url: baseUrl + '/api/habitacion/buscar/' + id, method: 'GET', header: hAuth() });",
+                  "        if (detalle.err || detalle.res.code !== 200) { continue; }",
+                  "        const h = (detalle.res.json() || {}).data || {};",
+                  "        if (!h.blockId) { continue; }",
+                  "        // blockId != null <=> existe operacion PREPARANDO o APLICADA (existsVigente).",
+                  "        const r = await hSend({",
+                  "          url: baseUrl + '/api/habitacion/' + id + '/mantenimiento-completado',",
+                  "          method: 'PUT',",
+                  "          header: Object.assign(hJson(), {",
+                  "            'Idempotency-Key': hGuid(),",
+                  "            'If-Match': String(h.version)",
+                  "          }),",
+                  "          body: { mode: 'raw', raw: JSON.stringify({ blockId: h.blockId }) }",
+                  "        });",
+                  "        if (!r.err && r.res.code === 200) { liberadas++; }",
+                  "      }",
+                  "      const lista = await hSend({ url: baseUrl + '/api/recepcion/listar?idHotel=' + idHotel + '&estadoEstadia=ACTIVA&page=0&size=100', method: 'GET', header: hAuth() });",
+                  "      if (lista.err) { throw new Error('GET /api/recepcion/listar: ' + lista.err); }",
+                  "      let anuladas = 0;",
+                  "      const activas = ((lista.res.json() || {}).data || []).filter(function (r) {",
+                  "        return r && String(r.observacion || '').indexOf(\"Check-in de prueba QA\") === 0;",
+                  "      });",
+                  "      for (const estadia of activas) {",
+                  "        const r = await hSend({",
+                  "          url: baseUrl + '/api/recepcion/' + estadia.idRecepcion + '/anular-checkin',",
+                  "          method: 'POST',",
+                  "          header: Object.assign(hJson(), {",
+                  "            'Idempotency-Key': hGuid(),",
+                  "            'If-Match': String(estadia.version)",
+                  "          }),",
+                  "          body: { mode: 'raw', raw: JSON.stringify({ motivo: 'Limpieza de la coleccion Postman' }) }",
+                  "        });",
+                  "        if (!r.err && r.res.code === 200) { anuladas++; }",
+                  "      }",
+                  "      pm.expect(liberadas + anuladas, 'Limpieza previa (mantenimientos + check-ins)').to.be.at.least(0);",
+                  "      done();",
+                  "    } catch (e) { done(e); }",
+                  "  })();",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "00.4 GET /api/habitacion/listar — elige la habitación del check-in",
+          "description": "Prefiere la 940 y confirma contra reception (/api/recepcion/habitacion-activa) que no hay estadía activa.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}&page=0&size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ---------- utilidades compartidas por los scripts de esta coleccion ----------",
+                  "function hSend(opts) {",
+                  "  return new Promise(function (resolve) {",
+                  "    pm.sendRequest(opts, function (err, res) { resolve({ err: err, res: res }); });",
+                  "  });",
+                  "}",
+                  "function hAuth() {",
+                  "  return { Authorization: 'Bearer ' + pm.variables.get('token') };",
+                  "}",
+                  "function hJson() {",
+                  "  const h = hAuth();",
+                  "  h['Content-Type'] = 'application/json';",
+                  "  return h;",
+                  "}",
+                  "function hGuid() {",
+                  "  return pm.variables.replaceIn('{{$guid}}');",
+                  "}",
+                  "",
+                  "pm.test('Listar habitaciones responde 200 (contrato hotel)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Elige la habitacion del check-in (LIBRE, sin bloqueo y sin estadia)', function (done) {",
+                  "  (async function () {",
+                  "    try {",
+                  "      const baseUrl = pm.variables.get('baseUrl');",
+                  "      const idHotel = Number(pm.variables.get('idHotel'));",
+                  "      const delCiclo = [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\"];",
+                  "      const todas = (pm.response.json().data || []).filter(function (h) {",
+                  "        return h && h.idHotel === idHotel && h.estado !== false",
+                  "          && h.estadoFisico && h.estadoFisico.codigo === 'LISTA'",
+                  "          && !h.blockId;",
+                  "      });",
+                  "      const reservaId = String(pm.variables.get('idHabitacionLibre') || '');",
+                  "      const esReserva = function (h) { return String(h.idHabitacion) === reservaId; };",
+                  "      const fueraCiclo = function (h) { return !esReserva(h) && delCiclo.indexOf(String(h.numero)) < 0; };",
+                  "      const orden = todas.filter(function (h) { return esReserva(h) || fueraCiclo(h); })",
+                  "        .concat(todas.filter(function (h) { return !esReserva(h) && !fueraCiclo(h); }));",
+                  "      let elegida = null;",
+                  "      for (const h of orden) {",
+                  "        // La verdad de la ocupacion la tiene reception, no la proyeccion de hotel-service.",
+                  "        const r = await hSend({",
+                  "          url: baseUrl + '/api/recepcion/habitacion-activa/' + h.idHabitacion,",
+                  "          method: 'GET',",
+                  "          header: hAuth()",
+                  "        });",
+                  "        if (!r.err && r.res.code === 200 && !(r.res.json() || {}).data) {",
+                  "          elegida = h;",
+                  "          break;",
+                  "        }",
+                  "      }",
+                  "      pm.expect(elegida, 'No hay habitacion libre y sin estadia: ejecuta 00.3 o cierra la estadia a mano').to.not.be.null;",
+                  "      pm.collectionVariables.set('idHabitacion', String(elegida.idHabitacion));",
+                  "      done();",
+                  "    } catch (e) { done(e); }",
+                  "  })();",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "01 · Identidad",
+      "description": "## Qué cubre\n- `POST /api/auth/login` — público; 200 con `data.token` (JWT RS256, 15 min). Guarda `{{token}}`.\n- `GET /api/auth/me` — `Authorization: Bearer {{token}}`; 200 con la persona propia.\n\n## Precondición\n`{{claveDemo}}` rellena.\n\n## Orden\n1. Login.\n2. `/api/auth/me`.\n\nContrato: `docs/contracts/openapi/identity.yaml`.",
+      "item": [
+        {
+          "name": "POST /api/auth/login — guarda {{token}}",
+          "description": "Login público. 200 esperado (contrato identity). Guarda data.token en la variable de entorno {{token}}.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoDemo}}\",\n  \"clave\": \"{{claveDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Claves de idempotencia de la corrida: se reinician al empezar para que la coleccion se",
+                  "// pueda repetir. Una clave reutilizada con otro payload devuelve 409 IDEMPOTENCY_CONFLICT",
+                  "// (IdempotencyFilter compara el hash del request).",
+                  "['idemCheckin', 'idemCarrito', 'idemVenta', 'idemPago'].forEach(function (k) {",
+                  "  pm.collectionVariables.set(k, '');",
+                  "});"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Causa habitual del 'connection refused': un entorno ajeno seleccionado en Postman con",
+                  "// otro {{baseUrl}} (p. ej. un puerto que este proyecto no usa). La coleccion no depende del",
+                  "// entorno: trae sus propios valores y solo necesita claveDemo.",
+                  "pm.test('El {{baseUrl}} activo apunta al Gateway local', function () {",
+                  "  const baseUrl = String(pm.variables.get('baseUrl') || '').trim();",
+                  "  const env = pm.environment.name ? pm.environment.name : '(sin entorno)';",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + '. Define baseUrl.').to.not.be.empty;",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + ' -> baseUrl=' + baseUrl",
+                  "    + '. Usa http://127.0.0.1:8080: el Gateway publica solo IPv4 y en Windows'",
+                  "    + ' localhost resuelve primero a [::1], que rechaza la conexion.').to.not.match(/localhost/i);",
+                  "});",
+                  "pm.test('{{claveDemo}} esta rellena (no se versiona)', function () {",
+                  "  pm.expect(String(pm.variables.get('claveDemo') || '').trim(),",
+                  "    'Rellena claveDemo con la DEMO_PASSWORD de tu .env').to.not.be.empty;",
+                  "});",
+                  "",
+                  "// identity limita a 5 intentos/min por IP+cuenta (contrato identity: 429 RATE_LIMITED).",
+                  "// Si esta llamada recibe 429 se conserva el {{token}} que ya habia.",
+                  "pm.test('Login responde 200 o 429 (limite de identity)', function () {",
+                  "  pm.expect([200, 429], '429 = 5 intentos/min por IP+cuenta').to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Deja un {{token}} utilizable', function () {",
+                  "  const cuerpo = pm.response.json() || {};",
+                  "  if (pm.response.code === 200) {",
+                  "    pm.expect(cuerpo.data).to.have.property('token');",
+                  "    pm.collectionVariables.set('token', cuerpo.data.token);",
+                  "  } else {",
+                  "    pm.expect(String(pm.variables.get('token') || ''),",
+                  "      'Sin token previo: espera un minuto y repite la corrida').to.not.be.empty;",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/auth/me — sesión propia",
+          "description": "Sesión propia con Bearer {{token}}. 200 esperado (contrato identity).",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "me"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"GET /api/auth/me responde 200 (contrato identity)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"correo\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 · Catálogo hotelero",
+      "description": "## Qué cubre\n- `GET /api/hotel/listar` — sedes de alcance; 200. Anota `{{idHotel}}`.\n- `GET /api/habitacion/listar?idHotel={{idHotel}}` — habitaciones de la sede; 200.\n- `GET /api/habitacion/buscar/{{idHabitacion}}` — detalle; 200.\n\n## Precondición\n`{{token}}` vigente y `{{idHabitacion}}` fijada por 00.4.\n\n## Orden\n1. Sedes.\n2. Habitaciones.\n3. Detalle.\n\nContrato: `docs/contracts/openapi/hotel.yaml`.",
+      "item": [
+        {
+          "name": "GET /api/hotel/listar — sedes de alcance",
+          "description": "Listar sedes (A/E). 200 esperado. Guarda data[0].idHotel en {{idHotel}}.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/hotel/listar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "hotel",
+                "listar"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar sedes responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.be.an(\"array\").that.is.not.empty;",
+                  "});",
+                  "pm.test(",
+                  "  \"Anota {{idHotel}} con la primera sede\",",
+                  "  function () {",
+                  "    const data = pm.response.json().data || [];",
+                  "    if (data.length > 0) {",
+                  "      pm.collectionVariables.set(\"idHotel\", String(data[0].idHotel));",
+                  "    }",
+                  "  }",
+                  ");"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/habitacion/listar?idHotel= — habitaciones de la sede",
+          "description": "Habitaciones de la sede (200, contrato hotel). {{idHabitacion}} lo fija 00.4 con una comprobacion real contra reception; la proyeccion de ocupacion de hotel-service puede seguir en DESCONOCIDA, asi que aqui no se sobrescribe.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar habitaciones responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.have.property(\"data\");",
+                  "  pm.expect(pm.response.json().data).to.be.an(\"array\");",
+                  "});",
+                  "pm.test(\"La sede {{idHotel}} tiene habitaciones\", function () {",
+                  "  pm.expect(pm.response.json().data).to.not.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/habitacion/buscar/{id} — detalle de habitación",
+          "description": "Detalle de una habitación (A/E). 200 esperado. Depende de {{idHabitacion}} anotado en la petición anterior.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacion}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "buscar",
+                "{{idHabitacion}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Detalle de habitación responde 200 (contrato hotel)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"idHabitacion\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 · Recepción",
+      "description": "## Qué cubre\n- `POST /api/recepcion/registrar` — check-in inmediato; 201 con `data.idRecepcion`. `fechaSalida` se calcula en el pre-request (mañana en America/Lima) y la habitación es la de 00.4. Guarda `{{idRecepcion}}`.\n- `GET /api/recepcion/listar?idHotel={{idHotel}}` — estadías de la sede; 200.\n\n## Precondición\n`{{token}}` vigente y `{{idHabitacion}}` libre. Si ya hay una estadía ACTIVA el contrato responde 409 `ROOM_OCCUPIED`: 00.3 anula los check-ins de prueba.\n\n## Orden\n1. Check-in.\n2. Listado.\n\nContrato: `docs/contracts/openapi/reception.yaml`.",
+      "item": [
+        {
+          "name": "POST /api/recepcion/registrar — check-in inmediato",
+          "description": "Check-in inmediato sobre una habitación LIBRE. 201 esperado (contrato reception). Guarda data.idRecepcion en {{idRecepcion}}.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemCheckin}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idHotel\": {{idHotel}},\n  \"idCliente\": {{idCliente}},\n  \"idHabitacion\": {{idHabitacion}},\n  \"fechaSalida\": \"{{fechaSalida}}\",\n  \"adelanto\": 20.00,\n  \"medioPago\": \"EFECTIVO\",\n  \"observacion\": \"Check-in de prueba QA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/recepcion/registrar",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "recepcion",
+                "registrar"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Clave estable dentro de la corrida: un reintento reusa la misma clave",
+                  "// (asi se demuestra la idempotencia) y 00.1 la reinicia en cada corrida.",
+                  "if (!pm.collectionVariables.get('idemCheckin')) {",
+                  "  pm.collectionVariables.set('idemCheckin', pm.variables.replaceIn('{{$guid}}'));",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// fechaSalida = manana en America/Lima: el contrato exige hoy o posterior y una constante",
+                  "// versionada devuelve 400 en cuanto pasa el dia.",
+                  "const hoy = new Date();",
+                  "const lima = new Date(hoy.getTime() - 5 * 60 * 60 * 1000);",
+                  "lima.setUTCDate(lima.getUTCDate() + 1);",
+                  "pm.collectionVariables.set('fechaSalida', lima.toISOString().slice(0, 10));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Check-in responde 201 (contrato reception: /api/recepcion/registrar)\", function () {",
+                  "  pm.response.to.have.status(201);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"idRecepcion\");",
+                  "});",
+                  "pm.test(\"Anota {{idRecepcion}} con la estadía creada\", function () {",
+                  "  pm.collectionVariables.set(\"idRecepcion\", String(pm.response.json().data.idRecepcion));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/recepcion/listar?idHotel= — estadías de la sede",
+          "description": "Listar estadías por sede (A/E). 200 esperado. Tras el check-in, la estadía creada debe aparecer en el listado.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/recepcion/listar?idHotel={{idHotel}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "recepcion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar estadías responde 200 (contrato reception)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04 · Ventas",
+      "description": "## Qué cubre\n- `GET /api/venta/catalogo?idRecepcion=` — productos activos de la sede de la estadía; anota `{{idProducto}}`.\n- `POST /api/carrito/agregar` — upsert de la línea; 200; anota `{{idCarrito}}`.\n- `GET /api/carrito/listar/{{idRecepcion}}` — carrito; 200.\n- `POST /api/venta` — alta con Idempotency-Key; 201 (o 202 en recuperación); anota `{{idVenta}}` y `{{versionVenta}}`.\n- `PUT /api/venta/{{idVenta}}` — pago manual con `If-Match` + Idempotency-Key; 200 (o 202).\n\n## Precondición\n`{{idRecepcion}}` ACTIVA de la carpeta 03.\n\n## Orden\n1. Catálogo → `{{idProducto}}`.\n2. Carrito.\n3. Listar carrito.\n4. Alta → `{{idVenta}}`.\n5. Pago.\n\nContrato: `docs/contracts/openapi/sales.yaml`.",
+      "item": [
+        {
+          "name": "GET /api/venta/catalogo — productos de la sede de la estadia",
+          "description": "Catalogo privado de la sede de la estadia (A/E/C); 200 esperado (contrato sales). Anota {{idProducto}} con el primer producto activo.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/venta/catalogo?idRecepcion={{idRecepcion}}&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "venta",
+                "catalogo"
+              ],
+              "query": [
+                {
+                  "key": "idRecepcion",
+                  "value": "{{idRecepcion}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Catalogo de venta responde 200 (contrato sales)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  pm.expect(pm.response.json()).to.have.property(\"data\");",
+                  "});",
+                  "pm.test(\"Anota {{idProducto}} con el primer producto activo\", function () {",
+                  "  const data = pm.response.json().data || [];",
+                  "  pm.expect(data, \"La sede necesita al menos un producto activo\").to.not.be.empty;",
+                  "  pm.collectionVariables.set(\"idProducto\", String(data[0].idProducto));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/carrito/agregar — agregar producto al carrito",
+          "description": "Upsert de línea en el carrito (sin body; query params). 200 esperado (contrato sales). Guarda data.idCarrito en {{idCarrito}}.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemCarrito}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/carrito/agregar?idRecepcion={{idRecepcion}}&idProducto={{idProducto}}&cantidad=1",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "carrito",
+                "agregar"
+              ],
+              "query": [
+                {
+                  "key": "idRecepcion",
+                  "value": "{{idRecepcion}}"
+                },
+                {
+                  "key": "idProducto",
+                  "value": "{{idProducto}}"
+                },
+                {
+                  "key": "cantidad",
+                  "value": "1"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Clave estable dentro de la corrida: un reintento reusa la misma clave",
+                  "// (asi se demuestra la idempotencia) y 00.1 la reinicia en cada corrida.",
+                  "if (!pm.collectionVariables.get('idemCarrito')) {",
+                  "  pm.collectionVariables.set('idemCarrito', pm.variables.replaceIn('{{$guid}}'));",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Agregar al carrito responde 200 (contrato sales)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.have.property(\"idCarrito\");",
+                  "});",
+                  "pm.test(\"Anota {{idCarrito}} con la línea del carrito\", function () {",
+                  "  pm.collectionVariables.set(\"idCarrito\", String(pm.response.json().data.idCarrito));",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/carrito/listar/{idRecepcion} — listar carrito de la estadía",
+          "description": "Listar el carrito de la estadía. 200 esperado (contrato sales).",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/carrito/listar/{{idRecepcion}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "carrito",
+                "listar",
+                "{{idRecepcion}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Listar carrito responde 200 (contrato sales)\", function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "  pm.expect(json.data).to.be.an(\"array\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "POST /api/venta — alta de venta",
+          "description": "Crear venta (JSON cerrado VentaAlta). 201 confirmada o 202 operación en recuperación (contrato sales). Guarda data.idVenta y data.version.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemVenta}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idRecepcion\": {{idRecepcion}},\n  \"detalles\": [\n    {\n      \"idProducto\": {{idProducto}},\n      \"cantidad\": 1\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/venta",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "venta"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Clave estable dentro de la corrida: un reintento reusa la misma clave",
+                  "// (asi se demuestra la idempotencia) y 00.1 la reinicia en cada corrida.",
+                  "if (!pm.collectionVariables.get('idemVenta')) {",
+                  "  pm.collectionVariables.set('idemVenta', pm.variables.replaceIn('{{$guid}}'));",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Alta de venta responde 201 (confirmada) o 202 (operación en curso) (contrato sales)\", function () {",
+                  "  pm.expect([201, 202]).to.include(pm.response.code);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "});",
+                  "pm.test(\"Anota {{idVenta}} y {{versionVenta}}\", function () {",
+                  "  const data = pm.response.json().data || {};",
+                  "  if (data.idVenta) {",
+                  "    pm.collectionVariables.set(\"idVenta\", String(data.idVenta));",
+                  "  }",
+                  "  if (data.version) {",
+                  "    pm.collectionVariables.set(\"versionVenta\", String(data.version));",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "PUT /api/venta/{id} — registrar pago manual",
+          "description": "Pago de venta con If-Match (V) e Idempotency-Key. 200 pagado o 202 operación PAGO en curso (contrato sales).",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "If-Match",
+                "value": "\"{{versionVenta}}\""
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idemPago}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"PAGADO\",\n  \"medioPago\": \"EFECTIVO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/venta/{{idVenta}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "venta",
+                "{{idVenta}}"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Clave estable dentro de la corrida: un reintento reusa la misma clave",
+                  "// (asi se demuestra la idempotencia) y 00.1 la reinicia en cada corrida.",
+                  "if (!pm.collectionVariables.get('idemPago')) {",
+                  "  pm.collectionVariables.set('idemPago', pm.variables.replaceIn('{{$guid}}'));",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Pago de venta responde 200 (pagado) o 202 (operación PAGO en curso) (contrato sales)\", function () {",
+                  "  pm.expect([200, 202]).to.include(pm.response.code);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"data\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05 · Reportes",
+      "description": "## Qué cubre\n- `GET /api/reportes/dashboard?idHotel={{idHotel}}` — dashboard del día; 200 (o 503 `REPORTING_UNAVAILABLE`).\n- `GET /api/reportes/ventas?idHotel=&inicio=&fin=` — ventas PAGADO por producto del mes en curso; el pre-request calcula `{{inicioMes}}` y `{{finMes}}` con offset -05:00.\n\n## Precondición\n`{{token}}` vigente. La proyección de reporting es eventual: puede responder `degraded=true`.\n\nContrato: `docs/contracts/openapi/reporting.yaml`.",
+      "item": [
+        {
+          "name": "GET /api/reportes/dashboard?idHotel= — dashboard del día",
+          "description": "Dashboard del día de la sede. 200 esperado con meta de consistencia eventual; 503 (REPORTING_NOT_READY / REPORTING_UNAVAILABLE) también válido si la proyección no está lista.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reportes/dashboard?idHotel={{idHotel}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "dashboard"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Mes en curso con offset -05:00: intervalo [inicio, fin) y menos de 366 dias.",
+                  "const ahora = new Date();",
+                  "const lima = new Date(ahora.getTime() - 5 * 60 * 60 * 1000);",
+                  "const inicio = new Date(Date.UTC(lima.getUTCFullYear(), lima.getUTCMonth(), 1));",
+                  "const fin = new Date(Date.UTC(lima.getUTCFullYear(), lima.getUTCMonth() + 1, 1));",
+                  "pm.collectionVariables.set('inicioMes', inicio.toISOString().slice(0, 10) + 'T00:00:00-05:00');",
+                  "pm.collectionVariables.set('finMes', fin.toISOString().slice(0, 10) + 'T00:00:00-05:00');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Dashboard responde 200 o 503 si la proyección no está lista (contrato reporting)\", function () {",
+                  "  pm.expect([200, 503]).to.include(pm.response.code);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "  pm.expect(json).to.have.property(\"meta\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET /api/reportes/ventas — ventas pagadas por producto (mes en curso)",
+          "description": "Ventas PAGADO agregadas por producto en [inicio, fin). 200 esperado, o 503 si la proyección no es utilizable. Intervalo de 30 días, medianoche America/Lima.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/reportes/ventas?idHotel={{idHotel}}&inicio={{inicioMes}}&fin={{finMes}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "reportes",
+                "ventas"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "inicio",
+                  "value": "{{inicioMes}}"
+                },
+                {
+                  "key": "fin",
+                  "value": "{{finMes}}"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Mes en curso con offset -05:00: intervalo [inicio, fin) y menos de 366 dias.",
+                  "const ahora = new Date();",
+                  "const lima = new Date(ahora.getTime() - 5 * 60 * 60 * 1000);",
+                  "const inicio = new Date(Date.UTC(lima.getUTCFullYear(), lima.getUTCMonth(), 1));",
+                  "const fin = new Date(Date.UTC(lima.getUTCFullYear(), lima.getUTCMonth() + 1, 1));",
+                  "pm.collectionVariables.set('inicioMes', inicio.toISOString().slice(0, 10) + 'T00:00:00-05:00');",
+                  "pm.collectionVariables.set('finMes', fin.toISOString().slice(0, 10) + 'T00:00:00-05:00');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Ventas por producto responde 200 o 503 si la proyección no está lista (contrato reporting)\", function () {",
+                  "  pm.expect([200, 503]).to.include(pm.response.code);",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.have.property(\"success\");",
+                  "  pm.expect(json).to.have.property(\"meta\");",
+                  "});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06 · Circuit breaker — tramo 1 (reception ARRIBA)",
+      "description": "## Qué cubre\nCB-01 (login), CB-02 (mantenimiento y liberación sobre la habitación A) y CB-03 (el breaker está en CLOSED). Reception debe estar **arriba**: en este tramo 00.3 también libera las habitaciones que quedaron con operación vigente.\n\n\n## Guion manual (tres tramos)\nPostman no puede detener servicios: el ciclo se ejecuta en tres carpetas seguidas, con la parada manual en medio.\n\n**Tramo 1** (reception ARRIBA): `00 · Preparación` + `06 · Circuit breaker — tramo 1`.\n\n**Parada:** `docker compose -f infra/compose.yaml --env-file .env stop reception-service`\n\n**Tramo 2** (reception DETENIDO): `07 · Circuit breaker — tramo 2`.\n\n**Reanudación:** `docker compose -f infra/compose.yaml --env-file .env start reception-service` y esperar 10 s (`open-state-duration` de Resilience4j).\n\n**Tramo 3** (reception ARRIBA otra vez): `08 · Circuit breaker — tramo 3`.\n\nCada tramo resuelve sus propios ids y hace su login, así que también se puede ejecutar suelto; lo que no puede saltarse es el orden y la parada de reception.",
+      "item": [
+        {
+          "name": "06.0 POST /api/auth/login — obtiene {{token}}",
+          "description": "Login (contrato identity). Valida que el entorno activo no sea ajeno y que {{claveDemo}} este rellena; guarda {{token}}. Si identity limita los intentos (429) conserva el token previo.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoDemo}}\",\n  \"clave\": \"{{claveDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Causa habitual del 'connection refused': un entorno ajeno seleccionado en Postman con",
+                  "// otro {{baseUrl}} (p. ej. un puerto que este proyecto no usa). La coleccion no depende del",
+                  "// entorno: trae sus propios valores y solo necesita claveDemo.",
+                  "pm.test('El {{baseUrl}} activo apunta al Gateway local', function () {",
+                  "  const baseUrl = String(pm.variables.get('baseUrl') || '').trim();",
+                  "  const env = pm.environment.name ? pm.environment.name : '(sin entorno)';",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + '. Define baseUrl.').to.not.be.empty;",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + ' -> baseUrl=' + baseUrl",
+                  "    + '. Usa http://127.0.0.1:8080: el Gateway publica solo IPv4 y en Windows'",
+                  "    + ' localhost resuelve primero a [::1], que rechaza la conexion.').to.not.match(/localhost/i);",
+                  "});",
+                  "pm.test('{{claveDemo}} esta rellena (no se versiona)', function () {",
+                  "  pm.expect(String(pm.variables.get('claveDemo') || '').trim(),",
+                  "    'Rellena claveDemo con la DEMO_PASSWORD de tu .env').to.not.be.empty;",
+                  "});",
+                  "",
+                  "// identity limita a 5 intentos/min por IP+cuenta (contrato identity: 429 RATE_LIMITED).",
+                  "// Si esta llamada recibe 429 se conserva el {{token}} que ya habia.",
+                  "pm.test('Login responde 200 o 429 (limite de identity)', function () {",
+                  "  pm.expect([200, 429], '429 = 5 intentos/min por IP+cuenta').to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Deja un {{token}} utilizable', function () {",
+                  "  const cuerpo = pm.response.json() || {};",
+                  "  if (pm.response.code === 200) {",
+                  "    pm.expect(cuerpo.data).to.have.property('token');",
+                  "    pm.collectionVariables.set('token', cuerpo.data.token);",
+                  "  } else {",
+                  "    pm.expect(String(pm.variables.get('token') || ''),",
+                  "      'Sin token previo: espera un minuto y repite la corrida').to.not.be.empty;",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.1 GET /api/habitacion/listar — libera el ciclo del breaker",
+          "description": "Completa los mantenimientos vigentes y anula los check-ins de prueba, para que las nueve habitaciones estén libres antes de CB-02.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}&page=0&size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ---------- utilidades compartidas por los scripts de esta coleccion ----------",
+                  "function hSend(opts) {",
+                  "  return new Promise(function (resolve) {",
+                  "    pm.sendRequest(opts, function (err, res) { resolve({ err: err, res: res }); });",
+                  "  });",
+                  "}",
+                  "function hAuth() {",
+                  "  return { Authorization: 'Bearer ' + pm.variables.get('token') };",
+                  "}",
+                  "function hJson() {",
+                  "  const h = hAuth();",
+                  "  h['Content-Type'] = 'application/json';",
+                  "  return h;",
+                  "}",
+                  "function hGuid() {",
+                  "  return pm.variables.replaceIn('{{$guid}}');",
+                  "}",
+                  "",
+                  "pm.test('Deja libre el ciclo del breaker y sin check-ins de prueba', function (done) {",
+                  "  (async function () {",
+                  "    try {",
+                  "      const baseUrl = pm.variables.get('baseUrl');",
+                  "      const idHotel = Number(pm.variables.get('idHotel'));",
+                  "      let liberadas = 0;",
+                  "      for (const sufijo of [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\"]) {",
+                  "        const id = pm.variables.get('idHabitacion' + sufijo);",
+                  "        if (!id) { continue; }",
+                  "        const detalle = await hSend({ url: baseUrl + '/api/habitacion/buscar/' + id, method: 'GET', header: hAuth() });",
+                  "        if (detalle.err || detalle.res.code !== 200) { continue; }",
+                  "        const h = (detalle.res.json() || {}).data || {};",
+                  "        if (!h.blockId) { continue; }",
+                  "        // blockId != null <=> existe operacion PREPARANDO o APLICADA (existsVigente).",
+                  "        const r = await hSend({",
+                  "          url: baseUrl + '/api/habitacion/' + id + '/mantenimiento-completado',",
+                  "          method: 'PUT',",
+                  "          header: Object.assign(hJson(), {",
+                  "            'Idempotency-Key': hGuid(),",
+                  "            'If-Match': String(h.version)",
+                  "          }),",
+                  "          body: { mode: 'raw', raw: JSON.stringify({ blockId: h.blockId }) }",
+                  "        });",
+                  "        if (!r.err && r.res.code === 200) { liberadas++; }",
+                  "      }",
+                  "      const lista = await hSend({ url: baseUrl + '/api/recepcion/listar?idHotel=' + idHotel + '&estadoEstadia=ACTIVA&page=0&size=100', method: 'GET', header: hAuth() });",
+                  "      if (lista.err) { throw new Error('GET /api/recepcion/listar: ' + lista.err); }",
+                  "      let anuladas = 0;",
+                  "      const activas = ((lista.res.json() || {}).data || []).filter(function (r) {",
+                  "        return r && String(r.observacion || '').indexOf(\"Check-in de prueba QA\") === 0;",
+                  "      });",
+                  "      for (const estadia of activas) {",
+                  "        const r = await hSend({",
+                  "          url: baseUrl + '/api/recepcion/' + estadia.idRecepcion + '/anular-checkin',",
+                  "          method: 'POST',",
+                  "          header: Object.assign(hJson(), {",
+                  "            'Idempotency-Key': hGuid(),",
+                  "            'If-Match': String(estadia.version)",
+                  "          }),",
+                  "          body: { mode: 'raw', raw: JSON.stringify({ motivo: 'Limpieza de la coleccion Postman' }) }",
+                  "        });",
+                  "        if (!r.err && r.res.code === 200) { anuladas++; }",
+                  "      }",
+                  "      pm.expect(liberadas + anuladas, 'Limpieza previa (mantenimientos + check-ins)').to.be.at.least(0);",
+                  "      done();",
+                  "    } catch (e) { done(e); }",
+                  "  })();",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06.2 GET /api/habitacion/listar — resuelve las habitaciones del ciclo",
+          "description": "Publica {{idHabitacionA}}…{{idHabitacionI}} desde los números 901…909 y verifica que ninguna tenga operación vigente.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}&page=0&size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ---------- utilidades compartidas por los scripts de esta coleccion ----------",
+                  "function hSend(opts) {",
+                  "  return new Promise(function (resolve) {",
+                  "    pm.sendRequest(opts, function (err, res) { resolve({ err: err, res: res }); });",
+                  "  });",
+                  "}",
+                  "function hAuth() {",
+                  "  return { Authorization: 'Bearer ' + pm.variables.get('token') };",
+                  "}",
+                  "function hJson() {",
+                  "  const h = hAuth();",
+                  "  h['Content-Type'] = 'application/json';",
+                  "  return h;",
+                  "}",
+                  "function hGuid() {",
+                  "  return pm.variables.replaceIn('{{$guid}}');",
+                  "}",
+                  "",
+                  "pm.test('Listar habitaciones responde 200 (contrato hotel)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Resuelve {{idHabitacionA}}…{{idHabitacionI}} (901…909)', function () {",
+                  "  const porNumero = {};",
+                  "  (pm.response.json().data || []).forEach(function (h) { porNumero[String(h.numero)] = h; });",
+                  "  const faltan = [];",
+                  "  [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\"].forEach(function (numero, i) {",
+                  "    if (porNumero[numero]) {",
+                  "      pm.collectionVariables.set('idHabitacion' + [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\"][i], String(porNumero[numero].idHabitacion));",
+                  "    } else {",
+                  "      faltan.push(numero);",
+                  "    }",
+                  "  });",
+                  "  pm.expect(faltan, 'Faltan habitaciones del ciclo: ' + faltan.join(', ')",
+                  "    + '. Ejecuta 00 · Preparacion.').to.be.empty;",
+                  "});",
+                  "pm.test('Ninguna habitacion del ciclo tiene operacion vigente', function () {",
+                  "  const porNumero = {};",
+                  "  (pm.response.json().data || []).forEach(function (h) { porNumero[String(h.numero)] = h; });",
+                  "  const bloqueadas = [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\"].filter(function (n) {",
+                  "    return porNumero[n] && porNumero[n].blockId;",
+                  "  });",
+                  "  pm.expect(bloqueadas, 'Con operacion PREPARANDO/APLICADA: ' + bloqueadas.join(', ')",
+                  "    + '. Ejecuta 06 · Circuit breaker — tramo 1 con reception arriba (libera las habitaciones).'",
+                  "  ).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-01",
+          "description": "## Qué cubre\n- `POST {{baseUrl}}/api/auth/login` — login público; 200 con `data.token`; guarda el token en `{{token}}` (solo en memoria del entorno local, nunca se versiona).\n\n## Precondición\nEntorno `Hotel-local` cargado con `{{correoDemo}}/{{claveDemo}}` rellenados localmente (sin commitear).\n\n## Orden\n1. CB-01 (pobla `{{token}}`, consumido por CB-02 en adelante).\n\nContrato: `docs/contracts/openapi/identity.yaml` (`/api/auth/login` 200 `ApiSingleAuth`).",
+          "item": [
+            {
+              "name": "CB-01 POST /api/auth/login — guarda {{token}}",
+              "description": "Login (contrato identity). 200 guarda {{token}}; si identity ya limito los intentos (429, 5/min por IP+cuenta) se conserva el token del paso 06.0.",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"correo\": \"{{correoDemo}}\",\n  \"clave\": \"{{claveDemo}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/auth/login",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "auth",
+                    "login"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// identity limita a 5 intentos/min por IP+cuenta (contrato identity: 429 RATE_LIMITED).",
+                      "// Si esta llamada recibe 429 se conserva el {{token}} que ya habia.",
+                      "pm.test('Login responde 200 o 429 (limite de identity)', function () {",
+                      "  pm.expect([200, 429], '429 = 5 intentos/min por IP+cuenta').to.include(pm.response.code);",
+                      "});",
+                      "pm.test('Deja un {{token}} utilizable', function () {",
+                      "  const cuerpo = pm.response.json() || {};",
+                      "  if (pm.response.code === 200) {",
+                      "    pm.expect(cuerpo.data).to.have.property('token');",
+                      "    pm.collectionVariables.set('token', cuerpo.data.token);",
+                      "  } else {",
+                      "    pm.expect(String(pm.variables.get('token') || ''),",
+                      "      'Sin token previo: espera un minuto y repite la corrida').to.not.be.empty;",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CB-02",
+          "description": "## Qué cubre\n- `GET /api/habitacion/buscar/{{idHabitacionA}}` — lee la `version` vigente para el `If-Match`.\n- `POST /api/habitacion/{{idHabitacionA}}/mantenimiento` — reception ARRIBA → 200 con `blockId` (gate BLOQUEADA, CAS aplicado en el request).\n- `PUT /api/habitacion/{{idHabitacionA}}/mantenimiento-completado` — libera la habitación (If-Match con la versión devuelta + Idempotency-Key fija).\n\n## Precondición\n{{token}} poblado (CB-01 ejecutado). Reception ARRIBA.\n\n## Orden\n1. Buscar {{idHabitacionA}} → fija {{versionA}}.\n2. Mantenimiento → 200, anota {{blockIdCb02}} y la nueva {{versionA}}.\n3. Liberar (mantenimiento-completado) → 200, para no dejar la habitación ocupada.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`, `completarMantenimiento`).",
+          "item": [
+            {
+              "name": "CB-02.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}}",
+              "description": "Detalle de habitación (A/E). 200 esperado. Guarda data.version en {{versionA}} para el If-Match del mantenimiento.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionA}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionA}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-02.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel: GET /api/habitacion/buscar/{id})\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionA\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-02 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — 200 con blockId",
+              "description": "Iniciar mantenimiento (A). 200 esperado con reception arriba: gate BLOQUEADA y CAS PREPARANDO → APLICADA en el request; el cuerpo trae blockId y version. Headers: Authorization, Idempotency-Key, If-Match ({{versionA}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionA}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Verificación del ciclo del circuit breaker: mantenimiento preventivo (CB-02).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionA}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionA}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-02 Mantenimiento {{idHabitacionA}} responde 200 (gate BLOQUEADA; CAS aplicado en el request)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "});",
+                      "pm.test(\"CB-02 Anota {{blockIdCb02}} y la nueva versión de {{idHabitacionA}}\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb02\", json.data.blockId);",
+                      "  pm.collectionVariables.set(\"versionA\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-02.2 PUT /api/habitacion/{{idHabitacionA}}/mantenimiento-completado — libera",
+              "description": "Completar mantenimiento (A). 200 esperado. Libera el gate y deja el físico en LISTA. Headers: Authorization, Idempotency-Key, If-Match ({{versionA}} tras el mantenimiento). Cuerpo: { blockId: {{blockIdCb02}} }.",
+              "request": {
+                "method": "PUT",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionA}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"blockId\": \"{{blockIdCb02}}\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionA}}/mantenimiento-completado",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionA}}",
+                    "mantenimiento-completado"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-02.2 Liberar {{idHabitacionA}} responde 200 (mantenimiento completado, físico en LISTA)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\");",
+                      "  pm.expect(json.data).to.not.be.undefined;",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CB-03",
+          "description": "## Qué cubre\n- `GET {{hotelActuatorUrl}}/actuator/circuitbreakers` — lectura del estado del breaker (puerto de gestión de hotel-service, nunca el Gateway).\n\n## Precondición\n{{token}} poblado. Reception ARRIBA. CB-01 y CB-02 ejecutados (breaker en CLOSED tras llamadas con éxito).\n\n## Orden\n1. CB-03: aserta que el breaker `{{breakerId}}` está en CLOSED.\n\nContrato: diagnóstico de gestión de hotel-service (`configuracion.md` § Health y readiness por servicio); fuera del contrato del Gateway.",
+          "item": [
+            {
+              "name": "CB-03 GET {{hotelActuatorUrl}}/actuator/circuitbreakers — estado CLOSED",
+              "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker reportado por Feign ({{breakerId}}) está en CLOSED.",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{hotelActuatorUrl}}/actuator/circuitbreakers",
+                  "host": [
+                    "{{hotelActuatorUrl}}"
+                  ],
+                  "path": [
+                    "actuator",
+                    "circuitbreakers"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-03 Actuator responde 200: GET {{hotelActuatorUrl}}/actuator/circuitbreakers\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"CB-03 El breaker {{breakerId}} está en CLOSED\", function () {",
+                      "  const json = pm.response.json();",
+                      "  const cbMap = json && json.circuitBreakers || {};",
+                      "  const breaker = cbMap[pm.variables.get(\"breakerId\")];",
+                      "  pm.expect(breaker, \"Breaker \" + pm.variables.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(Object.keys(cbMap).map(function (k) { var b = cbMap[k]; return b ? b.name + \":\" + b.state : \"?\"; }))).to.not.be.undefined;",
+                      "  pm.expect(breaker.state).to.eql(\"CLOSED\");",
+                      "  pm.collectionVariables.set(\"breakerEstado\", breaker.state);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07 · Circuit breaker — tramo 2 (reception DETENIDO)",
+      "description": "## Qué cubre\nCB-04 (cinco mantenimientos sobre B…F con reception detenido → 202 PREPARANDO), CB-05 (el breaker pasa a OPEN) y CB-06 (con el breaker abierto la ruta sigue devolviendo 202, no 503). Reception debe estar **detenido** antes de empezar: si está arriba, CB-04 devuelve 200 y el tramo falla a propósito.\n\n\n## Guion manual (tres tramos)\nPostman no puede detener servicios: el ciclo se ejecuta en tres carpetas seguidas, con la parada manual en medio.\n\n**Tramo 1** (reception ARRIBA): `00 · Preparación` + `06 · Circuit breaker — tramo 1`.\n\n**Parada:** `docker compose -f infra/compose.yaml --env-file .env stop reception-service`\n\n**Tramo 2** (reception DETENIDO): `07 · Circuit breaker — tramo 2`.\n\n**Reanudación:** `docker compose -f infra/compose.yaml --env-file .env start reception-service` y esperar 10 s (`open-state-duration` de Resilience4j).\n\n**Tramo 3** (reception ARRIBA otra vez): `08 · Circuit breaker — tramo 3`.\n\nCada tramo resuelve sus propios ids y hace su login, así que también se puede ejecutar suelto; lo que no puede saltarse es el orden y la parada de reception.",
+      "item": [
+        {
+          "name": "07.0 POST /api/auth/login — obtiene {{token}}",
+          "description": "Login (contrato identity). Valida que el entorno activo no sea ajeno y que {{claveDemo}} este rellena; guarda {{token}}. Si identity limita los intentos (429) conserva el token previo.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoDemo}}\",\n  \"clave\": \"{{claveDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Causa habitual del 'connection refused': un entorno ajeno seleccionado en Postman con",
+                  "// otro {{baseUrl}} (p. ej. un puerto que este proyecto no usa). La coleccion no depende del",
+                  "// entorno: trae sus propios valores y solo necesita claveDemo.",
+                  "pm.test('El {{baseUrl}} activo apunta al Gateway local', function () {",
+                  "  const baseUrl = String(pm.variables.get('baseUrl') || '').trim();",
+                  "  const env = pm.environment.name ? pm.environment.name : '(sin entorno)';",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + '. Define baseUrl.').to.not.be.empty;",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + ' -> baseUrl=' + baseUrl",
+                  "    + '. Usa http://127.0.0.1:8080: el Gateway publica solo IPv4 y en Windows'",
+                  "    + ' localhost resuelve primero a [::1], que rechaza la conexion.').to.not.match(/localhost/i);",
+                  "});",
+                  "pm.test('{{claveDemo}} esta rellena (no se versiona)', function () {",
+                  "  pm.expect(String(pm.variables.get('claveDemo') || '').trim(),",
+                  "    'Rellena claveDemo con la DEMO_PASSWORD de tu .env').to.not.be.empty;",
+                  "});",
+                  "",
+                  "// identity limita a 5 intentos/min por IP+cuenta (contrato identity: 429 RATE_LIMITED).",
+                  "// Si esta llamada recibe 429 se conserva el {{token}} que ya habia.",
+                  "pm.test('Login responde 200 o 429 (limite de identity)', function () {",
+                  "  pm.expect([200, 429], '429 = 5 intentos/min por IP+cuenta').to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Deja un {{token}} utilizable', function () {",
+                  "  const cuerpo = pm.response.json() || {};",
+                  "  if (pm.response.code === 200) {",
+                  "    pm.expect(cuerpo.data).to.have.property('token');",
+                  "    pm.collectionVariables.set('token', cuerpo.data.token);",
+                  "  } else {",
+                  "    pm.expect(String(pm.variables.get('token') || ''),",
+                  "      'Sin token previo: espera un minuto y repite la corrida').to.not.be.empty;",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07.1 GET /api/habitacion/listar — resuelve las habitaciones del ciclo",
+          "description": "Resuelve {{idHabitacionA}}…{{idHabitacionI}} desde los numeros 901…909 y exige que no tengan operacion vigente (PREPARANDO/APLICADA), que es lo que bloquea CB-02..CB-08.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}&page=0&size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ---------- utilidades compartidas por los scripts de esta coleccion ----------",
+                  "function hSend(opts) {",
+                  "  return new Promise(function (resolve) {",
+                  "    pm.sendRequest(opts, function (err, res) { resolve({ err: err, res: res }); });",
+                  "  });",
+                  "}",
+                  "function hAuth() {",
+                  "  return { Authorization: 'Bearer ' + pm.variables.get('token') };",
+                  "}",
+                  "function hJson() {",
+                  "  const h = hAuth();",
+                  "  h['Content-Type'] = 'application/json';",
+                  "  return h;",
+                  "}",
+                  "function hGuid() {",
+                  "  return pm.variables.replaceIn('{{$guid}}');",
+                  "}",
+                  "",
+                  "pm.test('Listar habitaciones responde 200 (contrato hotel)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Resuelve {{idHabitacionA}}…{{idHabitacionI}} (901…909)', function () {",
+                  "  const porNumero = {};",
+                  "  (pm.response.json().data || []).forEach(function (h) { porNumero[String(h.numero)] = h; });",
+                  "  const faltan = [];",
+                  "  [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\"].forEach(function (numero, i) {",
+                  "    if (porNumero[numero]) {",
+                  "      pm.collectionVariables.set('idHabitacion' + [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\"][i], String(porNumero[numero].idHabitacion));",
+                  "    } else {",
+                  "      faltan.push(numero);",
+                  "    }",
+                  "  });",
+                  "  pm.expect(faltan, 'Faltan habitaciones del ciclo: ' + faltan.join(', ')",
+                  "    + '. Ejecuta 00 · Preparacion.').to.be.empty;",
+                  "});",
+                  "pm.test('Ninguna habitacion del ciclo tiene operacion vigente', function () {",
+                  "  const porNumero = {};",
+                  "  (pm.response.json().data || []).forEach(function (h) { porNumero[String(h.numero)] = h; });",
+                  "  const bloqueadas = [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\"].filter(function (n) {",
+                  "    return porNumero[n] && porNumero[n].blockId;",
+                  "  });",
+                  "  pm.expect(bloqueadas, 'Con operacion PREPARANDO/APLICADA: ' + bloqueadas.join(', ')",
+                  "    + '. Ejecuta 06 · Circuit breaker — tramo 1 con reception arriba (libera las habitaciones).'",
+                  "  ).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-04",
+          "description": "## Qué cubre\nCinco `POST /api/habitacion/{id}/mantenimiento`, uno por petición, sobre `{{idHabitacionB}}`…`{{idHabitacionF}}`, cada uno con `Idempotency-Key` distinta. Reception DETENIDO → cada uno devuelve 202 con `Location` y `Retry-After` (operación PREPARANDO, nunca 503). El script guarda en {{blockId}} el blockId del `Location` de la primera ({{idHabitacionB}}).\n\n## Precondición\n{{token}} poblado. Reception DETENIDO antes de esta carpeta:\n`docker compose -f infra/compose.yaml --env-file .env stop reception-service`\n(su opuesto: `... start reception-service`; en IDE: `taskkill /PID <pid> /F`).\n\n## Precondición de las habitaciones del ciclo\nCada una de B, C, D, E y F debe estar LIBRE en `hotel_db.habitacion` **y** LIBRE en `reception_db.room_gate`; estar LIBRE solo en `hotel_db.habitacion` no basta: reception valida el gate y rechaza con `GATE_NOT_AVAILABLE`, dejando la operación en `RECHAZADA` (correcto del contrato, pero rompe el ciclo). Comprobar antes de elegir:\n`docker exec hotel-postgres-1 psql -U reception_app -d reception_db -c \"SELECT id_habitacion, estado FROM room_gate ORDER BY id_habitacion;\"`\nCiclo usado en esta corrida: B=312, C=313, D=305, E=306, F=307 (LIBRE en `hotel_db.habitacion` y en `reception_db.room_gate`). Se evitan 303 y 304 (`OCUPADA` en el gate) y 102, 201, 202 (`BLOQUEADA`).\n\n## Por qué cinco habitaciones distintas\nEl índice único parcial `uq_operacion_vigente` (`V5__hotel_operaciones.sql`) rechaza una segunda operación sobre la misma habitación con `409 ROOM_OPERATION_IN_PROGRESS` antes de Feign; ese 409 no es fallo del breaker. Por eso cada llamada va sobre una habitación libre distinta.\n\n## Orden\nBuscar + mantener sobre B, C, D, E y F (una pareja por habitación). {{blockId}} queda con el valor de la primera.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`; respuesta 202 `AcceptedOp` con headers `Location` y `Retry-After`).",
+          "item": [
+            {
+              "name": "CB-04.1 GET /api/habitacion/buscar/{{idHabitacionB}} — fija {{versionB}}",
+              "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionB}} para el If-Match.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionB}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionB}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04.1 Buscar {{idHabitacionB}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionB\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04 POST /api/habitacion/{{idHabitacionB}}/mantenimiento — 202",
+              "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After` (operación PREPARANDO, el circuit breaker no introduce 503). Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionB}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionB}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionB}}).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionB}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionB}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04 Mantenimiento {{idHabitacionB}} responde 202 (operación PREPARANDO)\", function () {",
+                      "  pm.response.to.have.status(202);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                      "});",
+                      "pm.test(\"CB-04 {{idHabitacionB}} trae los headers Location y Retry-After\", function () {",
+                      "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                      "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                      "});",
+                      "pm.test(\"CB-04 Guarda {{blockId}} del Location de la primera operación ({{idHabitacionB}})\", function () {",
+                      "  if (pm.variables.get(\"blockId\") === \"\") {",
+                      "    const location = pm.response.headers.get(\"Location\") || \"\";",
+                      "    const match = location.match(/([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})$/);",
+                      "    if (match) {",
+                      "      pm.collectionVariables.set(\"blockId\", match[1]);",
+                      "    }",
+                      "  }",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04.2 GET /api/habitacion/buscar/{{idHabitacionC}} — fija {{versionC}}",
+              "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionC}} para el If-Match.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionC}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionC}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04.2 Buscar {{idHabitacionC}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionC\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04 POST /api/habitacion/{{idHabitacionC}}/mantenimiento — 202",
+              "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionC}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionC}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionC}}).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionC}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionC}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04 Mantenimiento {{idHabitacionC}} responde 202 (operación PREPARANDO)\", function () {",
+                      "  pm.response.to.have.status(202);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                      "});",
+                      "pm.test(\"CB-04 {{idHabitacionC}} trae los headers Location y Retry-After\", function () {",
+                      "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                      "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                      "});",
+                      "",
+                      "pm.test(\"CB-04 {{idHabitacionC}} guarda blockIdCb04C del cuerpo\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb04C\", json.data.blockId);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04.3 GET /api/habitacion/buscar/{{idHabitacionD}} — fija {{versionD}}",
+              "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionD}} para el If-Match.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionD}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionD}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04.3 Buscar {{idHabitacionD}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionD\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04 POST /api/habitacion/{{idHabitacionD}}/mantenimiento — 202",
+              "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionD}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionD}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionD}}).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionD}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionD}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04 Mantenimiento {{idHabitacionD}} responde 202 (operación PREPARANDO)\", function () {",
+                      "  pm.response.to.have.status(202);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                      "});",
+                      "pm.test(\"CB-04 {{idHabitacionD}} trae los headers Location y Retry-After\", function () {",
+                      "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                      "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                      "});",
+                      "",
+                      "pm.test(\"CB-04 {{idHabitacionD}} guarda blockIdCb04D del cuerpo\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb04D\", json.data.blockId);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04.4 GET /api/habitacion/buscar/{{idHabitacionE}} — fija {{versionE}}",
+              "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionE}} para el If-Match.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionE}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionE}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04.4 Buscar {{idHabitacionE}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionE\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04 POST /api/habitacion/{{idHabitacionE}}/mantenimiento — 202",
+              "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionE}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionE}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionE}}).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionE}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionE}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04 Mantenimiento {{idHabitacionE}} responde 202 (operación PREPARANDO)\", function () {",
+                      "  pm.response.to.have.status(202);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                      "});",
+                      "pm.test(\"CB-04 {{idHabitacionE}} trae los headers Location y Retry-After\", function () {",
+                      "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                      "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                      "});",
+                      "",
+                      "pm.test(\"CB-04 {{idHabitacionE}} guarda blockIdCb04E del cuerpo\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb04E\", json.data.blockId);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04.5 GET /api/habitacion/buscar/{{idHabitacionF}} — fija {{versionF}}",
+              "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionF}} para el If-Match.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionF}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionF}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04.5 Buscar {{idHabitacionF}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionF\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-04 POST /api/habitacion/{{idHabitacionF}}/mantenimiento — 202",
+              "description": "Iniciar mantenimiento (A). Reception DETENIDO → 202 esperado con `Location` y `Retry-After`. Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionF}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionF}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Mantenimiento de prueba del circuit breaker sobre habitación libre (CB-04, {{idHabitacionF}}).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionF}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionF}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-04 Mantenimiento {{idHabitacionF}} responde 202 (operación PREPARANDO)\", function () {",
+                      "  pm.response.to.have.status(202);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                      "});",
+                      "pm.test(\"CB-04 {{idHabitacionF}} trae los headers Location y Retry-After\", function () {",
+                      "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                      "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                      "});",
+                      "",
+                      "pm.test(\"CB-04 {{idHabitacionF}} guarda blockIdCb04F del cuerpo\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb04F\", json.data.blockId);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CB-05",
+          "description": "## Qué cubre\n- `GET {{hotelActuatorUrl}}/actuator/circuitbreakers` — 200 y el breaker `{{breakerId}}` está en `OPEN`.\n\n## Precondición\nReception DETENIDO. CB-04 ejecutado (cinco fallos contra reception).\n\n## Orden\n1. CB-05: aserta OPEN. Esta es la prueba del ciclo; si sigue CLOSED, la prueba falla con el mensaje de que la tanda no alcanzó el mínimo de llamadas.\n\nContrato: diagnóstico de gestión de hotel-service (fuera del contrato del Gateway). `03-contrato-comun.md` § Servicio a servicio: con breaker abierto, hotel-service sigue devolviendo 202 PREPARANDO, nunca 503 en esta ruta de negocio.",
+          "item": [
+            {
+              "name": "CB-05 GET {{hotelActuatorUrl}}/actuator/circuitbreakers — estado OPEN",
+              "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker {{breakerId}} está en OPEN (la prueba del ciclo).",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{hotelActuatorUrl}}/actuator/circuitbreakers",
+                  "host": [
+                    "{{hotelActuatorUrl}}"
+                  ],
+                  "path": [
+                    "actuator",
+                    "circuitbreakers"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-05 Actuator responde 200: GET {{hotelActuatorUrl}}/actuator/circuitbreakers\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"CB-05 El breaker {{breakerId}} está en OPEN (la prueba del ciclo)\", function () {",
+                      "  const json = pm.response.json();",
+                      "  const cbMap = json && json.circuitBreakers || {};",
+                      "  const breaker = cbMap[pm.variables.get(\"breakerId\")];",
+                      "  pm.expect(breaker, \"Breaker \" + pm.variables.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(Object.keys(cbMap).map(function (k) { var b = cbMap[k]; return b ? b.name + \":\" + b.state : \"?\"; }))).to.not.be.undefined;",
+                      "  pm.expect(breaker.state).to.eql(\"OPEN\", \"El breaker sigue CLOSED tras cinco llamadas con reception detenido: la tanda no alcanzó el mínimo de fallos para abrir el breaker.\");",
+                      "  pm.collectionVariables.set(\"breakerEstado\", breaker.state);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CB-06",
+          "description": "## Qué cubre\n- `POST /api/habitacion/{{idHabitacionG}}/mantenimiento` — reception DETENIDO, breaker abierto → 202 con `Location` y `Retry-After` (no 503).\n- `GET {{hotelActuatorUrl}}/actuator/circuitbreakers` — el estado sigue `OPEN`.\n\n## Precondición\n{{token}} poblado. Reception DETENIDO. CB-05 en verde (breaker en OPEN).\n\n## Orden\n1. Buscar {{idHabitacionG}} → fija {{versionG}}.\n2. Mantenimiento sobre {{idHabitacionG}} → 202 con Location y Retry-After.\n3. Actuator → el breaker {{breakerId}} sigue en OPEN.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`); diagnóstico de gestión de hotel-service.",
+          "item": [
+            {
+              "name": "CB-06.1 GET /api/habitacion/buscar/{{idHabitacionG}} — fija {{versionG}}",
+              "description": "Detalle de habitación. 200 esperado. Guarda data.version en {{versionG}} para el If-Match.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionG}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionG}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-06.1 Buscar {{idHabitacionG}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionG\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-06 POST /api/habitacion/{{idHabitacionG}}/mantenimiento — 202, breaker abierto",
+              "description": "Iniciar mantenimiento (A). Reception DETENIDO y breaker OPEN → 202 esperado con `Location` y `Retry-After` (no 503). Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionG}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionG}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Sonda de prueba con breaker abierto (CB-06).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionG}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionG}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-06 Mantenimiento {{idHabitacionG}} responde 202 (breaker abierto, no 503)\", function () {",
+                      "  pm.response.to.have.status(202);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"estado\").that.eql(\"PREPARANDO\");",
+                      "});",
+                      "pm.test(\"CB-06 {{idHabitacionG}} trae los headers Location y Retry-After\", function () {",
+                      "  pm.expect(pm.response.headers.has(\"Location\")).to.be.true;",
+                      "  pm.expect(pm.response.headers.has(\"Retry-After\")).to.be.true;",
+                      "});",
+                      "",
+                      "pm.test(\"CB-06 {{idHabitacionG}} guarda {{blockIdCb06}} del cuerpo\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb06\", json.data.blockId);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-06.2 GET {{hotelActuatorUrl}}/actuator/circuitbreakers — el estado sigue OPEN",
+              "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker {{breakerId}} sigue en OPEN tras la sexta llamada.",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{hotelActuatorUrl}}/actuator/circuitbreakers",
+                  "host": [
+                    "{{hotelActuatorUrl}}"
+                  ],
+                  "path": [
+                    "actuator",
+                    "circuitbreakers"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-06.2 Actuator responde 200: GET {{hotelActuatorUrl}}/actuator/circuitbreakers\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"CB-06.2 El breaker {{breakerId}} sigue en OPEN\", function () {",
+                      "  const json = pm.response.json();",
+                      "  const cbMap = json && json.circuitBreakers || {};",
+                      "  const breaker = cbMap[pm.variables.get(\"breakerId\")];",
+                      "  pm.expect(breaker, \"Breaker \" + pm.variables.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(Object.keys(cbMap).map(function (k) { var b = cbMap[k]; return b ? b.name + \":\" + b.state : \"?\"; }))).to.not.be.undefined;",
+                      "  pm.expect(breaker.state).to.eql(\"OPEN\");",
+                      "  pm.collectionVariables.set(\"breakerEstado\", breaker.state);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08 · Circuit breaker — tramo 3 (reception ARRIBA otra vez)",
+      "description": "## Qué cubre\nCB-07 (sonda tras la pausa de 10 s), CB-08 (reception arriba: los mantenimientos vuelven a aplicarse), CB-09 (estado CLOSED) y CB-10 (la operación de CB-04 termina APLICADA). Reception debe estar **arriba** y haber pasado el intervalo de `open-state-duration` (10 s).\n\n**Sobre HALF_OPEN:** `OperacionHabitacionService.reintentarPendientes` (job RB3) llama a reception con los mismos `blockId` pendientes; esas llamadas también cuentan para Resilience4j y pueden cerrar el breaker antes de leerlo. CB-07.3 exige HALF_OPEN y, si ya cerró, el mensaje de la aserción lo explica; CB-09 verifica el estado final CLOSED.\n\n\n## Guion manual (tres tramos)\nPostman no puede detener servicios: el ciclo se ejecuta en tres carpetas seguidas, con la parada manual en medio.\n\n**Tramo 1** (reception ARRIBA): `00 · Preparación` + `06 · Circuit breaker — tramo 1`.\n\n**Parada:** `docker compose -f infra/compose.yaml --env-file .env stop reception-service`\n\n**Tramo 2** (reception DETENIDO): `07 · Circuit breaker — tramo 2`.\n\n**Reanudación:** `docker compose -f infra/compose.yaml --env-file .env start reception-service` y esperar 10 s (`open-state-duration` de Resilience4j).\n\n**Tramo 3** (reception ARRIBA otra vez): `08 · Circuit breaker — tramo 3`.\n\nCada tramo resuelve sus propios ids y hace su login, así que también se puede ejecutar suelto; lo que no puede saltarse es el orden y la parada de reception.",
+      "item": [
+        {
+          "name": "08.0 POST /api/auth/login — obtiene {{token}}",
+          "description": "Login (contrato identity). Valida que el entorno activo no sea ajeno y que {{claveDemo}} este rellena; guarda {{token}}. Si identity limita los intentos (429) conserva el token previo.",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"{{correoDemo}}\",\n  \"clave\": \"{{claveDemo}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/login",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Causa habitual del 'connection refused': un entorno ajeno seleccionado en Postman con",
+                  "// otro {{baseUrl}} (p. ej. un puerto que este proyecto no usa). La coleccion no depende del",
+                  "// entorno: trae sus propios valores y solo necesita claveDemo.",
+                  "pm.test('El {{baseUrl}} activo apunta al Gateway local', function () {",
+                  "  const baseUrl = String(pm.variables.get('baseUrl') || '').trim();",
+                  "  const env = pm.environment.name ? pm.environment.name : '(sin entorno)';",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + '. Define baseUrl.').to.not.be.empty;",
+                  "  pm.expect(baseUrl, 'Entorno activo: ' + env + ' -> baseUrl=' + baseUrl",
+                  "    + '. Usa http://127.0.0.1:8080: el Gateway publica solo IPv4 y en Windows'",
+                  "    + ' localhost resuelve primero a [::1], que rechaza la conexion.').to.not.match(/localhost/i);",
+                  "});",
+                  "pm.test('{{claveDemo}} esta rellena (no se versiona)', function () {",
+                  "  pm.expect(String(pm.variables.get('claveDemo') || '').trim(),",
+                  "    'Rellena claveDemo con la DEMO_PASSWORD de tu .env').to.not.be.empty;",
+                  "});",
+                  "",
+                  "// identity limita a 5 intentos/min por IP+cuenta (contrato identity: 429 RATE_LIMITED).",
+                  "// Si esta llamada recibe 429 se conserva el {{token}} que ya habia.",
+                  "pm.test('Login responde 200 o 429 (limite de identity)', function () {",
+                  "  pm.expect([200, 429], '429 = 5 intentos/min por IP+cuenta').to.include(pm.response.code);",
+                  "});",
+                  "pm.test('Deja un {{token}} utilizable', function () {",
+                  "  const cuerpo = pm.response.json() || {};",
+                  "  if (pm.response.code === 200) {",
+                  "    pm.expect(cuerpo.data).to.have.property('token');",
+                  "    pm.collectionVariables.set('token', cuerpo.data.token);",
+                  "  } else {",
+                  "    pm.expect(String(pm.variables.get('token') || ''),",
+                  "      'Sin token previo: espera un minuto y repite la corrida').to.not.be.empty;",
+                  "  }",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.1 GET /api/habitacion/listar — libera el ciclo del breaker",
+          "description": "Reception está arriba: completa los mantenimientos que CB-04 dejó PREPARANDO y que el job RB3 ya aplicó.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}&page=0&size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ---------- utilidades compartidas por los scripts de esta coleccion ----------",
+                  "function hSend(opts) {",
+                  "  return new Promise(function (resolve) {",
+                  "    pm.sendRequest(opts, function (err, res) { resolve({ err: err, res: res }); });",
+                  "  });",
+                  "}",
+                  "function hAuth() {",
+                  "  return { Authorization: 'Bearer ' + pm.variables.get('token') };",
+                  "}",
+                  "function hJson() {",
+                  "  const h = hAuth();",
+                  "  h['Content-Type'] = 'application/json';",
+                  "  return h;",
+                  "}",
+                  "function hGuid() {",
+                  "  return pm.variables.replaceIn('{{$guid}}');",
+                  "}",
+                  "",
+                  "pm.test('Deja libre el ciclo del breaker y sin check-ins de prueba', function (done) {",
+                  "  (async function () {",
+                  "    try {",
+                  "      const baseUrl = pm.variables.get('baseUrl');",
+                  "      const idHotel = Number(pm.variables.get('idHotel'));",
+                  "      let liberadas = 0;",
+                  "      for (const sufijo of [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\"]) {",
+                  "        const id = pm.variables.get('idHabitacion' + sufijo);",
+                  "        if (!id) { continue; }",
+                  "        const detalle = await hSend({ url: baseUrl + '/api/habitacion/buscar/' + id, method: 'GET', header: hAuth() });",
+                  "        if (detalle.err || detalle.res.code !== 200) { continue; }",
+                  "        const h = (detalle.res.json() || {}).data || {};",
+                  "        if (!h.blockId) { continue; }",
+                  "        // blockId != null <=> existe operacion PREPARANDO o APLICADA (existsVigente).",
+                  "        const r = await hSend({",
+                  "          url: baseUrl + '/api/habitacion/' + id + '/mantenimiento-completado',",
+                  "          method: 'PUT',",
+                  "          header: Object.assign(hJson(), {",
+                  "            'Idempotency-Key': hGuid(),",
+                  "            'If-Match': String(h.version)",
+                  "          }),",
+                  "          body: { mode: 'raw', raw: JSON.stringify({ blockId: h.blockId }) }",
+                  "        });",
+                  "        if (!r.err && r.res.code === 200) { liberadas++; }",
+                  "      }",
+                  "      const lista = await hSend({ url: baseUrl + '/api/recepcion/listar?idHotel=' + idHotel + '&estadoEstadia=ACTIVA&page=0&size=100', method: 'GET', header: hAuth() });",
+                  "      if (lista.err) { throw new Error('GET /api/recepcion/listar: ' + lista.err); }",
+                  "      let anuladas = 0;",
+                  "      const activas = ((lista.res.json() || {}).data || []).filter(function (r) {",
+                  "        return r && String(r.observacion || '').indexOf(\"Check-in de prueba QA\") === 0;",
+                  "      });",
+                  "      for (const estadia of activas) {",
+                  "        const r = await hSend({",
+                  "          url: baseUrl + '/api/recepcion/' + estadia.idRecepcion + '/anular-checkin',",
+                  "          method: 'POST',",
+                  "          header: Object.assign(hJson(), {",
+                  "            'Idempotency-Key': hGuid(),",
+                  "            'If-Match': String(estadia.version)",
+                  "          }),",
+                  "          body: { mode: 'raw', raw: JSON.stringify({ motivo: 'Limpieza de la coleccion Postman' }) }",
+                  "        });",
+                  "        if (!r.err && r.res.code === 200) { anuladas++; }",
+                  "      }",
+                  "      pm.expect(liberadas + anuladas, 'Limpieza previa (mantenimientos + check-ins)').to.be.at.least(0);",
+                  "      done();",
+                  "    } catch (e) { done(e); }",
+                  "  })();",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08.2 GET /api/habitacion/listar — resuelve las habitaciones del ciclo",
+          "description": "Resuelve {{idHabitacionA}}…{{idHabitacionI}} desde los numeros 901…909 y exige que no tengan operacion vigente (PREPARANDO/APLICADA), que es lo que bloquea CB-02..CB-08.",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/habitacion/listar?idHotel={{idHotel}}&page=0&size=100",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "habitacion",
+                "listar"
+              ],
+              "query": [
+                {
+                  "key": "idHotel",
+                  "value": "{{idHotel}}"
+                },
+                {
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "key": "size",
+                  "value": "100"
+                }
+              ]
+            }
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// ---------- utilidades compartidas por los scripts de esta coleccion ----------",
+                  "function hSend(opts) {",
+                  "  return new Promise(function (resolve) {",
+                  "    pm.sendRequest(opts, function (err, res) { resolve({ err: err, res: res }); });",
+                  "  });",
+                  "}",
+                  "function hAuth() {",
+                  "  return { Authorization: 'Bearer ' + pm.variables.get('token') };",
+                  "}",
+                  "function hJson() {",
+                  "  const h = hAuth();",
+                  "  h['Content-Type'] = 'application/json';",
+                  "  return h;",
+                  "}",
+                  "function hGuid() {",
+                  "  return pm.variables.replaceIn('{{$guid}}');",
+                  "}",
+                  "",
+                  "pm.test('Listar habitaciones responde 200 (contrato hotel)', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "});",
+                  "pm.test('Resuelve {{idHabitacionA}}…{{idHabitacionI}} (901…909)', function () {",
+                  "  const porNumero = {};",
+                  "  (pm.response.json().data || []).forEach(function (h) { porNumero[String(h.numero)] = h; });",
+                  "  const faltan = [];",
+                  "  [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\"].forEach(function (numero, i) {",
+                  "    if (porNumero[numero]) {",
+                  "      pm.collectionVariables.set('idHabitacion' + [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\"][i], String(porNumero[numero].idHabitacion));",
+                  "    } else {",
+                  "      faltan.push(numero);",
+                  "    }",
+                  "  });",
+                  "  pm.expect(faltan, 'Faltan habitaciones del ciclo: ' + faltan.join(', ')",
+                  "    + '. Ejecuta 00 · Preparacion.').to.be.empty;",
+                  "});",
+                  "pm.test('Ninguna habitacion del ciclo tiene operacion vigente', function () {",
+                  "  const porNumero = {};",
+                  "  (pm.response.json().data || []).forEach(function (h) { porNumero[String(h.numero)] = h; });",
+                  "  const bloqueadas = [\"901\", \"902\", \"903\", \"904\", \"905\", \"906\", \"907\", \"908\", \"909\"].filter(function (n) {",
+                  "    return porNumero[n] && porNumero[n].blockId;",
+                  "  });",
+                  "  pm.expect(bloqueadas, 'Con operacion PREPARANDO/APLICADA: ' + bloqueadas.join(', ')",
+                  "    + '. Ejecuta 06 · Circuit breaker — tramo 1 con reception arriba (libera las habitaciones).'",
+                  "  ).to.be.empty;",
+                  "});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "CB-07",
+          "description": "## Qué cubre\n- Pausa manual de 10 s (breaker en OPEN; lectura en caliente sigue en OPEN hasta que llega una llamada).\n- Levantar reception (o verificar que ya está arriba) antes de la sonda.\n- `POST /api/habitacion/{{idHabitacionA}}/mantenimiento` — llamada de sonda → `200` con `blockId` (reception arriba, operación aplicada en el request; el breaker permite la llamada tras el intervalo de open-state y pasa a HALF_OPEN).\n- `GET {{hotelActuatorUrl}}/actuator/circuitbreakers` — 200 y el breaker está en `HALF_OPEN`.\n\n## Precondición\n{{token}} poblado. Reception ARRIBA antes de la sonda: verificar con `curl http://localhost:8083/actuator/health`; si está detenido, levantar con `bash scripts/mvn.sh -f services/pom.xml -pl :reception-service spring-boot:run` (PID del proceso de reception). CB-06 en verde (breaker en OPEN).\n\n## Por qué este orden (esperar → levantar → llamar → leer)\nHALF_OPEN solo es observable con reception arriba: con reception detenido, la única llamada permitida tras el intervalo falla (conexión rechazada) y Resilience4j devuelve el breaker a OPEN inmediatamente, por lo que no hay nada que leer. Con reception sano, la primera llamada permitida tiene éxito (200 con blockId) y el breaker queda en HALF_OPEN hasta completar las llamadas permitidas (3). Por eso la sonda se ejecuta tras levantar reception y el actuator se lee después de la sonda.\n\n## Orden\n1. Pausa manual de 10 s.\n2. Levantar reception / verificar arriba.\n3. Buscar {{idHabitacionA}} → fija {{versionA}} ({{idHabitacionA}} fue liberada en CB-02).\n4. Sonda → 200 con blockId.\n5. Actuator → HALF_OPEN.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`); diagnóstico de gestión de hotel-service.",
+          "item": [
+            {
+              "name": "CB-07.1 GET /api/habitacion/buscar/{{idHabitacionA}} — fija {{versionA}} (tras pausa de 10 s)",
+              "description": "Detalle de habitación. 200 esperado. Ejecutar tras la pausa manual de 10 s. Guarda data.version en {{versionA}} para el If-Match de la sonda.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionA}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionA}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-07.1 Buscar {{idHabitacionA}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionA\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-07.2 POST /api/habitacion/{{idHabitacionA}}/mantenimiento — llamada de sonda → 200",
+              "description": "Iniciar mantenimiento (A). Reception ARRIBA, breaker tras el intervalo → 200 esperado con `blockId` (operación aplicada en el request, nunca 503; el breaker pasa a HALF_OPEN tras permitir la llamada). Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionA}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionA}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Llamada de sonda tras intervalo de open-state (CB-07).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionA}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionA}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-07.2 Sonda {{idHabitacionA}} responde 200 (reception arriba; operación aplicada en el request)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "});",
+                      "",
+                      "pm.test(\"CB-07.2 {{idHabitacionA}} guarda {{blockIdCb07}} del cuerpo de la sonda\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb07\", json.data.blockId);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-07.3 GET {{hotelActuatorUrl}}/actuator/circuitbreakers — estado HALF_OPEN",
+              "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker {{breakerId}} está en HALF_OPEN tras la llamada de sonda (lectura de solo lectura a los 10 s, sin sonda, seguiría en OPEN).",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{hotelActuatorUrl}}/actuator/circuitbreakers",
+                  "host": [
+                    "{{hotelActuatorUrl}}"
+                  ],
+                  "path": [
+                    "actuator",
+                    "circuitbreakers"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-07.3 Actuator responde 200: GET {{hotelActuatorUrl}}/actuator/circuitbreakers\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"CB-07.3 El breaker {{breakerId}} está en HALF_OPEN (tras la sonda de los 10 s)\", function () {",
+                      "  const json = pm.response.json();",
+                      "  const cbMap = json && json.circuitBreakers || {};",
+                      "  const breaker = cbMap[pm.variables.get(\"breakerId\")];",
+                      "  pm.expect(breaker, \"Breaker \" + pm.variables.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(Object.keys(cbMap).map(function (k) { var b = cbMap[k]; return b ? b.name + \":\" + b.state : \"?\"; }))).to.not.be.undefined;",
+                      "  pm.expect(breaker.state, \"El breaker debe estar en HALF_OPEN. Si aparece CLOSED es porque el job de recuperacion RB3 de hotel-service (OperacionHabitacionService.reintentarPendientes) tambien llama a reception y consume las llamadas permitidas, cerrando el ciclo antes de esta lectura; el tramo 3 debe ejecutarse en cuanto reception vuelve. Estado observado: \" + breaker.state).to.eql(\"HALF_OPEN\");",
+                      "  pm.collectionVariables.set(\"breakerEstado\", breaker.state);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CB-08",
+          "description": "## Qué cubre\nHasta tres `POST /api/habitacion/{id}/mantenimiento` sobre habitaciones libres con reception ARRIBA → 200 con `blockId` en cada una; cada éxito en HALF_OPEN cuenta hacia el cierre del breaker (límite: 3 llamadas permitidas). En esta corrida la sonda de CB-07 es la 1ª permitida y quedan 2: una sobre {{idHabitacionH}} y otra sobre {{idHabitacionI}}; tras la segunda, el breaker vuelve a CLOSED.\n\n## Precondición\n{{token}} poblado. Reception ARRIBA. CB-07 en verde (breaker en HALF_OPEN tras la sonda).\n\n## Qué habitaciones usar\nB-F y G dejaron operaciones PREPARANDO en CB-04/CB-06 (reintentadas por el job tras levantar reception); A se usó en la sonda de CB-07. Usar habitaciones libres y distintas: {{idHabitacionH}} y {{idHabitacionI}}.\n\n## Orden\n1. Buscar {{idHabitacionH}} → fija {{versionH}}; mantener sobre {{idHabitacionH}} → 200 con blockId (2ª permitida en HALF_OPEN).\n2. Buscar {{idHabitacionI}} → fija {{versionI}}; mantener sobre {{idHabitacionI}} → 200 con blockId (3ª permitida → CLOSED).\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`buscarHabitacion`, `iniciarMantenimiento`).",
+          "item": [
+            {
+              "name": "CB-08.1 GET /api/habitacion/buscar/{{idHabitacionH}} — fija {{versionH}} (habitación libre)",
+              "description": "Detalle de habitación libre. 200 esperado. Guarda data.version en {{versionH}} para el If-Match del mantenimiento de CB-08.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionH}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionH}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-08.1 Buscar {{idHabitacionH}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionH\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-08.2 POST /api/habitacion/{{idHabitacionH}}/mantenimiento — 200 con blockId",
+              "description": "Iniciar mantenimiento (A). Reception ARRIBA → 200 esperado con `blockId` (gate BLOQUEADA, CAS aplicado en el request; 2ª llamada permitida en HALF_OPEN). Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionH}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionH}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Mantenimiento de verificación de cierre del breaker (CB-08).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionH}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionH}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-08.2 Mantenimiento {{idHabitacionH}} responde 200 (reception arriba; 2ª permitida en HALF_OPEN)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "});",
+                      "pm.test(\"CB-08 Anota el blockId del mantenimiento que cerró el breaker\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb08\", json.data.blockId);",
+                      "});",
+                      "",
+                      "pm.test(\"CB-08.2 {{idHabitacionH}} guarda {{blockIdCb08H}} del cuerpo\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb08H\", json.data.blockId);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-08.3 GET /api/habitacion/buscar/{{idHabitacionI}} — fija {{versionI}} (habitación libre)",
+              "description": "Detalle de habitación libre. 200 esperado. Guarda data.version en {{versionI}} para el If-Match del mantenimiento de CB-08.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/buscar/{{idHabitacionI}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "buscar",
+                    "{{idHabitacionI}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-08.3 Buscar {{idHabitacionI}} responde 200 (contrato hotel)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "  pm.collectionVariables.set(\"versionI\", String(json.data.version));",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            },
+            {
+              "name": "CB-08.4 POST /api/habitacion/{{idHabitacionI}}/mantenimiento — 200 con blockId",
+              "description": "Iniciar mantenimiento (A). Reception ARRIBA → 200 esperado con `blockId` (gate BLOQUEADA, CAS aplicado en el request; 3ª llamada permitida en HALF_OPEN → CLOSED). Cabeceras: Authorization, Idempotency-Key, If-Match ({{versionI}}).",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  },
+                  {
+                    "key": "Idempotency-Key",
+                    "value": "{{$guid}}"
+                  },
+                  {
+                    "key": "If-Match",
+                    "value": "{{versionH}}"
+                  },
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"motivo\": \"Mantenimiento de verificación de cierre del breaker (CB-08).\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/{{idHabitacionI}}/mantenimiento",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "{{idHabitacionI}}",
+                    "mantenimiento"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-08.4 Mantenimiento {{idHabitacionI}} responde 200 (reception arriba; 2ª permitida en HALF_OPEN)\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "  const json = pm.response.json();",
+                      "  pm.expect(json).to.have.property(\"data\");",
+                      "  pm.expect(json.data).to.have.property(\"blockId\").that.is.not.undefined;",
+                      "  pm.expect(json.data).to.have.property(\"version\").that.is.not.undefined;",
+                      "});",
+                      "pm.test(\"CB-08 Anota el blockId del mantenimiento que cerró el breaker\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb08\", json.data.blockId);",
+                      "});",
+                      "",
+                      "pm.test(\"CB-08.4 {{idHabitacionI}} guarda {{blockIdCb08I}} del cuerpo\", function () {",
+                      "  const json = pm.response.json();",
+                      "  pm.collectionVariables.set(\"blockIdCb08I\", json.data.blockId);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CB-09",
+          "description": "## Qué cubre\n- `GET {{hotelActuatorUrl}}/actuator/circuitbreakers` — 200 y el breaker `{{breakerId}}` está en `CLOSED` (llamadas con éxito tras la reapertura de reception cerraron el breaker).\n\n## Precondición\n{{token}} poblado. Reception ARRIBA. CB-08 ejecutado (al menos una llamada con éxito en HALF_OPEN).\n\n## Orden\n1. CB-09: aserta CLOSED.\n\nContrato: diagnóstico de gestión de hotel-service (fuera del contrato del Gateway).",
+          "item": [
+            {
+              "name": "CB-09 GET {{hotelActuatorUrl}}/actuator/circuitbreakers — estado CLOSED",
+              "description": "Actuator de hotel-service (puerto 8082). 200 esperado. Aserta que el breaker {{breakerId}} volvió a CLOSED tras llamadas con éxito en HALF_OPEN.",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{hotelActuatorUrl}}/actuator/circuitbreakers",
+                  "host": [
+                    "{{hotelActuatorUrl}}"
+                  ],
+                  "path": [
+                    "actuator",
+                    "circuitbreakers"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "pm.test(\"CB-09 Actuator responde 200: GET {{hotelActuatorUrl}}/actuator/circuitbreakers\", function () {",
+                      "  pm.response.to.have.status(200);",
+                      "});",
+                      "pm.test(\"CB-09 El breaker {{breakerId}} está en CLOSED\", function () {",
+                      "  const json = pm.response.json();",
+                      "  const cbMap = json && json.circuitBreakers || {};",
+                      "  const breaker = cbMap[pm.variables.get(\"breakerId\")];",
+                      "  pm.expect(breaker, \"Breaker \" + pm.variables.get(\"breakerId\") + \" no listado; estados: \" + JSON.stringify(Object.keys(cbMap).map(function (k) { var b = cbMap[k]; return b ? b.name + \":\" + b.state : \"?\"; }))).to.not.be.undefined;",
+                      "  pm.expect(breaker.state).to.eql(\"CLOSED\");",
+                      "  pm.collectionVariables.set(\"breakerEstado\", breaker.state);",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "CB-10",
+          "description": "## Qué cubre\n- `GET /api/habitacion/operaciones/{{blockId}}` — 200, `data.estado` igual a `APLICADA` y `data.blockId` igual al `{{blockId}}` guardado en CB-04 (operación de la primera habitación del ciclo, retomada por el job tras levantar reception).\n\n## Precondición\n{{token}} poblado. {{blockId}} poblado (CB-04 ejecutado). Reception ARRIBA (el job reintenta la operación PREPARANDO con el mismo blockId).\n\n## Orden\n1. CB-10: polling de la operación; aserta APLICADA con el mismo blockId.\n\nContrato: `docs/contracts/openapi/hotel.yaml` (`consultarOperacionHabitacion`; 200 `ApiSingleOperacionHabitacion`).",
+          "item": [
+            {
+              "name": "CB-10 GET /api/habitacion/operaciones/{{blockId}} — estado APLICADA",
+              "description": "Toma el blockId de la operacion que abrio el breaker (o el de la primera habitacion del ciclo con operacion vigente) y hace polling hasta APLICADA con GET /api/habitacion/operaciones/{blockId}. No depende de una variable de otra corrida.",
+              "request": {
+                "method": "GET",
+                "header": [
+                  {
+                    "key": "Authorization",
+                    "value": "Bearer {{token}}"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/habitacion/operaciones/{{blockId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "habitacion",
+                    "operaciones",
+                    "{{blockId}}"
+                  ]
+                }
+              },
+              "response": [],
+              "event": [
+                {
+                  "listen": "test",
+                  "script": {
+                    "type": "text/javascript",
+                    "exec": [
+                      "// La operacion que abrio el breaker en CB-04 debe terminar APLICADA cuando reception",
+                      "// vuelve: OperacionHabitacionService.reintentarPendientes reintenta con el mismo blockId.",
+                      "// Se resuelve desde las habitaciones (blockId vigente), no desde una variable de otra corrida.",
+                      "pm.test('La operacion del ciclo termina APLICADA', function (done) {",
+                      "  (async function () {",
+                      "    try {",
+                      "      const baseUrl = pm.variables.get('baseUrl');",
+                      "      let blockId = String(pm.variables.get('blockId') || '');",
+                      "      if (!blockId) {",
+                      "        for (const sufijo of [\"A\", \"B\", \"C\", \"D\", \"E\", \"F\", \"G\", \"H\", \"I\"]) {",
+                      "          const id = pm.variables.get('idHabitacion' + sufijo);",
+                      "          if (!id) { continue; }",
+                      "          const detalle = await hSend({ url: baseUrl + '/api/habitacion/buscar/' + id, method: 'GET', header: hAuth() });",
+                      "          if (detalle.err || detalle.res.code !== 200) { continue; }",
+                      "          const h = (detalle.res.json() || {}).data || {};",
+                      "          if (h.blockId) {",
+                      "            blockId = h.blockId;",
+                      "            pm.collectionVariables.set('blockId', blockId);",
+                      "            break;",
+                      "          }",
+                      "        }",
+                      "      }",
+                      "      pm.expect(blockId, 'Ninguna habitacion del ciclo tiene operacion vigente: ejecuta el tramo 2').to.not.be.empty;",
+                      "      let ultimo = null;",
+                      "      let respuesta = null;",
+                      "      for (let intento = 0; intento < 30; intento++) {",
+                      "        respuesta = await hSend({ url: baseUrl + '/api/habitacion/operaciones/' + blockId, method: 'GET', header: hAuth() });",
+                      "        if (respuesta.err) { throw new Error('GET /api/habitacion/operaciones: ' + respuesta.err); }",
+                      "        const cuerpo = respuesta.res.json() || {};",
+                      "        ultimo = cuerpo.data ? cuerpo.data.estado : null;",
+                      "        if (ultimo === 'APLICADA') { break; }",
+                      "        await new Promise(function (r) { setTimeout(r, 1000); });",
+                      "      }",
+                      "      pm.expect(respuesta.res.code).to.eql(200);",
+                      "      pm.expect((respuesta.res.json() || {}).data.blockId).to.eql(blockId);",
+                      "      pm.expect(ultimo, 'Estado observado de ' + blockId).to.eql('APLICADA');",
+                      "      done();",
+                      "    } catch (e) { done(e); }",
+                      "  })();",
+                      "});"
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8080",
+      "type": "string"
+    },
+    {
+      "key": "hotelActuatorUrl",
+      "value": "http://127.0.0.1:8082",
+      "type": "string"
+    },
+    {
+      "key": "correoDemo",
+      "value": "admin@hotel.test",
+      "type": "string"
+    },
+    {
+      "key": "claveDemo",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHotel",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idCliente",
+      "value": "100",
+      "type": "string"
+    },
+    {
+      "key": "idProducto",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacion",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionLibre",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "fechaSalida",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "inicioMes",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "finMes",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idRecepcion",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idVenta",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionVenta",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idCarrito",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "breakerId",
+      "value": "ReceptionClientbloquearintBloqueoRequest",
+      "type": "string"
+    },
+    {
+      "key": "breakerEstado",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idemCheckin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idemCarrito",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idemVenta",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idemPago",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionA",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionB",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionC",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionD",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionE",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionF",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionG",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionH",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idHabitacionI",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionA",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionB",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionC",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionD",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionE",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionF",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionG",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionH",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "versionI",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb02",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb04C",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb04D",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb04E",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb04F",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb06",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb07",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb08",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb08H",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "blockIdCb08I",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}
